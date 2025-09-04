@@ -25,6 +25,11 @@ const navigation = [
     href: '/students',
     icon: '👥',
   },
+  {
+    name: 'Mock Tests',
+    href: '/tests',
+    icon: '📝',
+  },
   // Future navigation items can be added here
 ]
 

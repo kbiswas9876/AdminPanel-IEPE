@@ -59,3 +59,42 @@ export interface UserProfile {
   created_at: string
   updated_at?: string
 }
+
+// Types for tests table
+export interface Test {
+  id: number
+  name: string
+  description?: string
+  total_time_minutes: number
+  marks_per_correct: number
+  negative_marks_per_incorrect: number
+  status: 'draft' | 'scheduled' | 'live' | 'completed'
+  start_time?: string
+  end_time?: string
+  created_at: string
+  updated_at?: string
+}
+
+// Types for test_questions table
+export interface TestQuestion {
+  id: number
+  test_id: number
+  question_id: string
+  created_at: string
+}
+
+// Types for test creation blueprint
+export interface TestBlueprint {
+  chapter_name: string
+  question_count: number
+}
+
+// Types for test creation form data
+export interface TestCreationData {
+  name: string
+  description?: string
+  total_time_minutes: number
+  marks_per_correct: number
+  negative_marks_per_incorrect: number
+  blueprint: TestBlueprint[]
+}
