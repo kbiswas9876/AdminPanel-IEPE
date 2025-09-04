@@ -1,0 +1,332 @@
+'use client'
+
+import { useState, useEffect, useMemo } from 'react'
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  useReactTable,
+  SortingState,
+  ColumnFiltersState,
+} from '@tanstack/react-table'
+import { getQuestions } from '@/lib/actions/questions'
+import type { Question } from '@/lib/supabase/admin'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { ArrowUpDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Edit } from 'lucide-react'
+import Link from 'next/link'
+import { DeleteQuestionDialog } from './delete-question-dialog'
+
+export function ContentTable() {
+  const [data, setData] = useState<Question[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [totalCount, setTotalCount] = useState(0)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize] = useState(20)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+
+  // Fetch data when page or search changes
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      setError(null)
+      
+      try {
+        const result = await getQuestions(currentPage, pageSize, searchTerm)
+        
+        if (result.error) {
+          setError(result.error)
+        } else {
+          setData(result.data)
+          setTotalCount(result.count)
+        }
+      } catch (err) {
+        setError('Failed to fetch questions')
+        console.error('Error:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [currentPage, searchTerm, pageSize])
+
+  // Handle search with debouncing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setCurrentPage(1) // Reset to first page when searching
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [searchTerm])
+
+  const columns: ColumnDef<Question>[] = useMemo(
+    () => [
+      {
+        accessorKey: 'question_id',
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              className="h-auto p-0 font-semibold"
+            >
+              Question ID
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          )
+        },
+        cell: ({ row }) => (
+          <div className="font-mono text-sm">
+            {row.getValue('question_id')}
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'book_source',
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              className="h-auto p-0 font-semibold"
+            >
+              Book Source
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          )
+        },
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {row.getValue('book_source')}
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'chapter_name',
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              className="h-auto p-0 font-semibold"
+            >
+              Chapter
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          )
+        },
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {row.getValue('chapter_name')}
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'question_text',
+        header: 'Question Text',
+        cell: ({ row }) => {
+          const text = row.getValue('question_text') as string
+          const truncated = text.length > 100 ? text.substring(0, 100) + '...' : text
+          return (
+            <div className="max-w-md">
+              <p className="text-sm text-gray-700">{truncated}</p>
+            </div>
+          )
+        },
+      },
+      {
+        accessorKey: 'created_at',
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              className="h-auto p-0 font-semibold"
+            >
+              Created At
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          )
+        },
+        cell: ({ row }) => {
+          const date = new Date(row.getValue('created_at'))
+          return (
+            <div className="text-sm text-gray-600">
+              {date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+              })}
+            </div>
+          )
+        },
+      },
+      {
+        id: 'actions',
+        header: 'Actions',
+        cell: ({ row }) => {
+          const question = row.original
+          return (
+            <div className="flex items-center space-x-2">
+              <Link href={`/content/edit/${question.id}`}>
+                <Button variant="ghost" size="sm">
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </Link>
+              <DeleteQuestionDialog questionId={question.id!} questionText={question.question_text} />
+            </div>
+          )
+        },
+      },
+    ],
+    []
+  )
+
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    state: {
+      sorting,
+      columnFilters,
+    },
+    manualPagination: true,
+    pageCount: Math.ceil(totalCount / pageSize),
+  })
+
+  const totalPages = Math.ceil(totalCount / pageSize)
+
+  if (loading && data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-md p-4">
+        <p className="text-red-800">Error: {error}</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Search Input */}
+      <div className="flex items-center space-x-2">
+        <Input
+          placeholder="Search questions by text or ID..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="max-w-sm"
+        />
+      </div>
+
+      {/* Table */}
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="h-24 text-center">
+                  No questions found.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Pagination */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-gray-700">
+          Showing {data.length > 0 ? (currentPage - 1) * pageSize + 1 : 0} to{' '}
+          {Math.min(currentPage * pageSize, totalCount)} of {totalCount} questions
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(1)}
+            disabled={currentPage === 1}
+          >
+            <ChevronsLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm text-gray-700">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(totalPages)}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronsRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
