@@ -101,24 +101,33 @@ export async function createTest(testData: TestCreationData): Promise<{ success:
     const testId = testResult.id
     
     // Now, collect questions based on the blueprint
-    const allQuestionIds: string[] = []
+    const allQuestionIds: number[] = []
     
     for (const blueprintItem of testData.blueprint) {
       if (blueprintItem.question_count > 0) {
         // Get random questions from this chapter
-        const { data: questions, error: questionsError } = await supabase
+        // First, get all questions from this chapter
+        const { data: allQuestions, error: allQuestionsError } = await supabase
           .from('questions')
-          .select('question_id')
+          .select('id')
           .eq('chapter_name', blueprintItem.chapter_name)
-          .limit(blueprintItem.question_count)
         
-        if (questionsError) {
-          console.error(`Error fetching questions for chapter ${blueprintItem.chapter_name}:`, questionsError)
+        if (allQuestionsError) {
+          console.error(`Error fetching questions for chapter ${blueprintItem.chapter_name}:`, allQuestionsError)
           continue
         }
         
+        if (!allQuestions || allQuestions.length === 0) {
+          console.warn(`No questions found for chapter: ${blueprintItem.chapter_name}`)
+          continue
+        }
+        
+        // Shuffle the questions and take the requested count
+        const shuffled = allQuestions.sort(() => 0.5 - Math.random())
+        const questions = shuffled.slice(0, blueprintItem.question_count)
+        
         // Add the question IDs to our collection
-        allQuestionIds.push(...questions.map(q => q.question_id))
+        allQuestionIds.push(...questions.map(q => q.id))
       }
     }
     
