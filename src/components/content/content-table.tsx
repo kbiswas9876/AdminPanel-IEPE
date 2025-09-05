@@ -11,6 +11,7 @@ import {
   useReactTable,
   SortingState,
   ColumnFiltersState,
+  RowSelectionState,
 } from '@tanstack/react-table'
 import { getQuestions } from '@/lib/actions/questions'
 import type { Question } from '@/lib/supabase/admin'
@@ -24,9 +25,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { ArrowUpDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Edit } from 'lucide-react'
+import { ArrowUpDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Edit, MoreHorizontal } from 'lucide-react'
 import Link from 'next/link'
 import { DeleteQuestionDialog } from './delete-question-dialog'
+import { BulkTagManagementModal } from './bulk-tag-management-modal'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Checkbox } from '@/components/ui/checkbox'
 
 export function ContentTable() {
   const [data, setData] = useState<Question[]>([])
@@ -38,6 +47,8 @@ export function ContentTable() {
   const [searchTerm, setSearchTerm] = useState('')
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  const [showBulkTagModal, setShowBulkTagModal] = useState(false)
 
   // Fetch data when page or search changes
   useEffect(() => {
@@ -76,6 +87,25 @@ export function ContentTable() {
 
   const columns: ColumnDef<Question>[] = useMemo(
     () => [
+      {
+        id: 'select',
+        header: ({ table }) => (
+          <Checkbox
+            checked={table.getIsAllPageRowsSelected()}
+            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+            aria-label="Select all"
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Select row"
+          />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+      },
       {
         accessorKey: 'question_id',
         header: ({ column }) => {
@@ -150,6 +180,33 @@ export function ContentTable() {
         },
       },
       {
+        accessorKey: 'admin_tags',
+        header: 'Admin Tags',
+        cell: ({ row }) => {
+          const tags = row.getValue('admin_tags') as string[] | null
+          if (!tags || tags.length === 0) {
+            return <span className="text-sm text-gray-400 italic">No tags</span>
+          }
+          return (
+            <div className="flex flex-wrap gap-1 max-w-xs">
+              {tags.slice(0, 3).map((tag, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800"
+                >
+                  {tag}
+                </span>
+              ))}
+              {tags.length > 3 && (
+                <span className="text-xs text-gray-500">
+                  +{tags.length - 3} more
+                </span>
+              )}
+            </div>
+          )
+        },
+      },
+      {
         accessorKey: 'created_at',
         header: ({ column }) => {
           return (
@@ -206,12 +263,15 @@ export function ContentTable() {
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onRowSelectionChange: setRowSelection,
     state: {
       sorting,
       columnFilters,
+      rowSelection,
     },
     manualPagination: true,
     pageCount: Math.ceil(totalCount / pageSize),
+    enableRowSelection: true,
   })
 
   const totalPages = Math.ceil(totalCount / pageSize)
@@ -232,16 +292,41 @@ export function ContentTable() {
     )
   }
 
+  const selectedRows = table.getFilteredSelectedRowModel().rows
+  const selectedQuestionIds = selectedRows.map(row => row.original.id!)
+
   return (
     <div className="space-y-4">
-      {/* Search Input */}
-      <div className="flex items-center space-x-2">
+      {/* Search Input and Bulk Actions */}
+      <div className="flex items-center justify-between">
         <Input
           placeholder="Search questions by text or ID..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="max-w-sm"
         />
+        
+        {/* Bulk Actions */}
+        {selectedRows.length > 0 && (
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-600">
+              {selectedRows.length} question{selectedRows.length !== 1 ? 's' : ''} selected
+            </span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <MoreHorizontal className="h-4 w-4 mr-2" />
+                  Bulk Actions
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => setShowBulkTagModal(true)}>
+                  Manage Tags
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </div>
 
       {/* Table */}
@@ -327,6 +412,20 @@ export function ContentTable() {
           </Button>
         </div>
       </div>
+
+      {/* Bulk Tag Management Modal */}
+      <BulkTagManagementModal
+        isOpen={showBulkTagModal}
+        onClose={() => setShowBulkTagModal(false)}
+        selectedQuestionIds={selectedQuestionIds}
+        selectedCount={selectedRows.length}
+        onSuccess={() => {
+          setShowBulkTagModal(false)
+          setRowSelection({})
+          // Refresh data to show updated tags
+          window.location.reload()
+        }}
+      />
     </div>
   )
 }
