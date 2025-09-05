@@ -106,7 +106,7 @@ export function QuestionForm({ question, isEditing = false, onSubmit }: Question
                         No books available. Add books in Book Manager first.
                       </SelectItem>
                     ) : (
-                      bookSources.map((source) => (
+                      bookSources.filter(Boolean).map((source) => (
                         <SelectItem key={source} value={source}>
                           {source}
                         </SelectItem>

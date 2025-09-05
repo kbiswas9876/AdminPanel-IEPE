@@ -1,0 +1,374 @@
+'use client'
+
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { ArrowLeft, Save, Calendar, Clock, CheckCircle } from 'lucide-react'
+import { PublishTestModal } from './publish-test-modal'
+import type { TestQuestionSlot } from '@/lib/types'
+
+interface TestFinalizationStageProps {
+  questions: TestQuestionSlot[]
+  onPrevious: () => void
+  onSave: (testData: TestFormData) => Promise<void>
+  onPublish: (testData: TestFormData, publishData: PublishData) => Promise<void>
+  initialTestData?: {
+    name: string
+    description?: string
+    total_time_minutes: number
+    marks_per_correct: number
+    negative_marks_per_incorrect: number
+    result_policy?: 'instant' | 'scheduled'
+    result_release_at?: string | null
+  }
+}
+
+export interface TestFormData {
+  name: string
+  description: string
+  totalTimeMinutes: number
+  marksPerCorrect: number
+  negativeMarksPerIncorrect: number
+  resultPolicy: 'instant' | 'scheduled'
+  resultReleaseAt: string
+}
+
+export interface PublishData {
+  startTime: string
+  endTime: string
+}
+
+export function TestFinalizationStage({
+  questions,
+  onPrevious,
+  onSave,
+  onPublish,
+  initialTestData
+}: TestFinalizationStageProps) {
+  const [formData, setFormData] = useState<TestFormData>({
+    name: initialTestData?.name || '',
+    description: initialTestData?.description || '',
+    totalTimeMinutes: initialTestData?.total_time_minutes || 120,
+    marksPerCorrect: initialTestData?.marks_per_correct || 1,
+    negativeMarksPerIncorrect: initialTestData?.negative_marks_per_incorrect || 0.25,
+    resultPolicy: initialTestData?.result_policy || 'instant',
+    resultReleaseAt: initialTestData?.result_release_at || ''
+  })
+  
+  const [showPublishModal, setShowPublishModal] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {}
+    
+    if (!formData.name.trim()) {
+      newErrors.name = 'Test name is required'
+    }
+    
+    if (formData.totalTimeMinutes <= 0) {
+      newErrors.totalTimeMinutes = 'Total time must be greater than 0'
+    }
+    
+    if (formData.marksPerCorrect < 0) {
+      newErrors.marksPerCorrect = 'Marks per correct answer cannot be negative'
+    }
+    
+    if (formData.negativeMarksPerIncorrect < 0) {
+      newErrors.negativeMarksPerIncorrect = 'Negative marks cannot be negative'
+    }
+    
+    if (formData.resultPolicy === 'scheduled' && !formData.resultReleaseAt) {
+      newErrors.resultReleaseAt = 'Result release time is required for scheduled results'
+    }
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSaveAsDraft = async () => {
+    if (!validateForm()) return
+    
+    setIsSaving(true)
+    try {
+      await onSave(formData)
+    } catch (error) {
+      console.error('Error saving test:', error)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handlePublishClick = () => {
+    if (!validateForm()) return
+    setShowPublishModal(true)
+  }
+
+  const handlePublishConfirm = async (publishData: PublishData) => {
+    setIsSaving(true)
+    try {
+      await onPublish(formData, publishData)
+    } catch (error) {
+      console.error('Error publishing test:', error)
+    } finally {
+      setIsSaving(false)
+      setShowPublishModal(false)
+    }
+  }
+
+  const updateFormData = (field: keyof TestFormData, value: string | number) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }))
+    }
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      {/* Progress Indicator */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-800">
+              <CheckCircle className="h-5 w-5" />
+            </div>
+            <span className="text-sm font-medium text-green-800">
+              Test Blueprint ✓
+            </span>
+          </div>
+          
+          <div className="flex-1 h-0.5 bg-green-200 mx-4">
+            <div className="h-full bg-green-600" style={{ width: '100%' }} />
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-800">
+              <CheckCircle className="h-5 w-5" />
+            </div>
+            <span className="text-sm font-medium text-green-800">
+              Review & Refine ✓
+            </span>
+          </div>
+          
+          <div className="flex-1 h-0.5 bg-green-200 mx-4">
+            <div className="h-full bg-green-600" style={{ width: '100%' }} />
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white">
+              3
+            </div>
+            <span className="text-sm font-medium text-blue-600">
+              Finalize & Publish
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Test Summary */}
+      <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-medium text-blue-900">Test Summary</h3>
+            <p className="text-sm text-blue-700">
+              {questions.length} questions ready for finalization
+            </p>
+          </div>
+          <div className="text-sm text-blue-600">
+            Ready to publish
+          </div>
+        </div>
+      </div>
+
+      {/* Main Form */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Calendar className="h-5 w-5" />
+            <span>Test Rules & Publishing</span>
+          </CardTitle>
+          <CardDescription>
+            Set the final rules and publishing options for your test.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-8">
+          {/* A) Basic Settings */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900">Basic Settings</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="test-name">Test Name *</Label>
+                <Input
+                  id="test-name"
+                  value={formData.name}
+                  onChange={(e) => updateFormData('name', e.target.value)}
+                  placeholder="Enter test name..."
+                  className={errors.name ? 'border-red-300' : ''}
+                />
+                {errors.name && (
+                  <p className="text-sm text-red-600">{errors.name}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="test-description">Description (Optional)</Label>
+                <Textarea
+                  id="test-description"
+                  value={formData.description}
+                  onChange={(e) => updateFormData('description', e.target.value)}
+                  placeholder="Enter test description..."
+                  rows={3}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* B) Scoring & Timing */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900">Scoring & Timing</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="total-time">Total Time (minutes) *</Label>
+                <Input
+                  id="total-time"
+                  type="number"
+                  min="1"
+                  value={formData.totalTimeMinutes}
+                  onChange={(e) => updateFormData('totalTimeMinutes', Number(e.target.value))}
+                  className={errors.totalTimeMinutes ? 'border-red-300' : ''}
+                />
+                {errors.totalTimeMinutes && (
+                  <p className="text-sm text-red-600">{errors.totalTimeMinutes}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="marks-correct">Marks per Correct Answer *</Label>
+                <Input
+                  id="marks-correct"
+                  type="number"
+                  step="0.25"
+                  min="0"
+                  value={formData.marksPerCorrect}
+                  onChange={(e) => updateFormData('marksPerCorrect', Number(e.target.value))}
+                  className={errors.marksPerCorrect ? 'border-red-300' : ''}
+                />
+                {errors.marksPerCorrect && (
+                  <p className="text-sm text-red-600">{errors.marksPerCorrect}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="negative-marks">Negative Marks per Incorrect *</Label>
+                <Input
+                  id="negative-marks"
+                  type="number"
+                  step="0.25"
+                  min="0"
+                  value={formData.negativeMarksPerIncorrect}
+                  onChange={(e) => updateFormData('negativeMarksPerIncorrect', Number(e.target.value))}
+                  className={errors.negativeMarksPerIncorrect ? 'border-red-300' : ''}
+                />
+                {errors.negativeMarksPerIncorrect && (
+                  <p className="text-sm text-red-600">{errors.negativeMarksPerIncorrect}</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* C) Publishing Options */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900">Result Declaration Policy</h3>
+            <div className="space-y-4">
+              <div className="space-y-3">
+                <label className="flex items-center space-x-3">
+                  <input
+                    type="radio"
+                    name="resultPolicy"
+                    value="instant"
+                    checked={formData.resultPolicy === 'instant'}
+                    onChange={(e) => updateFormData('resultPolicy', e.target.value as 'instant' | 'scheduled')}
+                    className="w-4 h-4 text-blue-600"
+                  />
+                  <div>
+                    <span className="font-medium text-gray-900">Instantly on Submission</span>
+                    <p className="text-sm text-gray-600">Students see their results immediately after finishing the test.</p>
+                  </div>
+                </label>
+                
+                <label className="flex items-center space-x-3">
+                  <input
+                    type="radio"
+                    name="resultPolicy"
+                    value="scheduled"
+                    checked={formData.resultPolicy === 'scheduled'}
+                    onChange={(e) => updateFormData('resultPolicy', e.target.value as 'instant' | 'scheduled')}
+                    className="w-4 h-4 text-blue-600"
+                  />
+                  <div>
+                    <span className="font-medium text-gray-900">At a Fixed Date/Time</span>
+                    <p className="text-sm text-gray-600">Results are released at a specific future time.</p>
+                  </div>
+                </label>
+              </div>
+              
+              {formData.resultPolicy === 'scheduled' && (
+                <div className="ml-7 space-y-2">
+                  <Label htmlFor="result-release">Result Release Date & Time *</Label>
+                  <Input
+                    id="result-release"
+                    type="datetime-local"
+                    value={formData.resultReleaseAt}
+                    onChange={(e) => updateFormData('resultReleaseAt', e.target.value)}
+                    className={errors.resultReleaseAt ? 'border-red-300' : ''}
+                  />
+                  {errors.resultReleaseAt && (
+                    <p className="text-sm text-red-600">{errors.resultReleaseAt}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Action Buttons */}
+      <div className="flex justify-between mt-8">
+        <Button variant="outline" onClick={onPrevious}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Previous: Review & Refine
+        </Button>
+        
+        <div className="flex space-x-4">
+          <Button
+            variant="outline"
+            onClick={handleSaveAsDraft}
+            disabled={isSaving}
+            className="flex items-center space-x-2"
+          >
+            <Save className="h-4 w-4" />
+            <span>{isSaving ? 'Saving...' : 'Save as Draft'}</span>
+          </Button>
+          
+          <Button
+            onClick={handlePublishClick}
+            disabled={isSaving}
+            className="bg-blue-600 hover:bg-blue-700 flex items-center space-x-2"
+          >
+            <Clock className="h-4 w-4" />
+            <span>Publish Test</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Publish Test Modal */}
+      <PublishTestModal
+        open={showPublishModal}
+        onClose={() => setShowPublishModal(false)}
+        onConfirm={handlePublishConfirm}
+        isProcessing={isSaving}
+      />
+    </div>
+  )
+}

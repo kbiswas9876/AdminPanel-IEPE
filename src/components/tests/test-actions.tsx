@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { deleteTest } from '@/lib/actions/tests'
+import { deleteTest, cloneTest, exportTestToPdf } from '@/lib/actions/tests'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -53,6 +53,35 @@ export function TestActions({ test, onAction }: TestActionsProps) {
 
   const handlePublish = () => {
     onAction() // Refresh the list after publishing
+  }
+
+  const handleClone = async () => {
+    try {
+      const res = await cloneTest(test.id)
+      if (!res.success) {
+        console.error('Clone failed:', res.message)
+      } else {
+        onAction()
+      }
+    } catch (e) {
+      console.error('Clone error:', e)
+    }
+  }
+
+  const handleExport = async () => {
+    try {
+      const res = await exportTestToPdf(test.id)
+      if (res.success && res.base64 && res.fileName) {
+        const link = document.createElement('a')
+        link.href = `data:application/pdf;base64,${res.base64}`
+        link.download = res.fileName
+        link.click()
+      } else {
+        console.error('Export failed:', res.message)
+      }
+    } catch (e) {
+      console.error('Export error:', e)
+    }
   }
 
   return (
@@ -133,11 +162,11 @@ export function TestActions({ test, onAction }: TestActionsProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem disabled>
+          <DropdownMenuItem onClick={handleExport}>
             <FileDown className="h-4 w-4 mr-2" />
             Export to PDF
           </DropdownMenuItem>
-          <DropdownMenuItem disabled>
+          <DropdownMenuItem onClick={handleClone}>
             <Copy className="h-4 w-4 mr-2" />
             Clone Test
           </DropdownMenuItem>

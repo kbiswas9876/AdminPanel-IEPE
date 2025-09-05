@@ -20,7 +20,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { searchQuestions } from '@/lib/actions/tests'
-import type { Question } from '@/lib/supabase/admin'
+import type { Question } from '@/lib/types'
 
 interface MasterQuestionBankModalProps {
   open: boolean
@@ -47,7 +47,7 @@ export function MasterQuestionBankModal({ open, onClose, onSelect, initialChapte
         search,
         book_source: bookSource || undefined,
         chapter_name: chapterName || undefined,
-        difficulty: (difficulty as any) || undefined,
+        difficulty: (difficulty as 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard') || undefined,
         page,
         pageSize,
       })
@@ -123,7 +123,7 @@ export function MasterQuestionBankModal({ open, onClose, onSelect, initialChapte
                     <TableCell>{q.question_id}</TableCell>
                     <TableCell className="max-w-xl truncate">{q.question_text}</TableCell>
                     <TableCell>{q.chapter_name}</TableCell>
-                    <TableCell>{(q as any).difficulty || '-'}</TableCell>
+                    <TableCell>{(q as Question).difficulty || '-'}</TableCell>
                     <TableCell className="text-right">
                       <Button size="sm" onClick={() => { onSelect(q); onClose() }}>Select</Button>
                     </TableCell>
@@ -145,5 +145,6 @@ export function MasterQuestionBankModal({ open, onClose, onSelect, initialChapte
     </Dialog>
   )
 }
+
 
 

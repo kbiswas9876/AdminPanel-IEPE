@@ -3,6 +3,9 @@
 import { createAdminClient, type Test, type TestCreationData } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import type { Question } from '@/lib/supabase/admin'
+import { redirect } from 'next/navigation'
+import type { TestQuestionSlot, TestBlueprint } from '@/lib/types'
+// Types are imported from the central types file when needed
 
 // Get all tests
 export async function getAllTests(): Promise<Test[]> {
@@ -41,7 +44,7 @@ export async function getAllTestsWithCounts(): Promise<Array<Test & { question_c
       return []
     }
 
-    const result: Array<Test & { question_count: number }> = (data as any[]).map((row) => {
+    const result: Array<Test & { question_count: number }> = (data as Array<Test & { test_questions: Array<{ count: number }> }>).map((row) => {
       const { test_questions, ...testFields } = row
       const count = Array.isArray(test_questions) && test_questions.length > 0 && typeof test_questions[0].count === 'number'
         ? test_questions[0].count
@@ -139,24 +142,24 @@ export async function getChaptersWithTags(): Promise<Array<{ chapter_name: strin
   }
 }
 
-// Types for blueprint-driven generation
-export type DifficultyLevel = 'Easy' | 'Moderate' | 'Hard'
+// Types for blueprint-driven generation (rules-based)
+export type RuleRow = { tag: string | null; difficulty: string | null; quantity: number }
 export type BlueprintInput = Record<string, {
   random?: number
-  tags?: Record<string, number>
-  difficulty?: Record<DifficultyLevel, number>
+  rules?: RuleRow[]
 }>
 
 export interface GeneratedTestSlot {
   chapter_name: string
-  source_type: 'random' | 'tag' | 'difficulty'
-  source_value?: string
+  source_type: 'random' | 'rule'
+  rule_tag?: string | null
+  rule_difficulty?: string | null
   question: Question
 }
 
 async function fetchCandidateQuestions(
   supabase: ReturnType<typeof createAdminClient>,
-  criteria: { chapter_name: string; tag?: string; difficulty?: DifficultyLevel },
+  criteria: { chapter_name: string; tag?: string | null; difficulty?: string | null },
   excludeIds: number[]
 ): Promise<Question[]> {
   // Build base query
@@ -168,11 +171,14 @@ async function fetchCandidateQuestions(
   if (criteria.tag) {
     // admin_tags contains tag -> use Postgres array contains operator '@>' emulated via cs in Postgrest
     // However, Postgrest 'cs' checks json contains; for array use 'contains' filter
-    query = query.contains('admin_tags', [criteria.tag] as any)
+    query = query.contains('admin_tags', [criteria.tag] as string[])
   }
 
   if (criteria.difficulty) {
     query = query.eq('difficulty', criteria.difficulty)
+  }
+  if (excludeIds.length > 0) {
+    query = query.not('id', 'in', `(${excludeIds.join(',')})`)
   }
 
   const { data, error } = await query
@@ -182,7 +188,7 @@ async function fetchCandidateQuestions(
     return []
   }
 
-  // Exclude already picked ids
+  // Exclude already picked ids (extra guard)
   const filtered = (data as Question[]).filter((q) => !excludeIds.includes(q.id as number))
 
   return filtered
@@ -221,30 +227,20 @@ export async function generateTestPaperFromBlueprint(
         }
       }
 
-      // B) Tags
-      if (config.tags) {
-        for (const tag of Object.keys(config.tags)) {
-          const need = config.tags[tag] || 0
+      // B) Rules (tag + difficulty combinations)
+      if (Array.isArray(config.rules)) {
+        for (const rule of config.rules) {
+          const need = rule.quantity || 0
           if (need <= 0) continue
-          const candidates = await fetchCandidateQuestions(supabase, { chapter_name: chapter, tag }, selectedIds)
+          const candidates = await fetchCandidateQuestions(
+            supabase,
+            { chapter_name: chapter, tag: rule.tag ?? null, difficulty: rule.difficulty ?? null },
+            selectedIds
+          )
           const picks = takeRandom(candidates, need)
           for (const q of picks) {
             if (q.id != null) selectedIds.push(q.id as number)
-            slots.push({ chapter_name: chapter, source_type: 'tag', source_value: tag, question: q })
-          }
-        }
-      }
-
-      // C) Difficulty
-      if (config.difficulty) {
-        for (const level of Object.keys(config.difficulty) as DifficultyLevel[]) {
-          const need = config.difficulty[level] || 0
-          if (need <= 0) continue
-          const candidates = await fetchCandidateQuestions(supabase, { chapter_name: chapter, difficulty: level }, selectedIds)
-          const picks = takeRandom(candidates, need)
-          for (const q of picks) {
-            if (q.id != null) selectedIds.push(q.id as number)
-            slots.push({ chapter_name: chapter, source_type: 'difficulty', source_value: level, question: q })
+            slots.push({ chapter_name: chapter, source_type: 'rule', rule_tag: rule.tag ?? null, rule_difficulty: rule.difficulty ?? null, question: q })
           }
         }
       }
@@ -260,17 +256,20 @@ export async function generateTestPaperFromBlueprint(
 // Regenerate a single question based on slot criteria
 export async function regenerateSingleQuestion(args: {
   chapter_name: string
-  source_type: 'random' | 'tag' | 'difficulty'
-  source_value?: string
+  source_type: 'random' | 'rule'
+  rule_tag?: string | null
+  rule_difficulty?: string | null
   exclude_ids: number[]
 }): Promise<Question | null> {
   try {
     const supabase = createAdminClient()
-    const criteria: { chapter_name: string; tag?: string; difficulty?: DifficultyLevel } = {
+    const criteria: { chapter_name: string; tag?: string | null; difficulty?: string | null } = {
       chapter_name: args.chapter_name
     }
-    if (args.source_type === 'tag' && args.source_value) criteria.tag = args.source_value
-    if (args.source_type === 'difficulty' && args.source_value) criteria.difficulty = args.source_value as DifficultyLevel
+    if (args.source_type === 'rule') {
+      if (args.rule_tag) criteria.tag = args.rule_tag
+      if (args.rule_difficulty) criteria.difficulty = args.rule_difficulty
+    }
 
     const candidates = await fetchCandidateQuestions(supabase, criteria, args.exclude_ids)
     const pick = takeRandom(candidates, 1)[0]
@@ -287,7 +286,7 @@ export async function searchQuestions(args: {
   book_source?: string
   chapter_name?: string
   tags?: string[]
-  difficulty?: DifficultyLevel
+  difficulty?: 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard'
   page?: number
   pageSize?: number
 }): Promise<{ questions: Question[]; total: number }> {
@@ -304,7 +303,7 @@ export async function searchQuestions(args: {
     }
     if (args.book_source) query = query.eq('book_source', args.book_source)
     if (args.chapter_name) query = query.eq('chapter_name', args.chapter_name)
-    if (args.tags && args.tags.length > 0) query = query.contains('admin_tags', args.tags as any)
+    if (args.tags && args.tags.length > 0) query = query.contains('admin_tags', args.tags as string[])
     if (args.difficulty) query = query.eq('difficulty', args.difficulty)
 
     const from = (page - 1) * pageSize
@@ -320,6 +319,104 @@ export async function searchQuestions(args: {
   } catch (error) {
     console.error('Unexpected error searching questions:', error)
     return { questions: [], total: 0 }
+  }
+}
+
+// Save test (draft or scheduled) with curated question IDs
+export async function saveTest(args: {
+  testId?: number
+  name: string
+  description?: string
+  total_time_minutes: number
+  marks_per_correct: number
+  negative_marks_per_incorrect: number
+  result_policy: 'instant' | 'scheduled'
+  result_release_at?: string | null
+  question_ids: number[]
+  publish?: {
+    start_time: string
+    end_time: string
+  } | null
+}): Promise<{ success: boolean; message: string; testId?: number }> {
+  try {
+    const supabase = createAdminClient()
+
+    // Insert or update tests row
+    const status = args.publish ? 'scheduled' : 'draft'
+    let testId = args.testId
+
+    if (testId) {
+      const { error } = await supabase
+        .from('tests')
+        .update({
+          name: args.name,
+          description: args.description,
+          total_time_minutes: args.total_time_minutes,
+          marks_per_correct: args.marks_per_correct,
+          negative_marks_per_incorrect: args.negative_marks_per_incorrect,
+          result_policy: args.result_policy,
+          result_release_at: args.result_policy === 'scheduled' ? (args.result_release_at || null) : null,
+          status,
+          start_time: args.publish?.start_time || null,
+          end_time: args.publish?.end_time || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', testId)
+
+      if (error) {
+        console.error('Error updating test:', error)
+        return { success: false, message: `Failed to update test: ${error.message}` }
+      }
+    } else {
+      const { data, error } = await supabase
+        .from('tests')
+        .insert([{
+          name: args.name,
+          description: args.description,
+          total_time_minutes: args.total_time_minutes,
+          marks_per_correct: args.marks_per_correct,
+          negative_marks_per_incorrect: args.negative_marks_per_incorrect,
+          result_policy: args.result_policy,
+          result_release_at: args.result_policy === 'scheduled' ? (args.result_release_at || null) : null,
+          status,
+          start_time: args.publish?.start_time || null,
+          end_time: args.publish?.end_time || null,
+        }])
+        .select()
+        .single()
+
+      if (error || !data) {
+        console.error('Error creating test:', error)
+        return { success: false, message: `Failed to create test: ${error?.message}` }
+      }
+      testId = data.id
+    }
+
+    // Clean existing mappings
+    const { error: delErr } = await supabase
+      .from('test_questions')
+      .delete()
+      .eq('test_id', testId!)
+    if (delErr) {
+      console.error('Error clearing test_questions:', delErr)
+      return { success: false, message: `Failed to reset test questions: ${delErr.message}` }
+    }
+
+    // Batch insert mappings
+    const mappings = (args.question_ids || []).map((qid) => ({ test_id: testId!, question_id: qid }))
+    if (mappings.length > 0) {
+      const { error: insErr } = await supabase.from('test_questions').insert(mappings)
+      if (insErr) {
+        console.error('Error inserting test_questions:', insErr)
+        return { success: false, message: `Failed to add questions: ${insErr.message}` }
+      }
+    }
+
+    revalidatePath('/tests')
+    redirect('/tests')
+  } catch (error) {
+    console.error('Unexpected error saving test:', error)
+    return { success: false, message: 'Unexpected error while saving test' }
   }
 }
 
@@ -611,3 +708,238 @@ export async function getTestDetails(testId: number): Promise<{ test: Test | nul
     return { test: null, questionCount: 0 }
   }
 }
+
+// Fetch full details for editing: test metadata + question IDs
+export async function getTestDetailsForEdit(testId: number): Promise<{
+  test: Test
+  questions: TestQuestionSlot[]
+  blueprint: TestBlueprint
+} | null> {
+  try {
+    const supabase = createAdminClient()
+
+    // Get test metadata
+    const { data: test, error: testError } = await supabase
+      .from('tests')
+      .select('*')
+      .eq('id', testId)
+      .single()
+
+    if (testError || !test) {
+      console.error('Error fetching test:', testError)
+      return null
+    }
+
+    // Get test questions with full question data
+    const { data: testQuestions, error: questionsError } = await supabase
+      .from('test_questions')
+      .select(`
+        question_id,
+        questions (
+          id,
+          created_at,
+          question_id,
+          book_source,
+          chapter_name,
+          question_number_in_book,
+          question_text,
+          options,
+          correct_option,
+          solution_text,
+          exam_metadata,
+          admin_tags,
+          difficulty
+        )
+      `)
+      .eq('test_id', testId)
+
+    if (questionsError || !testQuestions) {
+      console.error('Error fetching test questions:', questionsError)
+      return null
+    }
+
+    // Transform to TestQuestionSlot format
+    const questions: TestQuestionSlot[] = (testQuestions as unknown as Array<{ question_id: number; questions: Question }>).map((tq) => ({
+      question: tq.questions,
+      source_type: 'random' as const, // Default for existing tests
+      rule_tag: null,
+      rule_difficulty: null,
+      chapter_name: tq.questions.chapter_name
+    }))
+
+    // Generate blueprint from questions
+    const blueprint: TestBlueprint = {}
+    questions.forEach((slot) => {
+      const chapter = slot.chapter_name
+      if (!blueprint[chapter]) {
+        blueprint[chapter] = { random: 0 }
+      }
+      blueprint[chapter].random = (blueprint[chapter].random || 0) + 1
+    })
+
+    return {
+      test,
+      questions,
+      blueprint
+    }
+  } catch (error) {
+    console.error('Error getting test details for edit:', error)
+    return null
+  }
+}
+
+// Clone a test: duplicate metadata and question mappings as a new draft
+export async function cloneTest(testId: number): Promise<{ success: boolean; message: string; newTestId?: number }> {
+  try {
+    const supabase = createAdminClient()
+
+    // Fetch original
+    const { data: original, error: testError } = await supabase
+      .from('tests')
+      .select('*')
+      .eq('id', testId)
+      .single()
+    if (testError || !original) {
+      console.error('Error fetching original test:', testError)
+      return { success: false, message: 'Original test not found' }
+    }
+
+    const { data: mappings, error: mapErr } = await supabase
+      .from('test_questions')
+      .select('question_id')
+      .eq('test_id', testId)
+    if (mapErr) {
+      console.error('Error fetching mappings for clone:', mapErr)
+      return { success: false, message: 'Failed to read original questions' }
+    }
+
+    // Create new test
+    const { data: created, error: createErr } = await supabase
+      .from('tests')
+      .insert([{
+        name: `${original.name} (Copy)`,
+        description: original.description,
+        total_time_minutes: original.total_time_minutes,
+        marks_per_correct: original.marks_per_correct,
+        negative_marks_per_incorrect: original.negative_marks_per_incorrect,
+        result_policy: 'instant',
+        result_release_at: null,
+        status: 'draft',
+      }])
+      .select()
+      .single()
+    if (createErr || !created) {
+      console.error('Error creating cloned test:', createErr)
+      return { success: false, message: 'Failed to create cloned test' }
+    }
+
+    const newTestId = created.id as number
+    const questionIds = (mappings || []).map((m) => m.question_id as number)
+    if (questionIds.length > 0) {
+      const insertData = questionIds.map((qid) => ({ test_id: newTestId, question_id: qid }))
+      const { error: insErr } = await supabase.from('test_questions').insert(insertData)
+      if (insErr) {
+        console.error('Error inserting cloned mappings:', insErr)
+        return { success: false, message: 'Cloned, but failed to attach questions' }
+      }
+    }
+
+    revalidatePath('/tests')
+    return { success: true, message: 'Test cloned', newTestId }
+  } catch (error) {
+    console.error('Unexpected error cloning test:', error)
+    return { success: false, message: 'Unexpected error' }
+  }
+}
+
+// Export test to PDF: render simple HTML and convert via Puppeteer to base64
+export async function exportTestToPdf(testId: number): Promise<{ success: boolean; fileName?: string; base64?: string; message?: string }> {
+  try {
+    const supabase = createAdminClient()
+
+    // Fetch test
+    const { data: test, error: testErr } = await supabase
+      .from('tests')
+      .select('*')
+      .eq('id', testId)
+      .single()
+    if (testErr || !test) {
+      console.error('Error fetching test for export:', testErr)
+      return { success: false, message: 'Test not found' }
+    }
+
+    // Fetch questions with join via two-step
+    const { data: mappings, error: mapErr } = await supabase
+      .from('test_questions')
+      .select('question_id')
+      .eq('test_id', testId)
+    if (mapErr) {
+      console.error('Error fetching mappings for export:', mapErr)
+      return { success: false, message: 'Failed to read test questions' }
+    }
+    const ids = (mappings || []).map((m) => m.question_id)
+    let questions: Question[] = []
+    if (ids.length > 0) {
+      const { data: qs, error: qErr } = await supabase
+        .from('questions')
+        .select('*')
+        .in('id', ids)
+      if (qErr) {
+        console.error('Error fetching questions for export:', qErr)
+        return { success: false, message: 'Failed to load question data' }
+      }
+      questions = (qs || []) as Question[]
+    }
+
+    // Generate simple HTML for PDF
+    const html = `<!doctype html>
+<html><head><meta charset="utf-8" />
+<style>
+  body { font-family: Arial, sans-serif; font-size: 12px; }
+  h1 { font-size: 18px; margin-bottom: 8px; }
+  .meta { color: #555; margin-bottom: 16px; }
+  .q { margin-bottom: 14px; }
+  .qid { color: #666; font-size: 11px; }
+  .options { margin-left: 16px; }
+  .options li { margin: 4px 0; }
+  .answer { color: #0a0; font-weight: 600; }
+</style>
+</head><body>
+  <h1>${test.name}</h1>
+  <div class="meta">
+    Duration: ${test.total_time_minutes} min | Marks/correct: ${test.marks_per_correct} | Negative: ${test.negative_marks_per_incorrect}
+  </div>
+  ${questions
+    .map((q, idx) => `
+      <div class="q">
+        <div class="qid">Q${idx + 1}. ${q.question_id} — ${q.chapter_name} (${(q as Question & { difficulty?: string }).difficulty || '-'})</div>
+        <div>${q.question_text}</div>
+        ${q.options ? `<ul class="options">
+          <li>A. ${q.options.a}</li>
+          <li>B. ${q.options.b}</li>
+          <li>C. ${q.options.c}</li>
+          <li>D. ${q.options.d}</li>
+        </ul>` : ''}
+        <div class="answer">Answer: ${(q as Question & { correct_option?: string }).correct_option?.toUpperCase() || '-'}</div>
+      </div>
+    `)
+    .join('')}
+</body></html>`
+
+    // Dynamic import puppeteer to avoid bundling if not used
+    const puppeteer = await import('puppeteer')
+    const browser = await puppeteer.launch({ headless: true })
+    const page = await browser.newPage()
+    await page.setContent(html, { waitUntil: 'networkidle0' })
+    const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true, margin: { top: '14mm', bottom: '14mm', left: '12mm', right: '12mm' } })
+    await browser.close()
+
+    const base64 = Buffer.from(pdfBuffer).toString('base64')
+    const safeName = `${test.name || 'Test'}-${testId}.pdf`.replace(/[^a-z0-9\-_.]/gi, '_')
+    return { success: true, fileName: safeName, base64 }
+  } catch (error) {
+    console.error('Export to PDF failed:', error)
+    return { success: false, message: 'Failed to export PDF. Ensure puppeteer is installed.' }
+  }
+}
+

@@ -1,35 +1,43 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
 import { getChapterQuestionCount, getChaptersWithTags, generateTestPaperFromBlueprint, regenerateSingleQuestion } from '@/lib/actions/tests'
-import type { TestBlueprint } from '@/lib/supabase/admin'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { ArrowLeft, ArrowRight, Plus, Minus, FileText, Settings, RefreshCw, Pencil } from 'lucide-react'
+import { ArrowRight, FileText } from 'lucide-react'
 import Link from 'next/link'
-import type { Question } from '@/lib/supabase/admin'
-import { MasterQuestionBankModal } from './master-question-bank-modal'
+import type { TestQuestionSlot, ChapterInfo, BlueprintRule, ChapterBlueprint, TestBlueprint } from '@/lib/types'
+import type { Test } from '@/lib/supabase/admin'
+import { ReviewRefineInterface } from './review-refine-interface'
+import { TestFinalizationStage, type TestFormData, type PublishData } from './test-finalization-stage'
+import { saveTest } from '@/lib/actions/tests'
 
-type RuleRow = { tag: string | null; difficulty: string | null; quantity: number }
-type BlueprintState = Record<string, {
-  random?: number
-  rules?: RuleRow[]
-}>
+type BlueprintState = Record<string, ChapterBlueprint>
 
-export function TestCreationWizard() {
-  const router = useRouter()
+interface TestCreationWizardProps {
+  initialData?: {
+    test: Test
+    questions: TestQuestionSlot[]
+    blueprint: TestBlueprint
+  }
+  isEditMode?: boolean
+  testId?: number
+}
+
+export function TestCreationWizard({ 
+  initialData, 
+  isEditMode = false, 
+  testId 
+}: TestCreationWizardProps = {}) {
   const [currentStep, setCurrentStep] = useState(1)
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
   // Step 1: Test Blueprint
-  const [chapters, setChapters] = useState<Array<{ name: string; available: number; tags: string[]; difficultyCounts: Record<string, number> }>>([])
-  const [blueprint, setBlueprint] = useState<BlueprintState>({})
+  const [chapters, setChapters] = useState<ChapterInfo[]>([])
+  const [blueprint, setBlueprint] = useState<BlueprintState>(initialData?.blueprint || {})
   const difficultyLevels: string[] = ['Easy', 'Easy-Moderate', 'Moderate', 'Moderate-Hard', 'Hard']
 
   const totalQuestions = useMemo(() => {
@@ -45,22 +53,9 @@ export function TestCreationWizard() {
     return total
   }, [blueprint])
   
-  // Step 2: Test Rules
-  const [testName, setTestName] = useState('')
-  const [testDescription, setTestDescription] = useState('')
-  const [totalTimeMinutes, setTotalTimeMinutes] = useState(120)
-  const [marksPerCorrect, setMarksPerCorrect] = useState(1)
-  const [negativeMarksPerIncorrect, setNegativeMarksPerIncorrect] = useState(0.25)
 
   // Stage 2: Review & Refine
-  const [reviewQuestions, setReviewQuestions] = useState<Array<{
-    chapter_name: string
-    source_type: 'random' | 'tag' | 'difficulty'
-    source_value?: string
-    question: Question
-  }>>([])
-  const [overrideIndex, setOverrideIndex] = useState<number | null>(null)
-  const [modalOpen, setModalOpen] = useState(false)
+  const [reviewQuestions, setReviewQuestions] = useState<TestQuestionSlot[]>(initialData?.questions || [])
 
   useEffect(() => {
     const fetchChapters = async () => {
@@ -103,13 +98,13 @@ export function TestCreationWizard() {
         ...prev,
         [chapterName]: {
           ...current,
-          rules: [...currentRules, { tag: null, difficulty: null, quantity: 0 }]
+          rules: [...currentRules, { tag: null, difficulty: null, quantity: 0 } as BlueprintRule]
         }
       }
     })
   }
 
-  const updateRule = (chapterName: string, index: number, patch: Partial<RuleRow>) => {
+  const updateRule = (chapterName: string, index: number, patch: Partial<BlueprintRule>) => {
     setBlueprint((prev) => {
       const current = prev[chapterName] || {}
       const currentRules = current.rules || []
@@ -148,7 +143,6 @@ export function TestCreationWizard() {
         setError('Please select at least one question for your test')
         return
       }
-      setLoading(true)
       generateTestPaperFromBlueprint(blueprint)
         .then((slots) => {
           setReviewQuestions(slots)
@@ -159,7 +153,6 @@ export function TestCreationWizard() {
           console.error('Failed to generate test paper:', err)
           setError('Failed to generate test paper')
         })
-        .finally(() => setLoading(false))
       return
     }
     setCurrentStep(2)
@@ -175,10 +168,25 @@ export function TestCreationWizard() {
     const slot = reviewQuestions[index]
     if (!slot) return
     const exclude = reviewQuestions.map((s) => s.question.id as number).filter(Boolean)
+    
+    // Map the source_type to the expected format
+    let sourceType: 'random' | 'rule' = 'random'
+    let ruleTag: string | null = null
+    let ruleDifficulty: string | null = null
+    
+    if (slot.source_type === 'tag' && slot.source_value) {
+      sourceType = 'rule'
+      ruleTag = slot.source_value
+    } else if (slot.source_type === 'difficulty' && slot.source_value) {
+      sourceType = 'rule'
+      ruleDifficulty = slot.source_value
+    }
+    
     const newQ = await regenerateSingleQuestion({
       chapter_name: slot.chapter_name,
-      source_type: slot.source_type,
-      source_value: slot.source_value,
+      source_type: sourceType,
+      rule_tag: ruleTag,
+      rule_difficulty: ruleDifficulty,
       exclude_ids: exclude,
     })
     if (newQ) {
@@ -188,19 +196,43 @@ export function TestCreationWizard() {
     }
   }
 
-  const handleOverrideAt = (index: number) => {
-    setOverrideIndex(index)
-    setModalOpen(true)
+  const handleSaveTest = async (testData: TestFormData) => {
+    const questionIds = reviewQuestions.map((slot) => slot.question.id as number).filter(Boolean)
+    
+    await saveTest({
+      testId: isEditMode ? testId : undefined,
+      name: testData.name,
+      description: testData.description || undefined,
+      total_time_minutes: testData.totalTimeMinutes,
+      marks_per_correct: testData.marksPerCorrect,
+      negative_marks_per_incorrect: testData.negativeMarksPerIncorrect,
+      result_policy: testData.resultPolicy,
+      result_release_at: testData.resultPolicy === 'scheduled' ? testData.resultReleaseAt : null,
+      question_ids: questionIds,
+      publish: null // Save as draft
+    })
   }
 
-  const handleSelectOverride = (q: Question) => {
-    if (overrideIndex == null) return
-    const slot = reviewQuestions[overrideIndex]
-    const copy = [...reviewQuestions]
-    copy[overrideIndex] = { ...slot, question: q }
-    setReviewQuestions(copy)
-    setOverrideIndex(null)
+  const handlePublishTest = async (testData: TestFormData, publishData: PublishData) => {
+    const questionIds = reviewQuestions.map((slot) => slot.question.id as number).filter(Boolean)
+    
+    await saveTest({
+      testId: isEditMode ? testId : undefined,
+      name: testData.name,
+      description: testData.description || undefined,
+      total_time_minutes: testData.totalTimeMinutes,
+      marks_per_correct: testData.marksPerCorrect,
+      negative_marks_per_incorrect: testData.negativeMarksPerIncorrect,
+      result_policy: testData.resultPolicy,
+      result_release_at: testData.resultPolicy === 'scheduled' ? testData.resultReleaseAt : null,
+      question_ids: questionIds,
+      publish: {
+        start_time: publishData.startTime,
+        end_time: publishData.endTime
+      }
+    })
   }
+
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -318,7 +350,7 @@ export function TestCreationWizard() {
                                     <SelectTrigger className="w-full"><SelectValue placeholder="Any Tag" /></SelectTrigger>
                                     <SelectContent>
                                       <SelectItem value="any">Any Tag</SelectItem>
-                                      {chapter.tags.map((t) => (
+                                      {chapter.tags.filter(Boolean).map((t) => (
                                         <SelectItem key={t} value={t}>{t}</SelectItem>
                                       ))}
                                     </SelectContent>
@@ -366,130 +398,49 @@ export function TestCreationWizard() {
 
       {/* Step 2: Review & Refine */}
       {currentStep === 2 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Settings className="h-5 w-5" />
-              <span>Review & Refine</span>
-            </CardTitle>
-            <CardDescription>
-              Review generated questions, regenerate individual items, or manually override.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              <div className="space-y-4">
-                {reviewQuestions.length === 0 ? (
-                  <p className="text-sm text-gray-600">No questions generated yet.</p>
-                ) : (
-                  Object.entries(
-                    reviewQuestions.reduce((acc: Record<string, typeof reviewQuestions>, item) => {
-                      const key = item.chapter_name || 'Uncategorized'
-                      if (!acc[key]) acc[key] = []
-                      acc[key].push(item)
-                      return acc
-                    }, {})
-                  ).map(([chapter, items]) => (
-                    <div key={chapter} className="border rounded-lg">
-                      <div className="px-4 py-2 border-b bg-gray-50 font-medium">{chapter}</div>
-                      <div className="divide-y">
-                        {items.map((slot) => {
-                          const index = reviewQuestions.indexOf(slot)
-                          const q = slot.question
-                          return (
-                            <div key={index} className="p-4">
-                              <div className="flex items-start justify-between">
-                                <div className="pr-4">
-                                  <div className="text-sm text-gray-500 mb-1">
-                                    Source: {slot.source_type}{slot.source_value ? ` / ${slot.source_value}` : ''}
-                                  </div>
-                                  <div className="font-medium mb-2">{q.question_id} — {q.chapter_name}</div>
-                                  <div className="prose prose-sm max-w-none mb-2">{q.question_text}</div>
-                                  <ul className="text-sm text-gray-800 mb-2 list-disc pl-5">
-                                    {q.options && (
-                                      <>
-                                        <li>A. {q.options.a}</li>
-                                        <li>B. {q.options.b}</li>
-                                        <li>C. {q.options.c}</li>
-                                        <li>D. {q.options.d}</li>
-                                      </>
-                                    )}
-                                  </ul>
-                                  <div className="text-sm mb-2">Correct: <span className="font-semibold uppercase">{q.correct_option}</span></div>
-                                  <div className="text-xs text-gray-600">
-                                    Book: {q.book_source} • No: {q.question_number_in_book ?? '-'} • Difficulty: {(q as any).difficulty ?? '-'}
-                                  </div>
-                                  <div className="text-xs text-gray-600">
-                                    Tags: {(q.admin_tags || []).join(', ') || '-'}
-                                  </div>
-                                </div>
-                                <div className="flex flex-col space-y-2">
-                                  <Button variant="outline" size="sm" onClick={() => handleRegenerateAt(index)}>
-                                    <RefreshCw className="h-4 w-4 mr-1" /> Regenerate
-                                  </Button>
-                                  <Button variant="outline" size="sm" onClick={() => handleOverrideAt(index)}>
-                                    <Pencil className="h-4 w-4 mr-1" /> Manual Override
-                                  </Button>
-                                </div>
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-medium text-gray-900 mb-2">Current Selection</h3>
-                <div className="text-sm text-gray-700">Total Questions: {reviewQuestions.length}</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <ReviewRefineInterface
+          questions={reviewQuestions}
+          onQuestionsChange={setReviewQuestions}
+          onRegenerate={handleRegenerateAt}
+          onEdit={(index) => {
+            // Placeholder for edit functionality
+            console.log('Edit question at index:', index)
+          }}
+          onPrevious={handlePrevious}
+          onNext={() => setCurrentStep(3)}
+        />
       )}
 
-      {/* Navigation Buttons */}
-      <div className="flex justify-between mt-8">
-        <div>
-          {currentStep === 2 && (
-            <Button variant="outline" onClick={handlePrevious}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Previous
-            </Button>
-          )}
-        </div>
-        
-        <div className="flex space-x-4">
-          <Link href="/tests">
-            <Button variant="outline">Cancel</Button>
-          </Link>
+      {/* Step 3: Finalize & Publish */}
+      {currentStep === 3 && (
+        <TestFinalizationStage
+          questions={reviewQuestions}
+          onPrevious={() => setCurrentStep(2)}
+          onSave={handleSaveTest}
+          onPublish={handlePublishTest}
+          initialTestData={isEditMode ? initialData?.test : undefined}
+        />
+      )}
+
+      {/* Navigation Buttons - Only for Step 1 */}
+      {currentStep === 1 && (
+        <div className="flex justify-between mt-8">
+          <div></div>
           
-          {currentStep === 1 ? (
+          <div className="flex space-x-4">
+            <Link href="/tests">
+              <Button variant="outline">Cancel</Button>
+            </Link>
+            
             <Button onClick={handleNext} disabled={totalQuestions === 0}>
               Next
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
-          ) : (
-            <Button 
-              onClick={() => console.log('Proceed to rules with question IDs:', reviewQuestions.map((s) => s.question.id))}
-              disabled={loading || reviewQuestions.length === 0}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              Next: Set Rules & Publish
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </Button>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
-      <MasterQuestionBankModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSelect={handleSelectOverride}
-        initialChapter={overrideIndex != null ? reviewQuestions[overrideIndex]?.chapter_name : undefined}
-      />
+
     </div>
   )
 }
