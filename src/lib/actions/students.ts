@@ -172,4 +172,76 @@ export async function suspendUser(userId: string): Promise<{ success: boolean; m
   }
 }
 
+// Promote a user to admin
+export async function promoteToAdmin(userId: string): Promise<{ success: boolean; message: string }> {
+  try {
+    const supabase = createAdminClient()
+    
+    const { error } = await supabase
+      .from('user_profiles')
+      .update({ 
+        role: 'admin',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId)
+    
+    if (error) {
+      console.error('Error promoting user to admin:', error)
+      return {
+        success: false,
+        message: `Failed to promote user: ${error.message}`
+      }
+    }
+    
+    revalidatePath('/students')
+    
+    return {
+      success: true,
+      message: 'User promoted to admin successfully!'
+    }
+  } catch (error) {
+    console.error('Error promoting user to admin:', error)
+    return {
+      success: false,
+      message: 'An unexpected error occurred while promoting the user'
+    }
+  }
+}
+
+// Demote an admin to student
+export async function demoteToStudent(userId: string): Promise<{ success: boolean; message: string }> {
+  try {
+    const supabase = createAdminClient()
+    
+    const { error } = await supabase
+      .from('user_profiles')
+      .update({ 
+        role: 'student',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId)
+    
+    if (error) {
+      console.error('Error demoting admin to student:', error)
+      return {
+        success: false,
+        message: `Failed to demote user: ${error.message}`
+      }
+    }
+    
+    revalidatePath('/students')
+    
+    return {
+      success: true,
+      message: 'User demoted to student successfully!'
+    }
+  } catch (error) {
+    console.error('Error demoting admin to student:', error)
+    return {
+      success: false,
+      message: 'An unexpected error occurred while demoting the user'
+    }
+  }
+}
+
 

@@ -12,6 +12,7 @@ import {
 import { User, Mail, Calendar, Shield } from 'lucide-react'
 import Link from 'next/link'
 import { SuspendUserDialog } from './suspend-user-dialog'
+import { PromoteToAdminDialog } from './promote-to-admin-dialog'
 
 interface ActiveStudentsTableProps {
   users: UserProfile[]
@@ -94,10 +95,16 @@ export function ActiveStudentsTable({ users, onUserAction }: ActiveStudentsTable
                 </span>
               </TableCell>
               <TableCell>
-                <SuspendUserDialog 
-                  user={user} 
-                  onSuspend={handleUserAction}
-                />
+                <div className="flex items-center space-x-2">
+                  <PromoteToAdminDialog 
+                    user={user} 
+                    onPromote={handleUserAction}
+                  />
+                  <SuspendUserDialog 
+                    user={user} 
+                    onSuspend={handleUserAction}
+                  />
+                </div>
               </TableCell>
             </TableRow>
           ))}

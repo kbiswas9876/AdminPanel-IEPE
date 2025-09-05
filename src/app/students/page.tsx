@@ -1,32 +1,21 @@
 import { MainLayout } from '@/components/layout/main-layout'
 import { ProtectedRoute } from '@/components/auth/protected-route'
-import { StudentManagement } from '@/components/students/student-management'
-import { createAdminClient, type UserProfile } from '@/lib/supabase/admin'
+import { StudentManagementClientUI } from '@/components/students/student-management-client-ui'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export default async function StudentsPage() {
-  const supabase = createAdminClient()
+  const supabaseAdmin = createAdminClient()
 
-  // Fetch all user data on the server using admin client
-  const [pendingResult, activeResult, allResult] = await Promise.all([
-    supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('status', 'active')
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('user_profiles')
-      .select('*')
-      .order('created_at', { ascending: false })
-  ])
+  // Fetch all users at once using admin client
+  const { data: allUsers, error } = await supabaseAdmin
+    .from('user_profiles')
+    .select('*')
+    .order('id', { ascending: false })
 
-  const pendingUsers = pendingResult.data as UserProfile[] || []
-  const activeUsers = activeResult.data as UserProfile[] || []
-  const allUsers = allResult.data as UserProfile[] || []
+  if (error) {
+    console.error("Error fetching users:", error)
+    // We'll handle this in the UI
+  }
 
   return (
     <ProtectedRoute>
@@ -41,11 +30,7 @@ export default async function StudentsPage() {
             </p>
           </div>
           
-          <StudentManagement 
-            initialPendingUsers={pendingUsers}
-            initialActiveUsers={activeUsers}
-            initialAllUsers={allUsers}
-          />
+          <StudentManagementClientUI users={allUsers || []} />
         </div>
       </MainLayout>
     </ProtectedRoute>
