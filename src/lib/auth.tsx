@@ -45,11 +45,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email,
       password,
     })
-    return { error }
+    
+    if (error) {
+      return { error }
+    }
+    
+    // After successful authentication, we need to check the user's role
+    // This will be handled by the ProtectedRoute component
+    return { error: null }
   }
 
   const signOut = async () => {
-    await supabase.auth.signOut()
+    try {
+      // Import the server action dynamically
+      const { signOut: serverSignOut } = await import('@/lib/actions/auth')
+      await serverSignOut()
+    } catch {
+      // Fallback to client-side sign out
+      await supabase.auth.signOut()
+    }
   }
 
   const value = {

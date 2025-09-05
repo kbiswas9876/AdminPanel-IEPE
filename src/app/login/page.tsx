@@ -13,7 +13,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { signIn } = useAuth()
+  const { } = useAuth()
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -21,13 +21,21 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
-    const { error } = await signIn(email, password)
-    
-    if (error) {
-      setError(error instanceof Error ? error.message : 'Login failed')
+    try {
+      // Import the server action dynamically
+      const { signInWithRoleCheck } = await import('@/lib/actions/auth')
+      const result = await signInWithRoleCheck(email, password)
+      
+      if (result.success) {
+        router.push('/')
+      } else {
+        setError(result.error || 'Login failed')
+      }
+    } catch (error) {
+      setError('An unexpected error occurred')
+      console.error('Login error:', error)
+    } finally {
       setLoading(false)
-    } else {
-      router.push('/')
     }
   }
 

@@ -1,7 +1,5 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { getUsersByStatus } from '@/lib/actions/students'
 import type { UserProfile } from '@/lib/supabase/admin'
 import {
   Table,
@@ -15,29 +13,10 @@ import { User, Mail, Calendar, Shield, CheckCircle, Clock } from 'lucide-react'
 import Link from 'next/link'
 
 interface AllStudentsTableProps {
-  onUserAction?: () => void
+  users: UserProfile[]
 }
 
-export function AllStudentsTable({ onUserAction }: AllStudentsTableProps) {
-  const [users, setUsers] = useState<UserProfile[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const allUsers = await getUsersByStatus() // No status filter = all users
-        setUsers(allUsers)
-      } catch (err) {
-        setError('Failed to fetch all users')
-        console.error('Error:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchUsers()
-  }, [])
+export function AllStudentsTable({ users }: AllStudentsTableProps) {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -81,21 +60,7 @@ export function AllStudentsTable({ onUserAction }: AllStudentsTableProps) {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-      </div>
-    )
-  }
 
-  if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-md p-4">
-        <p className="text-red-800">Error: {error}</p>
-      </div>
-    )
-  }
 
   if (users.length === 0) {
     return (

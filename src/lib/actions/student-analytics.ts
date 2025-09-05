@@ -29,7 +29,7 @@ export async function getStudentProfile(userId: string): Promise<UserProfile | n
     const supabase = createAdminClient()
     
     const { data, error } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .select('*')
       .eq('id', userId)
       .single()
@@ -180,7 +180,7 @@ export async function suspendUser(userId: string): Promise<{ success: boolean; m
     const supabase = createAdminClient()
     
     const { error } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .update({ 
         status: 'suspended',
         updated_at: new Date().toISOString()
@@ -217,7 +217,7 @@ export async function activateUser(userId: string): Promise<{ success: boolean; 
     const supabase = createAdminClient()
     
     const { error } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .update({ 
         status: 'active',
         updated_at: new Date().toISOString()

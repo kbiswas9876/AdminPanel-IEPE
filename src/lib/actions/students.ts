@@ -9,7 +9,7 @@ export async function getUsersByStatus(status?: 'pending' | 'active' | 'suspende
     const supabase = createAdminClient()
     
     let query = supabase
-      .from('profiles')
+      .from('user_profiles')
       .select('*')
       .order('created_at', { ascending: false })
     
@@ -41,9 +41,9 @@ export async function getUserCounts(): Promise<{
     const supabase = createAdminClient()
     
     const [pendingResult, activeResult, totalResult] = await Promise.all([
-      supabase.from('profiles').select('id', { count: 'exact' }).eq('status', 'pending'),
-      supabase.from('profiles').select('id', { count: 'exact' }).eq('status', 'active'),
-      supabase.from('profiles').select('id', { count: 'exact' })
+      supabase.from('user_profiles').select('id', { count: 'exact' }).eq('status', 'pending'),
+      supabase.from('user_profiles').select('id', { count: 'exact' }).eq('status', 'active'),
+      supabase.from('user_profiles').select('id', { count: 'exact' })
     ])
     
     return {
@@ -63,7 +63,7 @@ export async function approveUser(userId: string): Promise<{ success: boolean; m
     const supabase = createAdminClient()
     
     const { error } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .update({ 
         status: 'active',
         updated_at: new Date().toISOString()
@@ -98,9 +98,9 @@ export async function rejectUser(userId: string): Promise<{ success: boolean; me
   try {
     const supabase = createAdminClient()
     
-    // First, delete from profiles table
+    // First, delete from user_profiles table
     const { error: profileError } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .delete()
       .eq('id', userId)
     
@@ -142,7 +142,7 @@ export async function suspendUser(userId: string): Promise<{ success: boolean; m
     const supabase = createAdminClient()
     
     const { error } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .update({ 
         status: 'suspended',
         updated_at: new Date().toISOString()

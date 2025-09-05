@@ -1,7 +1,5 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { getUsersByStatus } from '@/lib/actions/students'
 import type { UserProfile } from '@/lib/supabase/admin'
 import {
   Table,
@@ -16,61 +14,17 @@ import Link from 'next/link'
 import { SuspendUserDialog } from './suspend-user-dialog'
 
 interface ActiveStudentsTableProps {
+  users: UserProfile[]
   onUserAction: () => void
 }
 
-export function ActiveStudentsTable({ onUserAction }: ActiveStudentsTableProps) {
-  const [users, setUsers] = useState<UserProfile[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const activeUsers = await getUsersByStatus('active')
-        setUsers(activeUsers)
-      } catch (err) {
-        setError('Failed to fetch active users')
-        console.error('Error:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchUsers()
-  }, [])
+export function ActiveStudentsTable({ users, onUserAction }: ActiveStudentsTableProps) {
 
   const handleUserAction = () => {
-    // Refresh the users list
-    const fetchUsers = async () => {
-      try {
-        const activeUsers = await getUsersByStatus('active')
-        setUsers(activeUsers)
-      } catch (err) {
-        setError('Failed to fetch active users')
-        console.error('Error:', err)
-      }
-    }
-    
-    fetchUsers()
-    onUserAction() // Notify parent component to refresh counts
+    onUserAction() // Notify parent component to refresh data
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-      </div>
-    )
-  }
 
-  if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-md p-4">
-        <p className="text-red-800">Error: {error}</p>
-      </div>
-    )
-  }
 
   if (users.length === 0) {
     return (
