@@ -66,7 +66,7 @@ export function PendingApprovalTable({ users, onUserAction }: PendingApprovalTab
               <TableCell>
                 <div className="flex items-center space-x-2">
                   <Mail className="h-4 w-4 text-gray-400" />
-                  <span className="text-sm text-gray-900">{user.email}</span>
+                  <span className="text-sm text-gray-900">{user.email || 'No email'}</span>
                 </div>
               </TableCell>
               <TableCell>

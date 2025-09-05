@@ -59,7 +59,7 @@ export function PromoteToAdminDialog({ user, onPromote }: PromoteToAdminDialogPr
         <AlertDialogHeader>
           <AlertDialogTitle>Promote to Administrator</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to promote <strong>{user.full_name || user.email}</strong> to an administrator?
+            Are you sure you want to promote <strong>{user.full_name || user.email || 'No email'}</strong> to an administrator?
             <br /><br />
             This will give them full access to the admin panel and all administrative functions.
           </AlertDialogDescription>

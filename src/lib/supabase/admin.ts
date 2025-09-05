@@ -53,12 +53,12 @@ export interface BookSource {
 // Types for user profiles table
 export interface UserProfile {
   id: string
-  email: string
   full_name?: string
   role: 'admin' | 'student'
   status: 'pending' | 'active' | 'suspended'
   created_at: string
   updated_at?: string
+  email?: string
 }
 
 // Types for tests table

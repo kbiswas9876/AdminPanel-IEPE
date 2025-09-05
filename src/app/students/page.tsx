@@ -12,6 +12,27 @@ export default async function StudentsPage() {
     .select('*')
     .order('id', { ascending: false })
 
+  // Fetch emails separately from auth.users
+  const userEmails: { [key: string]: string } = {}
+  if (allUsers && allUsers.length > 0) {
+    const userIds = allUsers.map(user => user.id)
+    const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers()
+    
+    if (authUsers?.users) {
+      authUsers.users.forEach(user => {
+        if (userIds.includes(user.id)) {
+          userEmails[user.id] = user.email || 'No email'
+        }
+      })
+    }
+  }
+
+  // Combine the data
+  const usersWithEmails = allUsers?.map(user => ({
+    ...user,
+    email: userEmails[user.id] || 'No email'
+  })) || []
+
   if (error) {
     console.error("Error fetching users:", error)
     // We'll handle this in the UI
@@ -30,7 +51,7 @@ export default async function StudentsPage() {
             </p>
           </div>
           
-          <StudentManagementClientUI users={allUsers || []} />
+          <StudentManagementClientUI users={usersWithEmails} />
         </div>
       </MainLayout>
     </ProtectedRoute>

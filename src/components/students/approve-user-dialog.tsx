@@ -60,7 +60,7 @@ export function ApproveUserDialog({ user, onApprove }: ApproveUserDialogProps) {
             <br />
             <strong>Student:</strong> {user.full_name || 'No name provided'}
             <br />
-            <strong>Email:</strong> {user.email}
+            <strong>Email:</strong> {user.email || 'No email'}
             <br />
             <br />
             This will grant them full access to the platform.

@@ -60,7 +60,7 @@ export function RejectUserDialog({ user, onReject }: RejectUserDialogProps) {
             <br />
             <strong>Student:</strong> {user.full_name || 'No name provided'}
             <br />
-            <strong>Email:</strong> {user.email}
+            <strong>Email:</strong> {user.email || 'No email'}
             <br />
             <br />
             <span className="text-red-600 font-medium">

@@ -34,12 +34,20 @@ export async function getStudentProfile(userId: string): Promise<UserProfile | n
       .eq('id', userId)
       .single()
     
-    if (error) {
+    if (error || !data) {
       console.error('Error fetching student profile:', error)
       return null
     }
+
+    // Fetch email separately from auth.users
+    const { data: authUsers } = await supabase.auth.admin.listUsers()
+    const authUser = authUsers?.users?.find(user => user.id === userId)
+    const email = authUser?.email || 'No email'
     
-    return data as UserProfile
+    return {
+      ...data,
+      email
+    }
   } catch (error) {
     console.error('Unexpected error:', error)
     return null

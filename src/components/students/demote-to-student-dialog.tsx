@@ -59,7 +59,7 @@ export function DemoteToStudentDialog({ user, onDemote }: DemoteToStudentDialogP
         <AlertDialogHeader>
           <AlertDialogTitle>Demote to Student</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to demote <strong>{user.full_name || user.email}</strong> from administrator to student?
+            Are you sure you want to demote <strong>{user.full_name || user.email || 'No email'}</strong> from administrator to student?
             <br /><br />
             This will remove their administrative privileges and they will no longer have access to the admin panel.
           </AlertDialogDescription>

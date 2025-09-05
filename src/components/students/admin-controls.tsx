@@ -119,7 +119,7 @@ export function AdminControls({ user, onAction }: AdminControlsProps) {
                     <br />
                     <strong>User:</strong> {user.full_name || 'No name provided'}
                     <br />
-                    <strong>Email:</strong> {user.email}
+                    <strong>Email:</strong> {user.email || 'No email'}
                     <br />
                     <br />
                     This will grant them full access to the platform.
@@ -160,7 +160,7 @@ export function AdminControls({ user, onAction }: AdminControlsProps) {
                     <br />
                     <strong>User:</strong> {user.full_name || 'No name provided'}
                     <br />
-                    <strong>Email:</strong> {user.email}
+                    <strong>Email:</strong> {user.email || 'No email'}
                     <br />
                     <br />
                     This will revoke their access to the platform but keep their data.

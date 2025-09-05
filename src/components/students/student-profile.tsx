@@ -209,7 +209,7 @@ export function StudentProfile({ userId }: StudentProfileProps) {
               <Mail className="h-5 w-5 text-gray-400" />
               <div>
                 <p className="text-sm font-medium text-gray-900">Email</p>
-                <p className="text-sm text-gray-600">{profile.email}</p>
+                <p className="text-sm text-gray-600">{profile.email || 'No email'}</p>
               </div>
             </div>
             <div className="flex items-center space-x-3">
