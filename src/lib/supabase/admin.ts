@@ -98,3 +98,58 @@ export interface TestCreationData {
   negative_marks_per_incorrect: number
   blueprint: TestBlueprint[]
 }
+
+// Types for test_attempts table
+export interface TestAttempt {
+  id: number
+  user_id: string
+  test_id: number
+  score: number
+  total_correct: number
+  total_incorrect: number
+  total_skipped: number
+  time_taken_seconds: number
+  completed_at: string
+}
+
+// Types for student analytics
+export interface StudentAnalytics {
+  totalTests: number
+  averageScore: number
+  totalCorrect: number
+  totalIncorrect: number
+  totalSkipped: number
+  averageAccuracy: number
+  bestScore: number
+  worstScore: number
+  totalTimeSpent: number
+}
+
+// Types for test attempt with test details
+export interface TestAttemptWithDetails extends TestAttempt {
+  test_name: string
+  test_description?: string
+  test_total_time_minutes: number
+  test_marks_per_correct: number
+  test_negative_marks_per_incorrect: number
+}
+
+// Types for error_reports table
+export interface ErrorReport {
+  id: number
+  question_id: string
+  user_id: string
+  report_description: string
+  status: 'new' | 'in_review' | 'resolved'
+  created_at: string
+  updated_at?: string
+}
+
+// Types for error report with user details
+export interface ErrorReportWithDetails extends ErrorReport {
+  user_email: string
+  user_full_name?: string
+  question_text?: string
+  book_source?: string
+  chapter_name?: string
+}

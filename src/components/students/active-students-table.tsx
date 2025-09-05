@@ -12,6 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { User, Mail, Calendar, Shield } from 'lucide-react'
+import Link from 'next/link'
 import { SuspendUserDialog } from './suspend-user-dialog'
 
 interface ActiveStudentsTableProps {
@@ -97,16 +98,21 @@ export function ActiveStudentsTable({ onUserAction }: ActiveStudentsTableProps) 
           {users.map((user) => (
             <TableRow key={user.id}>
               <TableCell>
-                <div className="flex items-center space-x-3">
-                  <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                    <User className="h-4 w-4 text-green-600" />
+                <Link href={`/students/${user.id}`} className="hover:bg-gray-50 rounded-md p-2 -m-2 block">
+                  <div className="flex items-center space-x-3">
+                    <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                      <User className="h-4 w-4 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900 hover:text-blue-600">
+                        {user.full_name || 'No name provided'}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Click to view profile
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      {user.full_name || 'No name provided'}
-                    </p>
-                  </div>
-                </div>
+                </Link>
               </TableCell>
               <TableCell>
                 <div className="flex items-center space-x-2">

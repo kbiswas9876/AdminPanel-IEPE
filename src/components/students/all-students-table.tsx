@@ -12,6 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { User, Mail, Calendar, Shield, CheckCircle, Clock } from 'lucide-react'
+import Link from 'next/link'
 
 interface AllStudentsTableProps {
   onUserAction?: () => void
@@ -122,21 +123,26 @@ export function AllStudentsTable({ onUserAction }: AllStudentsTableProps) {
           {users.map((user) => (
             <TableRow key={user.id}>
               <TableCell>
-                <div className="flex items-center space-x-3">
-                  <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-                    user.status === 'active' ? 'bg-green-100' :
-                    user.status === 'pending' ? 'bg-yellow-100' :
-                    user.status === 'suspended' ? 'bg-orange-100' :
-                    'bg-gray-100'
-                  }`}>
-                    {getStatusIcon(user.status)}
+                <Link href={`/students/${user.id}`} className="hover:bg-gray-50 rounded-md p-2 -m-2 block">
+                  <div className="flex items-center space-x-3">
+                    <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
+                      user.status === 'active' ? 'bg-green-100' :
+                      user.status === 'pending' ? 'bg-yellow-100' :
+                      user.status === 'suspended' ? 'bg-orange-100' :
+                      'bg-gray-100'
+                    }`}>
+                      {getStatusIcon(user.status)}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900 hover:text-blue-600">
+                        {user.full_name || 'No name provided'}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Click to view profile
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      {user.full_name || 'No name provided'}
-                    </p>
-                  </div>
-                </div>
+                </Link>
               </TableCell>
               <TableCell>
                 <div className="flex items-center space-x-2">

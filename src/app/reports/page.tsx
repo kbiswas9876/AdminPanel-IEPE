@@ -1,16 +1,13 @@
 import { MainLayout } from '@/components/layout/main-layout'
 import { ProtectedRoute } from '@/components/auth/protected-route'
-import { QuestionForm } from '@/components/content/question-form'
-import { createQuestion } from '@/lib/actions/questions'
+import { ErrorReportsManagement } from '@/components/reports/error-reports-management'
 
-export default function NewQuestionPage() {
+export default function ReportsPage() {
   return (
     <ProtectedRoute>
       <MainLayout>
-        <QuestionForm onSubmit={createQuestion} />
+        <ErrorReportsManagement />
       </MainLayout>
     </ProtectedRoute>
   )
 }
-
-
