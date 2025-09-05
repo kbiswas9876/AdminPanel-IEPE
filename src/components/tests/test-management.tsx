@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getAllTests } from '@/lib/actions/tests'
+import { getAllTestsWithCounts } from '@/lib/actions/tests'
 import type { Test } from '@/lib/supabase/admin'
 import { Button } from '@/components/ui/button'
 import {
@@ -17,14 +17,14 @@ import Link from 'next/link'
 import { TestActions } from './test-actions'
 
 export function TestManagement() {
-  const [tests, setTests] = useState<Test[]>([])
+  const [tests, setTests] = useState<Array<Test & { question_count?: number }>>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchTests = async () => {
       try {
-        const allTests = await getAllTests()
+        const allTests = await getAllTestsWithCounts()
         setTests(allTests)
       } catch (err) {
         setError('Failed to fetch tests')
@@ -41,7 +41,7 @@ export function TestManagement() {
     // Refresh the tests list
     const fetchTests = async () => {
       try {
-        const allTests = await getAllTests()
+        const allTests = await getAllTestsWithCounts()
         setTests(allTests)
       } catch (err) {
         setError('Failed to fetch tests')
@@ -169,6 +169,7 @@ export function TestManagement() {
               <TableRow>
                 <TableHead>Test Name</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Total Questions</TableHead>
                 <TableHead>Duration</TableHead>
                 <TableHead>Start Time</TableHead>
                 <TableHead>End Time</TableHead>
@@ -191,6 +192,11 @@ export function TestManagement() {
                       {getStatusIcon(test.status)}
                       {getStatusBadge(test.status)}
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm text-gray-600">
+                      {typeof test.question_count === 'number' ? test.question_count : '—'}
+                    </span>
                   </TableCell>
                   <TableCell>
                     <span className="text-sm text-gray-600">

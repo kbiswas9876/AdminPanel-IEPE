@@ -4,6 +4,12 @@ import { useState } from 'react'
 import { deleteTest } from '@/lib/actions/tests'
 import { Button } from '@/components/ui/button'
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -15,7 +21,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { PublishTestDialog } from './publish-test-dialog'
-import { Edit, Trash2, BarChart3 } from 'lucide-react'
+import { Edit, Trash2, BarChart3, MoreHorizontal, FileDown, Copy } from 'lucide-react'
 import Link from 'next/link'
 import type { Test } from '@/lib/supabase/admin'
 
@@ -118,6 +124,25 @@ export function TestActions({ test, onAction }: TestActionsProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* More actions dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem disabled>
+            <FileDown className="h-4 w-4 mr-2" />
+            Export to PDF
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled>
+            <Copy className="h-4 w-4 mr-2" />
+            Clone Test
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   )
 }

@@ -2,6 +2,7 @@
 
 import { createAdminClient, type Test, type TestCreationData } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import type { Question } from '@/lib/supabase/admin'
 
 // Get all tests
 export async function getAllTests(): Promise<Test[]> {
@@ -19,6 +20,39 @@ export async function getAllTests(): Promise<Test[]> {
     }
     
     return data as Test[]
+  } catch (error) {
+    console.error('Unexpected error:', error)
+    return []
+  }
+}
+
+// Get all tests with aggregated question counts
+export async function getAllTestsWithCounts(): Promise<Array<Test & { question_count: number }>> {
+  try {
+    const supabase = createAdminClient()
+
+    const { data, error } = await supabase
+      .from('tests')
+      .select('*, test_questions(count)')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching tests with counts:', error)
+      return []
+    }
+
+    const result: Array<Test & { question_count: number }> = (data as any[]).map((row) => {
+      const { test_questions, ...testFields } = row
+      const count = Array.isArray(test_questions) && test_questions.length > 0 && typeof test_questions[0].count === 'number'
+        ? test_questions[0].count
+        : (Array.isArray(test_questions) ? test_questions.length : 0)
+      return {
+        ...(testFields as Test),
+        question_count: count
+      }
+    })
+
+    return result
   } catch (error) {
     console.error('Unexpected error:', error)
     return []
@@ -46,6 +80,246 @@ export async function getChapterNames(): Promise<string[]> {
   } catch (error) {
     console.error('Unexpected error:', error)
     return []
+  }
+}
+
+// Get chapters with their unique admin tags
+export async function getChaptersWithTags(): Promise<Array<{ chapter_name: string; tags: string[]; difficultyCounts: Record<string, number> }>> {
+  try {
+    const supabase = createAdminClient()
+
+    const { data, error } = await supabase
+      .from('questions')
+      .select('chapter_name, admin_tags, difficulty')
+      .not('chapter_name', 'is', null)
+
+    if (error) {
+      console.error('Error fetching chapters with tags:', error)
+      return []
+    }
+
+    const chapterToTags = new Map<string, Set<string>>()
+    for (const row of (data as Array<{ chapter_name: string | null; admin_tags: string[] | null; difficulty?: string | null }>)) {
+      const chapter = row.chapter_name
+      if (!chapter) continue
+      if (!chapterToTags.has(chapter)) {
+        chapterToTags.set(chapter, new Set<string>())
+      }
+      const set = chapterToTags.get(chapter)!
+      if (Array.isArray(row.admin_tags)) {
+        for (const tag of row.admin_tags) {
+          if (tag && typeof tag === 'string') set.add(tag)
+        }
+      }
+      // Difficulty counts
+      const diffKey = (row.difficulty || 'Unknown') as string
+      // Use a symbol on the map to store counts map
+      const countsMapKey = `${chapter}::__diff_counts__`
+      let counts = (chapterToTags as unknown as Map<string, unknown>).get(countsMapKey) as Record<string, number> | undefined
+      if (!counts) {
+        counts = {}
+        ;(chapterToTags as unknown as Map<string, unknown>).set(countsMapKey, counts)
+      }
+      counts[diffKey] = (counts[diffKey] || 0) + 1
+    }
+
+    const result: Array<{ chapter_name: string; tags: string[]; difficultyCounts: Record<string, number> }> = []
+    for (const [chapter, tagsSet] of chapterToTags.entries()) {
+      if (chapter.endsWith('::__diff_counts__')) continue
+      const counts = (chapterToTags as unknown as Map<string, unknown>).get(`${chapter}::__diff_counts__`) as Record<string, number> | undefined
+      result.push({ chapter_name: chapter, tags: Array.from(tagsSet).sort(), difficultyCounts: counts || {} })
+    }
+
+    // Sort by chapter name for stable UI
+    result.sort((a, b) => a.chapter_name.localeCompare(b.chapter_name))
+    return result
+  } catch (error) {
+    console.error('Unexpected error:', error)
+    return []
+  }
+}
+
+// Types for blueprint-driven generation
+export type DifficultyLevel = 'Easy' | 'Moderate' | 'Hard'
+export type BlueprintInput = Record<string, {
+  random?: number
+  tags?: Record<string, number>
+  difficulty?: Record<DifficultyLevel, number>
+}>
+
+export interface GeneratedTestSlot {
+  chapter_name: string
+  source_type: 'random' | 'tag' | 'difficulty'
+  source_value?: string
+  question: Question
+}
+
+async function fetchCandidateQuestions(
+  supabase: ReturnType<typeof createAdminClient>,
+  criteria: { chapter_name: string; tag?: string; difficulty?: DifficultyLevel },
+  excludeIds: number[]
+): Promise<Question[]> {
+  // Build base query
+  let query = supabase
+    .from('questions')
+    .select('*')
+    .eq('chapter_name', criteria.chapter_name)
+
+  if (criteria.tag) {
+    // admin_tags contains tag -> use Postgres array contains operator '@>' emulated via cs in Postgrest
+    // However, Postgrest 'cs' checks json contains; for array use 'contains' filter
+    query = query.contains('admin_tags', [criteria.tag] as any)
+  }
+
+  if (criteria.difficulty) {
+    query = query.eq('difficulty', criteria.difficulty)
+  }
+
+  const { data, error } = await query
+
+  if (error || !data) {
+    console.error('Error fetching candidate questions:', error)
+    return []
+  }
+
+  // Exclude already picked ids
+  const filtered = (data as Question[]).filter((q) => !excludeIds.includes(q.id as number))
+
+  return filtered
+}
+
+function takeRandom<T>(items: T[], count: number): T[] {
+  const arr = [...items]
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
+  }
+  return arr.slice(0, Math.max(0, count))
+}
+
+// Generate test paper from blueprint
+export async function generateTestPaperFromBlueprint(
+  blueprint: BlueprintInput
+): Promise<GeneratedTestSlot[]> {
+  try {
+    const supabase = createAdminClient()
+    const selectedIds: number[] = []
+    const slots: GeneratedTestSlot[] = []
+
+    const chapterNames = Object.keys(blueprint)
+    for (const chapter of chapterNames) {
+      const config = blueprint[chapter]
+      if (!config) continue
+
+      // A) Random
+      if ((config.random || 0) > 0) {
+        const candidates = await fetchCandidateQuestions(supabase, { chapter_name: chapter }, selectedIds)
+        const picks = takeRandom(candidates, config.random || 0)
+        for (const q of picks) {
+          if (q.id != null) selectedIds.push(q.id as number)
+          slots.push({ chapter_name: chapter, source_type: 'random', question: q })
+        }
+      }
+
+      // B) Tags
+      if (config.tags) {
+        for (const tag of Object.keys(config.tags)) {
+          const need = config.tags[tag] || 0
+          if (need <= 0) continue
+          const candidates = await fetchCandidateQuestions(supabase, { chapter_name: chapter, tag }, selectedIds)
+          const picks = takeRandom(candidates, need)
+          for (const q of picks) {
+            if (q.id != null) selectedIds.push(q.id as number)
+            slots.push({ chapter_name: chapter, source_type: 'tag', source_value: tag, question: q })
+          }
+        }
+      }
+
+      // C) Difficulty
+      if (config.difficulty) {
+        for (const level of Object.keys(config.difficulty) as DifficultyLevel[]) {
+          const need = config.difficulty[level] || 0
+          if (need <= 0) continue
+          const candidates = await fetchCandidateQuestions(supabase, { chapter_name: chapter, difficulty: level }, selectedIds)
+          const picks = takeRandom(candidates, need)
+          for (const q of picks) {
+            if (q.id != null) selectedIds.push(q.id as number)
+            slots.push({ chapter_name: chapter, source_type: 'difficulty', source_value: level, question: q })
+          }
+        }
+      }
+    }
+
+    return slots
+  } catch (error) {
+    console.error('Unexpected error generating paper:', error)
+    return []
+  }
+}
+
+// Regenerate a single question based on slot criteria
+export async function regenerateSingleQuestion(args: {
+  chapter_name: string
+  source_type: 'random' | 'tag' | 'difficulty'
+  source_value?: string
+  exclude_ids: number[]
+}): Promise<Question | null> {
+  try {
+    const supabase = createAdminClient()
+    const criteria: { chapter_name: string; tag?: string; difficulty?: DifficultyLevel } = {
+      chapter_name: args.chapter_name
+    }
+    if (args.source_type === 'tag' && args.source_value) criteria.tag = args.source_value
+    if (args.source_type === 'difficulty' && args.source_value) criteria.difficulty = args.source_value as DifficultyLevel
+
+    const candidates = await fetchCandidateQuestions(supabase, criteria, args.exclude_ids)
+    const pick = takeRandom(candidates, 1)[0]
+    return pick || null
+  } catch (error) {
+    console.error('Unexpected error regenerating question:', error)
+    return null
+  }
+}
+
+// Search questions for the Master Question Bank modal
+export async function searchQuestions(args: {
+  search?: string
+  book_source?: string
+  chapter_name?: string
+  tags?: string[]
+  difficulty?: DifficultyLevel
+  page?: number
+  pageSize?: number
+}): Promise<{ questions: Question[]; total: number }> {
+  try {
+    const supabase = createAdminClient()
+    const page = Math.max(1, args.page || 1)
+    const pageSize = Math.max(1, Math.min(50, args.pageSize || 10))
+    let query = supabase
+      .from('questions')
+      .select('*', { count: 'exact' })
+
+    if (args.search) {
+      query = query.or(`question_id.ilike.%${args.search}%,question_text.ilike.%${args.search}%`)
+    }
+    if (args.book_source) query = query.eq('book_source', args.book_source)
+    if (args.chapter_name) query = query.eq('chapter_name', args.chapter_name)
+    if (args.tags && args.tags.length > 0) query = query.contains('admin_tags', args.tags as any)
+    if (args.difficulty) query = query.eq('difficulty', args.difficulty)
+
+    const from = (page - 1) * pageSize
+    const to = from + pageSize - 1
+    const { data, error, count } = await query.range(from, to)
+
+    if (error || !data) {
+      console.error('Error searching questions:', error)
+      return { questions: [], total: 0 }
+    }
+
+    return { questions: data as Question[], total: count || 0 }
+  } catch (error) {
+    console.error('Unexpected error searching questions:', error)
+    return { questions: [], total: 0 }
   }
 }
 
