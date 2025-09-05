@@ -3,7 +3,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { BookSource } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 
 // Get all book sources
 export async function getBookSources(): Promise<BookSource[]> {
@@ -50,7 +49,7 @@ export async function getBookSourceNames(): Promise<string[]> {
 }
 
 // Create a new book source
-export async function createBookSource(formData: FormData) {
+export async function createBookSource(formData: FormData): Promise<{ success: boolean; message: string }> {
   try {
     const supabase = createAdminClient()
     
@@ -61,7 +60,10 @@ export async function createBookSource(formData: FormData) {
     
     // Validate required fields
     if (!bookData.name || !bookData.code) {
-      throw new Error('Name and code are required')
+      return {
+        success: false,
+        message: 'Name and code are required'
+      }
     }
     
     // Check if code already exists
@@ -72,7 +74,10 @@ export async function createBookSource(formData: FormData) {
       .single()
     
     if (existingBook) {
-      throw new Error('A book with this code already exists')
+      return {
+        success: false,
+        message: 'A book with this code already exists'
+      }
     }
     
     const { error } = await supabase
@@ -81,14 +86,23 @@ export async function createBookSource(formData: FormData) {
     
     if (error) {
       console.error('Error creating book source:', error)
-      throw new Error(error.message)
+      return {
+        success: false,
+        message: error.message
+      }
     }
     
     revalidatePath('/books')
-    redirect('/books')
+    return {
+      success: true,
+      message: 'Book source added successfully!'
+    }
   } catch (error) {
     console.error('Error creating book source:', error)
-    throw error
+    return {
+      success: false,
+      message: 'An unexpected error occurred while creating the book source'
+    }
   }
 }
 

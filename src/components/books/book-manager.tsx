@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/table'
 import { Plus } from 'lucide-react'
 import { DeleteBookDialog } from './delete-book-dialog'
+import { toast } from 'sonner'
 
 export function BookManager() {
   const [books, setBooks] = useState<BookSource[]>([])
@@ -26,6 +27,7 @@ export function BookManager() {
     name: '',
     code: ''
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Fetch books on component mount
   useEffect(() => {
@@ -48,27 +50,38 @@ export function BookManager() {
     e.preventDefault()
     
     if (!formData.name.trim() || !formData.code.trim()) {
-      setError('Name and code are required')
+      toast.error('Name and code are required')
       return
     }
 
+    setIsSubmitting(true)
+    setError(null)
+
     try {
-      setError(null)
       const form = new FormData()
       form.append('name', formData.name.trim())
       form.append('code', formData.code.trim().toUpperCase())
       
-      await createBookSource(form)
+      const result = await createBookSource(form)
       
-      // Reset form
-      setFormData({ name: '', code: '' })
-      
-      // Refresh the books list
-      const updatedBooks = await getBookSources()
-      setBooks(updatedBooks)
+      if (result.success) {
+        toast.success(result.message)
+        // Reset form
+        setFormData({ name: '', code: '' })
+        // Refresh the books list
+        const updatedBooks = await getBookSources()
+        setBooks(updatedBooks)
+      } else {
+        toast.error(result.message)
+        setError(result.message)
+      }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to create book source')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create book source'
+      toast.error(errorMessage)
+      setError(errorMessage)
       console.error('Error:', err)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -140,9 +153,9 @@ export function BookManager() {
               </div>
             )}
             
-            <Button type="submit">
+            <Button type="submit" disabled={isSubmitting}>
               <Plus className="mr-2 h-4 w-4" />
-              Save Book
+              {isSubmitting ? 'Saving...' : 'Save Book'}
             </Button>
           </form>
         </CardContent>

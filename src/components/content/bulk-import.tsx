@@ -5,11 +5,15 @@ import { bulkImportQuestions } from '@/lib/actions/bulk-import'
 import { generateCSVTemplate } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Download, Upload, FileText, CheckCircle, AlertCircle } from 'lucide-react'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import { Download, Upload, FileText, CheckCircle, AlertCircle, Clipboard } from 'lucide-react'
 
 export function BulkImport() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [pastedData, setPastedData] = useState('')
   const [isUploading, setIsUploading] = useState(false)
+  const [isProcessingPaste, setIsProcessingPaste] = useState(false)
   const [result, setResult] = useState<{
     success: boolean
     message: string
@@ -77,6 +81,41 @@ export function BulkImport() {
       })
     } finally {
       setIsUploading(false)
+    }
+  }
+
+  const handlePasteProcess = async () => {
+    if (!pastedData.trim()) {
+      setResult({
+        success: false,
+        message: 'Please paste CSV data before processing.'
+      })
+      return
+    }
+
+    setIsProcessingPaste(true)
+    setResult(null)
+
+    try {
+      // Create a File object from the pasted text
+      const file = new File([pastedData], 'pasted_data.csv', { type: 'text/csv' })
+      
+      const formData = new FormData()
+      formData.append('csvFile', file)
+      
+      const result = await bulkImportQuestions(formData)
+      setResult(result)
+      
+      if (result.success) {
+        setPastedData('')
+      }
+    } catch {
+      setResult({
+        success: false,
+        message: 'Processing failed. Please check your CSV data and try again.'
+      })
+    } finally {
+      setIsProcessingPaste(false)
     }
   }
 
@@ -171,6 +210,65 @@ export function BulkImport() {
         </CardContent>
       </Card>
 
+      {/* Alternative: Paste CSV Data */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Clipboard className="mr-2 h-5 w-5" />
+            Alternative: Paste CSV Data Directly
+          </CardTitle>
+          <CardDescription>
+            If you already have your CSV data ready, you can paste it directly here for faster processing.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="csvData">CSV Data</Label>
+              <Textarea
+                id="csvData"
+                placeholder="Paste your CSV data here. The first row must be the headers: question_id, book_source, chapter_name, question_text, options, correct_option, solution_text, exam_metadata, admin_tags"
+                value={pastedData}
+                onChange={(e) => setPastedData(e.target.value)}
+                className="min-h-[200px] font-mono text-sm"
+              />
+              <p className="text-sm text-gray-500">
+                Make sure the first row contains the column headers and each row is properly formatted.
+              </p>
+            </div>
+
+            <Button
+              onClick={handlePasteProcess}
+              disabled={!pastedData.trim() || isProcessingPaste || isUploading}
+              className="w-full sm:w-auto"
+            >
+              {isProcessingPaste ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Processing Pasted Data...
+                </>
+              ) : (
+                <>
+                  <Clipboard className="mr-2 h-4 w-4" />
+                  Process Pasted Data
+                </>
+              )}
+            </Button>
+
+            {pastedData && (
+              <div className="bg-blue-50 p-3 rounded-md">
+                <div className="flex items-center">
+                  <CheckCircle className="h-4 w-4 text-blue-600 mr-2" />
+                  <span className="text-sm text-blue-800">
+                    Ready to process {pastedData.split('\n').length - 1} rows of data
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Step 3: Process Upload */}
       <Card>
         <CardHeader>
@@ -186,13 +284,13 @@ export function BulkImport() {
           <div className="space-y-4">
             <Button
               onClick={handleUpload}
-              disabled={!selectedFile || isUploading}
+              disabled={!selectedFile || isUploading || isProcessingPaste}
               className="w-full sm:w-auto"
             >
               {isUploading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Processing...
+                  Processing File...
                 </>
               ) : (
                 <>
