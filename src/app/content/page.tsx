@@ -27,8 +27,8 @@ export default function ContentPage() {
               <TabsTrigger value="import">Bulk Import</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="manage" className="space-y-6">
-              <div className="flex items-center justify-between">
+            <TabsContent value="manage" className="flex flex-col h-[calc(100vh-200px)]">
+              <div className="flex-shrink-0 flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">
                     Individual Question Management
@@ -44,7 +44,9 @@ export default function ContentPage() {
                   </Button>
                 </Link>
               </div>
-              <ContentManagement />
+              <div className="flex-1 min-h-0">
+                <ContentManagement />
+              </div>
             </TabsContent>
             
             <TabsContent value="import" className="space-y-6">

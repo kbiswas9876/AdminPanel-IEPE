@@ -262,3 +262,96 @@ export async function deleteQuestion(id: number): Promise<{
     }
   }
 }
+
+// Bulk delete multiple questions with data integrity checks
+export async function deleteMultipleQuestions(questionIds: number[]): Promise<{ 
+  success: boolean; 
+  message: string; 
+  deletedCount?: number;
+  usedInTests?: { questionId: number; testNames: string[] }[]
+}> {
+  try {
+    if (!questionIds || questionIds.length === 0) {
+      return {
+        success: false,
+        message: 'No questions selected for deletion'
+      }
+    }
+
+    const supabase = createAdminClient()
+    
+    // Step 1: Check if any of the questions are being used in tests
+    const { data: testQuestions, error: testQuestionsError } = await supabase
+      .from('test_questions')
+      .select(`
+        question_id,
+        tests!inner(name)
+      `)
+      .in('question_id', questionIds)
+    
+    if (testQuestionsError) {
+      console.error('Error checking question usage:', testQuestionsError)
+      return { 
+        success: false, 
+        message: 'Failed to check question usage. Please try again.' 
+      }
+    }
+    
+    // Step 2: If any questions are in use, return error with details
+    if (testQuestions && testQuestions.length > 0) {
+      // Group by question_id to get test names for each question
+      const usedQuestions = new Map<number, string[]>()
+      
+      testQuestions.forEach((tq: { question_id: number; tests: { name: string }[] }) => {
+        const questionId = tq.question_id
+        const testName = tq.tests?.[0]?.name || 'Unknown Test'
+        
+        if (!usedQuestions.has(questionId)) {
+          usedQuestions.set(questionId, [])
+        }
+        usedQuestions.get(questionId)!.push(testName)
+      })
+      
+      const usedInTests = Array.from(usedQuestions.entries()).map(([questionId, testNames]) => ({
+        questionId,
+        testNames
+      }))
+      
+      return {
+        success: false,
+        message: `Cannot delete questions. ${usedInTests.length} of the selected questions are currently used in existing mock tests. Please remove them from those tests first.`,
+        usedInTests
+      }
+    }
+    
+    // Step 3: If no questions are in use, proceed with bulk deletion
+    const { error: deleteError } = await supabase
+      .from('questions')
+      .delete()
+      .in('id', questionIds)
+    
+    if (deleteError) {
+      console.error('Error deleting questions:', deleteError)
+      return {
+        success: false,
+        message: 'Failed to delete questions. Please try again.'
+      }
+    }
+    
+    // Step 4: Revalidate the content page to refresh the UI
+    revalidatePath('/content')
+    
+    return {
+      success: true,
+      message: `Successfully deleted ${questionIds.length} question${questionIds.length !== 1 ? 's' : ''}`,
+      deletedCount: questionIds.length
+    }
+    
+  } catch (error) {
+    console.error('Unexpected error in bulk delete:', error)
+    return {
+      success: false,
+      message: 'An unexpected error occurred while deleting questions'
+    }
+  }
+}

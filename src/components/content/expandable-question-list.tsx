@@ -30,6 +30,7 @@ interface ExpandableQuestionListProps {
   selectedQuestions?: Set<string | number>
   onSelectionChange?: (selected: Set<string | number>) => void
   onMultiSelect?: (questions: Question[]) => void
+  onBulkDelete?: (questions: Question[]) => void
 }
 
 export function ExpandableQuestionList({ 
@@ -43,7 +44,8 @@ export function ExpandableQuestionList({
   multiSelect = false,
   selectedQuestions = new Set(),
   onSelectionChange,
-  onMultiSelect
+  onMultiSelect,
+  onBulkDelete
 }: ExpandableQuestionListProps) {
   const [data, setData] = useState<Question[]>([])
   const [totalCount, setTotalCount] = useState(0)
@@ -97,6 +99,15 @@ export function ExpandableQuestionList({
       isQuestionSelected(question)
     )
     onMultiSelect(selectedQuestionsList)
+  }
+
+  const handleBulkDelete = () => {
+    if (!multiSelect || !onBulkDelete) return
+    
+    const selectedQuestionsList = data.filter(question => 
+      isQuestionSelected(question)
+    )
+    onBulkDelete(selectedQuestionsList)
   }
 
   // Handle filtered data from parent component
@@ -164,9 +175,9 @@ export function ExpandableQuestionList({
   }
 
   return (
-    <div className="space-y-6">
-      {/* Results Summary */}
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col h-full">
+      {/* Results Summary - Fixed Height */}
+      <div className="flex-shrink-0 flex items-center justify-between mb-4">
         <div className="text-sm text-gray-600">
           {isUsingFilters ? (
             <>
@@ -194,13 +205,24 @@ export function ExpandableQuestionList({
                 {selectedQuestions.size === data.length ? 'Deselect All' : 'Select All'}
               </Button>
               {selectedQuestions.size > 0 && (
-                <Button 
-                  size="sm" 
-                  onClick={addSelectedQuestions}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  Add Selected ({selectedQuestions.size})
-                </Button>
+                <>
+                  <Button 
+                    size="sm" 
+                    onClick={addSelectedQuestions}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    Add Selected ({selectedQuestions.size})
+                  </Button>
+                  {actionType === 'edit' && (
+                    <Button 
+                      size="sm" 
+                      onClick={handleBulkDelete}
+                      variant="destructive"
+                    >
+                      Delete Selected ({selectedQuestions.size})
+                    </Button>
+                  )}
+                </>
               )}
             </>
           )}
@@ -216,8 +238,8 @@ export function ExpandableQuestionList({
         </div>
       </div>
 
-      {/* Expandable Question List */}
-      <div className="space-y-3">
+      {/* Expandable Question List - Scrollable */}
+      <div className="flex-1 min-h-0 overflow-y-auto space-y-3">
         {data.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <p className="text-lg font-medium">No questions found</p>
@@ -462,7 +484,7 @@ export function ExpandableQuestionList({
 
       {/* Pagination - Only show when not using filters */}
       {!isUsingFilters && totalPages > 1 && (
-        <div className="flex items-center justify-between pt-6 border-t">
+        <div className="flex-shrink-0 flex items-center justify-between pt-6 border-t">
           <div className="text-sm text-gray-700">
             Showing {data.length > 0 ? (currentPage - 1) * pageSize + 1 : 0} to{' '}
             {Math.min(currentPage * pageSize, totalCount)} of {totalCount} questions

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { AdvancedFilterBar } from '../content/advanced-filter-bar'
+import { CompactFilterBar } from '../content/compact-filter-bar'
 import { ExpandableQuestionList } from '../content/expandable-question-list'
 import type { Question } from '@/lib/types'
 
@@ -14,6 +14,7 @@ interface QuestionExplorerProps {
   onQuestionSelectMultiple?: (questions: Question[]) => void
   onQuestionEdit?: (question: Question) => void
   onQuestionDelete?: (question: Question) => void
+  onQuestionBulkDelete?: (questions: Question[]) => void
   
   // UI customization
   title?: string
@@ -41,6 +42,7 @@ export function QuestionExplorer({
   onQuestionSelectMultiple,
   onQuestionEdit,
   onQuestionDelete,
+  onQuestionBulkDelete,
   title = "Question Explorer",
   showHeader = true,
   className = "",
@@ -94,35 +96,45 @@ export function QuestionExplorer({
     onQuestionSelectMultiple?.(questions)
   }
 
+  // Handle bulk delete actions
+  const handleBulkDelete = (questions: Question[]) => {
+    onQuestionBulkDelete?.(questions)
+  }
+
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div className={`flex flex-col h-full ${className}`}>
       {showHeader && (
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
         </div>
       )}
 
-      {/* Advanced Filter Bar */}
-      <AdvancedFilterBar 
-        onFiltersApplied={handleFiltersApplied}
-        onLoadingChange={handleLoadingChange}
-      />
+      {/* Compact Filter Bar - Fixed Height */}
+      <div className="flex-shrink-0 mb-4">
+        <CompactFilterBar 
+          onFiltersApplied={handleFiltersApplied}
+          onLoadingChange={handleLoadingChange}
+        />
+      </div>
 
-      {/* Expandable Question List with Action Configuration */}
-      <ExpandableQuestionList 
-        key={refreshKey}
-        filteredData={filteredQuestions}
-        filteredTotal={filteredTotal}
-        loading={loading}
-        error={error}
-        onQuestionDeleted={handleQuestionDeleted}
-        actionType={actionType}
-        onQuestionAction={handleQuestionAction}
-        multiSelect={multiSelect}
-        selectedQuestions={selectedQuestions}
-        onSelectionChange={onSelectionChange}
-        onMultiSelect={handleMultiSelect}
-      />
+      {/* Expandable Question List - Flexible Height with Scrolling */}
+      <div className="flex-1 min-h-0">
+        <ExpandableQuestionList 
+          key={refreshKey}
+          filteredData={filteredQuestions}
+          filteredTotal={filteredTotal}
+          loading={loading}
+          error={error}
+          onQuestionDeleted={handleQuestionDeleted}
+          actionType={actionType}
+          onQuestionAction={handleQuestionAction}
+          multiSelect={multiSelect}
+          selectedQuestions={selectedQuestions}
+          onSelectionChange={onSelectionChange}
+          onMultiSelect={handleMultiSelect}
+          onBulkDelete={handleBulkDelete}
+        />
+      </div>
     </div>
   )
 }
