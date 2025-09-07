@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { X, Plus, Save, XCircle } from 'lucide-react'
+import { BookSourceCombobox } from './book-source-combobox'
+import { ChapterNameCombobox } from './chapter-name-combobox'
 import type { Question } from '@/lib/types'
 
 interface InPlaceQuestionEditorProps {
@@ -131,104 +133,121 @@ export function InPlaceQuestionEditor({
   const optionKeys = Object.keys(options).sort()
 
   return (
-    <Card className="border-blue-200 bg-blue-50">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center justify-between">
-          <span>Edit Question {isStaged ? '(Staged)' : ''}</span>
+    <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-xl">
+      <CardHeader className="pb-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg">
+        <CardTitle className="text-xl font-bold flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+            {isStaged ? 'Edit Staged Question' : 'Edit Question'}
+          </span>
           <Button
             variant="ghost"
             size="sm"
             onClick={onCancel}
-            className="h-8 w-8 p-0"
+            className="h-8 w-8 p-0 text-white hover:bg-white/20 transition-colors"
           >
             <X className="h-4 w-4" />
           </Button>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6 p-6">
         {/* Basic Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="question_id">Question ID</Label>
-            <Input
-              id="question_id"
-              value={formData.question_id}
-              onChange={(e) => handleInputChange('question_id', e.target.value)}
-              placeholder="e.g., Q001"
-            />
+        <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
+            Basic Information
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">
+                Book Source *
+              </Label>
+              <BookSourceCombobox
+                value={formData.book_source}
+                onValueChange={(value) => handleInputChange('book_source', value)}
+                placeholder="Select book source..."
+                className="w-full"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">
+                Chapter Name *
+              </Label>
+              <ChapterNameCombobox
+                value={formData.chapter_name}
+                onValueChange={(value) => handleInputChange('chapter_name', value)}
+                placeholder="Select or type chapter name..."
+                className="w-full"
+              />
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="book_source">Book Source</Label>
-            <Input
-              id="book_source"
-              value={formData.book_source}
-              onChange={(e) => handleInputChange('book_source', e.target.value)}
-              placeholder="e.g., NCERT Class 10"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="chapter_name">Chapter Name</Label>
-            <Input
-              id="chapter_name"
-              value={formData.chapter_name}
-              onChange={(e) => handleInputChange('chapter_name', e.target.value)}
-              placeholder="e.g., Light - Reflection and Refraction"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="question_number_in_book">Question Number in Book</Label>
-            <Input
-              id="question_number_in_book"
-              type="number"
-              value={formData.question_number_in_book || ''}
-              onChange={(e) => handleInputChange('question_number_in_book', e.target.value ? parseInt(e.target.value) : undefined)}
-              placeholder="e.g., 15"
-            />
+          <div className="mt-4">
+            <div className="space-y-2">
+              <Label htmlFor="question_number_in_book" className="text-sm font-medium text-gray-700">
+                Question Number in Book *
+              </Label>
+              <Input
+                id="question_number_in_book"
+                type="number"
+                value={formData.question_number_in_book || ''}
+                onChange={(e) => handleInputChange('question_number_in_book', e.target.value ? parseInt(e.target.value) : undefined)}
+                placeholder="e.g., 15"
+                className="transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
           </div>
         </div>
 
         {/* Question Text */}
-        <div className="space-y-2">
-          <Label htmlFor="question_text">Question Text</Label>
-          <Textarea
-            id="question_text"
-            value={formData.question_text}
-            onChange={(e) => handleInputChange('question_text', e.target.value)}
-            placeholder="Enter the question text with LaTeX formatting..."
-            className="min-h-[100px]"
-          />
+        <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="w-1 h-6 bg-green-600 rounded-full"></div>
+            Question Content
+          </h3>
+          <div className="space-y-2">
+            <Label htmlFor="question_text" className="text-sm font-medium text-gray-700">
+              Question Text *
+            </Label>
+            <Textarea
+              id="question_text"
+              value={formData.question_text}
+              onChange={(e) => handleInputChange('question_text', e.target.value)}
+              placeholder="Enter the question text with LaTeX formatting..."
+              className="min-h-[120px] transition-all duration-200 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            />
+          </div>
         </div>
 
         {/* Options */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label>Options</Label>
+        <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <div className="w-1 h-6 bg-purple-600 rounded-full"></div>
+              Answer Options
+            </h3>
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={addOption}
-              className="h-8"
+              className="h-9 px-4 bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100 transition-colors"
             >
-              <Plus className="h-3 w-3 mr-1" />
+              <Plus className="h-4 w-4 mr-2" />
               Add Option
             </Button>
           </div>
           
-          <div className="space-y-2">
+          <div className="space-y-3">
             {optionKeys.map((key) => (
-              <div key={key} className="flex items-center gap-2">
-                <div className="w-8 text-sm font-medium text-gray-600">
-                  ({key.toUpperCase()})
+              <div key={key} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-purple-300 transition-colors">
+                <div className="w-10 h-10 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center text-sm font-bold">
+                  {key.toUpperCase()}
                 </div>
                 <Input
                   value={options[key]}
                   onChange={(e) => handleOptionChange(key, e.target.value)}
                   placeholder={`Option ${key.toUpperCase()}`}
-                  className="flex-1"
+                  className="flex-1 transition-all duration-200 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                 />
                 {optionKeys.length > 2 && (
                   <Button
@@ -236,9 +255,9 @@ export function InPlaceQuestionEditor({
                     variant="ghost"
                     size="sm"
                     onClick={() => removeOption(key)}
-                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors"
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-4 w-4" />
                   </Button>
                 )}
               </div>
@@ -247,107 +266,134 @@ export function InPlaceQuestionEditor({
         </div>
 
         {/* Correct Option */}
-        <div className="space-y-2">
-          <Label htmlFor="correct_option">Correct Option</Label>
-          <Select
-            value={formData.correct_option || ''}
-            onValueChange={(value) => handleInputChange('correct_option', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select correct option" />
-            </SelectTrigger>
-            <SelectContent>
-              {optionKeys.map((key) => (
-                <SelectItem key={key} value={key}>
-                  Option {key.toUpperCase()}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="w-1 h-6 bg-orange-600 rounded-full"></div>
+            Correct Answer
+          </h3>
+          <div className="space-y-2">
+            <Label htmlFor="correct_option" className="text-sm font-medium text-gray-700">
+              Correct Option *
+            </Label>
+            <Select
+              value={formData.correct_option || ''}
+              onValueChange={(value) => handleInputChange('correct_option', value)}
+            >
+              <SelectTrigger className="transition-all duration-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                <SelectValue placeholder="Select correct option" />
+              </SelectTrigger>
+              <SelectContent>
+                {optionKeys.map((key) => (
+                  <SelectItem key={key} value={key}>
+                    Option {key.toUpperCase()}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        {/* Solution Text */}
-        <div className="space-y-2">
-          <Label htmlFor="solution_text">Solution Text</Label>
-          <Textarea
-            id="solution_text"
-            value={formData.solution_text || ''}
-            onChange={(e) => handleInputChange('solution_text', e.target.value)}
-            placeholder="Enter the solution with LaTeX formatting..."
-            className="min-h-[100px]"
-          />
-        </div>
-
-        {/* Difficulty */}
-        <div className="space-y-2">
-          <Label htmlFor="difficulty">Difficulty</Label>
-          <Select
-            value={formData.difficulty || ''}
-            onValueChange={(value) => handleInputChange('difficulty', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select difficulty level" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Easy">Easy</SelectItem>
-              <SelectItem value="Easy-Moderate">Easy-Moderate</SelectItem>
-              <SelectItem value="Moderate">Moderate</SelectItem>
-              <SelectItem value="Moderate-Hard">Moderate-Hard</SelectItem>
-              <SelectItem value="Hard">Hard</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Admin Tags */}
-        <div className="space-y-2">
-          <Label htmlFor="admin_tags">Admin Tags</Label>
-          <Input
-            id="admin_tags"
-            placeholder="Enter tags separated by commas..."
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                handleTagInput(e.currentTarget.value)
-                e.currentTarget.value = ''
-              }
-            }}
-          />
-          {adminTags.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {adminTags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="flex items-center gap-1">
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() => removeTag(tag)}
-                    className="ml-1 hover:text-red-600"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
+        {/* Optional Fields */}
+        <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="w-1 h-6 bg-gray-600 rounded-full"></div>
+            Optional Information
+          </h3>
+          <div className="space-y-4">
+            {/* Solution Text */}
+            <div className="space-y-2">
+              <Label htmlFor="solution_text" className="text-sm font-medium text-gray-700">
+                Solution Text
+              </Label>
+              <Textarea
+                id="solution_text"
+                value={formData.solution_text || ''}
+                onChange={(e) => handleInputChange('solution_text', e.target.value)}
+                placeholder="Enter the solution with LaTeX formatting..."
+                className="min-h-[100px] transition-all duration-200 focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+              />
             </div>
-          )}
-        </div>
 
-        {/* Exam Metadata */}
-        <div className="space-y-2">
-          <Label htmlFor="exam_metadata">Exam Metadata</Label>
-          <Textarea
-            id="exam_metadata"
-            value={formData.exam_metadata || ''}
-            onChange={(e) => handleInputChange('exam_metadata', e.target.value)}
-            placeholder="Additional exam-related information..."
-            className="min-h-[60px]"
-          />
+            {/* Difficulty */}
+            <div className="space-y-2">
+              <Label htmlFor="difficulty" className="text-sm font-medium text-gray-700">
+                Difficulty Level
+              </Label>
+              <Select
+                value={formData.difficulty || ''}
+                onValueChange={(value) => handleInputChange('difficulty', value)}
+              >
+                <SelectTrigger className="transition-all duration-200 focus:ring-2 focus:ring-gray-500 focus:border-gray-500">
+                  <SelectValue placeholder="Select difficulty level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Easy">Easy</SelectItem>
+                  <SelectItem value="Easy-Moderate">Easy-Moderate</SelectItem>
+                  <SelectItem value="Moderate">Moderate</SelectItem>
+                  <SelectItem value="Moderate-Hard">Moderate-Hard</SelectItem>
+                  <SelectItem value="Hard">Hard</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Admin Tags */}
+            <div className="space-y-2">
+              <Label htmlFor="admin_tags" className="text-sm font-medium text-gray-700">
+                Admin Tags
+              </Label>
+              <Input
+                id="admin_tags"
+                placeholder="Enter tags separated by commas..."
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    handleTagInput(e.currentTarget.value)
+                    e.currentTarget.value = ''
+                  }
+                }}
+                className="transition-all duration-200 focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+              />
+              {adminTags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {adminTags.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="flex items-center gap-1 bg-gray-100 text-gray-700">
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => removeTag(tag)}
+                        className="ml-1 hover:text-red-600 transition-colors"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Exam Metadata */}
+            <div className="space-y-2">
+              <Label htmlFor="exam_metadata" className="text-sm font-medium text-gray-700">
+                Exam Metadata
+              </Label>
+              <Textarea
+                id="exam_metadata"
+                value={formData.exam_metadata || ''}
+                onChange={(e) => handleInputChange('exam_metadata', e.target.value)}
+                placeholder="Additional exam-related information..."
+                className="min-h-[60px] transition-all duration-200 focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+              />
+            </div>
+          </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t">
+        <div className="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
           <Button
             variant="outline"
             onClick={onCancel}
             disabled={isSaving}
+            className="px-6 py-2 border-gray-300 text-gray-700 hover:bg-gray-50 transition-all duration-200"
           >
             <XCircle className="h-4 w-4 mr-2" />
             Cancel
@@ -355,7 +401,7 @@ export function InPlaceQuestionEditor({
           <Button
             onClick={handleSave}
             disabled={isSaving}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
           >
             {isSaving ? (
               <>

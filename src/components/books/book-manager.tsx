@@ -33,8 +33,12 @@ export function BookManager() {
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const bookSources = await getBookSources()
-        setBooks(bookSources)
+        const result = await getBookSources()
+        if (result.error) {
+          setError(result.error)
+        } else {
+          setBooks(result.data)
+        }
       } catch (err) {
         setError('Failed to fetch book sources')
         console.error('Error:', err)
@@ -58,19 +62,22 @@ export function BookManager() {
     setError(null)
 
     try {
-      const form = new FormData()
-      form.append('name', formData.name.trim())
-      form.append('code', formData.code.trim().toUpperCase())
-      
-      const result = await createBookSource(form)
+      const result = await createBookSource(
+        formData.name.trim(),
+        formData.code.trim().toUpperCase()
+      )
       
       if (result.success) {
         toast.success(result.message)
         // Reset form
         setFormData({ name: '', code: '' })
         // Refresh the books list
-        const updatedBooks = await getBookSources()
-        setBooks(updatedBooks)
+        const updatedResult = await getBookSources()
+        if (updatedResult.error) {
+          setError(updatedResult.error)
+        } else {
+          setBooks(updatedResult.data)
+        }
       } else {
         toast.error(result.message)
         setError(result.message)
@@ -90,8 +97,12 @@ export function BookManager() {
       await deleteBookSource(bookId)
       
       // Refresh the books list
-      const updatedBooks = await getBookSources()
-      setBooks(updatedBooks)
+      const updatedResult = await getBookSources()
+      if (updatedResult.error) {
+        setError(updatedResult.error)
+      } else {
+        setBooks(updatedResult.data)
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to delete book source')
       console.error('Error:', err)

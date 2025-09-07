@@ -1,11 +1,19 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import type { BookSource } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
-// Get all book sources
-export async function getBookSources(): Promise<BookSource[]> {
+export interface BookSource {
+  id: number
+  name: string
+  code: string
+  created_at: string
+}
+
+export async function getBookSources(): Promise<{
+  data: BookSource[]
+  error?: string
+}> {
   try {
     const supabase = createAdminClient()
     
@@ -16,89 +24,82 @@ export async function getBookSources(): Promise<BookSource[]> {
     
     if (error) {
       console.error('Error fetching book sources:', error)
-      return []
+      return {
+        data: [],
+        error: error.message
+      }
     }
     
-    return data as BookSource[]
+    return {
+      data: data || [],
+      error: undefined
+    }
   } catch (error) {
     console.error('Unexpected error:', error)
-    return []
+    return {
+      data: [],
+      error: 'An unexpected error occurred'
+    }
   }
 }
 
-// Get book source names for dropdown (used in question forms)
-export async function getBookSourceNames(): Promise<string[]> {
+export async function createBookSource(name: string, code: string): Promise<{
+  success: boolean
+  message: string
+  data?: BookSource
+}> {
   try {
+    if (!name || !code) {
+      return {
+        success: false,
+        message: 'Book name and code are required'
+      }
+    }
+
     const supabase = createAdminClient()
+    
+    // Check if book source already exists
+    const { data: existing } = await supabase
+      .from('book_sources')
+      .select('id')
+      .or(`name.eq.${name},code.eq.${code}`)
+      .single()
+    
+    if (existing) {
+      return {
+        success: false,
+        message: 'A book source with this name or code already exists'
+      }
+    }
     
     const { data, error } = await supabase
       .from('book_sources')
-      .select('name')
-      .order('name', { ascending: true })
-    
-    if (error) {
-      console.error('Error fetching book source names:', error)
-      return []
-    }
-    
-    return data.map(item => item.name)
-  } catch (error) {
-    console.error('Unexpected error:', error)
-    return []
-  }
-}
-
-// Create a new book source
-export async function createBookSource(formData: FormData): Promise<{ success: boolean; message: string }> {
-  try {
-    const supabase = createAdminClient()
-    
-    const bookData = {
-      name: formData.get('name') as string,
-      code: formData.get('code') as string,
-    }
-    
-    // Validate required fields
-    if (!bookData.name || !bookData.code) {
-      return {
-        success: false,
-        message: 'Name and code are required'
-      }
-    }
-    
-    // Check if code already exists
-    const { data: existingBook } = await supabase
-      .from('book_sources')
-      .select('id')
-      .eq('code', bookData.code)
+      .insert({
+        name,
+        code
+      })
+      .select()
       .single()
-    
-    if (existingBook) {
-      return {
-        success: false,
-        message: 'A book with this code already exists'
-      }
-    }
-    
-    const { error } = await supabase
-      .from('book_sources')
-      .insert([bookData])
     
     if (error) {
       console.error('Error creating book source:', error)
       return {
         success: false,
-        message: error.message
+        message: `Failed to create book source: ${error.message}`
       }
     }
     
-    revalidatePath('/books')
+    // Revalidate the content page to refresh the UI
+    revalidatePath('/content')
+    
     return {
       success: true,
-      message: 'Book source added successfully!'
+      message: 'Book source created successfully!',
+      data
     }
+    
   } catch (error) {
-    console.error('Error creating book source:', error)
+    console.error('Unexpected error creating book source:', error)
     return {
       success: false,
       message: 'An unexpected error occurred while creating the book source'
@@ -106,21 +107,24 @@ export async function createBookSource(formData: FormData): Promise<{ success: b
   }
 }
 
-// Delete a book source
-export async function deleteBookSource(id: number) {
+// Get book source names only (for backward compatibility)
+export async function getBookSourceNames(): Promise<string[]> {
+  try {
+    const result = await getBookSources()
+    return result.data.map(book => book.name)
+  } catch (error) {
+    console.error('Error getting book source names:', error)
+    return []
+  }
+}
+
+// Delete book source
+export async function deleteBookSource(id: number): Promise<{
+  success: boolean
+  message: string
+}> {
   try {
     const supabase = createAdminClient()
-    
-    // Check if any questions are using this book source
-    const { data: questionsUsingBook } = await supabase
-      .from('questions')
-      .select('id')
-      .eq('book_source', (await supabase.from('book_sources').select('name').eq('id', id).single()).data?.name)
-      .limit(1)
-    
-    if (questionsUsingBook && questionsUsingBook.length > 0) {
-      throw new Error('Cannot delete book source that is being used by questions')
-    }
     
     const { error } = await supabase
       .from('book_sources')
@@ -129,12 +133,25 @@ export async function deleteBookSource(id: number) {
     
     if (error) {
       console.error('Error deleting book source:', error)
-      throw new Error(error.message)
+      return {
+        success: false,
+        message: `Failed to delete book source: ${error.message}`
+      }
     }
     
-    revalidatePath('/books')
+    // Revalidate the content page to refresh the UI
+    revalidatePath('/content')
+    
+    return {
+      success: true,
+      message: 'Book source deleted successfully!'
+    }
+    
   } catch (error) {
-    console.error('Error deleting book source:', error)
-    throw error
+    console.error('Unexpected error deleting book source:', error)
+    return {
+      success: false,
+      message: 'An unexpected error occurred while deleting the book source'
+    }
   }
 }
