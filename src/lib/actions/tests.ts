@@ -143,7 +143,7 @@ export async function getChaptersWithTags(): Promise<Array<{ chapter_name: strin
 }
 
 // Dynamic filter options for the Master Question Bank modal
-export async function getFilterOptions(args?: { bookSource?: string }): Promise<{
+export async function getFilterOptions(args?: { bookSource?: string; bookSources?: string[] }): Promise<{
   bookSources: string[]
   chapters: string[]
   tags: string[]
@@ -163,10 +163,14 @@ export async function getFilterOptions(args?: { bookSource?: string }): Promise<
       new Set((bookRows || []).map((r: { book_source: string | null }) => r.book_source).filter(Boolean) as string[])
     ).sort((a, b) => a.localeCompare(b))
 
-    // B) Chapters (optionally filtered by bookSource)
+    const selectedBooks = args?.bookSources && args.bookSources.length > 0
+      ? args.bookSources
+      : (args?.bookSource ? [args.bookSource] : [])
+
+    // B) Chapters (optionally filtered by selected books)
     let chapterQuery = supabase.from('questions').select('chapter_name')
-    if (args?.bookSource) {
-      chapterQuery = chapterQuery.eq('book_source', args.bookSource)
+    if (selectedBooks.length > 0) {
+      chapterQuery = chapterQuery.in('book_source', selectedBooks)
     }
     const { data: chRows, error: chErr } = await chapterQuery
     if (chErr) {
@@ -176,10 +180,10 @@ export async function getFilterOptions(args?: { bookSource?: string }): Promise<
       new Set((chRows || []).map((r: { chapter_name: string | null }) => r.chapter_name).filter(Boolean) as string[])
     ).sort((a, b) => a.localeCompare(b))
 
-    // C) Tags (optionally filtered by bookSource)
+    // C) Tags (optionally filtered by selected books)
     let tagQuery = supabase.from('questions').select('admin_tags')
-    if (args?.bookSource) {
-      tagQuery = tagQuery.eq('book_source', args.bookSource)
+    if (selectedBooks.length > 0) {
+      tagQuery = tagQuery.in('book_source', selectedBooks)
     }
     const { data: tagRows, error: tagErr } = await tagQuery
     if (tagErr) {

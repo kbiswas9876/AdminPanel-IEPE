@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+// Removed shadcn Select usage in favor of checkbox multi-select dropdowns
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Search, ChevronLeft, ChevronRight, Check } from 'lucide-react'
@@ -38,6 +39,9 @@ interface QuestionExplorerModalProps {
 
 export function QuestionExplorerModal({ open, onClose, onSelect, initialChapter }: QuestionExplorerModalProps) {
   const [filters, setFilters] = useState<Filters>({ search: '', bookSource: '', chapter: initialChapter || '', difficulty: '', tags: [], page: 1 })
+  const [selectedBooks, setSelectedBooks] = useState<string[]>([])
+  const [selectedChapters, setSelectedChapters] = useState<string[]>([])
+  const [selectedDifficulties, setSelectedDifficulties] = useState<string[]>([])
   const [options, setOptions] = useState<FilterOptions>({ bookSources: [], chapters: [], tags: [], difficulties: ['Easy', 'Easy-Moderate', 'Moderate', 'Moderate-Hard', 'Hard'] })
   const [results, setResults] = useState<Question[]>([])
   const [total, setTotal] = useState(0)
@@ -48,12 +52,13 @@ export function QuestionExplorerModal({ open, onClose, onSelect, initialChapter 
   const pageSize = 10
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
+  // Placeholder retained for readability; not used with multi-select approach
   const ALL = '__ALL__'
 
   // Load filter options; supports cascading by bookSource
   const loadOptions = useCallback(async (bookSource?: string) => {
     try {
-      const next = await getFilterOptions({ bookSource: bookSource || undefined })
+      const next = await getFilterOptions({ bookSource: bookSource || undefined, bookSources: selectedBooks })
       setOptions(next)
 
       // Cascade: ensure chapter/tags remain valid
@@ -65,7 +70,7 @@ export function QuestionExplorerModal({ open, onClose, onSelect, initialChapter 
     } catch (e) {
       console.error('Failed loading filter options', e)
     }
-  }, [])
+  }, [selectedBooks])
 
   // Fetch results
   const fetchResults = useCallback(async () => {
@@ -73,9 +78,9 @@ export function QuestionExplorerModal({ open, onClose, onSelect, initialChapter 
     try {
       const { questions, total } = await searchQuestions({
         search: filters.search || undefined,
-        book_source: filters.bookSource || undefined,
-        chapter_name: filters.chapter || undefined,
-        difficulty: (filters.difficulty as 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard') || undefined,
+        book_source: selectedBooks.length ? undefined : (filters.bookSource || undefined),
+        chapter_name: selectedChapters.length ? undefined : (filters.chapter || undefined),
+        difficulty: (selectedDifficulties[0] as ('Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard') | undefined) || (filters.difficulty as ('Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard') | undefined),
         tags: filters.tags.length ? filters.tags : undefined,
         page: filters.page,
         pageSize
@@ -94,7 +99,7 @@ export function QuestionExplorerModal({ open, onClose, onSelect, initialChapter 
     } finally {
       setLoading(false)
     }
-  }, [filters, pageSize, expandedKey])
+  }, [filters, pageSize, expandedKey, selectedBooks.length, selectedChapters.length, selectedDifficulties.length])
 
   // Open: load filters + run initial search
   useEffect(() => {
@@ -159,34 +164,55 @@ export function QuestionExplorerModal({ open, onClose, onSelect, initialChapter 
             </div>
             <div className="md:col-span-3">
               <Label>Book Source</Label>
-              <Select value={filters.bookSource || ALL} onValueChange={(v) => setFilters((p) => ({ ...p, bookSource: v === ALL ? '' : v }))}>
-                <SelectTrigger className="w-full"><SelectValue placeholder="All Books" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ALL}>All Books</SelectItem>
-                  {options.bookSources.map((s) => (<SelectItem key={s} value={s}>{s}</SelectItem>))}
-                </SelectContent>
-              </Select>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between">
+                    {selectedBooks.length ? `${selectedBooks.length} selected` : 'All Books'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-64">
+                  {options.bookSources.map((s) => (
+                    <DropdownMenuCheckboxItem key={s} checked={selectedBooks.includes(s)} onCheckedChange={(v) => setSelectedBooks((prev) => v ? [...prev, s] : prev.filter((x) => x !== s))}>
+                      {s}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             <div className="md:col-span-3">
               <Label>Chapter</Label>
               <Input placeholder="Filter chapters..." value={chapterQuery} onChange={(e) => setChapterQuery(e.target.value)} className="mb-1" />
-              <Select value={filters.chapter || ALL} onValueChange={(v) => setFilters((p) => ({ ...p, chapter: v === ALL ? '' : v }))}>
-                <SelectTrigger className="w-full"><SelectValue placeholder="All Chapters" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ALL}>All Chapters</SelectItem>
-                  {options.chapters.filter((c) => c.toLowerCase().includes(chapterQuery.toLowerCase())).map((c) => (<SelectItem key={c} value={c}>{c}</SelectItem>))}
-                </SelectContent>
-              </Select>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between">
+                    {selectedChapters.length ? `${selectedChapters.length} selected` : 'All Chapters'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-72 max-h-64 overflow-y-auto">
+                  {options.chapters.filter((c) => c.toLowerCase().includes(chapterQuery.toLowerCase())).map((c) => (
+                    <DropdownMenuCheckboxItem key={c} checked={selectedChapters.includes(c)} onCheckedChange={(v) => setSelectedChapters((prev) => v ? [...prev, c] : prev.filter((x) => x !== c))}>
+                      {c}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             <div className="md:col-span-2">
               <Label>Difficulty</Label>
-              <Select value={filters.difficulty || ALL} onValueChange={(v) => setFilters((p) => ({ ...p, difficulty: v === ALL ? '' : v }))}>
-                <SelectTrigger className="w-full"><SelectValue placeholder="All Difficulties" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ALL}>All Difficulties</SelectItem>
-                  {options.difficulties.map((d) => (<SelectItem key={d} value={d}>{d}</SelectItem>))}
-                </SelectContent>
-              </Select>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between">
+                    {selectedDifficulties.length ? `${selectedDifficulties.length} selected` : 'All Difficulties'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-64">
+                  {options.difficulties.map((d) => (
+                    <DropdownMenuCheckboxItem key={d} checked={selectedDifficulties.includes(d)} onCheckedChange={(v) => setSelectedDifficulties((prev) => v ? [...prev, d] : prev.filter((x) => x !== d))}>
+                      {d}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             <div className="md:col-span-12">
               <div className="flex items-center gap-3">
