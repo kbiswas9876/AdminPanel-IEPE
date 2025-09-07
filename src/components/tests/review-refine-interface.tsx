@@ -3,9 +3,14 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, ArrowRight, Shuffle, RotateCcw, Pencil, Edit3 } from 'lucide-react'
 import { InlineMath, BlockMath } from 'react-katex'
+import { SmartLatexRenderer } from './smart-latex-renderer'
 import type { Question, TestQuestionSlot } from '@/lib/types'
 import { EnhancedMasterQuestionBankModal } from './enhanced-master-question-bank-modal'
 
@@ -29,6 +34,13 @@ export function ReviewRefineInterface({
   const [shuffleOptions, setShuffleOptions] = useState(false)
   const [overrideIndex, setOverrideIndex] = useState<number | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+  const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const [editForm, setEditForm] = useState<{
+    question_text: string
+    options: { a: string; b: string; c: string; d: string }
+    correct_option: 'a' | 'b' | 'c' | 'd'
+    solution_text: string
+  } | null>(null)
 
   const handleShuffleQuestions = () => {
     const shuffled = [...questions]
@@ -58,18 +70,47 @@ export function ReviewRefineInterface({
     setModalOpen(false)
   }
 
-  const renderMathContent = (text: string) => {
-    // Check if text contains LaTeX math delimiters
-    if (text.includes('$') || text.includes('\\(') || text.includes('\\[')) {
-      // Simple detection for inline math (single $) vs block math ($$ or \[)
-      if (text.includes('$$') || text.includes('\\[')) {
-        return <BlockMath math={text.replace(/\$\$/g, '').replace(/\\\[/g, '').replace(/\\\]/g, '')} />
-      } else {
-        return <InlineMath math={text.replace(/\$/g, '')} />
+  const beginEdit = (index: number) => {
+    const q = questions[index].question
+    const opts = (q.options || { a: '', b: '', c: '', d: '' }) as { a: string; b: string; c: string; d: string }
+    setEditingIndex(index)
+    setEditForm({
+      question_text: q.question_text || '',
+      options: {
+        a: opts.a || '',
+        b: opts.b || '',
+        c: opts.c || '',
+        d: opts.d || ''
+      },
+      correct_option: (q.correct_option as 'a' | 'b' | 'c' | 'd') || 'a',
+      solution_text: q.solution_text || ''
+    })
+  }
+
+  const cancelEdit = () => {
+    setEditingIndex(null)
+    setEditForm(null)
+  }
+
+  const saveEdit = () => {
+    if (editingIndex === null || !editForm) return
+    const updated = [...questions]
+    const current = updated[editingIndex]
+    updated[editingIndex] = {
+      ...current,
+      question: {
+        ...current.question,
+        question_text: editForm.question_text,
+        options: { ...editForm.options },
+        correct_option: editForm.correct_option,
+        solution_text: editForm.solution_text
       }
     }
-    return <span>{text}</span>
+    onQuestionsChange(updated)
+    cancelEdit()
   }
+
+  const renderMathContent = (text: string) => <SmartLatexRenderer text={text} />
 
   const getOptionLabel = (option: string) => {
     return option.charAt(0).toUpperCase()
@@ -165,64 +206,126 @@ export function ReviewRefineInterface({
                           </Badge>
                         </div>
                       </div>
+                      {editingIndex === index && editForm ? (
+                        <div className="space-y-6">
+                          <div>
+                            <Label className="text-sm">Question Text</Label>
+                            <Textarea
+                              value={editForm.question_text}
+                              onChange={(e) => setEditForm({ ...editForm, question_text: e.target.value })}
+                              className="mt-1"
+                              rows={5}
+                            />
+                          </div>
 
-                      {/* Question Text */}
-                      <div className="mb-6">
-                        <div className="prose prose-lg max-w-none">
-                          {renderMathContent(q.question_text)}
-                        </div>
-                      </div>
-
-                      {/* Options */}
-                      <div className="space-y-3 mb-6">
-                        {optionKeys.map((optionKey) => {
-                          const optionText = options[optionKey]
-                          const isCorrect = q.correct_option === optionKey
-                          
-                          return (
-                            <div
-                              key={optionKey}
-                              className={`flex items-start space-x-3 p-3 rounded-lg border ${
-                                isCorrect 
-                                  ? 'bg-green-50 border-green-200' 
-                                  : 'bg-gray-50 border-gray-200'
-                              }`}
-                            >
-                              <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-                                isCorrect
-                                  ? 'bg-green-100 text-green-800'
-                                  : 'bg-gray-100 text-gray-800'
-                              }`}>
-                                {getOptionLabel(optionKey)}
-                                {isCorrect && (
-                                  <span className="ml-1 text-green-600">✓</span>
-                                )}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {(['a','b','c','d'] as const).map((k) => (
+                              <div key={k}>
+                                <Label className="text-sm">Option {k.toUpperCase()}</Label>
+                                <Input
+                                  value={editForm.options[k]}
+                                  onChange={(e) => setEditForm({ ...editForm, options: { ...editForm.options, [k]: e.target.value } })}
+                                  className="mt-1"
+                                />
                               </div>
-                              <div className="flex-1 prose prose-sm max-w-none">
-                                {renderMathContent(optionText)}
+                            ))}
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <Label className="text-sm">Correct Option</Label>
+                              <Select
+                                value={editForm.correct_option}
+                                onValueChange={(v) => setEditForm({ ...editForm, correct_option: v as 'a' | 'b' | 'c' | 'd' })}
+                              >
+                                <SelectTrigger className="mt-1">
+                                  <SelectValue placeholder="Select correct option" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {(['a','b','c','d'] as const).map((k) => (
+                                    <SelectItem key={k} value={k}>{k.toUpperCase()}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div>
+                              <Label className="text-sm">Solution</Label>
+                              <Textarea
+                                value={editForm.solution_text}
+                                onChange={(e) => setEditForm({ ...editForm, solution_text: e.target.value })}
+                                className="mt-1"
+                                rows={3}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            <Button onClick={saveEdit} className="bg-blue-600 hover:bg-blue-700">Save Changes</Button>
+                            <Button variant="outline" onClick={cancelEdit}>Cancel</Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          {/* Question Text */}
+                          <div className="mb-6">
+                            <div className="prose prose-lg max-w-none">
+                              {renderMathContent(q.question_text)}
+                            </div>
+                          </div>
+
+                          {/* Options */}
+                          <div className="space-y-3 mb-6">
+                            {optionKeys.map((optionKey) => {
+                              const optionText = options[optionKey]
+                              const isCorrect = q.correct_option === optionKey
+                              
+                              return (
+                                <div
+                                  key={optionKey}
+                                  className={`flex items-start space-x-3 p-3 rounded-lg border ${
+                                    isCorrect 
+                                      ? 'bg-green-50 border-green-200' 
+                                      : 'bg-gray-50 border-gray-200'
+                                  }`}
+                                >
+                                  <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+                                    isCorrect
+                                      ? 'bg-green-100 text-green-800'
+                                      : 'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {getOptionLabel(String(optionKey))}
+                                    {isCorrect && (
+                                      <span className="ml-1 text-green-600">✓</span>
+                                    )}
+                                  </div>
+                                  <div className="flex-1 prose prose-sm max-w-none">
+                                    {renderMathContent(String(optionText))}
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+
+                          {/* Admin Metadata */}
+                          <div className="bg-gray-50 rounded-lg p-4 text-xs text-gray-600 space-y-1">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              <div>
+                                <span className="font-medium">Source:</span> {q.book_source || '—'}
+                              </div>
+                              <div>
+                                <span className="font-medium">Original No:</span> {q.question_number_in_book || '—'}
+                              </div>
+                              <div>
+                                <span className="font-medium">Difficulty:</span> {(q as unknown as { difficulty?: string }).difficulty || '—'}
+                              </div>
+                              <div>
+                                <span className="font-medium">Tags:</span> {(q.admin_tags || []).join(', ') || '—'}
                               </div>
                             </div>
-                          )
-                        })}
-                      </div>
-
-                      {/* Admin Metadata */}
-                      <div className="bg-gray-50 rounded-lg p-4 text-xs text-gray-600 space-y-1">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          <div>
-                            <span className="font-medium">Source:</span> {q.book_source || '—'}
                           </div>
-                          <div>
-                            <span className="font-medium">Original No:</span> {q.question_number_in_book || '—'}
-                          </div>
-                          <div>
-                            <span className="font-medium">Difficulty:</span> {(q as unknown as { difficulty?: string }).difficulty || '—'}
-                          </div>
-                          <div>
-                            <span className="font-medium">Tags:</span> {(q.admin_tags || []).join(', ') || '—'}
-                          </div>
-                        </div>
-                      </div>
+                        </>
+                      )}
                     </div>
 
                     {/* Per-Question Control Deck */}
@@ -251,7 +354,14 @@ export function ReviewRefineInterface({
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => onEdit(index)}
+                          onClick={() => {
+                            if (editingIndex === index) {
+                              cancelEdit()
+                            } else {
+                              beginEdit(index)
+                            }
+                            onEdit(index)
+                          }}
                           className="h-10 w-10 p-0"
                           title="Edit In-Place"
                         >

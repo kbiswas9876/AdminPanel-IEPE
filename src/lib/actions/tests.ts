@@ -142,6 +142,68 @@ export async function getChaptersWithTags(): Promise<Array<{ chapter_name: strin
   }
 }
 
+// Dynamic filter options for the Master Question Bank modal
+export async function getFilterOptions(args?: { bookSource?: string }): Promise<{
+  bookSources: string[]
+  chapters: string[]
+  tags: string[]
+  difficulties: string[]
+}> {
+  try {
+    const supabase = createAdminClient()
+
+    // A) All unique book sources
+    const { data: bookRows, error: bookErr } = await supabase
+      .from('questions')
+      .select('book_source')
+    if (bookErr) {
+      console.error('Error fetching book sources:', bookErr)
+    }
+    const bookSources = Array.from(
+      new Set((bookRows || []).map((r: { book_source: string | null }) => r.book_source).filter(Boolean) as string[])
+    ).sort((a, b) => a.localeCompare(b))
+
+    // B) Chapters (optionally filtered by bookSource)
+    let chapterQuery = supabase.from('questions').select('chapter_name')
+    if (args?.bookSource) {
+      chapterQuery = chapterQuery.eq('book_source', args.bookSource)
+    }
+    const { data: chRows, error: chErr } = await chapterQuery
+    if (chErr) {
+      console.error('Error fetching chapters:', chErr)
+    }
+    const chapters = Array.from(
+      new Set((chRows || []).map((r: { chapter_name: string | null }) => r.chapter_name).filter(Boolean) as string[])
+    ).sort((a, b) => a.localeCompare(b))
+
+    // C) Tags (optionally filtered by bookSource)
+    let tagQuery = supabase.from('questions').select('admin_tags')
+    if (args?.bookSource) {
+      tagQuery = tagQuery.eq('book_source', args.bookSource)
+    }
+    const { data: tagRows, error: tagErr } = await tagQuery
+    if (tagErr) {
+      console.error('Error fetching tags:', tagErr)
+    }
+    const tagSet = new Set<string>()
+    for (const row of (tagRows || []) as Array<{ admin_tags: string[] | null }>) {
+      if (Array.isArray(row.admin_tags)) {
+        for (const t of row.admin_tags) {
+          if (t && typeof t === 'string') tagSet.add(t)
+        }
+      }
+    }
+    const tags = Array.from(tagSet).sort((a, b) => a.localeCompare(b))
+
+    const difficulties = ['Easy', 'Easy-Moderate', 'Moderate', 'Moderate-Hard', 'Hard']
+
+    return { bookSources, chapters, tags, difficulties }
+  } catch (error) {
+    console.error('Unexpected error in getFilterOptions:', error)
+    return { bookSources: [], chapters: [], tags: [], difficulties: ['Easy', 'Easy-Moderate', 'Moderate', 'Moderate-Hard', 'Hard'] }
+  }
+}
+
 // Types for blueprint-driven generation (rules-based)
 export type RuleRow = { tag: string | null; difficulty: string | null; quantity: number }
 export type BlueprintInput = Record<string, {
