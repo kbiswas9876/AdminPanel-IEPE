@@ -99,9 +99,18 @@ export function ReviewRefineInterface({
     const q = questions[index].question
     const opts = (q.options || {}) as Record<string, string>
     
-    // Ensure we have at least A, B, C, D options
-    const defaultOptions = { A: '', B: '', C: '', D: '' }
-    const mergedOptions = { ...defaultOptions, ...opts }
+    // Debug: Log the original options to see what we're working with
+    console.log('Original question options:', opts)
+    
+    // Only merge with defaults if the question has fewer than 4 options
+    // Otherwise, use the existing options as-is
+    let mergedOptions = opts
+    if (Object.keys(opts).length < 4) {
+      const defaultOptions = { A: '', B: '', C: '', D: '' }
+      mergedOptions = { ...defaultOptions, ...opts }
+    }
+    
+    console.log('Merged options for edit form:', mergedOptions)
     
     setEditingIndex(index)
     setEditForm({
@@ -113,12 +122,16 @@ export function ReviewRefineInterface({
   }
 
   const cancelEdit = () => {
+    console.log('Cancelling edit, cleaning state')
     setEditingIndex(null)
     setEditForm(null)
   }
 
   const saveEdit = () => {
     if (editingIndex === null || !editForm) return
+    
+    console.log('Saving edit with options:', editForm.options)
+    
     const updated = [...questions]
     const current = updated[editingIndex]
     updated[editingIndex] = {
@@ -133,6 +146,8 @@ export function ReviewRefineInterface({
     }
     onQuestionsChange(updated)
     cancelEdit()
+    
+    console.log('Edit saved and state cleaned')
   }
 
   const addEditOption = () => {
@@ -254,7 +269,8 @@ export function ReviewRefineInterface({
           {questions.map((item, index) => {
             const q = item.question
             const options = q.options || {}
-            const optionKeys = Object.keys(options) as Array<keyof typeof options>
+            // Filter out empty options to avoid displaying placeholder options
+            const optionKeys = Object.keys(options).filter(key => options[key] && options[key].trim()) as Array<keyof typeof options>
             
             return (
               <Card key={index} className="border-l-4 border-l-blue-500 shadow-sm">
