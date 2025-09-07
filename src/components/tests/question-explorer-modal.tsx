@@ -78,7 +78,9 @@ export function QuestionExplorerModal({ open, onClose, onSelect, initialChapter 
     try {
       const { questions, total } = await searchQuestions({
         search: filters.search || undefined,
+        book_sources: selectedBooks.length ? selectedBooks : undefined,
         book_source: selectedBooks.length ? undefined : (filters.bookSource || undefined),
+        chapters: selectedChapters.length ? selectedChapters : undefined,
         chapter_name: selectedChapters.length ? undefined : (filters.chapter || undefined),
         difficulty: (selectedDifficulties[0] as ('Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard') | undefined) || (filters.difficulty as ('Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard') | undefined),
         tags: filters.tags.length ? filters.tags : undefined,
@@ -148,7 +150,7 @@ export function QuestionExplorerModal({ open, onClose, onSelect, initialChapter 
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose() }}>
-      <DialogContent className="w-[90vw] sm:max-w-[90vw] lg:max-w-[1280px] h-[85vh] flex flex-col">
+      <DialogContent className="w-[96vw] sm:max-w-[96vw] lg:max-w-[96vw] h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">Master Question Bank</DialogTitle>
         </DialogHeader>
@@ -181,7 +183,6 @@ export function QuestionExplorerModal({ open, onClose, onSelect, initialChapter 
             </div>
             <div className="md:col-span-3">
               <Label>Chapter</Label>
-              <Input placeholder="Filter chapters..." value={chapterQuery} onChange={(e) => setChapterQuery(e.target.value)} className="mb-1" />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-full justify-between">
@@ -189,7 +190,7 @@ export function QuestionExplorerModal({ open, onClose, onSelect, initialChapter 
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-72 max-h-64 overflow-y-auto">
-                  {options.chapters.filter((c) => c.toLowerCase().includes(chapterQuery.toLowerCase())).map((c) => (
+                  {options.chapters.map((c) => (
                     <DropdownMenuCheckboxItem key={c} checked={selectedChapters.includes(c)} onCheckedChange={(v) => setSelectedChapters((prev) => v ? [...prev, c] : prev.filter((x) => x !== c))}>
                       {c}
                     </DropdownMenuCheckboxItem>
@@ -218,8 +219,7 @@ export function QuestionExplorerModal({ open, onClose, onSelect, initialChapter 
               <div className="flex items-center gap-3">
                 <div className="flex-1">
                   <Label>Tags</Label>
-                  <Input placeholder="Search tags..." value={tagQuery} onChange={(e) => setTagQuery(e.target.value)} className="mt-1 mb-2" />
-                  <div className="flex flex-wrap gap-2 max-h-20 overflow-y-auto">
+                  <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto">
                     {filteredTags.map((t) => {
                       const active = filters.tags.includes(t)
                       return (

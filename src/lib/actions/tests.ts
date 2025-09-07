@@ -143,7 +143,7 @@ export async function getChaptersWithTags(): Promise<Array<{ chapter_name: strin
 }
 
 // Dynamic filter options for the Master Question Bank modal
-export async function getFilterOptions(args?: { bookSource?: string; bookSources?: string[] }): Promise<{
+export async function getFilterOptions(args?: { bookSource?: string; bookSources?: string[]; chapters?: string[] }): Promise<{
   bookSources: string[]
   chapters: string[]
   tags: string[]
@@ -180,17 +180,20 @@ export async function getFilterOptions(args?: { bookSource?: string; bookSources
       new Set((chRows || []).map((r: { chapter_name: string | null }) => r.chapter_name).filter(Boolean) as string[])
     ).sort((a, b) => a.localeCompare(b))
 
-    // C) Tags (optionally filtered by selected books)
-    let tagQuery = supabase.from('questions').select('admin_tags')
+    // C) Tags (optionally filtered by selected books and chapters)
+    let tagQuery = supabase.from('questions').select('admin_tags, chapter_name, book_source')
     if (selectedBooks.length > 0) {
       tagQuery = tagQuery.in('book_source', selectedBooks)
+    }
+    if (args?.chapters && args.chapters.length > 0) {
+      tagQuery = tagQuery.in('chapter_name', args.chapters)
     }
     const { data: tagRows, error: tagErr } = await tagQuery
     if (tagErr) {
       console.error('Error fetching tags:', tagErr)
     }
     const tagSet = new Set<string>()
-    for (const row of (tagRows || []) as Array<{ admin_tags: string[] | null }>) {
+    for (const row of (tagRows || []) as Array<{ admin_tags: string[] | null; chapter_name?: string | null }>) {
       if (Array.isArray(row.admin_tags)) {
         for (const t of row.admin_tags) {
           if (t && typeof t === 'string') tagSet.add(t)
@@ -350,7 +353,9 @@ export async function regenerateSingleQuestion(args: {
 export async function searchQuestions(args: {
   search?: string
   book_source?: string
+  book_sources?: string[]
   chapter_name?: string
+  chapters?: string[]
   tags?: string[]
   difficulty?: 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard'
   page?: number
@@ -367,8 +372,17 @@ export async function searchQuestions(args: {
     if (args.search) {
       query = query.or(`question_id.ilike.%${args.search}%,question_text.ilike.%${args.search}%`)
     }
-    if (args.book_source) query = query.eq('book_source', args.book_source)
-    if (args.chapter_name) query = query.eq('chapter_name', args.chapter_name)
+    if (args.book_sources && args.book_sources.length > 0) {
+      query = query.in('book_source', args.book_sources)
+    } else if (args.book_source) {
+      query = query.eq('book_source', args.book_source)
+    }
+
+    if (args.chapters && args.chapters.length > 0) {
+      query = query.in('chapter_name', args.chapters)
+    } else if (args.chapter_name) {
+      query = query.eq('chapter_name', args.chapter_name)
+    }
     if (args.tags && args.tags.length > 0) query = query.contains('admin_tags', args.tags as string[])
     if (args.difficulty) query = query.eq('difficulty', args.difficulty)
 
