@@ -321,12 +321,16 @@ export function TestCreationWizard({
                         <Label>Random questions from this chapter</Label>
                         <div className="flex items-center space-x-2">
                           <Input
-                            type="number"
-                            min={0}
-                            max={chapter.available}
-                            value={chState.random ?? 0}
-                            onChange={(e) => setChapterRandom(chapter.name, Number(e.target.value))}
-                            className="w-32"
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={(chState.random ?? 0).toString()}
+                            onChange={(e) => {
+                              const digitsOnly = e.target.value.replace(/[^0-9]/g, '')
+                              const num = Math.min(Math.max(parseInt(digitsOnly || '0', 10), 0), chapter.available)
+                              setChapterRandom(chapter.name, num)
+                            }}
+                            className="w-24"
                           />
                           <span className="text-sm text-gray-500">0 - {chapter.available}</span>
                         </div>

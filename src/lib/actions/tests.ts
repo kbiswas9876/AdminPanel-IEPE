@@ -1,6 +1,7 @@
 'use server'
 
 import { createAdminClient, type Test, type TestCreationData } from '@/lib/supabase/admin'
+import { cache } from 'react'
 import { revalidatePath } from 'next/cache'
 import type { Question } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
@@ -87,7 +88,7 @@ export async function getChapterNames(): Promise<string[]> {
 }
 
 // Get chapters with their unique admin tags
-export async function getChaptersWithTags(): Promise<Array<{ chapter_name: string; tags: string[]; difficultyCounts: Record<string, number> }>> {
+export const getChaptersWithTags = cache(async (): Promise<Array<{ chapter_name: string; tags: string[]; difficultyCounts: Record<string, number> }>> => {
   try {
     const supabase = createAdminClient()
 
@@ -140,7 +141,7 @@ export async function getChaptersWithTags(): Promise<Array<{ chapter_name: strin
     console.error('Unexpected error:', error)
     return []
   }
-}
+})
 
 // Dynamic filter options for the Master Question Bank modal
 export async function getFilterOptions(args?: { bookSource?: string; bookSources?: string[]; chapters?: string[] }): Promise<{
@@ -421,73 +422,47 @@ export async function saveTest(args: {
   try {
     const supabase = createAdminClient()
 
-    // Insert or update tests row
+    // Upsert tests row (insert or update)
     const status = args.publish ? 'scheduled' : 'draft'
-    let testId = args.testId
+    const upsertPayload = [{
+      id: args.testId || undefined,
+      name: args.name,
+      description: args.description,
+      total_time_minutes: args.total_time_minutes,
+      marks_per_correct: args.marks_per_correct,
+      negative_marks_per_incorrect: args.negative_marks_per_incorrect,
+      result_policy: args.result_policy,
+      result_release_at: args.result_policy === 'scheduled' ? (args.result_release_at || null) : null,
+      status,
+      start_time: args.publish?.start_time || null,
+      end_time: args.publish?.end_time || null,
+      updated_at: new Date().toISOString()
+    }]
 
-    if (testId) {
-      const { error } = await supabase
-        .from('tests')
-        .update({
-          name: args.name,
-          description: args.description,
-          total_time_minutes: args.total_time_minutes,
-          marks_per_correct: args.marks_per_correct,
-          negative_marks_per_incorrect: args.negative_marks_per_incorrect,
-          result_policy: args.result_policy,
-          result_release_at: args.result_policy === 'scheduled' ? (args.result_release_at || null) : null,
-          status,
-          start_time: args.publish?.start_time || null,
-          end_time: args.publish?.end_time || null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', testId)
+    const { data: upserted, error: upsertErr } = await supabase
+      .from('tests')
+      .upsert(upsertPayload, { onConflict: 'id' })
+      .select()
+      .single()
 
-      if (error) {
-        console.error('Error updating test:', error)
-        return { success: false, message: `Failed to update test: ${error.message}` }
-      }
-    } else {
-      const { data, error } = await supabase
-        .from('tests')
-        .insert([{
-          name: args.name,
-          description: args.description,
-          total_time_minutes: args.total_time_minutes,
-          marks_per_correct: args.marks_per_correct,
-          negative_marks_per_incorrect: args.negative_marks_per_incorrect,
-          result_policy: args.result_policy,
-          result_release_at: args.result_policy === 'scheduled' ? (args.result_release_at || null) : null,
-          status,
-          start_time: args.publish?.start_time || null,
-          end_time: args.publish?.end_time || null,
-        }])
-        .select()
-        .single()
-
-      if (error || !data) {
-        console.error('Error creating test:', error)
-        return { success: false, message: `Failed to create test: ${error?.message}` }
-      }
-      testId = data.id
+    if (upsertErr || !upserted) {
+      console.error('Error upserting test:', upsertErr)
+      return { success: false, message: `Failed to save test: ${upsertErr?.message}` }
     }
+    const testId = upserted.id as number
 
-    // Clean existing mappings
-    const { error: delErr } = await supabase
-      .from('test_questions')
-      .delete()
-      .eq('test_id', testId!)
+    // Reset mappings then insert fresh
+    const { error: delErr } = await supabase.from('test_questions').delete().eq('test_id', testId)
     if (delErr) {
-      console.error('Error clearing test_questions:', delErr)
+      console.error('Error clearing mappings:', delErr)
       return { success: false, message: `Failed to reset test questions: ${delErr.message}` }
     }
 
-    // Batch insert mappings
-    const mappings = (args.question_ids || []).map((qid) => ({ test_id: testId!, question_id: qid }))
+    const mappings = (args.question_ids || []).map((qid) => ({ test_id: testId, question_id: qid }))
     if (mappings.length > 0) {
       const { error: insErr } = await supabase.from('test_questions').insert(mappings)
       if (insErr) {
-        console.error('Error inserting test_questions:', insErr)
+        console.error('Error inserting mappings:', insErr)
         return { success: false, message: `Failed to add questions: ${insErr.message}` }
       }
     }

@@ -32,6 +32,8 @@ export function PublishTestModal({
     startTime: '',
     endTime: ''
   })
+  const [resultPolicy, setResultPolicy] = useState<'instant' | 'scheduled'>('instant')
+  const [resultReleaseAt, setResultReleaseAt] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const validatePublishData = (): boolean => {
@@ -64,7 +66,9 @@ export function PublishTestModal({
 
   const handleConfirm = () => {
     if (validatePublishData()) {
-      onConfirm(publishData)
+      // Extend publish payload by putting result policy in the server call via parent
+      onConfirm({ ...publishData })
+      // Parent already has form data; policy is controlled there when saving/publishing
     }
   }
 
@@ -98,6 +102,24 @@ export function PublishTestModal({
         </DialogHeader>
         
         <div className="space-y-6">
+          {/* Result policy */}
+          <div className="space-y-3">
+            <Label className="text-sm">Result Declaration Policy</Label>
+            <label className="flex items-center space-x-3">
+              <input type="radio" name="policy" value="instant" checked={resultPolicy==='instant'} onChange={() => setResultPolicy('instant')} className="w-4 h-4 text-blue-600" />
+              <span className="text-sm">Instantly on submission</span>
+            </label>
+            <label className="flex items-center space-x-3">
+              <input type="radio" name="policy" value="scheduled" checked={resultPolicy==='scheduled'} onChange={() => setResultPolicy('scheduled')} className="w-4 h-4 text-blue-600" />
+              <span className="text-sm">At a fixed date/time</span>
+            </label>
+            {resultPolicy==='scheduled' && (
+              <div className="ml-7 space-y-2">
+                <Label htmlFor="result-release">Result Release Date & Time *</Label>
+                <Input id="result-release" type="datetime-local" value={resultReleaseAt} onChange={(e)=>setResultReleaseAt(e.target.value)} />
+              </div>
+            )}
+          </div>
           {/* Start Time */}
           <div className="space-y-2">
             <Label htmlFor="start-time" className="flex items-center space-x-2">

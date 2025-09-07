@@ -128,46 +128,7 @@ export function TestFinalizationStage({
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Progress Indicator */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-800">
-              <CheckCircle className="h-5 w-5" />
-            </div>
-            <span className="text-sm font-medium text-green-800">
-              Test Blueprint ✓
-            </span>
-          </div>
-          
-          <div className="flex-1 h-0.5 bg-green-200 mx-4">
-            <div className="h-full bg-green-600" style={{ width: '100%' }} />
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-800">
-              <CheckCircle className="h-5 w-5" />
-            </div>
-            <span className="text-sm font-medium text-green-800">
-              Review & Refine ✓
-            </span>
-          </div>
-          
-          <div className="flex-1 h-0.5 bg-green-200 mx-4">
-            <div className="h-full bg-green-600" style={{ width: '100%' }} />
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white">
-              3
-            </div>
-            <span className="text-sm font-medium text-blue-600">
-              Finalize & Publish
-            </span>
-          </div>
-        </div>
-      </div>
+    <div className="max-w-4xl mx-auto transition-opacity duration-300 animate-in fade-in">
 
       {/* Test Summary */}
       <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -189,10 +150,10 @@ export function TestFinalizationStage({
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Calendar className="h-5 w-5" />
-            <span>Test Rules & Publishing</span>
+            <span>Finalize Test Details</span>
           </CardTitle>
           <CardDescription>
-            Set the final rules and publishing options for your test.
+            Set the essential rules for your test. You can choose result release while publishing.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-8">
@@ -277,59 +238,7 @@ export function TestFinalizationStage({
             </div>
           </div>
 
-          {/* C) Publishing Options */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Result Declaration Policy</h3>
-            <div className="space-y-4">
-              <div className="space-y-3">
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="radio"
-                    name="resultPolicy"
-                    value="instant"
-                    checked={formData.resultPolicy === 'instant'}
-                    onChange={(e) => updateFormData('resultPolicy', e.target.value as 'instant' | 'scheduled')}
-                    className="w-4 h-4 text-blue-600"
-                  />
-                  <div>
-                    <span className="font-medium text-gray-900">Instantly on Submission</span>
-                    <p className="text-sm text-gray-600">Students see their results immediately after finishing the test.</p>
-                  </div>
-                </label>
-                
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="radio"
-                    name="resultPolicy"
-                    value="scheduled"
-                    checked={formData.resultPolicy === 'scheduled'}
-                    onChange={(e) => updateFormData('resultPolicy', e.target.value as 'instant' | 'scheduled')}
-                    className="w-4 h-4 text-blue-600"
-                  />
-                  <div>
-                    <span className="font-medium text-gray-900">At a Fixed Date/Time</span>
-                    <p className="text-sm text-gray-600">Results are released at a specific future time.</p>
-                  </div>
-                </label>
-              </div>
-              
-              {formData.resultPolicy === 'scheduled' && (
-                <div className="ml-7 space-y-2">
-                  <Label htmlFor="result-release">Result Release Date & Time *</Label>
-                  <Input
-                    id="result-release"
-                    type="datetime-local"
-                    value={formData.resultReleaseAt}
-                    onChange={(e) => updateFormData('resultReleaseAt', e.target.value)}
-                    className={errors.resultReleaseAt ? 'border-red-300' : ''}
-                  />
-                  {errors.resultReleaseAt && (
-                    <p className="text-sm text-red-600">{errors.resultReleaseAt}</p>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Publishing options moved to Publish modal */}
         </CardContent>
       </Card>
 
