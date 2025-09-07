@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { InlineMath, BlockMath } from 'react-katex'
+import { sanitizeLatexForRendering } from '@/lib/utils/latex-sanitization'
 
 interface SmartLatexRendererProps {
   text: string
@@ -11,17 +12,20 @@ interface SmartLatexRendererProps {
 // Splits mixed content into text and LaTeX parts (inline: $...$, \(...\); block: $$...$$, \[...\])
 function splitIntoParts(input: string): Array<{ type: 'text' | 'inline' | 'block'; content: string }> {
   if (!input) return [{ type: 'text', content: '' }]
+  
+  // Sanitize the input for rendering (convert \\ to \)
+  const sanitizedInput = sanitizeLatexForRendering(input) || ''
   const pattern = /(\$\$[\s\S]+?\$\$|\$[^$]+?\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\))/g
   const parts: Array<{ type: 'text' | 'inline' | 'block'; content: string }> = []
   let lastIndex = 0
   let match: RegExpExecArray | null
   const regex = new RegExp(pattern)
   regex.lastIndex = 0
-  while ((match = pattern.exec(input)) !== null) {
+  while ((match = pattern.exec(sanitizedInput)) !== null) {
     const matchStart = match.index
     const matchEnd = match.index + match[0].length
     if (matchStart > lastIndex) {
-      parts.push({ type: 'text', content: input.slice(lastIndex, matchStart) })
+      parts.push({ type: 'text', content: sanitizedInput.slice(lastIndex, matchStart) })
     }
     const token = match[0]
     if (token.startsWith('$$')) {
@@ -35,8 +39,8 @@ function splitIntoParts(input: string): Array<{ type: 'text' | 'inline' | 'block
     }
     lastIndex = matchEnd
   }
-  if (lastIndex < input.length) {
-    parts.push({ type: 'text', content: input.slice(lastIndex) })
+  if (lastIndex < sanitizedInput.length) {
+    parts.push({ type: 'text', content: sanitizedInput.slice(lastIndex) })
   }
   return parts
 }

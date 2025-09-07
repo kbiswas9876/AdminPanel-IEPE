@@ -15,6 +15,7 @@ interface QuestionExplorerProps {
   onQuestionEdit?: (question: Question) => void
   onQuestionDelete?: (question: Question) => void
   onQuestionBulkDelete?: (questions: Question[]) => void
+  onQuestionAction?: (question: Question, action: string) => void
   
   // UI customization
   title?: string

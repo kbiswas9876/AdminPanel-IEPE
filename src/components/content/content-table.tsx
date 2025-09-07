@@ -14,7 +14,7 @@ import {
   RowSelectionState,
 } from '@tanstack/react-table'
 import { getQuestions } from '@/lib/actions/questions'
-import type { Question } from '@/lib/supabase/admin'
+import type { Question } from '@/lib/types'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {

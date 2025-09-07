@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Edit } from 'lucide-react'
-import Link from 'next/link'
 import { DeleteQuestionDialog } from './delete-question-dialog'
 import { SmartLatexRenderer } from '../tests/smart-latex-renderer'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -250,13 +249,16 @@ export function ExpandableQuestionList({
             <p className="text-sm">Try adjusting your search terms or add new questions.</p>
           </div>
         ) : (
-          data.map((question) => {
+          data.map((question, index) => {
             const isExpanded = expandedQuestionIds.has(question.id!)
             const options = question.options || {}
             const optionKeys = Object.keys(options).sort()
             
+            // Use a more robust key that works for both regular and staged questions
+            const questionKey = question.id || question.question_id || `staged-${index}`
+            
             return (
-              <Card key={question.id} className="border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-shadow">
+              <Card key={questionKey} className="border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-shadow">
                 <CardContent className="p-0">
                   {/* Compact Row (Default View) */}
                   <div className="p-6">
@@ -440,12 +442,14 @@ export function ExpandableQuestionList({
                         <div className="flex items-center justify-end gap-3 pt-4 border-t">
                           {actionType === 'edit' && (
                             <>
-                              <Link href={`/content/edit/${question.id}`}>
-                                <Button variant="outline" size="sm">
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Edit Question
-                                </Button>
-                              </Link>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => onQuestionAction?.(question, 'edit')}
+                              >
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit Question
+                              </Button>
                               <DeleteQuestionDialog 
                                 questionId={question.id!} 
                                 questionText={question.question_text}

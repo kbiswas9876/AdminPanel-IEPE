@@ -1,14 +1,16 @@
 'use server'
 
-import { createAdminClient, type Question, type QuestionsResponse } from '@/lib/supabase/admin'
+import { createAdminClient, type Question as DBQuestion, type QuestionsResponse } from '@/lib/supabase/admin'
+import type { Question } from '@/lib/types'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { sanitizeQuestionForStorage, sanitizeQuestionForRendering } from '@/lib/utils/latex-sanitization'
 
 export async function getQuestions(
   page: number = 1,
   limit: number = 20,
   search?: string
-): Promise<QuestionsResponse> {
+): Promise<{ data: Question[]; count: number; error?: string }> {
   try {
     const supabase = createAdminClient()
     
@@ -38,8 +40,11 @@ export async function getQuestions(
       }
     }
     
+    // Sanitize questions for rendering (convert \\ to \)
+    const sanitizedQuestions = (data as Question[]).map(q => sanitizeQuestionForRendering(q) as Question)
+    
     return {
-      data: data as Question[],
+      data: sanitizedQuestions,
       count: count || 0
     }
   } catch (error) {
@@ -69,7 +74,8 @@ export async function getQuestionById(id: number): Promise<Question | null> {
       return null
     }
     
-    return data as Question
+    // Sanitize question for rendering (convert \\ to \)
+    return sanitizeQuestionForRendering(data as Question) as Question
   } catch (error) {
     console.error('Unexpected error:', error)
     return null
@@ -352,6 +358,68 @@ export async function deleteMultipleQuestions(questionIds: number[]): Promise<{
     return {
       success: false,
       message: 'An unexpected error occurred while deleting questions'
+    }
+  }
+}
+
+// Update a single question (new in-place editor version)
+export async function updateQuestionInPlace(question: Question): Promise<{ 
+  success: boolean; 
+  message: string; 
+}> {
+  try {
+    if (!question.id) {
+      return {
+        success: false,
+        message: 'Question ID is required for update'
+      }
+    }
+
+    const supabase = createAdminClient()
+    
+    // Sanitize question for storage (convert \ to \\ for JSON compatibility)
+    const sanitizedQuestion = sanitizeQuestionForStorage(question)
+    
+    // Convert Question type to DBQuestion type for database update
+    const updateData: Partial<DBQuestion> = {
+      question_id: sanitizedQuestion.question_id as string,
+      book_source: sanitizedQuestion.book_source as string,
+      chapter_name: sanitizedQuestion.chapter_name as string,
+      question_number_in_book: sanitizedQuestion.question_number_in_book as number | undefined,
+      question_text: sanitizedQuestion.question_text as string,
+      options: sanitizedQuestion.options as { a: string; b: string; c: string; d: string; } | undefined,
+      correct_option: sanitizedQuestion.correct_option as string | undefined,
+      solution_text: sanitizedQuestion.solution_text as string | undefined,
+      exam_metadata: sanitizedQuestion.exam_metadata as string | undefined,
+      admin_tags: sanitizedQuestion.admin_tags as string[] | undefined
+    }
+    
+    const { error } = await supabase
+      .from('questions')
+      .update(updateData)
+      .eq('id', question.id)
+    
+    if (error) {
+      console.error('Error updating question:', error)
+      return {
+        success: false,
+        message: `Failed to update question: ${error.message}`
+      }
+    }
+    
+    // Revalidate the content page to refresh the UI
+    revalidatePath('/content')
+    
+    return {
+      success: true,
+      message: 'Question updated successfully!'
+    }
+    
+  } catch (error) {
+    console.error('Unexpected error updating question:', error)
+    return {
+      success: false,
+      message: 'An unexpected error occurred while updating the question'
     }
   }
 }

@@ -3,6 +3,7 @@
 import { createAdminClient, type Question as DBQuestion } from '@/lib/supabase/admin'
 import type { Question } from '@/lib/types'
 import { revalidatePath } from 'next/cache'
+import { sanitizeQuestionForStorage } from '@/lib/utils/latex-sanitization'
 import Papa from 'papaparse'
 
 export interface ImportResult {
@@ -200,20 +201,23 @@ export async function finalizeImport(questions: Question[]): Promise<ImportResul
       }
     }
     
+    // Sanitize questions for storage (convert \ to \\ for JSON compatibility)
+    const sanitizedQuestions = questions.map(q => sanitizeQuestionForStorage(q))
+    
     // Convert Question type to DBQuestion type for database insertion
-    const dbQuestions: DBQuestion[] = questions.map(q => ({
-      id: q.id,
-      question_id: q.question_id,
-      book_source: q.book_source,
-      chapter_name: q.chapter_name,
-      question_number_in_book: q.question_number_in_book ?? undefined,
-      question_text: q.question_text,
+    // Exclude id field to let the database auto-generate it
+    const dbQuestions: Omit<DBQuestion, 'id'>[] = sanitizedQuestions.map(q => ({
+      question_id: q.question_id as string,
+      book_source: q.book_source as string,
+      chapter_name: q.chapter_name as string,
+      question_number_in_book: q.question_number_in_book as number | undefined,
+      question_text: q.question_text as string,
       options: q.options as { a: string; b: string; c: string; d: string; } | undefined,
-      correct_option: q.correct_option,
-      solution_text: q.solution_text ?? undefined,
-      exam_metadata: q.exam_metadata ?? undefined,
-      admin_tags: q.admin_tags ?? undefined,
-      created_at: q.created_at
+      correct_option: q.correct_option as string | undefined,
+      solution_text: q.solution_text as string | undefined,
+      exam_metadata: q.exam_metadata as string | undefined,
+      admin_tags: q.admin_tags as string[] | undefined,
+      created_at: q.created_at as string
     }))
     
     // Batch insert into database

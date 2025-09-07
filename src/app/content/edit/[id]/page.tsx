@@ -32,7 +32,7 @@ export default async function EditQuestionPage({ params }: EditQuestionPageProps
     <ProtectedRoute>
       <MainLayout>
         <QuestionForm 
-          question={question} 
+          question={question as unknown as import('@/lib/supabase/admin').Question} 
           isEditing={true} 
           onSubmit={handleUpdate} 
         />

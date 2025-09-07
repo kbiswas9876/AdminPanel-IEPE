@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { QuestionExplorer } from '../shared/question-explorer'
+import { InPlaceQuestionEditor } from '../shared/in-place-question-editor'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ArrowLeft, CheckCircle, AlertTriangle } from 'lucide-react'
@@ -16,6 +17,7 @@ export function ImportReviewInterface() {
   const [stagedQuestions, setStagedQuestions] = useState<Question[]>([])
   const [isFinalizing, setIsFinalizing] = useState(false)
   const [selectedQuestions, setSelectedQuestions] = useState<Set<string | number>>(new Set())
+  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null)
 
   // Load staged questions from URL params or localStorage
   useEffect(() => {
@@ -49,8 +51,27 @@ export function ImportReviewInterface() {
   }, [searchParams, router])
 
   const handleQuestionEdit = (question: Question) => {
-    // Navigate to edit page
-    window.location.href = `/content/edit/${question.id}`
+    // Start in-place editing for staged question
+    setEditingQuestion(question)
+  }
+
+  const handleQuestionAction = (question: Question, action: string) => {
+    if (action === 'edit') {
+      handleQuestionEdit(question)
+    }
+  }
+
+  const handleQuestionSave = (updatedQuestion: Question) => {
+    // Update the question in the staged questions array
+    setStagedQuestions(prev => 
+      prev.map(q => q.id === updatedQuestion.id ? updatedQuestion : q)
+    )
+    setEditingQuestion(null)
+    toast.success('Question updated in import batch')
+  }
+
+  const handleQuestionEditCancel = () => {
+    setEditingQuestion(null)
   }
 
   const handleQuestionDelete = (question: Question) => {
@@ -212,18 +233,39 @@ export function ImportReviewInterface() {
 
       {/* Question Explorer with Editing Capabilities */}
       <div className="flex-1 min-h-0">
-        <QuestionExplorer
-          actionType="edit"
-          onQuestionEdit={handleQuestionEdit}
-          onQuestionDelete={handleQuestionDelete}
-          onQuestionBulkDelete={handleBulkDelete}
-          title=""
-          showHeader={false}
-          multiSelect={true}
-          selectedQuestions={selectedQuestions}
-          onSelectionChange={handleSelectionChange}
-          stagedQuestions={stagedQuestions}
-        />
+        {editingQuestion ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-900">Edit Staged Question</h2>
+              <button
+                onClick={handleQuestionEditCancel}
+                className="text-sm text-gray-600 hover:text-gray-800"
+              >
+                ← Back to Review
+              </button>
+            </div>
+            <InPlaceQuestionEditor
+              question={editingQuestion}
+              onSave={handleQuestionSave}
+              onCancel={handleQuestionEditCancel}
+              isStaged={true}
+            />
+          </div>
+        ) : (
+          <QuestionExplorer
+            actionType="edit"
+            onQuestionEdit={handleQuestionEdit}
+            onQuestionDelete={handleQuestionDelete}
+            onQuestionBulkDelete={handleBulkDelete}
+            onQuestionAction={handleQuestionAction}
+            title=""
+            showHeader={false}
+            multiSelect={true}
+            selectedQuestions={selectedQuestions}
+            onSelectionChange={handleSelectionChange}
+            stagedQuestions={stagedQuestions}
+          />
+        )}
       </div>
 
       {/* Finalize Import Button */}
