@@ -30,10 +30,10 @@ export function PublishTestModal({
 }: PublishTestModalProps) {
   const [publishData, setPublishData] = useState<PublishData>({
     startTime: '',
-    endTime: ''
+    endTime: '',
+    resultPolicy: 'instant',
+    resultReleaseAt: ''
   })
-  const [resultPolicy, setResultPolicy] = useState<'instant' | 'scheduled'>('instant')
-  const [resultReleaseAt, setResultReleaseAt] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const validatePublishData = (): boolean => {
@@ -66,9 +66,7 @@ export function PublishTestModal({
 
   const handleConfirm = () => {
     if (validatePublishData()) {
-      // Extend publish payload by putting result policy in the server call via parent
-      onConfirm({ ...publishData })
-      // Parent already has form data; policy is controlled there when saving/publishing
+      onConfirm(publishData)
     }
   }
 
@@ -82,7 +80,7 @@ export function PublishTestModal({
 
   const handleClose = () => {
     if (!isProcessing) {
-      setPublishData({ startTime: '', endTime: '' })
+      setPublishData({ startTime: '', endTime: '', resultPolicy: 'instant', resultReleaseAt: '' })
       setErrors({})
       onClose()
     }
@@ -106,17 +104,17 @@ export function PublishTestModal({
           <div className="space-y-3">
             <Label className="text-sm">Result Declaration Policy</Label>
             <label className="flex items-center space-x-3">
-              <input type="radio" name="policy" value="instant" checked={resultPolicy==='instant'} onChange={() => setResultPolicy('instant')} className="w-4 h-4 text-blue-600" />
+              <input type="radio" name="policy" value="instant" checked={publishData.resultPolicy==='instant'} onChange={() => setPublishData((p)=>({ ...p, resultPolicy: 'instant', resultReleaseAt: '' }))} className="w-4 h-4 text-blue-600" />
               <span className="text-sm">Instantly on submission</span>
             </label>
             <label className="flex items-center space-x-3">
-              <input type="radio" name="policy" value="scheduled" checked={resultPolicy==='scheduled'} onChange={() => setResultPolicy('scheduled')} className="w-4 h-4 text-blue-600" />
+              <input type="radio" name="policy" value="scheduled" checked={publishData.resultPolicy==='scheduled'} onChange={() => setPublishData((p)=>({ ...p, resultPolicy: 'scheduled' }))} className="w-4 h-4 text-blue-600" />
               <span className="text-sm">At a fixed date/time</span>
             </label>
-            {resultPolicy==='scheduled' && (
+            {publishData.resultPolicy==='scheduled' && (
               <div className="ml-7 space-y-2">
                 <Label htmlFor="result-release">Result Release Date & Time *</Label>
-                <Input id="result-release" type="datetime-local" value={resultReleaseAt} onChange={(e)=>setResultReleaseAt(e.target.value)} />
+                <Input id="result-release" type="datetime-local" value={publishData.resultReleaseAt || ''} onChange={(e)=>setPublishData((p)=>({ ...p, resultReleaseAt: e.target.value }))} />
               </div>
             )}
           </div>

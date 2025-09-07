@@ -9,12 +9,7 @@ export type Question = {
   chapter_name: string;
   question_number_in_book?: number | null;
   question_text: string;
-  options?: {
-    a: string;
-    b: string;
-    c: string;
-    d: string;
-  } | null;
+  options?: Record<string, string> | null;
   correct_option?: string;
   solution_text?: string | null;
   exam_metadata?: string | null;
@@ -43,11 +38,12 @@ export type TestBlueprint = {
 // Type for a single question slot in the "Review & Refine" stage
 export type TestQuestionSlot = {
   question: Question;
-  source_type: 'random' | 'tag' | 'difficulty' | 'rule';
+  source_type: 'random' | 'tag' | 'difficulty' | 'rule' | 'custom';
   source_value?: string;
   rule_tag?: string | null;
   rule_difficulty?: string | null;
   chapter_name: string;
+  tempId?: string;
 };
 
 // Type for test creation and management

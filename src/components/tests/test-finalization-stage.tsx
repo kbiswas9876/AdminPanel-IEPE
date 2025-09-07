@@ -6,8 +6,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { ArrowLeft, Save, Calendar, Clock, CheckCircle } from 'lucide-react'
+import { ArrowLeft, Save, Calendar, Clock } from 'lucide-react'
 import { PublishTestModal } from './publish-test-modal'
+import { saveTestFromForm } from '@/lib/actions/tests'
+import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 import type { TestQuestionSlot } from '@/lib/types'
 
 interface TestFinalizationStageProps {
@@ -24,6 +27,8 @@ interface TestFinalizationStageProps {
     result_policy?: 'instant' | 'scheduled'
     result_release_at?: string | null
   }
+  isEditMode?: boolean
+  testId?: number
 }
 
 export interface TestFormData {
@@ -39,15 +44,18 @@ export interface TestFormData {
 export interface PublishData {
   startTime: string
   endTime: string
+  resultPolicy: 'instant' | 'scheduled'
+  resultReleaseAt?: string
 }
 
 export function TestFinalizationStage({
   questions,
   onPrevious,
-  onSave,
-  onPublish,
-  initialTestData
+  initialTestData,
+  isEditMode,
+  testId
 }: TestFinalizationStageProps) {
+  const router = useRouter()
   const [formData, setFormData] = useState<TestFormData>({
     name: initialTestData?.name || '',
     description: initialTestData?.description || '',
@@ -91,15 +99,55 @@ export function TestFinalizationStage({
 
   const handleSaveAsDraft = async () => {
     if (!validateForm()) return
-    
     setIsSaving(true)
-    try {
-      await onSave(formData)
-    } catch (error) {
-      console.error('Error saving test:', error)
-    } finally {
-      setIsSaving(false)
+    const fd = new FormData()
+    if (isEditMode && typeof testId === 'number') {
+      fd.append('testId', String(testId))
     }
+    fd.append('name', formData.name)
+    fd.append('description', formData.description)
+    fd.append('total_time_minutes', String(formData.totalTimeMinutes))
+    fd.append('marks_per_correct', String(formData.marksPerCorrect))
+    fd.append('negative_marks_per_incorrect', String(formData.negativeMarksPerIncorrect))
+    fd.append('result_policy', 'instant')
+    fd.append('result_release_at', '')
+    fd.append('status', 'draft')
+    const questionsPayload = questions.map((slot) => {
+      const q = slot.question
+      const normalizedOptions = Object.fromEntries(Object.entries(q.options || {}).map(([k, v]) => [String(k).toUpperCase(), v]))
+      if (typeof q.id === 'number') {
+        return {
+          id: q.id,
+          override: {
+            question_text: q.question_text,
+            options: normalizedOptions,
+            correct_option: (q.correct_option || '').toString().toUpperCase(),
+            solution_text: q.solution_text ?? null
+          }
+        }
+      }
+      return {
+        new: {
+          question_text: q.question_text,
+          options: normalizedOptions,
+          correct_option: (q.correct_option || '').toString().toUpperCase(),
+          solution_text: q.solution_text || null,
+          book_source: q.book_source,
+          chapter_name: q.chapter_name,
+          difficulty: q.difficulty || null,
+          admin_tags: q.admin_tags || []
+        }
+      }
+    })
+    fd.append('questions_payload', JSON.stringify(questionsPayload))
+    const res = await saveTestFromForm(fd)
+    setIsSaving(false)
+    if (!res.success) {
+      toast.error(res.message || (isEditMode ? 'Failed to update draft' : 'Failed to save draft'))
+      return
+    }
+    toast.success(isEditMode ? 'Draft updated successfully!' : 'Test saved as draft successfully!')
+    setTimeout(() => router.push('/tests'), 1500)
   }
 
   const handlePublishClick = () => {
@@ -109,14 +157,57 @@ export function TestFinalizationStage({
 
   const handlePublishConfirm = async (publishData: PublishData) => {
     setIsSaving(true)
-    try {
-      await onPublish(formData, publishData)
-    } catch (error) {
-      console.error('Error publishing test:', error)
-    } finally {
-      setIsSaving(false)
-      setShowPublishModal(false)
+    const fd = new FormData()
+    if (isEditMode && typeof testId === 'number') {
+      fd.append('testId', String(testId))
     }
+    fd.append('name', formData.name)
+    fd.append('description', formData.description)
+    fd.append('total_time_minutes', String(formData.totalTimeMinutes))
+    fd.append('marks_per_correct', String(formData.marksPerCorrect))
+    fd.append('negative_marks_per_incorrect', String(formData.negativeMarksPerIncorrect))
+    fd.append('result_policy', publishData.resultPolicy)
+    fd.append('result_release_at', publishData.resultPolicy === 'scheduled' ? (publishData.resultReleaseAt || '') : '')
+    fd.append('status', 'scheduled')
+    fd.append('start_time', publishData.startTime)
+    fd.append('end_time', publishData.endTime)
+    const questionsPayload = questions.map((slot) => {
+      const q = slot.question
+      const normalizedOptions = Object.fromEntries(Object.entries(q.options || {}).map(([k, v]) => [String(k).toUpperCase(), v]))
+      if (typeof q.id === 'number') {
+        return {
+          id: q.id,
+          override: {
+            question_text: q.question_text,
+            options: normalizedOptions,
+            correct_option: (q.correct_option || '').toString().toUpperCase(),
+            solution_text: q.solution_text ?? null
+          }
+        }
+      }
+      return {
+        new: {
+          question_text: q.question_text,
+          options: normalizedOptions,
+          correct_option: (q.correct_option || '').toString().toUpperCase(),
+          solution_text: q.solution_text || null,
+          book_source: q.book_source,
+          chapter_name: q.chapter_name,
+          difficulty: q.difficulty || null,
+          admin_tags: q.admin_tags || []
+        }
+      }
+    })
+    fd.append('questions_payload', JSON.stringify(questionsPayload))
+    const res = await saveTestFromForm(fd)
+    setIsSaving(false)
+    setShowPublishModal(false)
+    if (!res.success) {
+      toast.error(res.message || (isEditMode ? 'Failed to update & publish' : 'Failed to publish test'))
+      return
+    }
+    toast.success(isEditMode ? 'Test updated & scheduled successfully!' : 'Your test has been published successfully!')
+    setTimeout(() => router.push('/tests'), 1500)
   }
 
   const updateFormData = (field: keyof TestFormData, value: string | number) => {
@@ -140,7 +231,7 @@ export function TestFinalizationStage({
             </p>
           </div>
           <div className="text-sm text-blue-600">
-            Ready to publish
+            {isEditMode ? 'Ready to update' : 'Ready to publish'}
           </div>
         </div>
       </div>
@@ -257,7 +348,7 @@ export function TestFinalizationStage({
             className="flex items-center space-x-2"
           >
             <Save className="h-4 w-4" />
-            <span>{isSaving ? 'Saving...' : 'Save as Draft'}</span>
+            <span>{isSaving ? (isEditMode ? 'Updating...' : 'Saving...') : (isEditMode ? 'Update Draft' : 'Save as Draft')}</span>
           </Button>
           
           <Button
@@ -266,7 +357,7 @@ export function TestFinalizationStage({
             className="bg-blue-600 hover:bg-blue-700 flex items-center space-x-2"
           >
             <Clock className="h-4 w-4" />
-            <span>Publish Test</span>
+            <span>{isEditMode ? 'Update & Publish' : 'Publish Test'}</span>
           </Button>
         </div>
       </div>

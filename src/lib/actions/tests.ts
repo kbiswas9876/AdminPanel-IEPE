@@ -3,7 +3,7 @@
 import { createAdminClient, type Test, type TestCreationData } from '@/lib/supabase/admin'
 import { cache } from 'react'
 import { revalidatePath } from 'next/cache'
-import type { Question } from '@/lib/supabase/admin'
+import type { Question as UIQuestion } from '@/lib/types'
 import { redirect } from 'next/navigation'
 import type { TestQuestionSlot, TestBlueprint } from '@/lib/types'
 // Types are imported from the central types file when needed
@@ -224,14 +224,14 @@ export interface GeneratedTestSlot {
   source_type: 'random' | 'rule'
   rule_tag?: string | null
   rule_difficulty?: string | null
-  question: Question
+  question: UIQuestion
 }
 
 async function fetchCandidateQuestions(
   supabase: ReturnType<typeof createAdminClient>,
   criteria: { chapter_name: string; tag?: string | null; difficulty?: string | null },
   excludeIds: number[]
-): Promise<Question[]> {
+): Promise<UIQuestion[]> {
   // Build base query
   let query = supabase
     .from('questions')
@@ -259,7 +259,7 @@ async function fetchCandidateQuestions(
   }
 
   // Exclude already picked ids (extra guard)
-  const filtered = (data as Question[]).filter((q) => !excludeIds.includes(q.id as number))
+  const filtered = (data as unknown as UIQuestion[]).filter((q) => !excludeIds.includes(q.id as number))
 
   return filtered
 }
@@ -330,7 +330,7 @@ export async function regenerateSingleQuestion(args: {
   rule_tag?: string | null
   rule_difficulty?: string | null
   exclude_ids: number[]
-}): Promise<Question | null> {
+}): Promise<UIQuestion | null> {
   try {
     const supabase = createAdminClient()
     const criteria: { chapter_name: string; tag?: string | null; difficulty?: string | null } = {
@@ -361,7 +361,7 @@ export async function searchQuestions(args: {
   difficulty?: 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard'
   page?: number
   pageSize?: number
-}): Promise<{ questions: Question[]; total: number }> {
+}): Promise<{ questions: UIQuestion[]; total: number }> {
   try {
     const supabase = createAdminClient()
     const page = Math.max(1, args.page || 1)
@@ -396,7 +396,7 @@ export async function searchQuestions(args: {
       return { questions: [], total: 0 }
     }
 
-    return { questions: data as Question[], total: count || 0 }
+    return { questions: data as unknown as UIQuestion[], total: count || 0 }
   } catch (error) {
     console.error('Unexpected error searching questions:', error)
     return { questions: [], total: 0 }
@@ -422,10 +422,11 @@ export async function saveTest(args: {
   try {
     const supabase = createAdminClient()
 
-    // Upsert tests row (insert or update)
+    // Determine status based on publish payload
     const status = args.publish ? 'scheduled' : 'draft'
-    const upsertPayload = [{
-      id: args.testId || undefined,
+
+    // Base payload for tests table
+    const baseData = {
       name: args.name,
       description: args.description,
       total_time_minutes: args.total_time_minutes,
@@ -437,28 +438,44 @@ export async function saveTest(args: {
       start_time: args.publish?.start_time || null,
       end_time: args.publish?.end_time || null,
       updated_at: new Date().toISOString()
-    }]
-
-    const { data: upserted, error: upsertErr } = await supabase
-      .from('tests')
-      .upsert(upsertPayload, { onConflict: 'id' })
-      .select()
-      .single()
-
-    if (upsertErr || !upserted) {
-      console.error('Error upserting test:', upsertErr)
-      return { success: false, message: `Failed to save test: ${upsertErr?.message}` }
     }
-    const testId = upserted.id as number
+
+    let testId: number | undefined = args.testId
+
+    if (typeof testId === 'number' && Number.isFinite(testId)) {
+      // UPDATE existing test
+      const { error: updateErr } = await supabase
+        .from('tests')
+        .update(baseData)
+        .eq('id', testId)
+
+      if (updateErr) {
+        console.error('Error updating test:', updateErr)
+        return { success: false, message: `Failed to update test: ${updateErr.message}` }
+      }
+    } else {
+      // CREATE new test - let DB generate the id
+      const { data: created, error: insertErr } = await supabase
+        .from('tests')
+        .insert([baseData])
+        .select('id')
+        .single()
+
+      if (insertErr || !created) {
+        console.error('Error creating test:', insertErr)
+        return { success: false, message: `Failed to create test: ${insertErr?.message}` }
+      }
+      testId = created.id as number
+    }
 
     // Reset mappings then insert fresh
-    const { error: delErr } = await supabase.from('test_questions').delete().eq('test_id', testId)
+    const { error: delErr } = await supabase.from('test_questions').delete().eq('test_id', testId!)
     if (delErr) {
       console.error('Error clearing mappings:', delErr)
       return { success: false, message: `Failed to reset test questions: ${delErr.message}` }
     }
 
-    const mappings = (args.question_ids || []).map((qid) => ({ test_id: testId, question_id: qid }))
+    const mappings = (args.question_ids || []).map((qid) => ({ test_id: testId!, question_id: qid }))
     if (mappings.length > 0) {
       const { error: insErr } = await supabase.from('test_questions').insert(mappings)
       if (insErr) {
@@ -472,6 +489,208 @@ export async function saveTest(args: {
   } catch (error) {
     console.error('Unexpected error saving test:', error)
     return { success: false, message: 'Unexpected error while saving test' }
+  }
+}
+
+// FormData-compatible server action for robust client submissions
+export async function saveTestFromForm(formData: FormData): Promise<{ success: boolean; message: string; testId?: number }> {
+  try {
+    const payload = {
+      testId: formData.get('testId') ? Number(formData.get('testId')) : undefined,
+      name: String(formData.get('name') || ''),
+      description: formData.get('description') ? String(formData.get('description')) : undefined,
+      total_time_minutes: Number(formData.get('total_time_minutes') || 0),
+      marks_per_correct: Number(formData.get('marks_per_correct') || 0),
+      negative_marks_per_incorrect: Number(formData.get('negative_marks_per_incorrect') || 0),
+      result_policy: (String(formData.get('result_policy') || 'instant') as 'instant' | 'scheduled'),
+      result_release_at: formData.get('result_release_at') ? String(formData.get('result_release_at')) : null,
+      question_ids: (() => { try { return JSON.parse(String(formData.get('question_ids') || '[]')) as number[] } catch { return [] } })(),
+      publish: ((): { start_time: string; end_time: string } | null => {
+        const status = String(formData.get('status') || 'draft')
+        if (status === 'scheduled') {
+          return {
+            start_time: String(formData.get('start_time') || ''),
+            end_time: String(formData.get('end_time') || '')
+          }
+        }
+        return null
+      })()
+    }
+    // Run the same logic as saveTest but without redirect so client can control navigation
+    const supabase = createAdminClient()
+    const status = payload.publish ? 'scheduled' : 'draft'
+    const baseData = {
+      name: payload.name,
+      description: payload.description,
+      total_time_minutes: payload.total_time_minutes,
+      marks_per_correct: payload.marks_per_correct,
+      negative_marks_per_incorrect: payload.negative_marks_per_incorrect,
+      result_policy: payload.result_policy,
+      result_release_at: payload.result_policy === 'scheduled' ? (payload.result_release_at || null) : null,
+      status,
+      start_time: payload.publish?.start_time || null,
+      end_time: payload.publish?.end_time || null,
+      updated_at: new Date().toISOString()
+    }
+
+    let testId: number | undefined = payload.testId
+    if (typeof testId === 'number' && Number.isFinite(testId)) {
+      const { error: updateErr } = await supabase.from('tests').update(baseData).eq('id', testId)
+      if (updateErr) {
+        console.error('Error updating test:', updateErr)
+        return { success: false, message: `Failed to update test: ${updateErr.message}` }
+      }
+    } else {
+      const { data: created, error: insertErr } = await supabase
+        .from('tests')
+        .insert([baseData])
+        .select('id')
+        .single()
+      if (insertErr || !created) {
+        console.error('Error creating test:', insertErr)
+        return { success: false, message: `Failed to create test: ${insertErr?.message}` }
+      }
+      testId = created.id as number
+    }
+
+    // New: accept questions_payload with mixed existing/new questions
+    const questionsPayloadRaw = formData.get('questions_payload') as string | null
+    let finalQuestionIds: number[] = []
+    if (questionsPayloadRaw) {
+      type NewPayload = {
+        question_text: string
+        options: Record<string, string>
+        correct_option: string
+        solution_text?: string | null
+        book_source: string
+        chapter_name: string
+        difficulty?: string | null
+        admin_tags?: string[]
+      }
+      type OverridePayload = {
+        question_text?: string
+        options?: Record<string, string>
+        correct_option?: string
+        solution_text?: string | null
+      }
+      type Item = { id?: number; new?: NewPayload; override?: OverridePayload }
+      let list: Item[] = []
+      try {
+        list = JSON.parse(questionsPayloadRaw) as Item[]
+      } catch {
+        return { success: false, message: 'Invalid questions payload' }
+      }
+
+      console.log('saveTestFromForm: received items length =', list.length)
+
+      const newOnes = list.map((i) => i.new || null).filter(Boolean) as NewPayload[]
+
+      let createdIds: number[] = []
+      if (newOnes.length > 0) {
+        try {
+          const rows = newOnes.map((n, idx) => {
+            const idStr = `MANUAL-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+            const optionsUpper = Object.fromEntries(Object.entries(n.options || {}).map(([k, v]) => [String(k).toUpperCase(), v]))
+            // Basic validation
+            const optKeys = Object.keys(optionsUpper)
+            if (!n.book_source || !n.chapter_name || !n.question_text || optKeys.length < 2) {
+              throw new Error(`Missing required fields for new question at index ${idx}`)
+            }
+            const correct = (n.correct_option || '').toString().toUpperCase()
+            if (!optKeys.includes(correct)) {
+              throw new Error(`Correct option '${correct}' not among provided options for new question at index ${idx}`)
+            }
+            const row = {
+              question_id: idStr,
+              book_source: n.book_source,
+              chapter_name: n.chapter_name,
+              question_number_in_book: 0,
+              question_text: n.question_text,
+              options: optionsUpper,
+              correct_option: correct,
+              solution_text: n.solution_text || null,
+              admin_tags: n.admin_tags || [],
+              difficulty: n.difficulty || null
+            }
+            console.log('saveTestFromForm: inserting new question row', row)
+            return row
+          })
+          const { data: inserted, error: insNewErr } = await supabase
+            .from('questions')
+            .insert(rows)
+            .select('id')
+          if (insNewErr || !inserted) {
+            console.error('Insert new inline questions failed:', insNewErr)
+            return { success: false, message: 'Failed to insert new questions. Please ensure Book Source and Chapter are provided.' }
+          }
+          createdIds = inserted.map((r: { id: number }) => r.id)
+        } catch (e: unknown) {
+          console.error('New question validation/insert error:', e)
+          return { success: false, message: `Failed to save manually added question: ${e instanceof Error ? e.message : 'Unknown error'}` }
+        }
+      }
+
+      // Merge in order: for each item, pick id or shift from createdIds
+      let createdIdx = 0
+      for (const item of list) {
+        if (typeof item.id === 'number') {
+          finalQuestionIds.push(item.id)
+        } else {
+          finalQuestionIds.push(createdIds[createdIdx++])
+        }
+      }
+
+      // Try to write overrides into mapping rows
+      try {
+        const { error: del2 } = await supabase.from('test_questions').delete().eq('test_id', testId!)
+        if (del2) throw del2
+        for (let i = 0; i < list.length; i++) {
+          const qid = finalQuestionIds[i]
+          const override = list[i].override || null
+          const row: Record<string, unknown> = { test_id: testId!, question_id: qid }
+          if (override && Object.keys(override).length > 0) {
+            row.question_override_data = override
+          }
+          const { error: insRowErr } = await supabase.from('test_questions').insert([row])
+          if (insRowErr) throw insRowErr
+        }
+        } catch {
+        // Fallback if column doesn't exist
+        const { error: del3 } = await supabase.from('test_questions').delete().eq('test_id', testId!)
+        if (del3) {
+          console.error('Cleanup failed after override attempt:', del3)
+        }
+        if (finalQuestionIds.length > 0) {
+          const mappings = finalQuestionIds.map((qid) => ({ test_id: testId!, question_id: qid }))
+          const { error: insErr } = await supabase.from('test_questions').insert(mappings)
+          if (insErr) {
+            console.error('Error inserting mappings (fallback):', insErr)
+            return { success: false, message: `Failed to add questions: ${insErr.message}` }
+          }
+        }
+      }
+    } else {
+      finalQuestionIds = (payload.question_ids || [])
+      // Old path: just write mappings
+    const { error: delErr } = await supabase.from('test_questions').delete().eq('test_id', testId!)
+    if (delErr) {
+      console.error('Error clearing mappings:', delErr)
+      return { success: false, message: `Failed to reset test questions: ${delErr.message}` }
+    }
+      if (finalQuestionIds.length > 0) {
+        const mappings = finalQuestionIds.map((qid) => ({ test_id: testId!, question_id: qid }))
+      const { error: insErr } = await supabase.from('test_questions').insert(mappings)
+      if (insErr) {
+        console.error('Error inserting mappings:', insErr)
+        return { success: false, message: `Failed to add questions: ${insErr.message}` }
+        }
+      }
+    }
+    revalidatePath('/tests')
+    return { success: true, message: 'Saved', testId }
+  } catch (error) {
+    console.error('saveTestFromForm error:', error)
+    return { success: false, message: 'Failed to parse form data' }
   }
 }
 
@@ -644,7 +863,13 @@ export async function updateTest(testId: number, testData: Partial<TestCreationD
 }
 
 // Publish test (schedule it)
-export async function publishTest(testId: number, startTime: string, endTime: string): Promise<{ success: boolean; message: string }> {
+export async function publishTest(
+  testId: number,
+  startTime: string | null,
+  endTime: string | null,
+  resultPolicy?: 'instant' | 'scheduled',
+  resultReleaseAt?: string | null
+): Promise<{ success: boolean; message: string }> {
   try {
     const supabase = createAdminClient()
     
@@ -652,8 +877,10 @@ export async function publishTest(testId: number, startTime: string, endTime: st
       .from('tests')
       .update({
         status: 'scheduled',
-        start_time: startTime,
-        end_time: endTime,
+        start_time: startTime || null,
+        end_time: endTime || null,
+        result_policy: resultPolicy || null,
+        result_release_at: resultPolicy === 'scheduled' ? (resultReleaseAt || null) : null,
         updated_at: new Date().toISOString()
       })
       .eq('id', testId)
@@ -785,42 +1012,38 @@ export async function getTestDetailsForEdit(testId: number): Promise<{
       return null
     }
 
-    // Get test questions with full question data
+    // Get test questions with full question data and overrides if present
     const { data: testQuestions, error: questionsError } = await supabase
       .from('test_questions')
-      .select(`
-        question_id,
-        questions (
-          id,
-          created_at,
-          question_id,
-          book_source,
-          chapter_name,
-          question_number_in_book,
-          question_text,
-          options,
-          correct_option,
-          solution_text,
-          exam_metadata,
-          admin_tags,
-          difficulty
-        )
-      `)
+      .select('id, question_id, question_override_data, questions(*)')
       .eq('test_id', testId)
+      .order('id', { ascending: true })
 
     if (questionsError || !testQuestions) {
       console.error('Error fetching test questions:', questionsError)
       return null
     }
 
-    // Transform to TestQuestionSlot format
-    const questions: TestQuestionSlot[] = (testQuestions as unknown as Array<{ question_id: number; questions: Question }>).map((tq) => ({
-      question: tq.questions,
-      source_type: 'random' as const, // Default for existing tests
+    // Transform to TestQuestionSlot format with overrides applied
+    const questions: TestQuestionSlot[] = (testQuestions as unknown as Array<{ question_id: number; question_override_data?: unknown; questions: UIQuestion }>).
+      map((tq) => {
+        const override = (tq as { question_override_data?: Record<string, unknown> }).question_override_data
+        const base = tq.questions
+        const patched: UIQuestion = { ...base }
+        if (override && typeof override === 'object') {
+          if (typeof override.question_text === 'string') patched.question_text = override.question_text
+          if (override.options && typeof override.options === 'object') patched.options = override.options as Record<string, string>
+          if (typeof override.correct_option === 'string') patched.correct_option = override.correct_option
+          if (typeof override.solution_text === 'string' || override.solution_text === null) patched.solution_text = override.solution_text as string
+        }
+        return {
+          question: patched,
+          source_type: 'random' as const,
       rule_tag: null,
       rule_difficulty: null,
-      chapter_name: tq.questions.chapter_name
-    }))
+          chapter_name: patched.chapter_name
+        }
+      })
 
     // Generate blueprint from questions
     const blueprint: TestBlueprint = {}
@@ -909,79 +1132,202 @@ export async function cloneTest(testId: number): Promise<{ success: boolean; mes
 
 // Export test to PDF: render simple HTML and convert via Puppeteer to base64
 export async function exportTestToPdf(testId: number): Promise<{ success: boolean; fileName?: string; base64?: string; message?: string }> {
+  // Backward-compatible alias: export the professional Question Paper
+  return exportQuestionPaperPdf(testId)
+}
+
+// Shared helper to fetch test metadata and ordered questions
+async function fetchTestAndQuestionsOrdered(testId: number): Promise<{ test: Test; questions: UIQuestion[] } | { error: string }> {
   try {
     const supabase = createAdminClient()
-
-    // Fetch test
     const { data: test, error: testErr } = await supabase
       .from('tests')
       .select('*')
       .eq('id', testId)
       .single()
     if (testErr || !test) {
-      console.error('Error fetching test for export:', testErr)
-      return { success: false, message: 'Test not found' }
+      return { error: 'Test not found' }
     }
-
-    // Fetch questions with join via two-step
     const { data: mappings, error: mapErr } = await supabase
       .from('test_questions')
       .select('question_id')
       .eq('test_id', testId)
     if (mapErr) {
-      console.error('Error fetching mappings for export:', mapErr)
-      return { success: false, message: 'Failed to read test questions' }
+      return { error: 'Failed to read test questions' }
     }
-    const ids = (mappings || []).map((m) => m.question_id)
-    let questions: Question[] = []
+    const ids = (mappings || []).map((m) => m.question_id as number)
+    let questions: UIQuestion[] = []
     if (ids.length > 0) {
       const { data: qs, error: qErr } = await supabase
         .from('questions')
         .select('*')
         .in('id', ids)
       if (qErr) {
-        console.error('Error fetching questions for export:', qErr)
-        return { success: false, message: 'Failed to load question data' }
+        return { error: 'Failed to load question data' }
       }
-      questions = (qs || []) as Question[]
+      const byId = new Map<number, UIQuestion>()
+      for (const q of (qs || []) as unknown as UIQuestion[]) {
+        if (q.id != null) byId.set(q.id as number, q)
+      }
+      questions = ids.map((id) => byId.get(id)).filter(Boolean) as UIQuestion[]
+    }
+    return { test: test as Test, questions }
+  } catch {
+    return { error: 'Unexpected error fetching test data' }
+  }
+}
+
+// Fetch with overrides applied helper
+async function fetchTestAndQuestionsApplied(testId: number): Promise<{ test: Test; questions: UIQuestion[] } | { error: string }> {
+  const supabase = createAdminClient()
+  const { data: test, error: testErr } = await supabase
+    .from('tests')
+    .select('*')
+    .eq('id', testId)
+    .single()
+  if (testErr || !test) {
+    return { error: 'Test not found' }
+  }
+  const { data: rows, error: rowsErr } = await supabase
+    .from('test_questions')
+    .select('id, question_id, question_override_data, questions(*)')
+    .eq('test_id', testId)
+    .order('id', { ascending: true })
+  if (rowsErr) return { error: 'Failed to read test questions' }
+  const questions: UIQuestion[] = (rows || []).map((r: { id: number; question_id: number; question_override_data?: Record<string, unknown>; questions: UIQuestion[] }) => {
+    const base = (r.questions?.[0] || {}) as UIQuestion
+    const override = r.question_override_data
+    if (!override || typeof override !== 'object') return base
+    const patched: UIQuestion = { ...base }
+    if (typeof override.question_text === 'string') patched.question_text = override.question_text
+    if (override.options && typeof override.options === 'object') patched.options = override.options as Record<string, string>
+    if (typeof override.correct_option === 'string') patched.correct_option = override.correct_option
+    if (typeof override.solution_text === 'string' || override.solution_text === null) patched.solution_text = override.solution_text
+    return patched
+  })
+  return { test: test as Test, questions }
+}
+
+// 1) Professional, student-ready Question Paper PDF
+export async function exportQuestionPaperPdf(testId: number): Promise<{ success: boolean; fileName?: string; base64?: string; message?: string }> {
+  try {
+    const fetched = await (async () => {
+      // Try with overrides; fall back to base
+      const withOverrides = await (async () => {
+        try {
+          return await fetchTestAndQuestionsApplied(testId)
+        } catch {
+          return { error: 'fallback' } as const
+        }
+      })()
+      if (!('error' in withOverrides)) return withOverrides
+      return await fetchTestAndQuestionsOrdered(testId)
+    })()
+    if ('error' in fetched) {
+      return { success: false, message: fetched.error }
+    }
+    const { test, questions } = fetched
+
+    // Server-side KaTeX rendering
+    const katex = await import('katex')
+    const renderWithKaTeX = (input: string | null | undefined): string => {
+      const text = String(input || '')
+      const pattern = /(\$\$[\s\S]+?\$\$|\$[^$]+?\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\))/g
+      const parts: string[] = []
+      let lastIndex = 0
+      let match: RegExpExecArray | null
+      while ((match = pattern.exec(text)) !== null) {
+        const matchStart = match.index
+        const matchEnd = match.index + match[0].length
+        if (matchStart > lastIndex) {
+          parts.push(`<span class="text">${text.slice(lastIndex, matchStart)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+          }</span>`) 
+        }
+        const token = match[0]
+        try {
+          if (token.startsWith('$$')) {
+            parts.push(`<div class="k-block">${katex.renderToString(token.slice(2, -2), { displayMode: true, throwOnError: false })}</div>`)
+          } else if (token.startsWith('$')) {
+            parts.push(`<span class="k-inline">${katex.renderToString(token.slice(1, -1), { displayMode: false, throwOnError: false })}</span>`)
+          } else if (token.startsWith('\\[')) {
+            parts.push(`<div class="k-block">${katex.renderToString(token.slice(2, -2), { displayMode: true, throwOnError: false })}</div>`)
+          } else if (token.startsWith('\\(')) {
+            parts.push(`<span class="k-inline">${katex.renderToString(token.slice(2, -2), { displayMode: false, throwOnError: false })}</span>`)
+          }
+        } catch {
+          parts.push(`<span class="text">${token.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</span>`)
+        }
+        lastIndex = matchEnd
+      }
+      if (lastIndex < text.length) {
+        parts.push(`<span class="text">${text.slice(lastIndex).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</span>`)
+      }
+      return parts.join('')
     }
 
-    // Generate simple HTML for PDF
-    const html = `<!doctype html>
-<html><head><meta charset="utf-8" />
-<style>
-  body { font-family: Arial, sans-serif; font-size: 12px; }
-  h1 { font-size: 18px; margin-bottom: 8px; }
-  .meta { color: #555; margin-bottom: 16px; }
-  .q { margin-bottom: 14px; }
-  .qid { color: #666; font-size: 11px; }
-  .options { margin-left: 16px; }
-  .options li { margin: 4px 0; }
-  .answer { color: #0a0; font-weight: 600; }
-</style>
-</head><body>
-  <h1>${test.name}</h1>
-  <div class="meta">
-    Duration: ${test.total_time_minutes} min | Marks/correct: ${test.marks_per_correct} | Negative: ${test.negative_marks_per_incorrect}
-  </div>
-  ${questions
-    .map((q, idx) => `
-      <div class="q">
-        <div class="qid">Q${idx + 1}. ${q.question_id} — ${q.chapter_name} (${(q as Question & { difficulty?: string }).difficulty || '-'})</div>
-        <div>${q.question_text}</div>
-        ${q.options ? `<ul class="options">
-          <li>A. ${q.options.a}</li>
-          <li>B. ${q.options.b}</li>
-          <li>C. ${q.options.c}</li>
-          <li>D. ${q.options.d}</li>
-        </ul>` : ''}
-        <div class="answer">Answer: ${(q as Question & { correct_option?: string }).correct_option?.toUpperCase() || '-'}</div>
-      </div>
-    `)
-    .join('')}
-</body></html>`
+    const questionCount = questions.length
+    const fullMarks = (Number(test.marks_per_correct) || 0) * questionCount
 
-    // Dynamic import puppeteer to avoid bundling if not used
+    const html = `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+<style>
+    @page { size: A4; margin: 14mm 12mm; }
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #111; line-height: 1.4; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .title { font-size: 20px; font-weight: bold; letter-spacing: 0.3px; margin-bottom: 8px; }
+    .sub { display: grid; grid-template-columns: 1fr 1fr 1fr; margin-top: 8px; font-size: 12px; color: #333; }
+    .sub div { white-space: nowrap; }
+    .sub .left { text-align: left; }
+    .sub .center { text-align: center; }
+    .sub .right { text-align: right; }
+    .q { margin: 16px 0 14px; page-break-inside: avoid; }
+    .q-header { margin-bottom: 8px; }
+    .qnum { font-weight: 600; display: inline; }
+    .qtext { display: inline; margin-left: 4px; }
+    .text { white-space: pre-wrap; }
+    .options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; margin-top: 8px; }
+    .opt { display: flex; align-items: flex-start; gap: 8px; }
+    .opt .label { font-weight: 600; flex-shrink: 0; }
+    .opt .content { flex: 1; }
+    .k-block { margin: 6px 0; }
+    .k-inline { display: inline; }
+</style>
+  <title>${(test.name || 'Test').replace(/</g, '&lt;')}</title>
+  </head>
+  <body>
+    <div class="header">
+      <div class="title">${(test.name || 'Test').replace(/</g, '&lt;')}</div>
+      <div class="sub">
+        <div class="left">Duration: ${test.total_time_minutes} minutes</div>
+        <div class="center">Marks: +${test.marks_per_correct || 0} for correct, -${test.negative_marks_per_incorrect || 0} for incorrect</div>
+        <div class="right">Full Marks: ${fullMarks}</div>
+  </div>
+    </div>
+    ${questions.map((q, idx) => {
+      const opts = (q.options || {}) as Record<string, string>
+      return `
+      <div class="q">
+          <div class="q-header">
+            <span class="qnum">${idx + 1}.</span>
+            <span class="qtext">${renderWithKaTeX(q.question_text)}</span>
+      </div>
+          <div class="options">
+            ${Object.keys(opts).sort().map((key) => {
+              const lower = key.toLowerCase()
+              return `<div class="opt"><span class="label">(${lower})</span><span class="content">${renderWithKaTeX(opts[key] || '')}</span></div>`
+            }).join('')}
+          </div>
+        </div>`
+    }).join('')}
+  </body>
+</html>`
+
     const puppeteer = await import('puppeteer')
     const browser = await puppeteer.launch({ headless: true })
     const page = await browser.newPage()
@@ -990,11 +1336,76 @@ export async function exportTestToPdf(testId: number): Promise<{ success: boolea
     await browser.close()
 
     const base64 = Buffer.from(pdfBuffer).toString('base64')
-    const safeName = `${test.name || 'Test'}-${testId}.pdf`.replace(/[^a-z0-9\-_.]/gi, '_')
+    const safeName = `${test.name || 'Test'}-Question-Paper-${testId}.pdf`.replace(/[^a-z0-9\-_.]/gi, '_')
     return { success: true, fileName: safeName, base64 }
   } catch (error) {
-    console.error('Export to PDF failed:', error)
-    return { success: false, message: 'Failed to export PDF. Ensure puppeteer is installed.' }
+    console.error('Question Paper export failed:', error)
+    return { success: false, message: 'Failed to export Question Paper' }
+  }
+}
+
+// 2) Clean Answer Key PDF
+export async function exportAnswerKeyPdf(testId: number): Promise<{ success: boolean; fileName?: string; base64?: string; message?: string }> {
+  try {
+    const fetched = await (async () => {
+      const withOverrides = await (async () => {
+        try {
+          return await fetchTestAndQuestionsApplied(testId)
+        } catch {
+          return { error: 'fallback' } as const
+        }
+      })()
+      if (!('error' in withOverrides)) return withOverrides
+      return await fetchTestAndQuestionsOrdered(testId)
+    })()
+    if ('error' in fetched) {
+      return { success: false, message: fetched.error }
+    }
+    const { test, questions } = fetched
+    const html = `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    @page { size: A4; margin: 16mm 14mm; }
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #111; line-height: 1.4; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .title { font-size: 18px; font-weight: bold; }
+    .test-name { font-size: 14px; color: #666; margin-top: 4px; }
+    .answers { margin-top: 20px; }
+    .answer-item { margin: 6px 0; padding: 4px 0; }
+    .answer-number { font-weight: 600; display: inline-block; width: 30px; }
+    .answer-letter { font-weight: 600; color: #2563eb; }
+  </style>
+  <title>Answer Key - ${(test.name || 'Test').replace(/</g, '&lt;')}</title>
+</head>
+<body>
+  <div class="header">
+    <div class="title">Answer Key</div>
+    <div class="test-name">${(test.name || 'Test').replace(/</g, '&lt;')}</div>
+  </div>
+  <div class="answers">
+    ${questions.map((q, idx) => {
+      const letter = ((q as unknown as { correct_option?: string }).correct_option || '-').toString().trim().toLowerCase() || '-'
+      return `<div class="answer-item"><span class="answer-number">${idx + 1}.</span> <span class="answer-letter">(${letter})</span></div>`
+    }).join('')}
+  </div>
+</body>
+</html>`
+
+    const puppeteer = await import('puppeteer')
+    const browser = await puppeteer.launch({ headless: true })
+    const page = await browser.newPage()
+    await page.setContent(html, { waitUntil: 'networkidle0' })
+    const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true, margin: { top: '16mm', bottom: '16mm', left: '14mm', right: '14mm' } })
+    await browser.close()
+
+    const base64 = Buffer.from(pdfBuffer).toString('base64')
+    const safeName = `${test.name || 'Test'}-Answer-Key-${testId}.pdf`.replace(/[^a-z0-9\-_.]/gi, '_')
+    return { success: true, fileName: safeName, base64 }
+  } catch (error) {
+    console.error('Answer Key export failed:', error)
+    return { success: false, message: 'Failed to export Answer Key' }
   }
 }
 

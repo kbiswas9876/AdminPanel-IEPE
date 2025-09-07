@@ -27,21 +27,31 @@ export function PublishTestDialog({ test, onPublish }: PublishTestDialogProps) {
   const [isPublishing, setIsPublishing] = useState(false)
   const [startTime, setStartTime] = useState('')
   const [endTime, setEndTime] = useState('')
+  const [perpetual, setPerpetual] = useState(false)
+  const [policy, setPolicy] = useState<'instant' | 'scheduled'>('instant')
+  const [releaseAt, setReleaseAt] = useState('')
 
   const handlePublish = async () => {
-    if (!startTime || !endTime) {
-      alert('Please select both start and end times')
-      return
-    }
-
-    if (new Date(startTime) >= new Date(endTime)) {
-      alert('End time must be after start time')
-      return
+    if (!perpetual) {
+      if (!startTime || !endTime) {
+        alert('Please select both start and end times')
+        return
+      }
+      if (new Date(startTime) >= new Date(endTime)) {
+        alert('End time must be after start time')
+        return
+      }
     }
 
     setIsPublishing(true)
     try {
-      const result = await publishTest(test.id, startTime, endTime)
+      const result = await publishTest(
+        test.id,
+        perpetual ? null : startTime,
+        perpetual ? null : endTime,
+        policy,
+        policy === 'scheduled' ? (releaseAt || null) : null
+      )
       
       if (result.success) {
         setOpen(false)
@@ -76,7 +86,7 @@ export function PublishTestDialog({ test, onPublish }: PublishTestDialogProps) {
           Publish
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Publish Mock Test</DialogTitle>
           <DialogDescription>
@@ -94,6 +104,25 @@ export function PublishTestDialog({ test, onPublish }: PublishTestDialogProps) {
               className="bg-gray-50"
             />
           </div>
+
+          {/* Result policy and release time */}
+          <div className="space-y-3">
+            <Label className="text-sm">Result Declaration Policy</Label>
+            <label className="flex items-center space-x-3">
+              <input type="radio" name="policy" value="instant" checked={policy==='instant'} onChange={() => setPolicy('instant')} className="w-4 h-4 text-blue-600" />
+              <span className="text-sm">Instantly on submission</span>
+            </label>
+            <label className="flex items-center space-x-3">
+              <input type="radio" name="policy" value="scheduled" checked={policy==='scheduled'} onChange={() => setPolicy('scheduled')} className="w-4 h-4 text-blue-600" />
+              <span className="text-sm">At a fixed date/time</span>
+            </label>
+            {policy==='scheduled' && (
+              <div className="ml-7 space-y-2">
+                <Label htmlFor="release-at">Result Release Date & Time *</Label>
+                <Input id="release-at" type="datetime-local" value={releaseAt} onChange={(e)=>setReleaseAt(e.target.value)} />
+              </div>
+            )}
+          </div>
           
           <div className="space-y-2">
             <Label htmlFor="start-time">Start Time</Label>
@@ -103,6 +132,7 @@ export function PublishTestDialog({ test, onPublish }: PublishTestDialogProps) {
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
               min={new Date().toISOString().slice(0, 16)}
+              disabled={perpetual}
             />
           </div>
           
@@ -114,8 +144,14 @@ export function PublishTestDialog({ test, onPublish }: PublishTestDialogProps) {
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
               min={startTime || new Date().toISOString().slice(0, 16)}
+              disabled={perpetual}
             />
           </div>
+
+          <label className="flex items-center space-x-2">
+            <input type="checkbox" checked={perpetual} onChange={(e)=>setPerpetual(e.target.checked)} />
+            <span className="text-sm">Perpetual (available indefinitely)</span>
+          </label>
           
           <div className="flex justify-end">
             <Button

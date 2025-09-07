@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { deleteTest, cloneTest, exportTestToPdf } from '@/lib/actions/tests'
+import { deleteTest, cloneTest, exportTestToPdf, exportAnswerKeyPdf } from '@/lib/actions/tests'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -68,7 +68,7 @@ export function TestActions({ test, onAction }: TestActionsProps) {
     }
   }
 
-  const handleExport = async () => {
+  const handleExportQuestionPaper = async () => {
     try {
       const res = await exportTestToPdf(test.id)
       if (res.success && res.base64 && res.fileName) {
@@ -84,19 +84,41 @@ export function TestActions({ test, onAction }: TestActionsProps) {
     }
   }
 
+  const handleExportAnswerKey = async () => {
+    try {
+      const res = await exportAnswerKeyPdf(test.id)
+      if (res.success && res.base64 && res.fileName) {
+        const link = document.createElement('a')
+        link.href = `data:application/pdf;base64,${res.base64}`
+        link.download = res.fileName
+        link.click()
+      } else {
+        console.error('Export failed:', res.message)
+      }
+    } catch (e) {
+      console.error('Export error:', e)
+    }
+  }
+
+  const canEdit = (() => {
+    const now = new Date()
+    const startsAt = test.start_time ? new Date(test.start_time) : null
+    return !startsAt || startsAt > now
+  })()
+
   return (
     <div className="flex items-center space-x-2">
-      {/* Edit Button - Only for Draft tests */}
-      {test.status === 'draft' && (
+      {/* Edit Button - Allowed if start_time is in the future */}
+      {canEdit && (
         <Link href={`/tests/edit/${test.id}`}>
           <Button variant="outline" size="sm">
             <Edit className="h-4 w-4 mr-1" />
-            Edit
+            {test.status === 'draft' ? 'Edit' : 'Edit (Pending)'}
           </Button>
         </Link>
       )}
 
-      {/* Publish Button - Only for Draft tests */}
+      {/* Publish Button - Allow publishing drafts */}
       {test.status === 'draft' && (
         <PublishTestDialog 
           test={test} 
@@ -162,9 +184,13 @@ export function TestActions({ test, onAction }: TestActionsProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={handleExport}>
+          <DropdownMenuItem onClick={handleExportQuestionPaper}>
             <FileDown className="h-4 w-4 mr-2" />
-            Export to PDF
+            Export Question Paper
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleExportAnswerKey}>
+            <FileDown className="h-4 w-4 mr-2" />
+            Export Answer Key
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleClone}>
             <Copy className="h-4 w-4 mr-2" />

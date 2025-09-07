@@ -1,6 +1,6 @@
 import { MainLayout } from '@/components/layout/main-layout'
 import { ProtectedRoute } from '@/components/auth/protected-route'
-import { ContentTable } from '@/components/content/content-table'
+import { ContentManagement } from '@/components/content/content-management'
 import { BulkImport } from '@/components/content/bulk-import'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -44,7 +44,7 @@ export default function ContentPage() {
                   </Button>
                 </Link>
               </div>
-              <ContentTable />
+              <ContentManagement />
             </TabsContent>
             
             <TabsContent value="import" className="space-y-6">

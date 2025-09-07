@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -34,10 +34,12 @@ interface QuestionExplorerModalProps {
   open: boolean
   onClose: () => void
   onSelect: (q: Question) => void
+  onSelectMultiple?: (questions: Question[]) => void
   initialChapter?: string
+  multiSelect?: boolean
 }
 
-export function QuestionExplorerModal({ open, onClose, onSelect, initialChapter }: QuestionExplorerModalProps) {
+export function QuestionExplorerModal({ open, onClose, onSelect, onSelectMultiple, initialChapter, multiSelect = false }: QuestionExplorerModalProps) {
   const [filters, setFilters] = useState<Filters>({ search: '', bookSource: '', chapter: initialChapter || '', difficulty: '', tags: [], page: 1 })
   const [selectedBooks, setSelectedBooks] = useState<string[]>([])
   const [selectedChapters, setSelectedChapters] = useState<string[]>([])
@@ -48,12 +50,10 @@ export function QuestionExplorerModal({ open, onClose, onSelect, initialChapter 
   const [loading, setLoading] = useState(false)
   const [expandedKey, setExpandedKey] = useState<string | number | null>(null)
   const [tagQuery, setTagQuery] = useState('')
-  const [chapterQuery, setChapterQuery] = useState('')
+  const [selectedQuestions, setSelectedQuestions] = useState<Set<string | number>>(new Set())
   const pageSize = 10
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
-  // Placeholder retained for readability; not used with multi-select approach
-  const ALL = '__ALL__'
 
   // Load filter options; supports cascading by bookSource
   const loadOptions = useCallback(async (bookSource?: string) => {
@@ -101,7 +101,7 @@ export function QuestionExplorerModal({ open, onClose, onSelect, initialChapter 
     } finally {
       setLoading(false)
     }
-  }, [filters, pageSize, expandedKey, selectedBooks.length, selectedChapters.length, selectedDifficulties.length])
+  }, [filters, pageSize, expandedKey, selectedBooks, selectedChapters, selectedDifficulties])
 
   // Open: load filters + run initial search
   useEffect(() => {
@@ -129,7 +129,6 @@ export function QuestionExplorerModal({ open, onClose, onSelect, initialChapter 
   const reset = () => {
     setFilters({ search: '', bookSource: '', chapter: initialChapter || '', difficulty: '', tags: [], page: 1 })
     setTagQuery('')
-    setChapterQuery('')
     loadOptions('')
   }
 
@@ -148,11 +147,79 @@ export function QuestionExplorerModal({ open, onClose, onSelect, initialChapter 
     onClose()
   }
 
+  const toggleQuestionSelection = (q: Question) => {
+    const key = (q.id ?? q.question_id) as string | number
+    setSelectedQuestions(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(key)) {
+        newSet.delete(key)
+      } else {
+        newSet.add(key)
+      }
+      return newSet
+    })
+  }
+
+  const selectAllVisible = () => {
+    const allKeys = results.map(q => (q.id ?? q.question_id) as string | number)
+    setSelectedQuestions(new Set(allKeys))
+  }
+
+  const deselectAll = () => {
+    setSelectedQuestions(new Set())
+  }
+
+  const addSelectedQuestions = () => {
+    if (!onSelectMultiple) return
+    
+    const selectedQuestionsList = results.filter(q => {
+      const key = (q.id ?? q.question_id) as string | number
+      return selectedQuestions.has(key)
+    })
+    
+    onSelectMultiple(selectedQuestionsList)
+    onClose()
+  }
+
+  const isQuestionSelected = (q: Question) => {
+    const key = (q.id ?? q.question_id) as string | number
+    return selectedQuestions.has(key)
+  }
+
+  const allVisibleSelected = results.length > 0 && results.every(q => isQuestionSelected(q))
+
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose() }}>
       <DialogContent className="w-[96vw] sm:max-w-[96vw] lg:max-w-[96vw] h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">Master Question Bank</DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-2xl font-bold">
+              Master Question Bank
+              {multiSelect && (
+                <span className="text-sm font-normal text-gray-600 ml-2">
+                  ({selectedQuestions.size} selected)
+                </span>
+              )}
+            </DialogTitle>
+            {multiSelect && (
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={allVisibleSelected ? deselectAll : selectAllVisible}
+                >
+                  {allVisibleSelected ? 'Deselect All' : 'Select All'}
+                </Button>
+                <Button 
+                  onClick={addSelectedQuestions}
+                  disabled={selectedQuestions.size === 0}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  Add Selected ({selectedQuestions.size})
+                </Button>
+              </div>
+            )}
+          </div>
         </DialogHeader>
         {/* Top filter bar */}
         <div className="bg-gray-50 rounded-md border p-3 mb-3">
@@ -255,16 +322,35 @@ export function QuestionExplorerModal({ open, onClose, onSelect, initialChapter 
               const key = (q.id ?? q.question_id) as string | number
               const expanded = expandedKey === key
               return (
-                <div key={key} className={`border rounded-md bg-white ${expanded ? 'ring-1 ring-blue-200' : ''}`}>
+                <div key={key} className={`border rounded-md bg-white ${expanded ? 'ring-1 ring-blue-200' : ''} ${isQuestionSelected(q) ? 'ring-2 ring-blue-300 bg-blue-50' : ''}`}>
                   <div className="flex items-center justify-between px-3 py-2">
                     <div className="flex items-center gap-3">
+                      {multiSelect && (
+                        <input
+                          type="checkbox"
+                          checked={isQuestionSelected(q)}
+                          onChange={() => toggleQuestionSelection(q)}
+                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                      )}
                       <button type="button" onClick={() => toggleRow(q)} className="w-6 h-6 rounded-full border flex items-center justify-center text-xs">{expanded ? '▲' : '▼'}</button>
                       <span className="font-medium">{q.question_id || q.id}</span>
                       <Badge variant="outline" className="text-[10px]">{q.chapter_name}</Badge>
                       <span className="text-xs text-gray-500">{q.difficulty || '—'}</span>
                     </div>
                     <div>
-                      <Button size="sm" className={expanded ? 'bg-blue-600 hover:bg-blue-700' : ''} onClick={() => selectAndClose(q)}>Select</Button>
+                      {multiSelect ? (
+                        <Button 
+                          size="sm" 
+                          variant={isQuestionSelected(q) ? "default" : "outline"}
+                          className={isQuestionSelected(q) ? 'bg-blue-600 hover:bg-blue-700' : ''}
+                          onClick={() => toggleQuestionSelection(q)}
+                        >
+                          {isQuestionSelected(q) ? 'Selected' : 'Select'}
+                        </Button>
+                      ) : (
+                        <Button size="sm" className={expanded ? 'bg-blue-600 hover:bg-blue-700' : ''} onClick={() => selectAndClose(q)}>Select</Button>
+                      )}
                     </div>
                   </div>
                   <div className="px-3 pb-3">
@@ -280,13 +366,13 @@ export function QuestionExplorerModal({ open, onClose, onSelect, initialChapter 
                             <div className="mb-4">
                               <h5 className="font-medium text-gray-900 mb-2">Options:</h5>
                               <div className="space-y-2">
-                                {(Object.keys(q.options || { a: '', b: '', c: '', d: '' }) as Array<'a' | 'b' | 'c' | 'd'>).map((opt) => {
-                                  const isCorrect = q.correct_option === opt
-                                  const text = (q.options || { a: '', b: '', c: '', d: '' })[opt]
+                                {Object.keys(q.options || {}).sort().map((opt) => {
+                                  const isCorrect = q.correct_option?.toUpperCase() === opt.toUpperCase()
+                                  const text = (q.options || {})[opt as keyof typeof q.options] as string
                                   return (
                                     <div key={opt} className={`flex items-start space-x-3 p-2 rounded ${isCorrect ? 'bg-green-50 border border-green-200' : 'bg-gray-50'}`}>
-                                      <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-sm font-semibold ${isCorrect ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>{opt.toUpperCase()}{isCorrect && <Check className="h-3 w-3 ml-1" />}</div>
-                                      <div className="flex-1 prose prose-sm max-w-none"><SmartLatexRenderer text={text} /></div>
+                                      <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-sm font-semibold ${isCorrect ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>{String(opt).toUpperCase()}{isCorrect && <Check className="h-3 w-3 ml-1" />}</div>
+                                      <div className="flex-1 prose prose-sm max-w-none"><SmartLatexRenderer text={String(text || '')} /></div>
                                     </div>
                                   )
                                 })}

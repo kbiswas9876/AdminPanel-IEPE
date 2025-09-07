@@ -175,11 +175,66 @@ export async function updateQuestion(id: number, formData: FormData) {
   }
 }
 
-// Delete a question
-export async function deleteQuestion(id: number) {
+// Check if a question is being used in any tests
+export async function checkQuestionUsage(questionId: number): Promise<{ 
+  isUsed: boolean; 
+  testCount: number; 
+  testNames: string[] 
+}> {
   try {
     const supabase = createAdminClient()
     
+    // Get all tests that use this question
+    const { data: testQuestions, error: testQuestionsError } = await supabase
+      .from('test_questions')
+      .select(`
+        test_id,
+        tests!inner(name)
+      `)
+      .eq('question_id', questionId)
+    
+    if (testQuestionsError) {
+      console.error('Error checking question usage:', testQuestionsError)
+      return { isUsed: false, testCount: 0, testNames: [] }
+    }
+    
+    const testCount = testQuestions?.length || 0
+    const testNames = testQuestions?.map((tq: { test_id: number; tests: { name: string }[] }) => tq.tests?.[0]?.name || 'Unknown Test') || []
+    
+    return {
+      isUsed: testCount > 0,
+      testCount,
+      testNames
+    }
+  } catch (error) {
+    console.error('Unexpected error checking question usage:', error)
+    return { isUsed: false, testCount: 0, testNames: [] }
+  }
+}
+
+// Delete a question with integrity protection
+export async function deleteQuestion(id: number): Promise<{ 
+  success: boolean; 
+  message: string; 
+  testCount?: number; 
+  testNames?: string[] 
+}> {
+  try {
+    const supabase = createAdminClient()
+    
+    // First, check if the question is being used in any tests
+    const usageCheck = await checkQuestionUsage(id)
+    
+    if (usageCheck.isUsed) {
+      return {
+        success: false,
+        message: `Cannot delete this question because it is currently used in ${usageCheck.testCount} test(s): ${usageCheck.testNames.join(', ')}. Please remove it from those tests first.`,
+        testCount: usageCheck.testCount,
+        testNames: usageCheck.testNames
+      }
+    }
+    
+    // If not used in any tests, proceed with deletion
     const { error } = await supabase
       .from('questions')
       .delete()
@@ -187,12 +242,23 @@ export async function deleteQuestion(id: number) {
     
     if (error) {
       console.error('Error deleting question:', error)
-      throw new Error(error.message)
+      return {
+        success: false,
+        message: `Failed to delete question: ${error.message}`
+      }
     }
     
     revalidatePath('/content')
+    
+    return {
+      success: true,
+      message: 'Question deleted successfully!'
+    }
   } catch (error) {
-    console.error('Error deleting question:', error)
-    throw error
+    console.error('Unexpected error deleting question:', error)
+    return {
+      success: false,
+      message: 'An unexpected error occurred while deleting the question'
+    }
   }
 }

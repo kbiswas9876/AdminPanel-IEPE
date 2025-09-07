@@ -32,7 +32,7 @@ export function TestCreationWizard({
   isEditMode = false, 
   testId 
 }: TestCreationWizardProps = {}) {
-  const [currentStep, setCurrentStep] = useState(1)
+  const [currentStep, setCurrentStep] = useState(isEditMode ? 2 : 1)
   const [error, setError] = useState<string | null>(null)
   
   // Step 1: Test Blueprint
@@ -236,42 +236,44 @@ export function TestCreationWizard({
 
   return (
     <div className="max-w-4xl mx-auto">
-      {/* Progress Indicator */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
-              currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
-            }`}>
-              1
+      {/* Progress Indicator - hidden during Review & Refine per new UX */}
+      {currentStep !== 2 && (
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
+                currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
+              }`}>
+                1
+              </div>
+              <span className={`text-sm font-medium ${
+                currentStep >= 1 ? 'text-blue-600' : 'text-gray-600'
+              }`}>
+                Test Blueprint
+              </span>
             </div>
-            <span className={`text-sm font-medium ${
-              currentStep >= 1 ? 'text-blue-600' : 'text-gray-600'
-            }`}>
-              Test Blueprint
-            </span>
-          </div>
-          
-          <div className="flex-1 h-0.5 bg-gray-200 mx-4">
-            <div className={`h-full transition-all duration-300 ${
-              currentStep >= 2 ? 'bg-blue-600' : 'bg-gray-200'
-            }`} style={{ width: currentStep >= 2 ? '100%' : '0%' }} />
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
-              currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
-            }`}>
-              2
+            
+            <div className="flex-1 h-0.5 bg-gray-200 mx-4">
+              <div className={`h-full transition-all duration-300 ${
+                currentStep >= 2 ? 'bg-blue-600' : 'bg-gray-200'
+              }`} style={{ width: currentStep >= 2 ? '100%' : '0%' }} />
             </div>
-            <span className={`text-sm font-medium ${
-              currentStep >= 2 ? 'text-blue-600' : 'text-gray-600'
-            }`}>
-              Test Rules
-            </span>
+            
+            <div className="flex items-center space-x-4">
+              <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
+                currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
+              }`}>
+                2
+              </div>
+              <span className={`text-sm font-medium ${
+                currentStep >= 2 ? 'text-blue-600' : 'text-gray-600'
+              }`}>
+                Test Rules
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Error Message */}
       {error && (
@@ -423,6 +425,8 @@ export function TestCreationWizard({
           onSave={handleSaveTest}
           onPublish={handlePublishTest}
           initialTestData={isEditMode ? initialData?.test : undefined}
+          isEditMode={isEditMode}
+          testId={testId}
         />
       )}
 
