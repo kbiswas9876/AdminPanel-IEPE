@@ -235,121 +235,168 @@ export function TestCreationWizard({
 
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Progress Indicator - hidden during Review & Refine per new UX */}
-      {currentStep !== 2 && (
-        <div className="mb-8">
+    <div className="min-h-screen">
+      {/* Unified Header */}
+      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200/50 shadow-sm">
+        <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
-              }`}>
-                1
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100">
+                  <FileText className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 tracking-tight">
+                    {isEditMode ? 'Edit Mock Test' : 'Create Mock Test'}
+                  </h2>
+                  <p className="text-sm text-gray-600 font-medium">
+                    {currentStep === 1 && 'Design your test blueprint'}
+                    {currentStep === 2 && 'Review and refine questions'}
+                    {currentStep === 3 && 'Set rules and publish'}
+                  </p>
+                </div>
               </div>
-              <span className={`text-sm font-medium ${
-                currentStep >= 1 ? 'text-blue-600' : 'text-gray-600'
-              }`}>
-                Test Blueprint
-              </span>
             </div>
             
-            <div className="flex-1 h-0.5 bg-gray-200 mx-4">
-              <div className={`h-full transition-all duration-300 ${
-                currentStep >= 2 ? 'bg-blue-600' : 'bg-gray-200'
-              }`} style={{ width: currentStep >= 2 ? '100%' : '0%' }} />
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
-              }`}>
-                2
-              </div>
-              <span className={`text-sm font-medium ${
-                currentStep >= 2 ? 'text-blue-600' : 'text-gray-600'
-              }`}>
-                Test Rules
-              </span>
+            <div className="flex items-center space-x-3">
+              {currentStep > 1 && (
+                <Button 
+                  variant="outline" 
+                  onClick={handlePrevious}
+                  className="hover:bg-gray-50 transition-colors duration-200"
+                >
+                  ← Previous
+                </Button>
+              )}
+              
+              {currentStep === 1 && (
+                <Button 
+                  onClick={handleNext} 
+                  disabled={totalQuestions === 0}
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  Next: Review & Refine
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              )}
             </div>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-red-800">{error}</p>
-        </div>
-      )}
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto p-6">
 
-      {/* Step 1: Test Blueprint */}
-      {currentStep === 1 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <FileText className="h-5 w-5" />
-              <span>Test Blueprint</span>
-            </CardTitle>
-            <CardDescription>
-              Design your blueprint by chapter. Total questions selected: <strong>{totalQuestions}</strong>
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* Sticky total summary */}
-            <div className="sticky top-0 z-10 mb-4 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 border rounded-md p-3 flex items-center justify-between">
-              <span className="text-sm text-gray-700">Total Questions Selected</span>
-              <span className="font-semibold">{totalQuestions}</span>
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200">
+            <p className="text-sm font-medium text-red-800">{error}</p>
+          </div>
+        )}
+
+        {/* Step 1: Test Blueprint */}
+        {currentStep === 1 && (
+          <div className="space-y-6">
+            {/* Header Section */}
+            <div className="flex items-center justify-between p-6 bg-gradient-to-r from-gray-50/50 to-white/50 border-b border-gray-100/50">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100">
+                  <FileText className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 tracking-tight">
+                    Test Blueprint
+                  </h2>
+                  <p className="text-sm text-gray-600 font-medium">
+                    Design your blueprint by chapter and difficulty
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200/50">
+                  <span className="text-sm font-medium text-gray-700">Total Questions</span>
+                  <span className="ml-2 text-lg font-bold text-blue-600">{totalQuestions}</span>
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-4">
-              {chapters.map((chapter) => {
-                const chState = blueprint[chapter.name] || {}
-                const rules = chState.rules || []
-                return (
-                  <details key={chapter.name} className="border rounded-lg p-4">
-                    <summary className="cursor-pointer flex items-center justify-between">
-                      <div>
-                        <h3 className="font-medium text-gray-900">{chapter.name}</h3>
-                        <p className="text-sm text-gray-500">{chapter.available} questions available</p>
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        Selected: {(chState.random || 0) + rules.reduce((sum, r) => sum + (r.quantity || 0), 0)}
-                      </div>
-                    </summary>
+            {/* Content */}
+            <div className="p-6">
 
-                    <div className="mt-4 space-y-6">
-                      {/* A) Quantity (Simple Mode) */}
-                      <div className="space-y-2">
-                        <Label>Random questions from this chapter</Label>
-                        <div className="flex items-center space-x-2">
-                          <Input
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            value={(chState.random ?? 0).toString()}
-                            onChange={(e) => {
-                              const digitsOnly = e.target.value.replace(/[^0-9]/g, '')
-                              const num = Math.min(Math.max(parseInt(digitsOnly || '0', 10), 0), chapter.available)
-                              setChapterRandom(chapter.name, num)
-                            }}
-                            className="w-24"
-                          />
-                          <span className="text-sm text-gray-500">0 - {chapter.available}</span>
+              <div className="space-y-4">
+                {chapters.map((chapter) => {
+                  const chState = blueprint[chapter.name] || {}
+                  const rules = chState.rules || []
+                  const selectedCount = (chState.random || 0) + rules.reduce((sum, r) => sum + (r.quantity || 0), 0)
+                  
+                  return (
+                    <details key={chapter.name} className="group border border-gray-200/50 rounded-xl overflow-hidden bg-white/50 hover:bg-white/80 transition-all duration-200">
+                      <summary className="cursor-pointer flex items-center justify-between p-6 hover:bg-gray-50/50 transition-colors duration-200">
+                        <div className="flex items-center space-x-4">
+                          <div className="p-2 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 group-hover:from-blue-100 group-hover:to-indigo-100 transition-all duration-200">
+                            <FileText className="h-4 w-4 text-gray-600 group-hover:text-blue-600 transition-colors duration-200" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">{chapter.name}</h3>
+                            <p className="text-sm text-gray-600 font-medium">{chapter.available} questions available</p>
+                          </div>
                         </div>
-                      </div>
+                        <div className="flex items-center space-x-3">
+                          <div className="px-3 py-1 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200/50">
+                            <span className="text-sm font-semibold text-blue-600">
+                              {selectedCount} selected
+                            </span>
+                          </div>
+                          <div className="w-5 h-5 rounded-full bg-gray-200 group-hover:bg-blue-200 transition-colors duration-200 flex items-center justify-center">
+                            <span className="text-xs text-gray-600 group-hover:text-blue-600 transition-colors duration-200">+</span>
+                          </div>
+                        </div>
+                      </summary>
 
-                      {/* B) Ultra-Granular Rule Builder */}
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <Label>Custom Rules</Label>
-                          <Button variant="outline" size="sm" onClick={() => addRule(chapter.name)}>+ Add Custom Rule</Button>
-                        </div>
-                        {rules.length === 0 ? (
-                          <p className="text-sm text-gray-500">No custom rules added.</p>
-                        ) : (
-                          <div className="space-y-2">
-                            {rules.map((rule, idx) => (
-                              <div key={idx} className="grid grid-cols-1 md:grid-cols-12 gap-2 items-center border rounded-md p-2">
+                      <div className="p-6 bg-gray-50/50 border-t border-gray-100/50">
+                        <div className="space-y-6">
+                          {/* A) Quantity (Simple Mode) */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-semibold text-gray-700">Random questions from this chapter</Label>
+                            <div className="flex items-center space-x-3">
+                              <Input
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                className="w-24 transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                value={(chState.random ?? 0).toString()}
+                                onChange={(e) => {
+                                  const digitsOnly = e.target.value.replace(/[^0-9]/g, '')
+                                  const num = Math.min(Math.max(parseInt(digitsOnly || '0', 10), 0), chapter.available)
+                                  setChapterRandom(chapter.name, num)
+                                }}
+                              />
+                              <span className="text-sm text-gray-600 font-medium">0 - {chapter.available}</span>
+                            </div>
+                          </div>
+
+                          {/* B) Ultra-Granular Rule Builder */}
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-sm font-semibold text-gray-700">Custom Rules</Label>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => addRule(chapter.name)}
+                                className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-all duration-200"
+                              >
+                                + Add Custom Rule
+                              </Button>
+                            </div>
+                            {rules.length === 0 ? (
+                              <div className="p-4 text-center bg-gray-50/50 rounded-lg border border-gray-200/50">
+                                <p className="text-sm text-gray-600 font-medium">No custom rules added.</p>
+                                <p className="text-xs text-gray-500 mt-1">Add specific difficulty or tag-based rules</p>
+                              </div>
+                            ) : (
+                              <div className="space-y-3">
+                                {rules.map((rule, idx) => (
+                                  <div key={idx} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center p-4 bg-white/80 rounded-lg border border-gray-200/50 shadow-sm">
                                 <div className="md:col-span-5">
                                   <Label className="text-xs">Tag</Label>
                                   <Select value={rule.tag ?? 'any'} onValueChange={(v) => updateRule(chapter.name, idx, { tag: v === 'any' ? null : v })}>
@@ -381,13 +428,14 @@ export function TestCreationWizard({
                                 <div className="md:col-span-12 flex justify-end">
                                   <Button variant="outline" size="sm" className="text-red-600 border-red-300 hover:bg-red-50" onClick={() => removeRule(chapter.name, idx)}>🗑️ Remove</Button>
                                 </div>
+                                  </div>
+                                ))}
                               </div>
-                            ))}
+                            )}
                           </div>
-                        )}
+                        </div>
                       </div>
-                    </div>
-                  </details>
+                    </details>
                 )
               })}
 
@@ -396,11 +444,11 @@ export function TestCreationWizard({
                   <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                   <p className="text-gray-500">No chapters found. Please add some questions first.</p>
                 </div>
-              )}
+                )}
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        )}
 
       {/* Step 2: Review & Refine */}
       {currentStep === 2 && (
@@ -430,25 +478,7 @@ export function TestCreationWizard({
         />
       )}
 
-      {/* Navigation Buttons - Only for Step 1 */}
-      {currentStep === 1 && (
-        <div className="flex justify-between mt-8">
-          <div></div>
-          
-          <div className="flex space-x-4">
-            <Link href="/tests">
-              <Button variant="outline">Cancel</Button>
-            </Link>
-            
-            <Button onClick={handleNext} disabled={totalQuestions === 0}>
-              Next
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </Button>
-          </div>
-        </div>
-      )}
-
-
+      </div>
     </div>
   )
 }
