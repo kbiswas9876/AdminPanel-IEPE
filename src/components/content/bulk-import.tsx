@@ -1,15 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { bulkImportQuestions } from '@/lib/actions/bulk-import'
+import { parseCSVForStaging } from '@/lib/actions/bulk-import'
 import { generateCSVTemplate } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Download, Upload, FileText, CheckCircle, AlertCircle, Clipboard } from 'lucide-react'
+import { Download, Upload, FileText, CheckCircle, AlertCircle, Clipboard, Eye } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import type { Question } from '@/lib/types'
 
 export function BulkImport() {
+  const router = useRouter()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [pastedData, setPastedData] = useState('')
   const [isUploading, setIsUploading] = useState(false)
@@ -17,7 +20,7 @@ export function BulkImport() {
   const [result, setResult] = useState<{
     success: boolean
     message: string
-    importedCount?: number
+    questions?: Question[]
     errors?: string[]
   } | null>(null)
 
@@ -65,10 +68,12 @@ export function BulkImport() {
       const formData = new FormData()
       formData.append('csvFile', selectedFile)
       
-      const result = await bulkImportQuestions(formData)
+      const result = await parseCSVForStaging(formData)
       setResult(result)
       
-      if (result.success) {
+      if (result.success && result.questions) {
+        // Store questions in localStorage for the review page
+        localStorage.setItem('stagedImportQuestions', JSON.stringify(result.questions))
         setSelectedFile(null)
         // Reset file input
         const fileInput = document.getElementById('csvFile') as HTMLInputElement
@@ -103,10 +108,12 @@ export function BulkImport() {
       const formData = new FormData()
       formData.append('csvFile', file)
       
-      const result = await bulkImportQuestions(formData)
+      const result = await parseCSVForStaging(formData)
       setResult(result)
       
-      if (result.success) {
+      if (result.success && result.questions) {
+        // Store questions in localStorage for the review page
+        localStorage.setItem('stagedImportQuestions', JSON.stringify(result.questions))
         setPastedData('')
       }
     } catch {
@@ -277,7 +284,7 @@ export function BulkImport() {
             Step 3: Process Upload
           </CardTitle>
           <CardDescription>
-            Upload and process your CSV file to import all questions.
+            Upload and parse your CSV file. You&apos;ll then be able to review and edit each question before finalizing the import.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -295,7 +302,7 @@ export function BulkImport() {
               ) : (
                 <>
                   <Upload className="mr-2 h-4 w-4" />
-                  Upload and Process File
+                  Parse File for Review
                 </>
               )}
             </Button>
@@ -320,10 +327,19 @@ export function BulkImport() {
                       {result.message}
                     </p>
                     
-                    {result.importedCount && (
-                      <p className="text-sm text-green-700 mt-1">
-                        {result.importedCount} questions imported successfully!
-                      </p>
+                    {result.questions && result.questions.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-sm text-green-700 mb-3">
+                          {result.questions.length} questions parsed successfully and ready for review!
+                        </p>
+                        <Button
+                          onClick={() => router.push('/content/import-review')}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          Review & Finalize Import
+                        </Button>
+                      </div>
                     )}
                     
                     {result.errors && result.errors.length > 0 && (

@@ -34,6 +34,9 @@ interface QuestionExplorerProps {
     difficulties?: string[]
     tags?: string[]
   }
+  
+  // Staged questions (for import review)
+  stagedQuestions?: Question[]
 }
 
 export function QuestionExplorer({
@@ -49,12 +52,17 @@ export function QuestionExplorer({
   multiSelect = false,
   selectedQuestions = new Set(),
   onSelectionChange,
+  stagedQuestions,
 }: QuestionExplorerProps) {
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([])
   const [filteredTotal, setFilteredTotal] = useState(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
+
+  // Use staged questions if provided, otherwise use filtered questions
+  const displayQuestions = stagedQuestions || filteredQuestions
+  const displayTotal = stagedQuestions ? stagedQuestions.length : filteredTotal
 
   const handleFiltersApplied = (questions: Question[], total: number) => {
     setFilteredQuestions(questions)
@@ -109,20 +117,22 @@ export function QuestionExplorer({
         </div>
       )}
 
-      {/* Compact Filter Bar - Fixed Height */}
-      <div className="flex-shrink-0 mb-4">
-        <CompactFilterBar 
-          onFiltersApplied={handleFiltersApplied}
-          onLoadingChange={handleLoadingChange}
-        />
-      </div>
+      {/* Compact Filter Bar - Only show if not using staged questions */}
+      {!stagedQuestions && (
+        <div className="flex-shrink-0 mb-4">
+          <CompactFilterBar 
+            onFiltersApplied={handleFiltersApplied}
+            onLoadingChange={handleLoadingChange}
+          />
+        </div>
+      )}
 
       {/* Expandable Question List - Flexible Height with Scrolling */}
       <div className="flex-1 min-h-0">
         <ExpandableQuestionList 
           key={refreshKey}
-          filteredData={filteredQuestions}
-          filteredTotal={filteredTotal}
+          filteredData={displayQuestions}
+          filteredTotal={displayTotal}
           loading={loading}
           error={error}
           onQuestionDeleted={handleQuestionDeleted}
@@ -133,6 +143,7 @@ export function QuestionExplorer({
           onSelectionChange={onSelectionChange}
           onMultiSelect={handleMultiSelect}
           onBulkDelete={handleBulkDelete}
+          isStagedMode={!!stagedQuestions}
         />
       </div>
     </div>

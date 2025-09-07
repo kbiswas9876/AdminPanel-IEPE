@@ -1,6 +1,7 @@
 'use server'
 
-import { createAdminClient, type Question } from '@/lib/supabase/admin'
+import { createAdminClient, type Question as DBQuestion } from '@/lib/supabase/admin'
+import type { Question } from '@/lib/types'
 import { revalidatePath } from 'next/cache'
 import Papa from 'papaparse'
 
@@ -129,7 +130,126 @@ function parseCSVData(csvContent: string): { data: Question[], errors: string[] 
   return { data: questions, errors }
 }
 
-// Main bulk import Server Action
+// Parse CSV data without inserting into database (for staging)
+export async function parseCSVForStaging(formData: FormData): Promise<{
+  success: boolean
+  message: string
+  questions?: Question[]
+  errors?: string[]
+}> {
+  try {
+    const file = formData.get('csvFile') as File
+    
+    if (!file) {
+      return {
+        success: false,
+        message: 'No file provided'
+      }
+    }
+    
+    if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
+      return {
+        success: false,
+        message: 'Please upload a CSV file'
+      }
+    }
+    
+    // Read file content
+    const csvContent = await file.text()
+    
+    // Parse and validate CSV data
+    const { data: questions, errors } = parseCSVData(csvContent)
+    
+    if (errors.length > 0) {
+      return {
+        success: false,
+        message: 'Validation errors found',
+        errors: errors
+      }
+    }
+    
+    if (questions.length === 0) {
+      return {
+        success: false,
+        message: 'No valid questions found in the CSV file'
+      }
+    }
+    
+    return {
+      success: true,
+      message: `Successfully parsed ${questions.length} questions for review`,
+      questions: questions
+    }
+    
+  } catch (error) {
+    console.error('CSV parsing error:', error)
+    return {
+      success: false,
+      message: `Parsing failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+    }
+  }
+}
+
+// Finalize import by inserting staged questions into database
+export async function finalizeImport(questions: Question[]): Promise<ImportResult> {
+  try {
+    if (!questions || questions.length === 0) {
+      return {
+        success: false,
+        message: 'No questions provided for import'
+      }
+    }
+    
+    // Convert Question type to DBQuestion type for database insertion
+    const dbQuestions: DBQuestion[] = questions.map(q => ({
+      id: q.id,
+      question_id: q.question_id,
+      book_source: q.book_source,
+      chapter_name: q.chapter_name,
+      question_number_in_book: q.question_number_in_book ?? undefined,
+      question_text: q.question_text,
+      options: q.options as { a: string; b: string; c: string; d: string; } | undefined,
+      correct_option: q.correct_option,
+      solution_text: q.solution_text ?? undefined,
+      exam_metadata: q.exam_metadata ?? undefined,
+      admin_tags: q.admin_tags ?? undefined,
+      created_at: q.created_at
+    }))
+    
+    // Batch insert into database
+    const supabase = createAdminClient()
+    
+    const { error } = await supabase
+      .from('questions')
+      .insert(dbQuestions)
+    
+    if (error) {
+      console.error('Database insertion error:', error)
+      return {
+        success: false,
+        message: `Database error: ${error.message}`
+      }
+    }
+    
+    // Revalidate and redirect
+    revalidatePath('/content')
+    
+    return {
+      success: true,
+      message: `Successfully imported ${questions.length} questions!`,
+      importedCount: questions.length
+    }
+    
+  } catch (error) {
+    console.error('Finalize import error:', error)
+    return {
+      success: false,
+      message: `Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+    }
+  }
+}
+
+// Main bulk import Server Action (legacy - now redirects to staging)
 export async function bulkImportQuestions(formData: FormData): Promise<ImportResult> {
   try {
     const file = formData.get('csvFile') as File

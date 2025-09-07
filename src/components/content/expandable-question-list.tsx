@@ -31,6 +31,9 @@ interface ExpandableQuestionListProps {
   onSelectionChange?: (selected: Set<string | number>) => void
   onMultiSelect?: (questions: Question[]) => void
   onBulkDelete?: (questions: Question[]) => void
+  
+  // Staged mode (for import review)
+  isStagedMode?: boolean
 }
 
 export function ExpandableQuestionList({ 
@@ -45,7 +48,8 @@ export function ExpandableQuestionList({
   selectedQuestions = new Set(),
   onSelectionChange,
   onMultiSelect,
-  onBulkDelete
+  onBulkDelete,
+  isStagedMode = false
 }: ExpandableQuestionListProps) {
   const [data, setData] = useState<Question[]>([])
   const [totalCount, setTotalCount] = useState(0)
@@ -119,9 +123,9 @@ export function ExpandableQuestionList({
     }
   }, [filteredData, filteredTotal])
 
-  // Fetch default data when not using filters
+  // Fetch default data when not using filters and not in staged mode
   useEffect(() => {
-    if (!isUsingFilters) {
+    if (!isUsingFilters && !isStagedMode) {
       const fetchData = async () => {
         try {
           const result = await getQuestions(currentPage, pageSize)
@@ -142,7 +146,7 @@ export function ExpandableQuestionList({
 
       fetchData()
     }
-  }, [currentPage, pageSize, isUsingFilters])
+  }, [currentPage, pageSize, isUsingFilters, isStagedMode])
 
   const handleToggleQuestion = (questionId: number) => {
     setExpandedQuestionIds(prev => {
@@ -482,8 +486,8 @@ export function ExpandableQuestionList({
         )}
       </div>
 
-      {/* Pagination - Only show when not using filters */}
-      {!isUsingFilters && totalPages > 1 && (
+      {/* Pagination - Only show when not using filters and not in staged mode */}
+      {!isUsingFilters && !isStagedMode && totalPages > 1 && (
         <div className="flex-shrink-0 flex items-center justify-between pt-6 border-t">
           <div className="text-sm text-gray-700">
             Showing {data.length > 0 ? (currentPage - 1) * pageSize + 1 : 0} to{' '}
