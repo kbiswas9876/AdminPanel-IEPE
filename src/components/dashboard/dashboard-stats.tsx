@@ -36,7 +36,7 @@ function StatCard({
 }: {
   title: string
   value: number
-  icon: any
+  icon: React.ComponentType<{ className?: string }>
   href: string
   isUrgent?: boolean
   description?: string

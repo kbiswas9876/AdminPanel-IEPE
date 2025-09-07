@@ -345,3 +345,4 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
     </div>
   )
 }
+

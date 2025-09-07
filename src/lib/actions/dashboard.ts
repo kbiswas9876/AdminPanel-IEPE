@@ -18,7 +18,7 @@ export interface RecentActivity {
   description: string
   timestamp: string
   userEmail?: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 // Get dashboard statistics
@@ -146,3 +146,4 @@ export async function getRecentActivity(limit: number = 7): Promise<RecentActivi
     return []
   }
 }
+
