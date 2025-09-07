@@ -8,9 +8,10 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { X, Plus, Save, XCircle } from 'lucide-react'
+import { X, Plus, Save, XCircle, Eye, EyeOff } from 'lucide-react'
 import { BookSourceCombobox } from './book-source-combobox'
 import { ChapterNameCombobox } from './chapter-name-combobox'
+import { SmartLatexRenderer } from '../tests/smart-latex-renderer'
 import type { Question } from '@/lib/types'
 
 interface InPlaceQuestionEditorProps {
@@ -30,6 +31,11 @@ export function InPlaceQuestionEditor({
   const [isSaving, setIsSaving] = useState(false)
   const [options, setOptions] = useState<{ [key: string]: string }>({})
   const [adminTags, setAdminTags] = useState<string[]>([])
+  const [showPreview, setShowPreview] = useState({
+    question: true,
+    options: true,
+    solution: true
+  })
 
   // Initialize form data when question prop changes
   useEffect(() => {
@@ -132,6 +138,31 @@ export function InPlaceQuestionEditor({
 
   const optionKeys = Object.keys(options).sort()
 
+  // Live Preview Component
+  const LivePreview = ({ content, type }: { content: string; type: 'question' | 'options' | 'solution' }) => {
+    if (!showPreview[type] || !content.trim()) return null
+    
+    return (
+      <div className="mt-3 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-gray-600">Live Preview:</span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowPreview(prev => ({ ...prev, [type]: !prev[type] }))}
+            className="h-6 w-6 p-0"
+          >
+            <EyeOff className="h-3 w-3" />
+          </Button>
+        </div>
+        <div className="text-sm">
+          <SmartLatexRenderer text={content} />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-xl">
       <CardHeader className="pb-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg">
@@ -200,10 +231,22 @@ export function InPlaceQuestionEditor({
 
         {/* Question Text */}
         <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <div className="w-1 h-6 bg-green-600 rounded-full"></div>
-            Question Content
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <div className="w-1 h-6 bg-green-600 rounded-full"></div>
+              Question Content
+            </h3>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowPreview(prev => ({ ...prev, question: !prev.question }))}
+              className="text-green-600 border-green-200 hover:bg-green-50"
+            >
+              {showPreview.question ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+              {showPreview.question ? 'Hide Preview' : 'Show Preview'}
+            </Button>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="question_text" className="text-sm font-medium text-gray-700">
               Question Text *
@@ -215,6 +258,7 @@ export function InPlaceQuestionEditor({
               placeholder="Enter the question text with LaTeX formatting..."
               className="min-h-[120px] transition-all duration-200 focus:ring-2 focus:ring-green-500 focus:border-green-500"
             />
+            <LivePreview content={formData.question_text} type="question" />
           </div>
         </div>
 
@@ -225,40 +269,62 @@ export function InPlaceQuestionEditor({
               <div className="w-1 h-6 bg-purple-600 rounded-full"></div>
               Answer Options
             </h3>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={addOption}
-              className="h-9 px-4 bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100 transition-colors"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Option
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPreview(prev => ({ ...prev, options: !prev.options }))}
+                className="text-purple-600 border-purple-200 hover:bg-purple-50"
+              >
+                {showPreview.options ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                {showPreview.options ? 'Hide Preview' : 'Show Preview'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addOption}
+                className="h-9 px-4 bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100 transition-colors"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Option
+              </Button>
+            </div>
           </div>
           
-          <div className="space-y-3">
+          <div className="space-y-4">
             {optionKeys.map((key) => (
-              <div key={key} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-purple-300 transition-colors">
-                <div className="w-10 h-10 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center text-sm font-bold">
-                  {key.toUpperCase()}
+              <div key={key} className="space-y-2">
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-purple-300 transition-colors">
+                  <div className="w-10 h-10 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center text-sm font-bold">
+                    {key.toUpperCase()}
+                  </div>
+                  <Input
+                    value={options[key]}
+                    onChange={(e) => handleOptionChange(key, e.target.value)}
+                    placeholder={`Option ${key.toUpperCase()}`}
+                    className="flex-1 transition-all duration-200 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  />
+                  {optionKeys.length > 2 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeOption(key)}
+                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
-                <Input
-                  value={options[key]}
-                  onChange={(e) => handleOptionChange(key, e.target.value)}
-                  placeholder={`Option ${key.toUpperCase()}`}
-                  className="flex-1 transition-all duration-200 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                />
-                {optionKeys.length > 2 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeOption(key)}
-                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+                {showPreview.options && options[key] && (
+                  <div className="ml-13 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                    <div className="text-xs font-medium text-purple-700 mb-1">Preview:</div>
+                    <div className="text-sm">
+                      <SmartLatexRenderer text={options[key]} />
+                    </div>
+                  </div>
                 )}
               </div>
             ))}
@@ -302,9 +368,21 @@ export function InPlaceQuestionEditor({
           <div className="space-y-4">
             {/* Solution Text */}
             <div className="space-y-2">
-              <Label htmlFor="solution_text" className="text-sm font-medium text-gray-700">
-                Solution Text
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="solution_text" className="text-sm font-medium text-gray-700">
+                  Solution Text
+                </Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowPreview(prev => ({ ...prev, solution: !prev.solution }))}
+                  className="text-gray-600 border-gray-200 hover:bg-gray-50"
+                >
+                  {showPreview.solution ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                  {showPreview.solution ? 'Hide Preview' : 'Show Preview'}
+                </Button>
+              </div>
               <Textarea
                 id="solution_text"
                 value={formData.solution_text || ''}
@@ -312,6 +390,7 @@ export function InPlaceQuestionEditor({
                 placeholder="Enter the solution with LaTeX formatting..."
                 className="min-h-[100px] transition-all duration-200 focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
               />
+              <LivePreview content={formData.solution_text || ''} type="solution" />
             </div>
 
             {/* Difficulty */}

@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache'
 import type { Question as UIQuestion } from '@/lib/types'
 import { redirect } from 'next/navigation'
 import type { TestQuestionSlot, TestBlueprint } from '@/lib/types'
+import { sanitizeQuestionForRendering } from '@/lib/utils/latex-sanitization'
 // Types are imported from the central types file when needed
 
 // Get all tests
@@ -261,7 +262,10 @@ async function fetchCandidateQuestions(
   // Exclude already picked ids (extra guard)
   const filtered = (data as unknown as UIQuestion[]).filter((q) => !excludeIds.includes(q.id as number))
 
-  return filtered
+  // Sanitize questions for rendering (convert \\ to \)
+  const sanitizedQuestions = filtered.map(q => sanitizeQuestionForRendering(q) as UIQuestion)
+
+  return sanitizedQuestions
 }
 
 function takeRandom<T>(items: T[], count: number): T[] {
@@ -343,7 +347,8 @@ export async function regenerateSingleQuestion(args: {
 
     const candidates = await fetchCandidateQuestions(supabase, criteria, args.exclude_ids)
     const pick = takeRandom(candidates, 1)[0]
-    return pick || null
+    // Sanitize the picked question for rendering (convert \\ to \)
+    return pick ? sanitizeQuestionForRendering(pick) as UIQuestion : null
   } catch (error) {
     console.error('Unexpected error regenerating question:', error)
     return null
@@ -396,7 +401,10 @@ export async function searchQuestions(args: {
       return { questions: [], total: 0 }
     }
 
-    return { questions: data as unknown as UIQuestion[], total: count || 0 }
+    // Sanitize questions for rendering (convert \\ to \)
+    const sanitizedQuestions = (data as unknown as UIQuestion[]).map(q => sanitizeQuestionForRendering(q) as UIQuestion)
+    
+    return { questions: sanitizedQuestions, total: count || 0 }
   } catch (error) {
     console.error('Unexpected error searching questions:', error)
     return { questions: [], total: 0 }
@@ -1169,7 +1177,9 @@ async function fetchTestAndQuestionsOrdered(testId: number): Promise<{ test: Tes
       for (const q of (qs || []) as unknown as UIQuestion[]) {
         if (q.id != null) byId.set(q.id as number, q)
       }
-      questions = ids.map((id) => byId.get(id)).filter(Boolean) as UIQuestion[]
+      const rawQuestions = ids.map((id) => byId.get(id)).filter(Boolean) as UIQuestion[]
+      // Sanitize questions for rendering (convert \\ to \)
+      questions = rawQuestions.map(q => sanitizeQuestionForRendering(q) as UIQuestion)
     }
     return { test: test as Test, questions }
   } catch {
@@ -1194,7 +1204,7 @@ async function fetchTestAndQuestionsApplied(testId: number): Promise<{ test: Tes
     .eq('test_id', testId)
     .order('id', { ascending: true })
   if (rowsErr) return { error: 'Failed to read test questions' }
-  const questions: UIQuestion[] = (rows || []).map((r: { id: number; question_id: number; question_override_data?: Record<string, unknown>; questions: UIQuestion[] }) => {
+  const rawQuestions: UIQuestion[] = (rows || []).map((r: { id: number; question_id: number; question_override_data?: Record<string, unknown>; questions: UIQuestion[] }) => {
     const base = (r.questions?.[0] || {}) as UIQuestion
     const override = r.question_override_data
     if (!override || typeof override !== 'object') return base
@@ -1205,6 +1215,9 @@ async function fetchTestAndQuestionsApplied(testId: number): Promise<{ test: Tes
     if (typeof override.solution_text === 'string' || override.solution_text === null) patched.solution_text = override.solution_text
     return patched
   })
+  
+  // Sanitize questions for rendering (convert \\ to \)
+  const questions: UIQuestion[] = rawQuestions.map(q => sanitizeQuestionForRendering(q) as UIQuestion)
   return { test: test as Test, questions }
 }
 
