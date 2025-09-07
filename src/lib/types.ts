@@ -24,32 +24,57 @@ export type BlueprintRule = {
   quantity: number;
 };
 
-// Type for a chapter's section of the blueprint
+// Type for chapter blueprint configuration
 export type ChapterBlueprint = {
   random?: number;
   rules?: BlueprintRule[];
 };
 
-// The main blueprint object type
-export type TestBlueprint = {
-  [chapterName: string]: ChapterBlueprint;
-};
+// Type for test blueprint configuration
+export type TestBlueprint = Record<string, ChapterBlueprint>;
 
-// Type for a single question slot in the "Review & Refine" stage
+// Type for test question slot in the test creation wizard
 export type TestQuestionSlot = {
   question: Question;
-  source_type: 'random' | 'tag' | 'difficulty' | 'rule' | 'custom';
-  source_value?: string;
-  rule_tag?: string | null;
-  rule_difficulty?: string | null;
+  source_type: 'random' | 'tag' | 'difficulty' | 'custom';
   chapter_name: string;
+  source_value?: string | null;
   tempId?: string;
 };
 
-// Type for test creation and management
+// Type for PDF customization settings
+export type PDFCustomizationSettings = {
+  // Header customization
+  headerText?: string;
+  headerLogo?: string; // Base64 encoded image or URL
+  
+  // Footer customization
+  footerText?: string;
+  footerLogo?: string; // Base64 encoded image or URL
+  
+  // Watermark customization
+  watermarkText?: string;
+  watermarkLogo?: string; // Base64 encoded image or URL
+  watermarkOpacity?: number; // 0.1 to 0.5
+  
+  // Color scheme customization
+  primaryColor?: string; // Hex color for headers, borders, etc.
+  secondaryColor?: string; // Hex color for accents
+  
+  // Typography customization
+  titleFont?: string;
+  bodyFont?: string;
+  
+  // Layout customization
+  showInstructions?: boolean;
+  customInstructions?: string;
+  showPageNumbers?: boolean;
+  showTestMetadata?: boolean;
+};
+
+// Type for test metadata
 export type Test = {
-  id: number;
-  created_at: string;
+  id?: number;
   name: string;
   description?: string | null;
   total_time_minutes: number;
@@ -57,59 +82,31 @@ export type Test = {
   negative_marks_per_incorrect: number;
   result_policy: 'instant' | 'scheduled';
   result_release_at?: string | null;
-  start_time?: string | null;
-  end_time?: string | null;
-  status: 'draft' | 'scheduled' | 'live' | 'completed';
-  question_count?: number;
+  created_at?: string;
+  updated_at?: string;
+  published?: boolean;
+  publish_start_time?: string | null;
+  publish_end_time?: string | null;
 };
 
-// Type for search criteria in the Master Question Bank
-export type QuestionSearchCriteria = {
-  search?: string;
-  book_source?: string;
-  chapter_name?: string;
-  difficulty?: 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard';
-  tags?: string[];
-  page?: number;
-  pageSize?: number;
+// Type for UI question (with additional UI-specific properties)
+export type UIQuestion = Question & {
+  // Additional UI-specific properties can be added here
+  isSelected?: boolean;
+  isEditing?: boolean;
 };
 
-// Type for search results
-export type QuestionSearchResults = {
-  questions: Question[];
-  total: number;
-};
-
-// Type for regeneration criteria
-export type RegenerationCriteria = {
-  chapter_name: string;
-  source_type: 'random' | 'rule';
-  rule_tag?: string | null;
-  rule_difficulty?: string | null;
-  exclude_ids: number[];
-};
-
-// Type for chapter information with question counts
+// Type for chapter information
 export type ChapterInfo = {
   name: string;
   available: number;
   tags: string[];
-  difficultyCounts?: Record<string, number>;
 };
 
-// Type for test save parameters
-export type TestSaveParams = {
-  testId?: number;
-  name: string;
-  description?: string;
-  total_time_minutes: number;
-  marks_per_correct: number;
-  negative_marks_per_incorrect: number;
-  result_policy: 'instant' | 'scheduled';
-  result_release_at?: string | null;
-  question_ids: number[];
-  publish?: {
-    start_time: string;
-    end_time: string;
-  } | null;
+// Type for generated test slot (from blueprint generation)
+export type GeneratedTestSlot = {
+  question: Question;
+  source_type: 'random' | 'rule';
+  chapter_name: string;
+  source_value?: string | null;
 };

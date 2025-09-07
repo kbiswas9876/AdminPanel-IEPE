@@ -145,7 +145,12 @@ export function TestCreationWizard({
       }
       generateTestPaperFromBlueprint(blueprint)
         .then((slots) => {
-          setReviewQuestions(slots)
+          // Convert GeneratedTestSlot to TestQuestionSlot
+          const convertedSlots: TestQuestionSlot[] = slots.map(slot => ({
+            ...slot,
+            source_type: slot.source_type === 'rule' ? 'tag' : slot.source_type
+          }))
+          setReviewQuestions(convertedSlots)
           setCurrentStep(2)
           setError(null)
         })
@@ -403,7 +408,7 @@ export function TestCreationWizard({
                                     <SelectTrigger className="w-full"><SelectValue placeholder="Any Tag" /></SelectTrigger>
                                     <SelectContent>
                                       <SelectItem value="any">Any Tag</SelectItem>
-                                      {chapter.tags.filter(Boolean).map((t) => (
+                                      {chapter.tags.filter(Boolean).map((t: string) => (
                                         <SelectItem key={t} value={t}>{t}</SelectItem>
                                       ))}
                                     </SelectContent>

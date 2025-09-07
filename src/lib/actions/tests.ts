@@ -314,7 +314,13 @@ export async function generateTestPaperFromBlueprint(
           const picks = takeRandom(candidates, need)
           for (const q of picks) {
             if (q.id != null) selectedIds.push(q.id as number)
-            slots.push({ chapter_name: chapter, source_type: 'rule', rule_tag: rule.tag ?? null, rule_difficulty: rule.difficulty ?? null, question: q })
+            slots.push({ 
+              chapter_name: chapter, 
+              source_type: 'rule', 
+              rule_tag: rule.tag ?? null, 
+              rule_difficulty: rule.difficulty ?? null, 
+              question: q 
+            })
           }
         }
       }
@@ -1221,7 +1227,7 @@ async function fetchTestAndQuestionsApplied(testId: number): Promise<{ test: Tes
   return { test: test as Test, questions }
 }
 
-// 1) Professional, student-ready Question Paper PDF
+// Premium Professional Test Paper Generator
 export async function exportQuestionPaperPdf(testId: number): Promise<{ success: boolean; fileName?: string; base64?: string; message?: string }> {
   try {
     const fetched = await (async () => {
@@ -1241,7 +1247,11 @@ export async function exportQuestionPaperPdf(testId: number): Promise<{ success:
     }
     const { test, questions } = fetched
 
-    // Server-side KaTeX rendering
+    // Get PDF customization settings
+    const { getPDFCustomizationSettings } = await import('./settings')
+    const pdfSettings = await getPDFCustomizationSettings()
+
+    // Enhanced KaTeX rendering with better error handling
     const katex = await import('katex')
     const renderWithKaTeX = (input: string | null | undefined): string => {
       const text = String(input || '')
@@ -1283,81 +1293,386 @@ export async function exportQuestionPaperPdf(testId: number): Promise<{ success:
 
     const questionCount = questions.length
     const fullMarks = (Number(test.marks_per_correct) || 0) * questionCount
+    const negativeMarks = test.negative_marks_per_incorrect || 0
+    const positiveMarks = test.marks_per_correct || 0
 
+    // Premium HTML Template with Professional Design and Customization
     const html = `<!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${(test.name || 'Test').replace(/</g, '&lt;')} - Question Paper</title>
+  
+  <!-- KaTeX for Mathematical Rendering -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
-<style>
-    @page { size: A4; margin: 14mm 12mm; }
-    body { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #111; line-height: 1.4; }
-    .header { text-align: center; margin-bottom: 20px; }
-    .title { font-size: 20px; font-weight: bold; letter-spacing: 0.3px; margin-bottom: 8px; }
-    .sub { display: grid; grid-template-columns: 1fr 1fr 1fr; margin-top: 8px; font-size: 12px; color: #333; }
-    .sub div { white-space: nowrap; }
-    .sub .left { text-align: left; }
-    .sub .center { text-align: center; }
-    .sub .right { text-align: right; }
-    .q { margin: 16px 0 14px; page-break-inside: avoid; }
-    .q-header { margin-bottom: 8px; }
-    .qnum { font-weight: 600; display: inline; }
-    .qtext { display: inline; margin-left: 4px; }
-    .text { white-space: pre-wrap; }
-    .options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; margin-top: 8px; }
-    .opt { display: flex; align-items: flex-start; gap: 8px; }
-    .opt .label { font-weight: 600; flex-shrink: 0; }
-    .opt .content { flex: 1; }
-    .k-block { margin: 6px 0; }
-    .k-inline { display: inline; }
-</style>
-  <title>${(test.name || 'Test').replace(/</g, '&lt;')}</title>
-  </head>
-  <body>
-    <div class="header">
-      <div class="title">${(test.name || 'Test').replace(/</g, '&lt;')}</div>
-      <div class="sub">
-        <div class="left">Duration: ${test.total_time_minutes} minutes</div>
-        <div class="center">Marks: +${test.marks_per_correct || 0} for correct, -${test.negative_marks_per_incorrect || 0} for incorrect</div>
-        <div class="right">Full Marks: ${fullMarks}</div>
-  </div>
+  
+  <!-- Google Fonts for Professional Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(pdfSettings.bodyFont || 'Inter')}:wght@300;400;500;600;700&family=${encodeURIComponent(pdfSettings.titleFont || 'Source Serif Pro')}:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Print-optimized CSS with professional design */
+    @page { 
+      size: A4; 
+      margin: 20mm 15mm 25mm 15mm;
+      @top-center { content: "Question Paper"; }
+      @bottom-center { content: "Page " counter(page) " of " counter(pages); }
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+    
+    body { 
+      font-family: '${pdfSettings.bodyFont || 'Inter'}', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 11pt;
+      line-height: 1.6;
+      color: #1a1a1a;
+      background: #ffffff;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    
+    /* Professional Header Design */
+    .document-header {
+      text-align: center;
+      margin-bottom: 32px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid ${pdfSettings.primaryColor || '#2563eb'};
+      position: relative;
+    }
+    
+    .test-title {
+      font-family: '${pdfSettings.titleFont || 'Source Serif Pro'}', Georgia, serif;
+      font-size: 24pt;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0 0 16px 0;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+    
+    .test-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      margin-top: 16px;
+      font-size: 10pt;
+      color: #475569;
+    }
+    
+    .meta-item {
+      padding: 8px 12px;
+      background: #f8fafc;
+      border-radius: 6px;
+      border-left: 3px solid ${pdfSettings.primaryColor || '#2563eb'};
+    }
+    
+    .meta-label {
+      font-weight: 600;
+      color: #334155;
+      display: block;
+      margin-bottom: 2px;
+    }
+    
+    .meta-value {
+      font-weight: 500;
+      color: #1e293b;
+    }
+    
+    /* Instructions Section */
+    .instructions {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+      font-size: 10pt;
+    }
+    
+    .instructions-title {
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 8px;
+      font-size: 11pt;
+    }
+    
+    .instructions-list {
+      margin: 0;
+      padding-left: 16px;
+      color: #475569;
+    }
+    
+    .instructions-list li {
+      margin-bottom: 4px;
+    }
+    
+    /* Question Styling */
+    .question-container {
+      margin-bottom: 24px;
+      page-break-inside: avoid;
+      padding: 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #ffffff;
+    }
+    
+    .question-header {
+      margin-bottom: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    
+    .question-number {
+      font-family: 'Source Serif Pro', Georgia, serif;
+      font-size: 12pt;
+      font-weight: 600;
+      color: #2563eb;
+      min-width: 24px;
+      flex-shrink: 0;
+    }
+    
+    .question-text {
+      flex: 1;
+      font-size: 11pt;
+      line-height: 1.6;
+      color: #1e293b;
+    }
+    
+    /* Professional Options Grid */
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 24px;
+      margin-top: 12px;
+    }
+    
+    .option-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #f8fafc;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s ease;
+    }
+    
+    .option-label {
+      font-weight: 600;
+      color: #2563eb;
+      min-width: 20px;
+      flex-shrink: 0;
+      font-size: 10pt;
+    }
+    
+    .option-content {
+      flex: 1;
+      font-size: 10pt;
+      line-height: 1.5;
+      color: #374151;
+    }
+    
+    /* Mathematical Content Styling */
+    .k-block {
+      margin: 8px 0;
+      text-align: center;
+    }
+    
+    .k-inline {
+      display: inline;
+    }
+    
+    .text {
+      white-space: pre-wrap;
+    }
+    
+    /* Footer and Page Numbers */
+    .page-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 20mm;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9pt;
+      color: #64748b;
+    }
+    
+    /* Print-specific optimizations */
+    @media print {
+      body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      
+      .question-container {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      
+      .options-grid {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+    }
+    
+    /* Responsive adjustments for different screen sizes */
+    @media (max-width: 768px) {
+      .options-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .test-meta {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Professional Document Header -->
+  <div class="document-header">
+    <h1 class="test-title">${(test.name || 'Test').replace(/</g, '&lt;')}</h1>
+    
+    <div class="test-meta">
+      <div class="meta-item">
+        <span class="meta-label">Duration</span>
+        <span class="meta-value">${test.total_time_minutes} minutes</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Marking Scheme</span>
+        <span class="meta-value">+${positiveMarks} correct, -${negativeMarks} incorrect</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Total Marks</span>
+        <span class="meta-value">${fullMarks}</span>
+      </div>
     </div>
+  </div>
+  
+  ${pdfSettings.showInstructions !== false ? `<!-- Instructions Section -->
+  <div class="instructions">
+    <div class="instructions-title">General Instructions:</div>
+    <ol class="instructions-list">
+      <li>This question paper contains ${questionCount} questions.</li>
+      <li>Each question carries ${positiveMarks} mark${positiveMarks !== 1 ? 's' : ''} for correct answer${positiveMarks !== 1 ? 's' : ''}.</li>
+      ${negativeMarks > 0 ? `<li>${negativeMarks} mark${negativeMarks !== 1 ? 's' : ''} will be deducted for each incorrect answer.</li>` : ''}
+      <li>Total time allotted for this test is ${test.total_time_minutes} minutes.</li>
+      <li>Read each question carefully before answering.</li>
+      <li>Choose the most appropriate answer from the given options.</li>
+      ${pdfSettings.customInstructions ? `<li>${pdfSettings.customInstructions}</li>` : ''}
+    </ol>
+  </div>` : ''}
+  
+  <!-- Questions Section -->
+  <div class="questions-section">
     ${questions.map((q, idx) => {
       const opts = (q.options || {}) as Record<string, string>
+      const optionKeys = Object.keys(opts).sort()
+      
       return `
-      <div class="q">
-          <div class="q-header">
-            <span class="qnum">${idx + 1}.</span>
-            <span class="qtext">${renderWithKaTeX(q.question_text)}</span>
-      </div>
-          <div class="options">
-            ${Object.keys(opts).sort().map((key) => {
-              const lower = key.toLowerCase()
-              return `<div class="opt"><span class="label">(${lower})</span><span class="content">${renderWithKaTeX(opts[key] || '')}</span></div>`
-            }).join('')}
-          </div>
-        </div>`
+      <div class="question-container">
+        <div class="question-header">
+          <span class="question-number">${idx + 1}.</span>
+          <div class="question-text">${renderWithKaTeX(q.question_text)}</div>
+        </div>
+        
+        <div class="options-grid">
+          ${optionKeys.map((key) => {
+            const lower = key.toLowerCase()
+            return `
+            <div class="option-item">
+              <span class="option-label">(${lower})</span>
+              <div class="option-content">${renderWithKaTeX(opts[key] || '')}</div>
+            </div>`
+          }).join('')}
+        </div>
+      </div>`
     }).join('')}
-  </body>
+  </div>
+  
+  <!-- Professional Footer -->
+  <div class="page-footer">
+    <span>${pdfSettings.footerText || `© ${new Date().getFullYear()} Professional Test Platform - Question Paper`}</span>
+  </div>
+</body>
 </html>`
 
+    // Enhanced Puppeteer Configuration for Premium PDF Generation
     const puppeteer = await import('puppeteer')
-    const browser = await puppeteer.launch({ headless: true })
+    const browser = await puppeteer.launch({ 
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--disable-gpu'
+      ]
+    })
+    
     const page = await browser.newPage()
-    await page.setContent(html, { waitUntil: 'networkidle0' })
-    const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true, margin: { top: '14mm', bottom: '14mm', left: '12mm', right: '12mm' } })
+    
+    // Set viewport for consistent rendering
+    await page.setViewport({ width: 1200, height: 800, deviceScaleFactor: 2 })
+    
+    // Wait for fonts and resources to load
+    await page.setContent(html, { 
+      waitUntil: ['networkidle0', 'domcontentloaded'],
+      timeout: 30000
+    })
+    
+    // Wait for KaTeX rendering to complete
+    await page.waitForFunction(() => {
+      const katexElements = document.querySelectorAll('.katex')
+      return katexElements.length > 0 ? Array.from(katexElements).every(el => el.textContent && el.textContent.trim() !== '') : true
+    }, { timeout: 10000 })
+    
+    // Generate high-quality PDF with professional settings
+    const pdfBuffer = await page.pdf({ 
+      format: 'A4',
+      printBackground: true,
+      margin: { 
+        top: '20mm', 
+        bottom: '25mm', 
+        left: '15mm', 
+        right: '15mm' 
+      },
+      displayHeaderFooter: true,
+      headerTemplate: '<div></div>',
+      footerTemplate: `
+        <div style="font-size: 10px; color: #666; text-align: center; width: 100%; margin: 0 auto;">
+          <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
+        </div>
+      `,
+      preferCSSPageSize: true,
+      timeout: 30000
+    })
+    
     await browser.close()
 
     const base64 = Buffer.from(pdfBuffer).toString('base64')
     const safeName = `${test.name || 'Test'}-Question-Paper-${testId}.pdf`.replace(/[^a-z0-9\-_.]/gi, '_')
     return { success: true, fileName: safeName, base64 }
   } catch (error) {
-    console.error('Question Paper export failed:', error)
+    console.error('Premium Question Paper export failed:', error)
     return { success: false, message: 'Failed to export Question Paper' }
   }
 }
 
-// 2) Clean Answer Key PDF
+// 2) Premium Professional Answer Key PDF
 export async function exportAnswerKeyPdf(testId: number): Promise<{ success: boolean; fileName?: string; base64?: string; message?: string }> {
   try {
     const fetched = await (async () => {
@@ -1375,49 +1690,343 @@ export async function exportAnswerKeyPdf(testId: number): Promise<{ success: boo
       return { success: false, message: fetched.error }
     }
     const { test, questions } = fetched
+
+    const questionCount = questions.length
+    const fullMarks = (Number(test.marks_per_correct) || 0) * questionCount
+
+    // Premium Answer Key HTML Template
     const html = `<!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <style>
-    @page { size: A4; margin: 16mm 14mm; }
-    body { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #111; line-height: 1.4; }
-    .header { text-align: center; margin-bottom: 20px; }
-    .title { font-size: 18px; font-weight: bold; }
-    .test-name { font-size: 14px; color: #666; margin-top: 4px; }
-    .answers { margin-top: 20px; }
-    .answer-item { margin: 6px 0; padding: 4px 0; }
-    .answer-number { font-weight: 600; display: inline-block; width: 30px; }
-    .answer-letter { font-weight: 600; color: #2563eb; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Answer Key - ${(test.name || 'Test').replace(/</g, '&lt;')}</title>
+  
+  <!-- Google Fonts for Professional Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Serif+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Print-optimized CSS with professional design */
+    @page { 
+      size: A4; 
+      margin: 20mm 15mm 25mm 15mm;
+      @top-center { content: "Answer Key"; }
+      @bottom-center { content: "Page " counter(page) " of " counter(pages); }
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+    
+    body { 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 11pt;
+      line-height: 1.6;
+      color: #1a1a1a;
+      background: #ffffff;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    
+    /* Professional Header Design */
+    .document-header {
+      text-align: center;
+      margin-bottom: 32px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #dc2626;
+      position: relative;
+    }
+    
+    .answer-key-title {
+      font-family: 'Source Serif Pro', Georgia, serif;
+      font-size: 24pt;
+      font-weight: 700;
+      color: #dc2626;
+      margin: 0 0 8px 0;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+    
+    .test-name {
+      font-size: 14pt;
+      color: #374151;
+      margin: 0 0 16px 0;
+      font-weight: 500;
+    }
+    
+    .test-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      margin-top: 16px;
+      font-size: 10pt;
+      color: #475569;
+    }
+    
+    .meta-item {
+      padding: 8px 12px;
+      background: #fef2f2;
+      border-radius: 6px;
+      border-left: 3px solid #dc2626;
+    }
+    
+    .meta-label {
+      font-weight: 600;
+      color: #374151;
+      display: block;
+      margin-bottom: 2px;
+    }
+    
+    .meta-value {
+      font-weight: 500;
+      color: #1e293b;
+    }
+    
+    /* Answer Grid Layout */
+    .answers-section {
+      margin-top: 24px;
+    }
+    
+    .answers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+    }
+    
+    .answer-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+    
+    .answer-item:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+    
+    .answer-number {
+      font-family: 'Source Serif Pro', Georgia, serif;
+      font-size: 12pt;
+      font-weight: 600;
+      color: #374151;
+      min-width: 30px;
+    }
+    
+    .answer-letter {
+      font-size: 14pt;
+      font-weight: 700;
+      color: #dc2626;
+      background: #fef2f2;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 2px solid #fecaca;
+      min-width: 40px;
+      text-align: center;
+    }
+    
+    /* Summary Section */
+    .summary-section {
+      margin-top: 32px;
+      padding: 20px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+    }
+    
+    .summary-title {
+      font-size: 14pt;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 12px;
+    }
+    
+    .summary-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+    }
+    
+    .stat-item {
+      text-align: center;
+      padding: 12px;
+      background: #ffffff;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .stat-value {
+      font-size: 18pt;
+      font-weight: 700;
+      color: #dc2626;
+      display: block;
+    }
+    
+    .stat-label {
+      font-size: 10pt;
+      color: #64748b;
+      margin-top: 4px;
+    }
+    
+    /* Footer */
+    .page-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 20mm;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9pt;
+      color: #64748b;
+    }
+    
+    /* Print-specific optimizations */
+    @media print {
+      body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      
+      .answer-item {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+    }
+  </style>
 </head>
 <body>
-  <div class="header">
-    <div class="title">Answer Key</div>
+  <!-- Professional Document Header -->
+  <div class="document-header">
+    <h1 class="answer-key-title">Answer Key</h1>
     <div class="test-name">${(test.name || 'Test').replace(/</g, '&lt;')}</div>
+    
+    <div class="test-meta">
+      <div class="meta-item">
+        <span class="meta-label">Total Questions</span>
+        <span class="meta-value">${questionCount}</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Total Marks</span>
+        <span class="meta-value">${fullMarks}</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Duration</span>
+        <span class="meta-value">${test.total_time_minutes} minutes</span>
+      </div>
+    </div>
   </div>
-  <div class="answers">
-    ${questions.map((q, idx) => {
-      const letter = ((q as unknown as { correct_option?: string }).correct_option || '-').toString().trim().toLowerCase() || '-'
-      return `<div class="answer-item"><span class="answer-number">${idx + 1}.</span> <span class="answer-letter">(${letter})</span></div>`
-    }).join('')}
+  
+  <!-- Answers Section -->
+  <div class="answers-section">
+    <div class="answers-grid">
+      ${questions.map((q, idx) => {
+        const letter = ((q as unknown as { correct_option?: string }).correct_option || '-').toString().trim().toLowerCase() || '-'
+        return `
+        <div class="answer-item">
+          <span class="answer-number">${idx + 1}.</span>
+          <span class="answer-letter">${letter.toUpperCase()}</span>
+        </div>`
+      }).join('')}
+    </div>
+  </div>
+  
+  <!-- Summary Section -->
+  <div class="summary-section">
+    <div class="summary-title">Test Summary</div>
+    <div class="summary-stats">
+      <div class="stat-item">
+        <span class="stat-value">${questionCount}</span>
+        <span class="stat-label">Total Questions</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">${fullMarks}</span>
+        <span class="stat-label">Total Marks</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">${test.total_time_minutes}</span>
+        <span class="stat-label">Duration (min)</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">${test.marks_per_correct || 0}</span>
+        <span class="stat-label">Marks per Question</span>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Professional Footer -->
+  <div class="page-footer">
+    <span>© ${new Date().getFullYear()} Professional Test Platform - Answer Key</span>
   </div>
 </body>
 </html>`
 
+    // Enhanced Puppeteer Configuration for Premium PDF Generation
     const puppeteer = await import('puppeteer')
-    const browser = await puppeteer.launch({ headless: true })
+    const browser = await puppeteer.launch({ 
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--disable-gpu'
+      ]
+    })
+    
     const page = await browser.newPage()
-    await page.setContent(html, { waitUntil: 'networkidle0' })
-    const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true, margin: { top: '16mm', bottom: '16mm', left: '14mm', right: '14mm' } })
+    
+    // Set viewport for consistent rendering
+    await page.setViewport({ width: 1200, height: 800, deviceScaleFactor: 2 })
+    
+    // Wait for fonts and resources to load
+    await page.setContent(html, { 
+      waitUntil: ['networkidle0', 'domcontentloaded'],
+      timeout: 30000
+    })
+    
+    // Generate high-quality PDF with professional settings
+    const pdfBuffer = await page.pdf({ 
+      format: 'A4',
+      printBackground: true,
+      margin: { 
+        top: '20mm', 
+        bottom: '25mm', 
+        left: '15mm', 
+        right: '15mm' 
+      },
+      displayHeaderFooter: true,
+      headerTemplate: '<div></div>',
+      footerTemplate: `
+        <div style="font-size: 10px; color: #666; text-align: center; width: 100%; margin: 0 auto;">
+          <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
+        </div>
+      `,
+      preferCSSPageSize: true,
+      timeout: 30000
+    })
+    
     await browser.close()
 
     const base64 = Buffer.from(pdfBuffer).toString('base64')
     const safeName = `${test.name || 'Test'}-Answer-Key-${testId}.pdf`.replace(/[^a-z0-9\-_.]/gi, '_')
     return { success: true, fileName: safeName, base64 }
   } catch (error) {
-    console.error('Answer Key export failed:', error)
+    console.error('Premium Answer Key export failed:', error)
     return { success: false, message: 'Failed to export Answer Key' }
   }
 }
