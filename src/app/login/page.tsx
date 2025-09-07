@@ -25,13 +25,8 @@ export default function LoginPage({
 
   const handleSubmit = async (formData: FormData) => {
     setIsLoading(true)
-    try {
-      await signInWithRoleCheck(formData)
-    } catch (error) {
-      console.error('Login error:', error)
-    } finally {
-      setIsLoading(false)
-    }
+    // The server action will handle the redirect, so we don't need to await it
+    signInWithRoleCheck(formData)
   }
 
   const handleForgotPassword = async (e: React.FormEvent) => {

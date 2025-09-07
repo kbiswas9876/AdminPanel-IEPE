@@ -42,8 +42,14 @@ export function ReviewRefineInterface({
     solution_text: string
   } | null>(null)
   const [expandedSolutionIds, setExpandedSolutionIds] = useState<Set<string | number>>(new Set())
+  const [isShuffling, setIsShuffling] = useState(false)
 
-  const handleShuffleQuestions = () => {
+  const handleShuffleQuestions = async () => {
+    setIsShuffling(true)
+    
+    // Add a small delay for better UX feedback
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
     const shuffled = [...questions]
     // Fisher-Yates shuffle algorithm
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -51,6 +57,8 @@ export function ReviewRefineInterface({
       ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
     }
     onQuestionsChange(shuffled)
+    
+    setIsShuffling(false)
   }
 
   const handleOverride = (index: number) => {
@@ -245,11 +253,21 @@ export function ReviewRefineInterface({
               </Button>
               
               <Button 
-                onClick={handleShuffleQuestions} 
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                onClick={handleShuffleQuestions}
+                disabled={isShuffling}
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Shuffle className="h-4 w-4 mr-2" />
-                Shuffle Questions
+                {isShuffling ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Shuffling...
+                  </>
+                ) : (
+                  <>
+                    <Shuffle className="h-4 w-4 mr-2" />
+                    Shuffle Questions
+                  </>
+                )}
               </Button>
               
               <div className="flex items-center gap-3 px-3 py-2 bg-gray-50/80 rounded-lg border border-gray-200/50">

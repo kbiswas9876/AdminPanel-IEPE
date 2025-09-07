@@ -3,44 +3,48 @@
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
-import { LogOut, User, Bell, AlertTriangle, UserPlus, FileText } from 'lucide-react'
-
-// Mock notification data - in a real app, this would come from your backend
-const mockNotifications = [
-  {
-    id: 1,
-    type: 'user_registration',
-    title: 'New User Registration',
-    message: 'John Doe has registered and is awaiting approval',
-    timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-    read: false
-  },
-  {
-    id: 2,
-    type: 'error_report',
-    title: 'Error Report Submitted',
-    message: 'Critical error reported in Mock Test #123',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-    read: false
-  },
-  {
-    id: 3,
-    type: 'question_added',
-    title: 'New Question Added',
-    message: '5 new questions added to Mathematics category',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4), // 4 hours ago
-    read: true
-  }
-]
+import { LogOut, User, Bell, AlertTriangle, UserPlus, FileText, BookOpen, TestTube } from 'lucide-react'
+import { getNotifications, getUnreadNotificationCount, markNotificationAsRead, type Notification } from '@/lib/actions/notifications'
 
 export function Header() {
   const { user, signOut } = useAuth()
-  const [notifications, setNotifications] = useState(mockNotifications)
+  const [notifications, setNotifications] = useState<Notification[]>([])
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
   const notificationRef = useRef<HTMLDivElement>(null)
 
   const handleSignOut = async () => {
     await signOut()
+  }
+
+  // Fetch notifications on component mount and set up polling
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const fetchedNotifications = await getNotifications(10)
+        setNotifications(fetchedNotifications)
+      } catch (error) {
+        console.error('Error fetching notifications:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchNotifications()
+    
+    // Poll for new notifications every 30 seconds
+    const interval = setInterval(fetchNotifications, 30000)
+    
+    return () => clearInterval(interval)
+  }, [])
+
+  const handleNotificationClick = async (notification: Notification) => {
+    if (!notification.read) {
+      await markNotificationAsRead(notification.id)
+      setNotifications(prev => 
+        prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
+      )
+    }
   }
 
   const unreadCount = notifications.filter(n => !n.read).length
@@ -68,7 +72,11 @@ export function Header() {
       case 'error_report':
         return <AlertTriangle className="h-4 w-4 text-red-600" />
       case 'question_added':
-        return <FileText className="h-4 w-4 text-green-600" />
+        return <BookOpen className="h-4 w-4 text-green-600" />
+      case 'test_published':
+        return <TestTube className="h-4 w-4 text-purple-600" />
+      case 'system_alert':
+        return <AlertTriangle className="h-4 w-4 text-orange-600" />
       default:
         return <Bell className="h-4 w-4 text-gray-600" />
     }
@@ -164,7 +172,7 @@ export function Header() {
                           className={`p-4 hover:bg-gray-50/50 transition-all duration-200 cursor-pointer group ${
                             !notification.read ? 'bg-blue-50/30' : ''
                           }`}
-                          onClick={() => markAsRead(notification.id)}
+                          onClick={() => handleNotificationClick(notification)}
                         >
                           <div className="flex items-start space-x-3">
                             <div className={`flex-shrink-0 mt-1 p-2 rounded-lg ${

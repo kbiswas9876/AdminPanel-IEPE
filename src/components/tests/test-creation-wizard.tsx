@@ -34,6 +34,7 @@ export function TestCreationWizard({
 }: TestCreationWizardProps = {}) {
   const [currentStep, setCurrentStep] = useState(isEditMode ? 2 : 1)
   const [error, setError] = useState<string | null>(null)
+  const [isGenerating, setIsGenerating] = useState(false)
   
   // Step 1: Test Blueprint
   const [chapters, setChapters] = useState<ChapterInfo[]>([])
@@ -143,6 +144,9 @@ export function TestCreationWizard({
         setError('Please select at least one question for your test')
         return
       }
+      setIsGenerating(true)
+      setError(null)
+      
       generateTestPaperFromBlueprint(blueprint)
         .then((slots) => {
           // Convert GeneratedTestSlot to TestQuestionSlot
@@ -157,6 +161,9 @@ export function TestCreationWizard({
         .catch((err) => {
           console.error('Failed to generate test paper:', err)
           setError('Failed to generate test paper')
+        })
+        .finally(() => {
+          setIsGenerating(false)
         })
       return
     }
@@ -277,11 +284,20 @@ export function TestCreationWizard({
               {currentStep === 1 && (
                 <Button 
                   onClick={handleNext} 
-                  disabled={totalQuestions === 0}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                  disabled={totalQuestions === 0 || isGenerating}
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Next: Review & Refine
-                  <ArrowRight className="h-4 w-4 ml-2" />
+                  {isGenerating ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Generating Questions...
+                    </>
+                  ) : (
+                    <>
+                      Next: Review & Refine
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </>
+                  )}
                 </Button>
               )}
             </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { deleteTest, cloneTest, exportTestToPdf, exportAnswerKeyPdf } from '@/lib/actions/tests'
+import { deleteTest, cloneTest, exportTestToPdf, exportAnswerKeyPdf, exportMinimalistPdf, exportQuestionPaperPdf } from '@/lib/actions/tests'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -21,7 +21,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { PublishTestDialog } from './publish-test-dialog'
-import { Edit, Trash2, BarChart3, MoreHorizontal, FileDown, Copy } from 'lucide-react'
+import { Edit, Trash2, BarChart3, MoreHorizontal, FileDown, Copy, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import type { Test } from '@/lib/supabase/admin'
 
@@ -32,6 +32,8 @@ interface TestActionsProps {
 
 export function TestActions({ test, onAction }: TestActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
+  const [exportType, setExportType] = useState<string | null>(null)
 
   const handleDelete = async () => {
     setIsDeleting(true)
@@ -68,35 +70,44 @@ export function TestActions({ test, onAction }: TestActionsProps) {
     }
   }
 
-  const handleExportQuestionPaper = async () => {
+  const handleExport = async (type: 'premium' | 'minimalist' | 'answer-key') => {
+    setIsExporting(true)
+    setExportType(type)
+    
     try {
-      const res = await exportTestToPdf(test.id)
-      if (res.success && res.base64 && res.fileName) {
-        const link = document.createElement('a')
-        link.href = `data:application/pdf;base64,${res.base64}`
-        link.download = res.fileName
-        link.click()
-      } else {
-        console.error('Export failed:', res.message)
+      let res
+      switch (type) {
+        case 'premium':
+          res = await exportQuestionPaperPdf(test.id)
+          break
+        case 'minimalist':
+          res = await exportMinimalistPdf(test.id)
+          break
+        case 'answer-key':
+          res = await exportAnswerKeyPdf(test.id)
+          break
+        default:
+          throw new Error('Invalid export type')
       }
-    } catch (e) {
-      console.error('Export error:', e)
-    }
-  }
 
-  const handleExportAnswerKey = async () => {
-    try {
-      const res = await exportAnswerKeyPdf(test.id)
       if (res.success && res.base64 && res.fileName) {
         const link = document.createElement('a')
         link.href = `data:application/pdf;base64,${res.base64}`
         link.download = res.fileName
         link.click()
+        
+        // Show success feedback
+        console.log(`✅ ${type} PDF exported successfully: ${res.fileName}`)
       } else {
-        console.error('Export failed:', res.message)
+        console.error(`❌ Export failed:`, res.message)
+        alert(`Export failed: ${res.message || 'Unknown error'}`)
       }
     } catch (e) {
-      console.error('Export error:', e)
+      console.error(`❌ Export error:`, e)
+      alert(`Export failed: ${e instanceof Error ? e.message : 'Unknown error'}`)
+    } finally {
+      setIsExporting(false)
+      setExportType(null)
     }
   }
 
@@ -184,13 +195,38 @@ export function TestActions({ test, onAction }: TestActionsProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={handleExportQuestionPaper}>
-            <FileDown className="h-4 w-4 mr-2" />
-            Export Question Paper
+          <DropdownMenuItem 
+            onClick={() => handleExport('premium')}
+            disabled={isExporting}
+          >
+            {isExporting && exportType === 'premium' ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <FileDown className="h-4 w-4 mr-2" />
+            )}
+            {isExporting && exportType === 'premium' ? 'Exporting...' : 'Export Premium PDF'}
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleExportAnswerKey}>
-            <FileDown className="h-4 w-4 mr-2" />
-            Export Answer Key
+          <DropdownMenuItem 
+            onClick={() => handleExport('minimalist')}
+            disabled={isExporting}
+          >
+            {isExporting && exportType === 'minimalist' ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <FileDown className="h-4 w-4 mr-2" />
+            )}
+            {isExporting && exportType === 'minimalist' ? 'Exporting...' : 'Export Minimalist PDF'}
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            onClick={() => handleExport('answer-key')}
+            disabled={isExporting}
+          >
+            {isExporting && exportType === 'answer-key' ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <FileDown className="h-4 w-4 mr-2" />
+            )}
+            {isExporting && exportType === 'answer-key' ? 'Exporting...' : 'Export Answer Key'}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleClone}>
             <Copy className="h-4 w-4 mr-2" />

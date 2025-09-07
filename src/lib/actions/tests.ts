@@ -1150,6 +1150,176 @@ export async function exportTestToPdf(testId: number): Promise<{ success: boolea
   return exportQuestionPaperPdf(testId)
 }
 
+// Minimalist PDF Export - Simple, clean format
+export async function exportMinimalistPdf(testId: number): Promise<{ success: boolean; fileName?: string; base64?: string; message?: string }> {
+  try {
+    const fetched = await (async () => {
+      // Try with overrides; fall back to base
+      const withOverrides = await (async () => {
+        try {
+          return await fetchTestAndQuestionsApplied(testId)
+        } catch {
+          return { error: 'fallback' } as const
+        }
+      })()
+      if (!('error' in withOverrides)) return withOverrides
+      return await fetchTestAndQuestionsOrdered(testId)
+    })()
+    if ('error' in fetched) {
+      return { success: false, message: fetched.error }
+    }
+    const { test, questions } = fetched
+
+    // Simple KaTeX rendering
+    const katex = await import('katex')
+    const renderWithKaTeX = (input: string | null | undefined): string => {
+      if (!input) return ''
+      try {
+        return katex.renderToString(input, { throwOnError: false })
+      } catch {
+        return input
+      }
+    }
+
+    // Calculate total marks
+    const totalMarks = questions.length * (test.marks_per_correct || 1)
+
+    // Minimalist HTML Template
+    const html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${test.name || 'Test'} - Question Paper</title>
+  <style>
+    body {
+      font-family: 'Times New Roman', serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #333;
+      padding-bottom: 15px;
+    }
+    .test-title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .test-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    .question {
+      margin-bottom: 20px;
+      page-break-inside: avoid;
+    }
+    .question-number {
+      font-weight: bold;
+      margin-right: 5px;
+    }
+    .options {
+      margin-top: 10px;
+      margin-left: 20px;
+    }
+    .option-row {
+      display: flex;
+      margin-bottom: 5px;
+    }
+    .option {
+      flex: 1;
+      margin-right: 20px;
+    }
+    .option-label {
+      font-weight: bold;
+      margin-right: 5px;
+    }
+    .katex {
+      font-size: 1em;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="test-title">${test.name || 'Mock Test'}</div>
+    <div class="test-info">
+      <span>Duration: ${test.total_time_minutes || 0} minutes</span>
+      <span>Marks: +${test.marks_per_correct || 1} for correct, -${test.negative_marks_per_incorrect || 0} for incorrect</span>
+      <span>Total Marks: ${totalMarks}</span>
+    </div>
+  </div>
+  
+  <div class="questions">
+    ${questions.map((q, idx) => {
+      const opts = (q.options || {}) as Record<string, string>
+      const optionKeys = Object.keys(opts).sort()
+      
+      return `
+      <div class="question">
+        <span class="question-number">${idx + 1}.</span>
+        <span class="question-text">${renderWithKaTeX(q.question_text)}</span>
+        
+        <div class="options">
+          <div class="option-row">
+            <div class="option">
+              <span class="option-label">(a)</span>
+              <span>${renderWithKaTeX(opts[optionKeys[0]] || '')}</span>
+            </div>
+            <div class="option">
+              <span class="option-label">(b)</span>
+              <span>${renderWithKaTeX(opts[optionKeys[1]] || '')}</span>
+            </div>
+          </div>
+          <div class="option-row">
+            <div class="option">
+              <span class="option-label">(c)</span>
+              <span>${renderWithKaTeX(opts[optionKeys[2]] || '')}</span>
+            </div>
+            <div class="option">
+              <span class="option-label">(d)</span>
+              <span>${renderWithKaTeX(opts[optionKeys[3]] || '')}</span>
+            </div>
+          </div>
+        </div>
+      </div>`
+    }).join('')}
+  </div>
+</body>
+</html>`
+
+    // Simple Puppeteer Configuration
+    const puppeteer = await import('puppeteer')
+    const browser = await puppeteer.launch({ 
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    })
+    
+    const page = await browser.newPage()
+    await page.setContent(html, { waitUntil: 'networkidle0' })
+    
+    const pdfBuffer = await page.pdf({ 
+      format: 'A4',
+      margin: { top: '20mm', bottom: '20mm', left: '15mm', right: '15mm' },
+      printBackground: true
+    })
+    
+    await browser.close()
+
+    const base64 = Buffer.from(pdfBuffer).toString('base64')
+    const safeName = `${test.name || 'Test'}-Minimalist-${testId}.pdf`.replace(/[^a-z0-9\-_.]/gi, '_')
+    return { success: true, fileName: safeName, base64 }
+  } catch (error) {
+    console.error('Minimalist PDF export failed:', error)
+    return { success: false, message: 'Failed to export minimalist PDF' }
+  }
+}
+
 // Shared helper to fetch test metadata and ordered questions
 async function fetchTestAndQuestionsOrdered(testId: number): Promise<{ test: Test; questions: UIQuestion[] } | { error: string }> {
   try {
