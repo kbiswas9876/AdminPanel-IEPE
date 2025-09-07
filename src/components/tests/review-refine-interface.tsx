@@ -12,7 +12,7 @@ import { ArrowLeft, ArrowRight, Shuffle, RotateCcw, Pencil, Edit3 } from 'lucide
 import { InlineMath, BlockMath } from 'react-katex'
 import { SmartLatexRenderer } from './smart-latex-renderer'
 import type { Question, TestQuestionSlot } from '@/lib/types'
-import { EnhancedMasterQuestionBankModal } from './enhanced-master-question-bank-modal'
+import { QuestionExplorerModal } from './question-explorer-modal'
 
 interface ReviewRefineInterfaceProps {
   questions: TestQuestionSlot[]
@@ -394,8 +394,8 @@ export function ReviewRefineInterface({
         </div>
       </div>
 
-      {/* Enhanced Master Question Bank Modal */}
-      <EnhancedMasterQuestionBankModal
+      {/* Question Explorer Modal */}
+      <QuestionExplorerModal
         open={modalOpen}
         onClose={() => {
           setModalOpen(false)
