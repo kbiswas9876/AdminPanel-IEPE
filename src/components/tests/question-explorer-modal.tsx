@@ -42,8 +42,9 @@ export function QuestionExplorerModal({ open, onClose, onSelect, initialChapter 
   const [results, setResults] = useState<Question[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
-  const [selected, setSelected] = useState<Question | null>(null)
+  const [expandedKey, setExpandedKey] = useState<string | number | null>(null)
   const [tagQuery, setTagQuery] = useState('')
+  const [chapterQuery, setChapterQuery] = useState('')
   const pageSize = 10
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
@@ -81,8 +82,11 @@ export function QuestionExplorerModal({ open, onClose, onSelect, initialChapter 
       })
       setResults(questions)
       setTotal(total)
-      // Auto-select first item when none selected
-      if (!selected && questions.length > 0) setSelected(questions[0])
+      // If current expanded row disappears, collapse
+      if (expandedKey != null) {
+        const stillExists = questions.some((q) => (q.id ?? q.question_id) === expandedKey)
+        if (!stillExists) setExpandedKey(null)
+      }
     } catch (e) {
       console.error('Search failed', e)
       setResults([])
@@ -90,7 +94,7 @@ export function QuestionExplorerModal({ open, onClose, onSelect, initialChapter 
     } finally {
       setLoading(false)
     }
-  }, [filters, pageSize, selected])
+  }, [filters, pageSize, expandedKey])
 
   // Open: load filters + run initial search
   useEffect(() => {
@@ -100,27 +104,12 @@ export function QuestionExplorerModal({ open, onClose, onSelect, initialChapter 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
-  // Debounce search text only
-  const searchDebounceRef = useRef<number | null>(null)
-  useEffect(() => {
-    if (!open) return
-    if (searchDebounceRef.current) window.clearTimeout(searchDebounceRef.current)
-    searchDebounceRef.current = window.setTimeout(() => {
-      setFilters((prev) => ({ ...prev, page: 1 }))
-      fetchResults()
-    }, 300)
-    return () => {
-      if (searchDebounceRef.current) window.clearTimeout(searchDebounceRef.current)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.search])
-
-  // Re-run when any non-search filter changes (immediate)
+  // Apply search explicitly via button; auto-run only when page changes
   useEffect(() => {
     if (!open) return
     fetchResults()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.bookSource, filters.chapter, filters.difficulty, JSON.stringify(filters.tags), filters.page])
+  }, [filters.page])
 
   // When book source changes, reload options (cascade)
   useEffect(() => {
@@ -132,179 +121,173 @@ export function QuestionExplorerModal({ open, onClose, onSelect, initialChapter 
 
   const reset = () => {
     setFilters({ search: '', bookSource: '', chapter: initialChapter || '', difficulty: '', tags: [], page: 1 })
-    setSelected(null)
     setTagQuery('')
+    setChapterQuery('')
     loadOptions('')
   }
 
-  const selectRow = (q: Question) => setSelected(q)
+  const applyFilters = () => {
+    setFilters((p) => ({ ...p, page: 1 }))
+    fetchResults()
+  }
 
-  const selectAndClose = () => {
-    if (!selected) return
-    onSelect(selected)
+  const toggleRow = (q: Question) => {
+    const key = (q.id ?? q.question_id) as string | number
+    setExpandedKey((k) => (k === key ? null : key))
+  }
+
+  const selectAndClose = (q: Question) => {
+    onSelect(q)
     onClose()
   }
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose() }}>
-      <DialogContent className="w-[90vw] sm:max-w-[90vw] lg:max-w-[1280px] h-[80vh] flex flex-col">
+      <DialogContent className="w-[90vw] sm:max-w-[90vw] lg:max-w-[1280px] h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">Master Question Bank</DialogTitle>
         </DialogHeader>
-
-        <div className="flex flex-1 gap-4 overflow-hidden">
-          {/* Left: Filters + Results */}
-          <div className="w-[38%] bg-gray-50 rounded-lg p-4 overflow-hidden flex flex-col">
-            <h3 className="font-semibold text-gray-900 mb-3">Filters</h3>
-
-            <div className="space-y-3">
-              <div>
-                <Label htmlFor="search">Search</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input id="search" placeholder="Search questions..." value={filters.search} onChange={(e) => setFilters((p) => ({ ...p, search: e.target.value }))} className="pl-10" />
-                </div>
+        {/* Top filter bar */}
+        <div className="bg-gray-50 rounded-md border p-3 mb-3">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+            <div className="md:col-span-3">
+              <Label htmlFor="q-search">Search</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input id="q-search" value={filters.search} onChange={(e) => setFilters((p) => ({ ...p, search: e.target.value }))} placeholder="Search questions..." className="pl-9" />
               </div>
-
-              <div>
-                <Label>Book Source</Label>
-                <Select value={filters.bookSource || ALL} onValueChange={(v) => setFilters((p) => ({ ...p, bookSource: v === ALL ? '' : v, page: 1 }))}>
-                  <SelectTrigger className="w-full"><SelectValue placeholder="All Books" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={ALL}>All Books</SelectItem>
-                    {options.bookSources.map((s) => (<SelectItem key={s} value={s}>{s}</SelectItem>))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Chapter</Label>
-                <Select value={filters.chapter || ALL} onValueChange={(v) => setFilters((p) => ({ ...p, chapter: v === ALL ? '' : v, page: 1 }))}>
-                  <SelectTrigger className="w-full"><SelectValue placeholder="All Chapters" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={ALL}>All Chapters</SelectItem>
-                    {options.chapters.map((c) => (<SelectItem key={c} value={c}>{c}</SelectItem>))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Difficulty</Label>
-                <Select value={filters.difficulty || ALL} onValueChange={(v) => setFilters((p) => ({ ...p, difficulty: v === ALL ? '' : v, page: 1 }))}>
-                  <SelectTrigger className="w-full"><SelectValue placeholder="All Difficulties" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={ALL}>All Difficulties</SelectItem>
-                    {options.difficulties.map((d) => (<SelectItem key={d} value={d}>{d}</SelectItem>))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Tags</Label>
-                <Input placeholder="Search tags..." value={tagQuery} onChange={(e) => setTagQuery(e.target.value)} className="mt-1 mb-2" />
-                <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
-                  {filteredTags.map((t) => (
-                    <div key={t} className="flex items-center space-x-2">
-                      <input type="checkbox" id={`tag-${t}`} checked={filters.tags.includes(t)} onChange={() => setFilters((p) => ({ ...p, tags: p.tags.includes(t) ? p.tags.filter((x) => x !== t) : [...p.tags, t], page: 1 }))} className="rounded" />
-                      <Label htmlFor={`tag-${t}`} className="text-sm">{t}</Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <Button variant="outline" onClick={reset} className="w-full">Reset Filters</Button>
             </div>
-
-            {/* Results */}
-            <div className="mt-4 flex-1 overflow-y-auto">
-              {results.length === 0 && !loading && (
-                <div className="text-center py-8 text-sm text-gray-500">No questions found.</div>
-              )}
-              <div className="space-y-2">
-                {results.map((q) => {
-                  const active = selected ? ((selected.id != null && q.id != null) ? selected.id === q.id : selected.question_id === q.question_id) : false
-                  return (
-                    <button key={(q.id ?? q.question_id) as string | number} type="button" onClick={() => selectRow(q)} className={`w-full text-left rounded-md border px-3 py-2 text-sm transition-colors ${active ? 'bg-blue-50 border-blue-200' : 'bg-white hover:bg-gray-50'}`}>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">ID: {q.question_id || q.id}</span>
-                          <Badge variant="outline" className="text-[10px]">{q.chapter_name}</Badge>
-                        </div>
-                        <span className="text-[11px] text-gray-500">{active ? 'Previewing' : 'Preview'}</span>
-                      </div>
-                      <div className="mt-1 line-clamp-1 text-gray-700">
-                        <SmartLatexRenderer text={q.question_text} />
-                      </div>
-                    </button>
-                  )
-                })}
+            <div className="md:col-span-3">
+              <Label>Book Source</Label>
+              <Select value={filters.bookSource || ALL} onValueChange={(v) => setFilters((p) => ({ ...p, bookSource: v === ALL ? '' : v }))}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="All Books" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>All Books</SelectItem>
+                  {options.bookSources.map((s) => (<SelectItem key={s} value={s}>{s}</SelectItem>))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="md:col-span-3">
+              <Label>Chapter</Label>
+              <Input placeholder="Filter chapters..." value={chapterQuery} onChange={(e) => setChapterQuery(e.target.value)} className="mb-1" />
+              <Select value={filters.chapter || ALL} onValueChange={(v) => setFilters((p) => ({ ...p, chapter: v === ALL ? '' : v }))}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="All Chapters" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>All Chapters</SelectItem>
+                  {options.chapters.filter((c) => c.toLowerCase().includes(chapterQuery.toLowerCase())).map((c) => (<SelectItem key={c} value={c}>{c}</SelectItem>))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="md:col-span-2">
+              <Label>Difficulty</Label>
+              <Select value={filters.difficulty || ALL} onValueChange={(v) => setFilters((p) => ({ ...p, difficulty: v === ALL ? '' : v }))}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="All Difficulties" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>All Difficulties</SelectItem>
+                  {options.difficulties.map((d) => (<SelectItem key={d} value={d}>{d}</SelectItem>))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="md:col-span-12">
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <Label>Tags</Label>
+                  <Input placeholder="Search tags..." value={tagQuery} onChange={(e) => setTagQuery(e.target.value)} className="mt-1 mb-2" />
+                  <div className="flex flex-wrap gap-2 max-h-20 overflow-y-auto">
+                    {filteredTags.map((t) => {
+                      const active = filters.tags.includes(t)
+                      return (
+                        <button key={t} type="button" onClick={() => setFilters((p) => ({ ...p, tags: active ? p.tags.filter((x) => x !== t) : [...p.tags, t] }))} className={`text-xs px-2 py-1 rounded border ${active ? 'bg-blue-100 border-blue-300 text-blue-800' : 'bg-white border-gray-300 hover:bg-gray-50'}`}>{t}</button>
+                      )
+                    })}
+                  </div>
+                </div>
+                <div className="self-end pb-1 flex items-center gap-2">
+                  <Button variant="outline" onClick={reset}>Reset</Button>
+                  <Button onClick={applyFilters}>Apply Filters</Button>
+                </div>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Right: Rich Preview */}
-          <div className="w-[62%] flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-sm text-gray-600">
-                {total} questions found {loading && <span className="ml-2">Loading...</span>}
-              </div>
-              <div className="flex items-center space-x-2">
-                <Button variant="outline" size="sm" onClick={() => setFilters((p) => ({ ...p, page: Math.max(1, p.page - 1) }))} disabled={filters.page === 1 || loading}><ChevronLeft className="h-4 w-4" /></Button>
-                <span className="text-sm text-gray-600">Page {filters.page} of {totalPages}</span>
-                <Button variant="outline" size="sm" onClick={() => setFilters((p) => ({ ...p, page: Math.min(totalPages, p.page + 1) }))} disabled={filters.page === totalPages || loading}><ChevronRight className="h-4 w-4" /></Button>
-              </div>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              {!selected && (
-                <div className="h-full flex items-center justify-center text-sm text-gray-500">Select a question from the list to preview it.</div>
-              )}
-              {selected && (() => {
-                const q = selected
-                const options = q.options || { a: '', b: '', c: '', d: '' }
-                const keys = Object.keys(options) as Array<'a' | 'b' | 'c' | 'd'>
-                return (
-                  <Card className="border-l-4 border-l-blue-500">
-                    <CardContent className="p-5">
-                      <div className="mb-4">
-                        <h4 className="font-semibold text-gray-900 mb-2">Question:</h4>
-                        <div className="prose max-w-none"><SmartLatexRenderer text={q.question_text} /></div>
-                      </div>
-                      <div className="mb-4">
-                        <h5 className="font-medium text-gray-900 mb-2">Options:</h5>
-                        <div className="space-y-2">
-                          {keys.map((k) => {
-                            const isCorrect = q.correct_option === k
-                            return (
-                              <div key={k} className={`flex items-start space-x-3 p-2 rounded ${isCorrect ? 'bg-green-50 border border-green-200' : 'bg-gray-50'}`}>
-                                <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-sm font-semibold ${isCorrect ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>{k.toUpperCase()}{isCorrect && <Check className="h-3 w-3 ml-1" />}</div>
-                                <div className="flex-1 prose prose-sm max-w-none"><SmartLatexRenderer text={options[k]} /></div>
+        {/* Results list with expandable rows */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-sm text-gray-600">{total} questions found {loading && <span className="ml-2">Loading...</span>}</div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setFilters((p) => ({ ...p, page: Math.max(1, p.page - 1) }))} disabled={filters.page === 1 || loading}><ChevronLeft className="h-4 w-4" /></Button>
+            <span className="text-sm text-gray-600">Page {filters.page} of {totalPages}</span>
+            <Button variant="outline" size="sm" onClick={() => setFilters((p) => ({ ...p, page: Math.min(totalPages, p.page + 1) }))} disabled={filters.page === totalPages || loading}><ChevronRight className="h-4 w-4" /></Button>
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          {results.length === 0 && !loading && (
+            <div className="text-center py-12 text-sm text-gray-500">No questions found.</div>
+          )}
+          <div className="space-y-2">
+            {results.map((q) => {
+              const key = (q.id ?? q.question_id) as string | number
+              const expanded = expandedKey === key
+              return (
+                <div key={key} className={`border rounded-md bg-white ${expanded ? 'ring-1 ring-blue-200' : ''}`}>
+                  <div className="flex items-center justify-between px-3 py-2">
+                    <div className="flex items-center gap-3">
+                      <button type="button" onClick={() => toggleRow(q)} className="w-6 h-6 rounded-full border flex items-center justify-center text-xs">{expanded ? '▲' : '▼'}</button>
+                      <span className="font-medium">{q.question_id || q.id}</span>
+                      <Badge variant="outline" className="text-[10px]">{q.chapter_name}</Badge>
+                      <span className="text-xs text-gray-500">{q.difficulty || '—'}</span>
+                    </div>
+                    <div>
+                      <Button size="sm" className={expanded ? 'bg-blue-600 hover:bg-blue-700' : ''} onClick={() => selectAndClose(q)}>Select</Button>
+                    </div>
+                  </div>
+                  <div className="px-3 pb-3">
+                    <div className="text-gray-700 line-clamp-1">{!expanded && <SmartLatexRenderer text={q.question_text} />}</div>
+                    {expanded && (
+                      <div className="mt-3">
+                        <Card className="border-l-4 border-l-blue-500">
+                          <CardContent className="p-4">
+                            <div className="mb-4">
+                              <h4 className="font-semibold text-gray-900 mb-2">Question:</h4>
+                              <div className="prose max-w-none"><SmartLatexRenderer text={q.question_text} /></div>
+                            </div>
+                            <div className="mb-4">
+                              <h5 className="font-medium text-gray-900 mb-2">Options:</h5>
+                              <div className="space-y-2">
+                                {(Object.keys(q.options || { a: '', b: '', c: '', d: '' }) as Array<'a' | 'b' | 'c' | 'd'>).map((opt) => {
+                                  const isCorrect = q.correct_option === opt
+                                  const text = (q.options || { a: '', b: '', c: '', d: '' })[opt]
+                                  return (
+                                    <div key={opt} className={`flex items-start space-x-3 p-2 rounded ${isCorrect ? 'bg-green-50 border border-green-200' : 'bg-gray-50'}`}>
+                                      <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-sm font-semibold ${isCorrect ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>{opt.toUpperCase()}{isCorrect && <Check className="h-3 w-3 ml-1" />}</div>
+                                      <div className="flex-1 prose prose-sm max-w-none"><SmartLatexRenderer text={text} /></div>
+                                    </div>
+                                  )
+                                })}
                               </div>
-                            )
-                          })}
-                        </div>
+                            </div>
+                            <div className="bg-gray-50 rounded p-3 text-xs text-gray-600 mb-4">
+                              <div className="grid grid-cols-2 gap-2">
+                                <div><strong>Book:</strong> {q.book_source || '—'}</div>
+                                <div><strong>Question #:</strong> {q.question_number_in_book || '—'}</div>
+                                <div><strong>Tags:</strong> {(q.admin_tags || []).join(', ') || '—'}</div>
+                                <div><strong>Difficulty:</strong> {q.difficulty || '—'}</div>
+                              </div>
+                            </div>
+                            {q.solution_text && (
+                              <div className="mb-2">
+                                <h5 className="font-medium text-gray-900 mb-2">Solution:</h5>
+                                <div className="prose max-w-none"><SmartLatexRenderer text={q.solution_text} /></div>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
                       </div>
-                      <div className="bg-gray-50 rounded p-3 text-xs text-gray-600 mb-4">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div><strong>Book:</strong> {q.book_source || '—'}</div>
-                          <div><strong>Question #:</strong> {q.question_number_in_book || '—'}</div>
-                          <div><strong>Tags:</strong> {(q.admin_tags || []).join(', ') || '—'}</div>
-                          <div><strong>Difficulty:</strong> {q.difficulty || '—'}</div>
-                        </div>
-                      </div>
-                      {q.solution_text && (
-                        <div className="mb-6">
-                          <h5 className="font-medium text-gray-900 mb-2">Solution:</h5>
-                          <div className="prose max-w-none"><SmartLatexRenderer text={q.solution_text} /></div>
-                        </div>
-                      )}
-                      <div className="flex justify-end">
-                        <Button className="bg-blue-600 hover:bg-blue-700" onClick={selectAndClose}><Check className="h-4 w-4 mr-1" /> Select This Question</Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )
-              })()}
-            </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
       </DialogContent>
