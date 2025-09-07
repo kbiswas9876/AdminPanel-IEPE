@@ -295,24 +295,27 @@ export function ReviewRefineInterface({
                               <Button variant="outline" size="sm" onClick={addEditOption}>+ Add Option</Button>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                              {Object.keys(editForm.options).sort().map((k) => (
-                                <div key={k} className="flex items-center gap-2">
-                                  <span className="w-6 font-semibold text-sm">{k}.</span>
+                            {Object.keys(editForm.options).sort().map((k) => (
+                              <div key={k} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <div className="w-8 h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-sm font-bold">
+                                  {k.toUpperCase()}
+                                </div>
                                 <Input
                                   value={editForm.options[k]}
                                   onChange={(e) => setEditForm({ ...editForm, options: { ...editForm.options, [k]: e.target.value } })}
-                                    className="flex-1"
-                                  />
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    onClick={() => removeEditOption(k)}
-                                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
-                                    title="Delete Option"
-                                    disabled={Object.keys(editForm.options).length <= 2}
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
+                                  placeholder={`Option ${k.toUpperCase()}`}
+                                  className="flex-1 transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                />
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => removeEditOption(k)}
+                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
+                                  title="Delete Option"
+                                  disabled={Object.keys(editForm.options).length <= 2}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
                               </div>
                             ))}
                             </div>
