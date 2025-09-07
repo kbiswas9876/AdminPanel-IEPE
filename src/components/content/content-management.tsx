@@ -70,34 +70,42 @@ export function ContentManagement() {
     <>
       {editingQuestion ? (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">Edit Question</h1>
+          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 rounded-lg border border-blue-200/50">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Edit Question</h1>
+              <p className="text-sm text-gray-600 font-medium mt-1">Make changes to the question details</p>
+            </div>
             <button
               onClick={handleQuestionEditCancel}
-              className="text-sm text-gray-600 hover:text-gray-800"
+              className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-white/50 rounded-lg transition-all duration-200"
             >
-              ← Back to Content Management
+              <span>←</span>
+              <span>Back to Content Management</span>
             </button>
           </div>
-          <InPlaceQuestionEditor
-            question={editingQuestion}
-            onSave={handleQuestionSave}
-            onCancel={handleQuestionEditCancel}
-          />
+          <div className="bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200/50 shadow-gray-200/50">
+            <InPlaceQuestionEditor
+              question={editingQuestion}
+              onSave={handleQuestionSave}
+              onCancel={handleQuestionEditCancel}
+            />
+          </div>
         </div>
       ) : (
-        <QuestionExplorer
-          actionType="edit"
-          onQuestionEdit={handleQuestionEdit}
-          onQuestionDelete={handleQuestionDelete}
-          onQuestionBulkDelete={handleBulkDelete}
-          onQuestionAction={handleQuestionAction}
-          title="Content Management"
-          showHeader={false}
-          multiSelect={true}
-          selectedQuestions={selectedQuestions}
-          onSelectionChange={handleSelectionChange}
-        />
+        <div className="bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200/50 shadow-gray-200/50 overflow-hidden">
+          <QuestionExplorer
+            actionType="edit"
+            onQuestionEdit={handleQuestionEdit}
+            onQuestionDelete={handleQuestionDelete}
+            onQuestionBulkDelete={handleBulkDelete}
+            onQuestionAction={handleQuestionAction}
+            title="Content Management"
+            showHeader={false}
+            multiSelect={true}
+            selectedQuestions={selectedQuestions}
+            onSelectionChange={handleSelectionChange}
+          />
+        </div>
       )}
       
       <BulkDeleteDialog

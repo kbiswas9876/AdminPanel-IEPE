@@ -42,31 +42,47 @@ function StatCard({
   description?: string
 }) {
   return (
-    <Link href={href} className="block">
-      <Card className={`transition-all duration-200 hover:shadow-lg hover:scale-[1.02] cursor-pointer ${
-        isUrgent ? 'border-orange-200 bg-gradient-to-br from-orange-50 to-red-50' : 'border-gray-200 bg-white'
+    <Link href={href} className="block group">
+      <Card className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-[1.02] cursor-pointer border-0 ${
+        isUrgent 
+          ? 'bg-gradient-to-br from-orange-50 via-red-50 to-pink-50 shadow-orange-200/50' 
+          : 'bg-white/80 backdrop-blur-sm shadow-gray-200/50'
       }`}>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-gray-600">
+        {/* Subtle background pattern */}
+        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
+          <CardTitle className="text-sm font-semibold text-gray-700 tracking-wide">
             {title}
           </CardTitle>
-          <Icon className={`h-4 w-4 ${isUrgent ? 'text-orange-600' : 'text-blue-600'}`} />
+          <div className={`p-2 rounded-lg transition-all duration-200 ${
+            isUrgent 
+              ? 'bg-gradient-to-br from-orange-100 to-red-100 text-orange-600 group-hover:scale-110' 
+              : 'bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600 group-hover:scale-110'
+          }`}>
+            <Icon className="h-5 w-5" />
+          </div>
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-gray-900 mb-1">
+        <CardContent className="relative z-10">
+          <div className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">
             {value.toLocaleString()}
           </div>
           {description && (
-            <p className="text-xs text-gray-500">
+            <p className="text-sm text-gray-600 font-medium">
               {description}
             </p>
           )}
           {isUrgent && value > 0 && (
-            <Badge variant="destructive" className="mt-2 text-xs">
-              Action Required
-            </Badge>
+            <div className="mt-3">
+              <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 shadow-lg animate-pulse">
+                Action Required
+              </Badge>
+            </div>
           )}
         </CardContent>
+        
+        {/* Hover effect overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </Card>
     </Link>
   )
@@ -91,6 +107,23 @@ function ActivityItem({ activity }: { activity: RecentActivity }) {
     }
   }
 
+  const getActivityIconBg = (type: RecentActivity['type']) => {
+    switch (type) {
+      case 'user_registration':
+        return 'bg-green-100'
+      case 'error_report':
+        return 'bg-red-100'
+      case 'question_added':
+        return 'bg-blue-100'
+      case 'test_created':
+        return 'bg-purple-100'
+      case 'bulk_import':
+        return 'bg-indigo-100'
+      default:
+        return 'bg-gray-100'
+    }
+  }
+
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp)
     const now = new Date()
@@ -103,18 +136,18 @@ function ActivityItem({ activity }: { activity: RecentActivity }) {
   }
 
   return (
-    <div className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-      <div className="flex-shrink-0 mt-0.5">
+    <div className="flex items-start space-x-4 p-4 hover:bg-gray-50/50 transition-all duration-200 group">
+      <div className={`flex-shrink-0 mt-0.5 p-2 rounded-lg ${getActivityIconBg(activity.type)} group-hover:scale-110 transition-transform duration-200`}>
         {getActivityIcon(activity.type)}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900">
+        <p className="text-sm font-semibold text-gray-900 group-hover:text-gray-700 transition-colors">
           {activity.title}
         </p>
-        <p className="text-sm text-gray-600 mt-1">
+        <p className="text-sm text-gray-600 mt-1 leading-relaxed">
           {activity.description}
         </p>
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-gray-500 mt-2 font-medium">
           {formatTimestamp(activity.timestamp)}
         </p>
       </div>
@@ -163,28 +196,31 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
 // Recent Activity Component
 export function RecentActivity({ activities }: RecentActivityProps) {
   return (
-    <Card className="border-gray-200">
-      <CardHeader className="border-b border-gray-100">
+    <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-gray-200/50 overflow-hidden">
+      <CardHeader className="border-b border-gray-100/50 bg-gradient-to-r from-gray-50/50 to-white/50">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold text-gray-900">
+          <CardTitle className="text-lg font-bold text-gray-900 tracking-tight">
             Recent Activity
           </CardTitle>
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/reports" className="text-blue-600 hover:text-blue-700">
-              View All
-              <ArrowRight className="h-4 w-4 ml-1" />
+          <Button variant="ghost" size="sm" asChild className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-all duration-200">
+            <Link href="/reports" className="flex items-center space-x-1">
+              <span>View All</span>
+              <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
         </div>
       </CardHeader>
       <CardContent className="p-0">
         {activities.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">
-            <Clock className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-            <p>No recent activity</p>
+          <div className="p-8 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+              <Clock className="h-8 w-8 text-gray-400" />
+            </div>
+            <p className="text-gray-500 font-medium">No recent activity</p>
+            <p className="text-sm text-gray-400 mt-1">Activity will appear here as it happens</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-100/50">
             {activities.map((activity) => (
               <ActivityItem key={activity.id} activity={activity} />
             ))}
