@@ -10,6 +10,11 @@ interface EditQuestionPageProps {
   }
 }
 
+async function handleUpdate(questionId: number, formData: FormData) {
+  'use server'
+  await updateQuestion(questionId, formData)
+}
+
 export default async function EditQuestionPage({ params }: EditQuestionPageProps) {
   const questionId = parseInt(params.id)
   
@@ -23,18 +28,13 @@ export default async function EditQuestionPage({ params }: EditQuestionPageProps
     notFound()
   }
 
-  const handleUpdate = async (formData: FormData) => {
-    'use server'
-    await updateQuestion(questionId, formData)
-  }
-
   return (
     <ProtectedRoute>
       <MainLayout>
         <QuestionForm 
           question={question as unknown as import('@/lib/supabase/admin').Question} 
           isEditing={true} 
-          onSubmit={handleUpdate} 
+          onSubmit={(formData) => handleUpdate(questionId, formData)} 
         />
       </MainLayout>
     </ProtectedRoute>
