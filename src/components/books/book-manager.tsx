@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Plus } from 'lucide-react'
+import { Plus, Library } from 'lucide-react'
 import { DeleteBookDialog } from './delete-book-dialog'
 import { toast } from 'sonner'
 
