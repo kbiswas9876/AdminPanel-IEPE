@@ -155,8 +155,8 @@ export function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4 p-6">
-              <Button asChild className="w-full justify-start group hover:scale-[1.02] transition-all duration-200" variant="outline">
-                <Link href="/content/new" className="flex items-center space-x-4 p-4 rounded-xl border-2 border-blue-200/50 hover:border-blue-300 hover:bg-blue-50/50">
+              <Button asChild className="w-full justify-start group hover:scale-[1.02] transition-all duration-200 h-auto p-0" variant="outline">
+                <Link href="/content/new" className="flex items-center space-x-4 p-4 rounded-xl border-2 border-blue-200/50 hover:border-blue-300 hover:bg-blue-50/50 w-full">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 group-hover:from-blue-200 group-hover:to-blue-300 transition-all duration-200">
                     <Plus className="h-5 w-5 text-blue-600" />
                   </div>
@@ -166,8 +166,8 @@ export function DashboardPage() {
                   </div>
                 </Link>
               </Button>
-              <Button asChild className="w-full justify-start group hover:scale-[1.02] transition-all duration-200" variant="outline">
-                <Link href="/tests/new" className="flex items-center space-x-4 p-4 rounded-xl border-2 border-purple-200/50 hover:border-purple-300 hover:bg-purple-50/50">
+              <Button asChild className="w-full justify-start group hover:scale-[1.02] transition-all duration-200 h-auto p-0" variant="outline">
+                <Link href="/tests/new" className="flex items-center space-x-4 p-4 rounded-xl border-2 border-purple-200/50 hover:border-purple-300 hover:bg-purple-50/50 w-full">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-100 to-purple-200 group-hover:from-purple-200 group-hover:to-purple-300 transition-all duration-200">
                     <BookOpen className="h-5 w-5 text-purple-600" />
                   </div>
@@ -177,8 +177,8 @@ export function DashboardPage() {
                   </div>
                 </Link>
               </Button>
-              <Button asChild className="w-full justify-start group hover:scale-[1.02] transition-all duration-200" variant="outline">
-                <Link href="/students" className="flex items-center space-x-4 p-4 rounded-xl border-2 border-green-200/50 hover:border-green-300 hover:bg-green-50/50">
+              <Button asChild className="w-full justify-start group hover:scale-[1.02] transition-all duration-200 h-auto p-0" variant="outline">
+                <Link href="/students" className="flex items-center space-x-4 p-4 rounded-xl border-2 border-green-200/50 hover:border-green-300 hover:bg-green-50/50 w-full">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-100 to-green-200 group-hover:from-green-200 group-hover:to-green-300 transition-all duration-200">
                     <Users className="h-5 w-5 text-green-600" />
                   </div>
@@ -188,8 +188,8 @@ export function DashboardPage() {
                   </div>
                 </Link>
               </Button>
-              <Button asChild className="w-full justify-start group hover:scale-[1.02] transition-all duration-200" variant="outline">
-                <Link href="/reports" className="flex items-center space-x-4 p-4 rounded-xl border-2 border-red-200/50 hover:border-red-300 hover:bg-red-50/50">
+              <Button asChild className="w-full justify-start group hover:scale-[1.02] transition-all duration-200 h-auto p-0" variant="outline">
+                <Link href="/reports" className="flex items-center space-x-4 p-4 rounded-xl border-2 border-red-200/50 hover:border-red-300 hover:bg-red-50/50 w-full">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-red-100 to-red-200 group-hover:from-red-200 group-hover:to-red-300 transition-all duration-200">
                     <AlertTriangle className="h-5 w-5 text-red-600" />
                   </div>

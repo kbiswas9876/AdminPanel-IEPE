@@ -7,8 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, ArrowRight, Shuffle, RotateCcw, Pencil, Edit3, Trash2, ChevronDown } from 'lucide-react'
+import { ArrowRight, Shuffle, RotateCcw, Pencil, Edit3, Trash2, ChevronDown, Plus } from 'lucide-react'
 import { SmartLatexRenderer } from './smart-latex-renderer'
 import type { Question, TestQuestionSlot } from '@/lib/types'
 import { UnifiedQuestionBankModal } from './unified-question-bank-modal'
@@ -238,6 +237,14 @@ export function ReviewRefineInterface({
             
             <div className="flex items-center gap-3">
               <Button 
+                onClick={() => setChooseOpen(true)}
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add New Question
+              </Button>
+              
+              <Button 
                 onClick={handleShuffleQuestions} 
                 className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
               >
@@ -261,6 +268,14 @@ export function ReviewRefineInterface({
                   />
                 </button>
               </div>
+              
+              <Button 
+                onClick={onNext}
+                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                Next: Set Rules & Publish
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
             </div>
           </div>
         </div>
