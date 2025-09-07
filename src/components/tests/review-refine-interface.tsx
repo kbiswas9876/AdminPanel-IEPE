@@ -215,57 +215,62 @@ export function ReviewRefineInterface({
 
 
   return (
-    <div className="max-w-6xl mx-auto">
-      {/* New Global Control Bar */}
-      <div className="sticky top-0 z-40 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-b">
-        <div className="px-6 py-3">
-          <div className="flex flex-wrap items-center gap-3 justify-between">
-            <div className="flex items-center gap-3">
-              <Button onClick={handleShuffleQuestions} className="bg-blue-600 hover:bg-blue-700">
-                  <Shuffle className="h-4 w-4 mr-2" />
-                  Shuffle Questions
-                </Button>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">Shuffle Options</span>
-                  <button
-                    onClick={() => setShuffleOptions(!shuffleOptions)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${shuffleOptions ? 'bg-blue-600' : 'bg-gray-300'}`}
-                  aria-pressed={shuffleOptions}
-                  >
-                    <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${shuffleOptions ? 'translate-x-6' : 'translate-x-1'}`}
-                    />
-                  </button>
+    <div className="min-h-screen">
+      {/* Premium Global Control Bar */}
+      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200/50 shadow-sm">
+        <div className="px-6 py-4">
+          <div className="flex flex-wrap items-center gap-4 justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-green-100 to-emerald-100">
+                  <Edit3 className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 tracking-tight">
+                    Review & Refine
+                  </h2>
+                  <p className="text-sm text-gray-600 font-medium">
+                    {questions.length} questions ready for review
+                  </p>
+                </div>
               </div>
             </div>
+            
             <div className="flex items-center gap-3">
-              <Button variant="outline" onClick={onPrevious}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Previous: Edit Blueprint
+              <Button 
+                onClick={handleShuffleQuestions} 
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                <Shuffle className="h-4 w-4 mr-2" />
+                Shuffle Questions
               </Button>
-              <Button onClick={onNext} className="bg-blue-600 hover:bg-blue-700">
-                Next: Set Rules & Publish
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-              <Button variant="outline" onClick={() => setChooseOpen(true)}>
-                + Add Question
-              </Button>
+              
+              <div className="flex items-center gap-3 px-3 py-2 bg-gray-50/80 rounded-lg border border-gray-200/50">
+                <span className="text-sm font-semibold text-gray-700">Shuffle Options</span>
+                <button
+                  onClick={() => setShuffleOptions(!shuffleOptions)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-200 ${
+                    shuffleOptions ? 'bg-gradient-to-r from-blue-500 to-indigo-500' : 'bg-gray-300'
+                  }`}
+                  aria-pressed={shuffleOptions}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-200 ${
+                      shuffleOptions ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content Area */}
-      <div className="px-6 py-8">
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-1">Live Preview - Test Paper</h2>
-          <p className="text-sm text-gray-600">
-            This preview shows exactly how students will see the test. All mathematical content is rendered using KaTeX. Click the arrow on any question to view its full details, solution, and edit options.
-          </p>
-        </div>
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto p-6">
 
         {/* Questions List */}
-        <div className="space-y-8">
+        <div className="space-y-6">
           {questions.map((item, index) => {
             const q = item.question
             const options = q.options || {}
@@ -273,24 +278,35 @@ export function ReviewRefineInterface({
             const optionKeys = Object.keys(options).filter(key => options[key] && options[key].trim()) as Array<keyof typeof options>
             
             return (
-              <Card key={index} className="border-l-4 border-l-blue-500 shadow-sm">
+              <Card key={index} className="group border border-gray-200/50 rounded-xl overflow-hidden bg-white/80 hover:bg-white shadow-sm hover:shadow-lg transition-all duration-200">
                 <CardContent className="p-6">
                   <div className="flex gap-6">
                     {/* Question Content */}
                     <div className="flex-1">
                       {/* Question Header */}
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-bold text-gray-900">
-                          Q. {index + 1}
-                        </h3>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="outline" className="text-xs">
-                            {item.chapter_name}
-                          </Badge>
-                          <Badge variant="secondary" className="text-xs">
-                            {item.source_type}
-                            {item.source_value && `: ${item.source_value}`}
-                          </Badge>
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center space-x-4">
+                          <div className="p-2 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100">
+                            <span className="text-lg font-bold text-blue-600">{index + 1}</span>
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-bold text-gray-900 tracking-tight">
+                              Question {index + 1}
+                            </h3>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <div className="px-3 py-1 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200/50">
+                            <span className="text-sm font-semibold text-blue-600">
+                              {item.chapter_name}
+                            </span>
+                          </div>
+                          <div className="px-3 py-1 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200/50">
+                            <span className="text-sm font-medium text-gray-600">
+                              {item.source_type}
+                              {item.source_value && `: ${item.source_value}`}
+                            </span>
+                          </div>
                         </div>
                       </div>
                       {editingIndex === index && editForm ? (
@@ -374,14 +390,14 @@ export function ReviewRefineInterface({
                       ) : (
                         <>
                           {/* Question Text */}
-                          <div className="mb-6">
-                            <div className="prose prose-lg max-w-none">
+                          <div className="mb-8 p-6 bg-gradient-to-r from-gray-50/50 to-white/50 rounded-xl border border-gray-100/50">
+                            <div className="prose prose-lg max-w-none text-gray-800">
                               {renderMathContent(q.question_text)}
                             </div>
                           </div>
 
                           {/* Options */}
-                          <div className="space-y-3 mb-6">
+                          <div className="space-y-4 mb-8">
                             {optionKeys.map((optionKey) => {
                               const optionText = options[optionKey]
                               const isCorrect = q.correct_option === optionKey
@@ -389,23 +405,23 @@ export function ReviewRefineInterface({
                               return (
                                 <div
                                   key={optionKey}
-                                  className={`flex items-start space-x-3 p-3 rounded-lg border ${
+                                  className={`flex items-start space-x-4 p-4 rounded-xl border transition-all duration-200 ${
                                     isCorrect 
-                                      ? 'bg-green-50 border-green-200' 
-                                      : 'bg-gray-50 border-gray-200'
+                                      ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200/50 shadow-sm' 
+                                      : 'bg-white/80 border-gray-200/50 hover:bg-gray-50/50'
                                   }`}
                                 >
-                                  <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+                                  <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-200 ${
                                     isCorrect
-                                      ? 'bg-green-100 text-green-800'
-                                      : 'bg-gray-100 text-gray-800'
+                                      ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 shadow-sm'
+                                      : 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700'
                                   }`}>
                                     {getOptionLabel(String(optionKey))}
                                     {isCorrect && (
                                       <span className="ml-1 text-green-600">✓</span>
                                     )}
                                   </div>
-                                  <div className="flex-1 prose prose-sm max-w-none">
+                                  <div className="flex-1 prose prose-sm max-w-none text-gray-800">
                                     {renderMathContent(String(optionText))}
                                   </div>
                                 </div>
@@ -414,8 +430,8 @@ export function ReviewRefineInterface({
                           </div>
 
                           {/* Admin Metadata */}
-                          <div className="bg-gray-50 rounded-lg p-4 text-xs text-gray-600 space-y-1">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="bg-gradient-to-r from-gray-50/50 to-white/50 rounded-xl p-6 border border-gray-100/50">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                               <div>
                                 <span className="font-medium">Source:</span> {q.book_source || '—'}
                               </div>
@@ -468,13 +484,13 @@ export function ReviewRefineInterface({
                     </div>
 
                     {/* Per-Question Control Deck */}
-                    <div className="flex-shrink-0 w-16">
-                      <div className="flex flex-col space-y-2">
+                    <div className="flex-shrink-0 w-20">
+                      <div className="flex flex-col space-y-3">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => onRegenerate(index)}
-                          className="h-10 w-10 p-0"
+                          className="h-12 w-12 p-0 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-all duration-200"
                           title="Regenerate Question"
                         >
                           <RotateCcw className="h-4 w-4" />
@@ -484,7 +500,7 @@ export function ReviewRefineInterface({
                           variant="outline"
                           size="sm"
                           onClick={() => handleOverride(index)}
-                          className="h-10 w-10 p-0"
+                          className="h-12 w-12 p-0 hover:bg-green-50 hover:border-green-200 hover:text-green-600 transition-all duration-200"
                           title="Manual Override"
                         >
                           <Pencil className="h-4 w-4" />
@@ -501,7 +517,7 @@ export function ReviewRefineInterface({
                             }
                             onEdit(index)
                           }}
-                          className="h-10 w-10 p-0"
+                          className="h-12 w-12 p-0 hover:bg-purple-50 hover:border-purple-200 hover:text-purple-600 transition-all duration-200"
                           title="Edit In-Place"
                         >
                           <Edit3 className="h-4 w-4" />
@@ -511,7 +527,7 @@ export function ReviewRefineInterface({
                           variant="outline"
                           size="sm"
                           onClick={() => handleDelete(index)}
-                          className="h-10 w-10 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
+                          className="h-12 w-12 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300 transition-all duration-200"
                           title="Delete Question"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -526,18 +542,20 @@ export function ReviewRefineInterface({
         </div>
 
         {/* Summary */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="mt-8 p-6 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 rounded-xl border border-blue-200/50 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-medium text-blue-900">Test Summary</h3>
-              <p className="text-sm text-blue-700">
+              <h3 className="text-lg font-bold text-blue-900 tracking-tight">Test Summary</h3>
+              <p className="text-sm text-blue-700 font-medium mt-1">
                 Total Questions: {questions.length} | 
                 Shuffle Questions: Available | 
                 Shuffle Options: {shuffleOptions ? 'Enabled' : 'Disabled'}
               </p>
             </div>
-            <div className="text-sm text-blue-600">
-              Ready for final review
+            <div className="px-4 py-2 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-lg border border-blue-200/50">
+              <span className="text-sm font-semibold text-blue-600">
+                Ready for final review
+              </span>
             </div>
           </div>
         </div>
