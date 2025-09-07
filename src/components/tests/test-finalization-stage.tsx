@@ -219,146 +219,201 @@ export function TestFinalizationStage({
   }
 
   return (
-    <div className="max-w-4xl mx-auto transition-opacity duration-300 animate-in fade-in">
-
-      {/* Test Summary */}
-      <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-medium text-blue-900">Test Summary</h3>
-            <p className="text-sm text-blue-700">
-              {questions.length} questions ready for finalization
-            </p>
-          </div>
-          <div className="text-sm text-blue-600">
-            {isEditMode ? 'Ready to update' : 'Ready to publish'}
+    <div className="min-h-screen">
+      {/* Header Section */}
+      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200/50 shadow-sm">
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100">
+                  <Calendar className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 tracking-tight">
+                    Test Rules & Publishing
+                  </h2>
+                  <p className="text-sm text-gray-600 font-medium">
+                    {questions.length} questions ready for finalization
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              <Button 
+                variant="outline" 
+                onClick={onPrevious}
+                className="hover:bg-gray-50 transition-colors duration-200"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Previous: Review & Refine
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Main Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Calendar className="h-5 w-5" />
-            <span>Finalize Test Details</span>
-          </CardTitle>
-          <CardDescription>
-            Set the essential rules for your test. You can choose result release while publishing.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-8">
-          {/* A) Basic Settings */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Basic Settings</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="test-name">Test Name *</Label>
-                <Input
-                  id="test-name"
-                  value={formData.name}
-                  onChange={(e) => updateFormData('name', e.target.value)}
-                  placeholder="Enter test name..."
-                  className={errors.name ? 'border-red-300' : ''}
-                />
-                {errors.name && (
-                  <p className="text-sm text-red-600">{errors.name}</p>
-                )}
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto p-6">
+        {/* Test Summary */}
+        <div className="mb-8 p-6 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 rounded-xl border border-blue-200/50 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-blue-900 tracking-tight">Test Summary</h3>
+              <p className="text-sm text-blue-700 font-medium mt-1">
+                {questions.length} questions ready for finalization
+              </p>
+            </div>
+            <div className="px-4 py-2 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-lg border border-blue-200/50">
+              <span className="text-sm font-semibold text-blue-600">
+                {isEditMode ? 'Ready to update' : 'Ready to publish'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Form */}
+        <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-gray-200/50 overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-gray-50/50 to-white/50 border-b border-gray-100/50">
+            <CardTitle className="flex items-center space-x-3">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100">
+                <Calendar className="h-5 w-5 text-purple-600" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="test-description">Description (Optional)</Label>
-                <Textarea
-                  id="test-description"
-                  value={formData.description}
-                  onChange={(e) => updateFormData('description', e.target.value)}
-                  placeholder="Enter test description..."
+              <span className="text-xl font-bold text-gray-900 tracking-tight">Finalize Test Details</span>
+            </CardTitle>
+            <CardDescription className="text-gray-600 font-medium">
+              Set the essential rules for your test. You can choose result release while publishing.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-8 space-y-8">
+            {/* A) Basic Settings */}
+            <div className="space-y-6">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100">
+                  <Save className="h-4 w-4 text-blue-600" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 tracking-tight">Basic Settings</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <Label htmlFor="test-name" className="text-sm font-semibold text-gray-700">Test Name *</Label>
+                  <Input
+                    id="test-name"
+                    value={formData.name}
+                    onChange={(e) => updateFormData('name', e.target.value)}
+                    placeholder="Enter test name..."
+                    className={`transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.name ? 'border-red-300' : ''}`}
+                  />
+                  {errors.name && (
+                    <p className="text-sm text-red-600 font-medium">{errors.name}</p>
+                  )}
+                </div>
+                <div className="space-y-3">
+                  <Label htmlFor="test-description" className="text-sm font-semibold text-gray-700">Description (Optional)</Label>
+                  <Textarea
+                    id="test-description"
+                    value={formData.description}
+                    onChange={(e) => updateFormData('description', e.target.value)}
+                    placeholder="Enter test description..."
+                    className="transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   rows={3}
                 />
               </div>
             </div>
           </div>
 
-          {/* B) Scoring & Timing */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Scoring & Timing</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="total-time">Total Time (minutes) *</Label>
-                <Input
-                  id="total-time"
-                  type="number"
-                  min="1"
-                  value={formData.totalTimeMinutes}
-                  onChange={(e) => updateFormData('totalTimeMinutes', Number(e.target.value))}
-                  className={errors.totalTimeMinutes ? 'border-red-300' : ''}
-                />
-                {errors.totalTimeMinutes && (
-                  <p className="text-sm text-red-600">{errors.totalTimeMinutes}</p>
-                )}
+            {/* B) Scoring & Timing */}
+            <div className="space-y-6">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-green-100 to-emerald-100">
+                  <Clock className="h-4 w-4 text-green-600" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 tracking-tight">Scoring & Timing</h3>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="marks-correct">Marks per Correct Answer *</Label>
-                <Input
-                  id="marks-correct"
-                  type="number"
-                  step="0.25"
-                  min="0"
-                  value={formData.marksPerCorrect}
-                  onChange={(e) => updateFormData('marksPerCorrect', Number(e.target.value))}
-                  className={errors.marksPerCorrect ? 'border-red-300' : ''}
-                />
-                {errors.marksPerCorrect && (
-                  <p className="text-sm text-red-600">{errors.marksPerCorrect}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="negative-marks">Negative Marks per Incorrect *</Label>
-                <Input
-                  id="negative-marks"
-                  type="number"
-                  step="0.25"
-                  min="0"
-                  value={formData.negativeMarksPerIncorrect}
-                  onChange={(e) => updateFormData('negativeMarksPerIncorrect', Number(e.target.value))}
-                  className={errors.negativeMarksPerIncorrect ? 'border-red-300' : ''}
-                />
-                {errors.negativeMarksPerIncorrect && (
-                  <p className="text-sm text-red-600">{errors.negativeMarksPerIncorrect}</p>
-                )}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-3">
+                  <Label htmlFor="total-time" className="text-sm font-semibold text-gray-700">Total Time (minutes) *</Label>
+                  <Input
+                    id="total-time"
+                    type="number"
+                    min="1"
+                    value={formData.totalTimeMinutes}
+                    onChange={(e) => updateFormData('totalTimeMinutes', Number(e.target.value))}
+                    className={`transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.totalTimeMinutes ? 'border-red-300' : ''}`}
+                  />
+                  {errors.totalTimeMinutes && (
+                    <p className="text-sm text-red-600 font-medium">{errors.totalTimeMinutes}</p>
+                  )}
+                </div>
+                <div className="space-y-3">
+                  <Label htmlFor="marks-correct" className="text-sm font-semibold text-gray-700">Marks per Correct Answer *</Label>
+                  <Input
+                    id="marks-correct"
+                    type="number"
+                    step="0.25"
+                    min="0"
+                    value={formData.marksPerCorrect}
+                    onChange={(e) => updateFormData('marksPerCorrect', Number(e.target.value))}
+                    className={`transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.marksPerCorrect ? 'border-red-300' : ''}`}
+                  />
+                  {errors.marksPerCorrect && (
+                    <p className="text-sm text-red-600 font-medium">{errors.marksPerCorrect}</p>
+                  )}
+                </div>
+                <div className="space-y-3">
+                  <Label htmlFor="negative-marks" className="text-sm font-semibold text-gray-700">Negative Marks per Incorrect *</Label>
+                  <Input
+                    id="negative-marks"
+                    type="number"
+                    step="0.25"
+                    min="0"
+                    value={formData.negativeMarksPerIncorrect}
+                    onChange={(e) => updateFormData('negativeMarksPerIncorrect', Number(e.target.value))}
+                    className={`transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.negativeMarksPerIncorrect ? 'border-red-300' : ''}`}
+                  />
+                  {errors.negativeMarksPerIncorrect && (
+                    <p className="text-sm text-red-600 font-medium">{errors.negativeMarksPerIncorrect}</p>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
           {/* Publishing options moved to Publish modal */}
         </CardContent>
       </Card>
 
-      {/* Action Buttons */}
-      <div className="flex justify-between mt-8">
-        <Button variant="outline" onClick={onPrevious}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Previous: Review & Refine
-        </Button>
-        
-        <div className="flex space-x-4">
-          <Button
-            variant="outline"
-            onClick={handleSaveAsDraft}
-            disabled={isSaving}
-            className="flex items-center space-x-2"
+        {/* Action Buttons */}
+        <div className="flex justify-between mt-8">
+          <Button 
+            variant="outline" 
+            onClick={onPrevious}
+            className="hover:bg-gray-50 transition-colors duration-200"
           >
-            <Save className="h-4 w-4" />
-            <span>{isSaving ? (isEditMode ? 'Updating...' : 'Saving...') : (isEditMode ? 'Update Draft' : 'Save as Draft')}</span>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Previous: Review & Refine
           </Button>
           
-          <Button
-            onClick={handlePublishClick}
-            disabled={isSaving}
-            className="bg-blue-600 hover:bg-blue-700 flex items-center space-x-2"
-          >
-            <Clock className="h-4 w-4" />
-            <span>{isEditMode ? 'Update & Publish' : 'Publish Test'}</span>
-          </Button>
+          <div className="flex space-x-4">
+            <Button
+              variant="outline"
+              onClick={handleSaveAsDraft}
+              disabled={isSaving}
+              className="flex items-center space-x-2 hover:bg-gray-50 transition-colors duration-200"
+            >
+              <Save className="h-4 w-4" />
+              <span>{isSaving ? (isEditMode ? 'Updating...' : 'Saving...') : (isEditMode ? 'Update Draft' : 'Save as Draft')}</span>
+            </Button>
+            
+            <Button
+              onClick={handlePublishClick}
+              disabled={isSaving}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center space-x-2"
+            >
+              <Clock className="h-4 w-4" />
+              <span>{isEditMode ? 'Update & Publish' : 'Publish Test'}</span>
+            </Button>
+          </div>
         </div>
       </div>
 
