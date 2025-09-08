@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { X, Download, Eye, Palette, Type, Layout, Settings, FileText, CheckCircle, Loader2 } from 'lucide-react'
 import { PDFService } from '@/lib/services/pdf-service'
+import { PDFLivePreview } from './pdf-live-preview'
 import type { Test, Question } from '@/lib/supabase/admin'
 
 interface InteractivePDFExporterProps {
@@ -397,18 +398,11 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
           <div className="flex-1 p-6">
             <div className="h-full bg-white border rounded-lg overflow-hidden">
               {previewMode === 'preview' && (
-                <div className="h-full flex items-center justify-center bg-gray-50">
-                  <div className="text-center">
-                    <Eye className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Live Preview</h3>
-                    <p className="text-gray-600 mb-4">
-                      Preview will be available in the next version
-                    </p>
-                    <div className="text-sm text-gray-500">
-                      Current settings: {settings.theme.name} theme, {settings.fontSize}px font, {settings.questionsPerPage} questions per page
-                    </div>
-                  </div>
-                </div>
+                <PDFLivePreview
+                  test={test}
+                  questions={questions}
+                  settings={settings}
+                />
               )}
 
               {previewMode === 'generating' && (

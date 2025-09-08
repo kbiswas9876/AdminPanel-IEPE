@@ -1,288 +1,221 @@
 import React from 'react'
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer'
+import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
 import { Test, Question } from '@/lib/supabase/admin'
+import { renderMathContent } from '@/lib/utils/latex-pdf-renderer'
 
-// Use system fonts to avoid font loading issues
-// Font registration removed to prevent DataView errors
-
-// PDF Styles
+// Professional PDF Styles - Optimized for space and readability
 const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
     backgroundColor: '#FFFFFF',
-    padding: 30,
+    padding: 20,
     fontFamily: 'Helvetica',
-    fontSize: 12,
-    lineHeight: 1.6,
+    fontSize: 11,
+    lineHeight: 1.4,
   },
   header: {
-    marginBottom: 30,
-    paddingBottom: 20,
-    borderBottomWidth: 3,
+    marginBottom: 15,
+    paddingBottom: 10,
+    borderBottomWidth: 2,
     borderBottomColor: '#2563eb',
     borderBottomStyle: 'solid',
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#2563eb',
+    color: '#1f2937',
     textAlign: 'center',
-    marginBottom: 15,
+    marginBottom: 8,
     fontFamily: 'Helvetica-Bold',
   },
   testInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 10,
-    fontSize: 11,
-    color: '#4a5568',
+    marginBottom: 5,
+    fontSize: 10,
+    color: '#374151',
   },
   infoItem: {
     backgroundColor: '#f7fafc',
-    padding: '6 12',
-    borderRadius: 6,
+    padding: '4 8',
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: '#e2e8f0',
+    textAlign: 'center',
   },
   instructions: {
     backgroundColor: '#f8fafc',
     borderWidth: 1,
     borderColor: '#cbd5e0',
-    borderRadius: 8,
-    padding: 20,
-    marginBottom: 25,
-    fontSize: 11,
+    borderRadius: 6,
+    padding: 12,
+    marginBottom: 15,
+    fontSize: 10,
   },
   instructionsTitle: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#2563eb',
-    marginBottom: 10,
-  },
-  instructionsList: {
-    marginLeft: 15,
+    color: '#1f2937',
+    marginBottom: 6,
   },
   instructionItem: {
-    marginBottom: 5,
-    color: '#4a5568',
+    marginBottom: 3,
+    color: '#374151',
+    paddingLeft: 6,
   },
-  question: {
-    marginBottom: 25,
-    pageBreakInside: 'avoid',
+  questionContainer: {
+    marginBottom: 15,
+    padding: 12,
+    backgroundColor: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderRadius: 4,
   },
-  questionNumber: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#2563eb',
+  questionHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     marginBottom: 8,
   },
+  questionNumber: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginRight: 8,
+    minWidth: 20,
+  },
   questionText: {
-    marginBottom: 15,
-    color: '#2d3748',
-    lineHeight: 1.7,
+    fontSize: 11,
+    color: '#374151',
+    lineHeight: 1.4,
+    flex: 1,
   },
   optionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 15,
+    gap: 6,
+    marginTop: 8,
   },
   option: {
     width: '48%',
-    marginRight: '2%',
-    marginBottom: 12,
-    padding: 10,
-    backgroundColor: '#f8fafc',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 6,
     flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 4,
   },
   optionLabel: {
+    fontSize: 10,
     fontWeight: 'bold',
     color: '#2563eb',
-    marginRight: 8,
-    minWidth: 20,
+    marginRight: 4,
+    minWidth: 16,
   },
   optionText: {
+    fontSize: 10,
+    color: '#374151',
     flex: 1,
-    color: '#4a5568',
-    fontSize: 11,
+    lineHeight: 1.3,
   },
   footer: {
-    marginTop: 40,
-    paddingTop: 20,
+    position: 'absolute',
+    bottom: 15,
+    left: 20,
+    right: 20,
+    textAlign: 'center',
+    fontSize: 9,
+    color: '#6b7280',
     borderTopWidth: 1,
     borderTopColor: '#e2e8f0',
-    textAlign: 'center',
-    fontSize: 10,
-    color: '#718096',
-  },
-  answerKeyHeader: {
-    backgroundColor: '#f0f9ff',
-    borderWidth: 2,
-    borderColor: '#0ea5e9',
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 20,
-  },
-  answerKeyTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#0c4a6e',
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  answerKeyInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    fontSize: 11,
-    color: '#0c4a6e',
-  },
-  answerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  answerNumber: {
-    fontWeight: 'bold',
-    color: '#2563eb',
-    width: 60,
-  },
-  answerText: {
-    flex: 1,
-    color: '#374151',
-    marginLeft: 20,
-  },
-  answerValue: {
-    fontWeight: 'bold',
-    color: '#059669',
-    width: 40,
-    textAlign: 'center',
+    paddingTop: 8,
   },
 })
 
-// Helper function to render LaTeX-like content (simplified for PDF)
-const renderMathContent = (content: string): string => {
-  // Simple LaTeX to text conversion for PDF
-  return content
-    .replace(/\$\$([^$]+)\$\$/g, '$1') // Remove display math delimiters
-    .replace(/\$([^$]+)\$/g, '$1') // Remove inline math delimiters
-    .replace(/\\\[([^\]]+)\\\]/g, '$1') // Remove \[ \] delimiters
-    .replace(/\\\(([^)]+)\\\)/g, '$1') // Remove \( \) delimiters
-    .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1)/($2)') // Convert fractions
-    .replace(/\\sqrt\{([^}]+)\}/g, '√($1)') // Convert square roots
-    .replace(/\\pi/g, 'π') // Convert pi
-    .replace(/\\alpha/g, 'α') // Convert alpha
-    .replace(/\\beta/g, 'β') // Convert beta
-    .replace(/\\gamma/g, 'γ') // Convert gamma
-    .replace(/\\theta/g, 'θ') // Convert theta
-    .replace(/\\sum/g, 'Σ') // Convert sum
-    .replace(/\\int/g, '∫') // Convert integral
-    .replace(/\\infty/g, '∞') // Convert infinity
-    .replace(/\\leq/g, '≤') // Convert less than or equal
-    .replace(/\\geq/g, '≥') // Convert greater than or equal
-    .replace(/\\neq/g, '≠') // Convert not equal
-    .replace(/\\times/g, '×') // Convert times
-    .replace(/\\div/g, '÷') // Convert divide
+// Smart LaTeX Renderer Component
+const SmartLatexRenderer = ({ text }: { text: string }) => {
+  const renderedText = renderMathContent(text)
+  return <Text>{renderedText}</Text>
 }
 
-// Question Paper PDF Component
+// Premium Question Paper PDF Component
 export const QuestionPaperPDF = ({ test, questions }: { test: Test; questions: Question[] }) => {
-  const questionCount = questions.length
-  const fullMarks = (Number(test.marks_per_correct) || 0) * questionCount
-  const negativeMarks = test.negative_marks_per_incorrect || 0
-  const positiveMarks = test.marks_per_correct || 0
-
+  const totalMarks = questions.length * (test.marks_per_correct || 1)
+  
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Header */}
+        {/* Professional Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>{test.name || 'Test'}</Text>
+          <Text style={styles.title}>{test.name || 'Test Paper'}</Text>
+          
           <View style={styles.testInfo}>
-            <Text style={styles.infoItem}>
-              <Text style={{ fontWeight: 'bold' }}>Duration: </Text>
-              {test.total_time_minutes} minutes
-            </Text>
-            <Text style={styles.infoItem}>
-              <Text style={{ fontWeight: 'bold' }}>Total Questions: </Text>
-              {questionCount}
-            </Text>
-            <Text style={styles.infoItem}>
-              <Text style={{ fontWeight: 'bold' }}>Full Marks: </Text>
-              {fullMarks}
-            </Text>
-          </View>
-          <View style={styles.testInfo}>
-            <Text style={styles.infoItem}>
-              <Text style={{ fontWeight: 'bold' }}>Marking: </Text>
-              +{positiveMarks} for correct, -{negativeMarks} for incorrect
-            </Text>
+            <View style={styles.infoItem}>
+              <Text style={{ fontWeight: 'bold' }}>Duration</Text>
+              <Text>{test.total_time_minutes || 60} minutes</Text>
+            </View>
+            <View style={styles.infoItem}>
+              <Text style={{ fontWeight: 'bold' }}>Total Questions</Text>
+              <Text>{questions.length}</Text>
+            </View>
+            <View style={styles.infoItem}>
+              <Text style={{ fontWeight: 'bold' }}>Full Marks</Text>
+              <Text>{totalMarks}</Text>
+            </View>
+            <View style={styles.infoItem}>
+              <Text style={{ fontWeight: 'bold' }}>Marking</Text>
+              <Text>+{test.marks_per_correct || 1} for correct, -{test.negative_marks_per_incorrect || 0} for incorrect</Text>
+            </View>
           </View>
         </View>
 
         {/* Instructions */}
         <View style={styles.instructions}>
           <Text style={styles.instructionsTitle}>Instructions</Text>
-          <View style={styles.instructionsList}>
-            <Text style={styles.instructionItem}>
-              • Read all questions carefully before answering.
-            </Text>
-            <Text style={styles.instructionItem}>
-              • Each question carries {positiveMarks} mark(s) for correct answer.
-            </Text>
-            <Text style={styles.instructionItem}>
-              • There is negative marking of {negativeMarks} mark(s) for each incorrect answer.
-            </Text>
-            <Text style={styles.instructionItem}>
-              • Choose the most appropriate answer from the given options.
-            </Text>
-            <Text style={styles.instructionItem}>
-              • Use only black or blue ink pen for marking answers.
-            </Text>
-          </View>
+          <Text style={styles.instructionItem}>• Read all questions carefully before answering.</Text>
+          <Text style={styles.instructionItem}>• Each question carries {test.marks_per_correct || 1} mark(s) for correct answer.</Text>
+          {test.negative_marks_per_incorrect && test.negative_marks_per_incorrect > 0 && (
+            <Text style={styles.instructionItem}>• There is negative marking of {test.negative_marks_per_incorrect} mark(s) for each incorrect answer.</Text>
+          )}
+          <Text style={styles.instructionItem}>• Choose the most appropriate answer from the given options.</Text>
+          <Text style={styles.instructionItem}>• Use only black or blue ink pen for marking answers.</Text>
         </View>
 
         {/* Questions */}
         {questions.map((question, index) => (
-          <View key={question.id} style={styles.question}>
-            <Text style={styles.questionNumber}>{index + 1}.</Text>
-            <Text style={styles.questionText}>
-              {renderMathContent(question.question_text || '')}
-            </Text>
+          <View key={question.id} style={styles.questionContainer}>
+            <View style={styles.questionHeader}>
+              <Text style={styles.questionNumber}>{index + 1}.</Text>
+              <Text style={styles.questionText}>
+                <SmartLatexRenderer text={question.question_text || ''} />
+              </Text>
+            </View>
+            
             <View style={styles.optionsGrid}>
               {question.options?.a && (
                 <View style={styles.option}>
-                  <Text style={styles.optionLabel}>A)</Text>
+                  <Text style={styles.optionLabel}>(A)</Text>
                   <Text style={styles.optionText}>
-                    {renderMathContent(question.options.a)}
+                    <SmartLatexRenderer text={question.options.a} />
                   </Text>
                 </View>
               )}
               {question.options?.b && (
                 <View style={styles.option}>
-                  <Text style={styles.optionLabel}>B)</Text>
+                  <Text style={styles.optionLabel}>(B)</Text>
                   <Text style={styles.optionText}>
-                    {renderMathContent(question.options.b)}
+                    <SmartLatexRenderer text={question.options.b} />
                   </Text>
                 </View>
               )}
               {question.options?.c && (
                 <View style={styles.option}>
-                  <Text style={styles.optionLabel}>C)</Text>
+                  <Text style={styles.optionLabel}>(C)</Text>
                   <Text style={styles.optionText}>
-                    {renderMathContent(question.options.c)}
+                    <SmartLatexRenderer text={question.options.c} />
                   </Text>
                 </View>
               )}
               {question.options?.d && (
                 <View style={styles.option}>
-                  <Text style={styles.optionLabel}>D)</Text>
+                  <Text style={styles.optionLabel}>(D)</Text>
                   <Text style={styles.optionText}>
-                    {renderMathContent(question.options.d)}
+                    <SmartLatexRenderer text={question.options.d} />
                   </Text>
                 </View>
               )}
@@ -290,10 +223,10 @@ export const QuestionPaperPDF = ({ test, questions }: { test: Test; questions: Q
           </View>
         ))}
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text>© {new Date().getFullYear()} Professional Test Platform - Question Paper</Text>
-        </View>
+        {/* Professional Footer */}
+        <Text style={styles.footer}>
+          © 2025 Professional Test Platform - Question Paper
+        </Text>
       </Page>
     </Document>
   )
@@ -301,106 +234,99 @@ export const QuestionPaperPDF = ({ test, questions }: { test: Test; questions: Q
 
 // Answer Key PDF Component
 export const AnswerKeyPDF = ({ test, questions }: { test: Test; questions: Question[] }) => {
-  const questionCount = questions.length
-  const fullMarks = (Number(test.marks_per_correct) || 0) * questionCount
-  const negativeMarks = test.negative_marks_per_incorrect || 0
-  const positiveMarks = test.marks_per_correct || 0
-
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Answer Key Header */}
-        <View style={styles.answerKeyHeader}>
-          <Text style={styles.answerKeyTitle}>
-            {test.name || 'Test'} - Answer Key
-          </Text>
-          <View style={styles.answerKeyInfo}>
-            <Text>
-              <Text style={{ fontWeight: 'bold' }}>Total Questions: </Text>
-              {questionCount}
-            </Text>
-            <Text>
-              <Text style={{ fontWeight: 'bold' }}>Full Marks: </Text>
-              {fullMarks}
-            </Text>
-            <Text>
-              <Text style={{ fontWeight: 'bold' }}>Marking: </Text>
-              +{positiveMarks} for correct, -{negativeMarks} for incorrect
-            </Text>
-          </View>
+        <View style={styles.header}>
+          <Text style={styles.title}>{test.name || 'Test Paper'} - Answer Key</Text>
         </View>
 
-        {/* Answer Key Table */}
         {questions.map((question, index) => (
-          <View key={question.id} style={styles.answerRow}>
-            <Text style={styles.answerNumber}>Q{index + 1}</Text>
-            <Text style={styles.answerText}>
-              {renderMathContent(question.question_text || '')}
-            </Text>
-            <Text style={styles.answerValue}>
-              {question.correct_option || 'N/A'}
-            </Text>
+          <View key={question.id} style={styles.questionContainer}>
+            <View style={styles.questionHeader}>
+              <Text style={styles.questionNumber}>{index + 1}.</Text>
+              <Text style={styles.questionText}>
+                <SmartLatexRenderer text={question.question_text || ''} />
+              </Text>
+            </View>
+            
+            <View style={{ marginTop: 8 }}>
+              <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#059669' }}>
+                Correct Answer: {question.correct_option || 'A'}
+              </Text>
+              {question.solution_text && (
+                <Text style={{ fontSize: 10, color: '#374151', marginTop: 4 }}>
+                  <SmartLatexRenderer text={question.solution_text} />
+                </Text>
+              )}
+            </View>
           </View>
         ))}
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text>© {new Date().getFullYear()} Professional Test Platform - Answer Key</Text>
-        </View>
+        <Text style={styles.footer}>
+          © 2025 Professional Test Platform - Answer Key
+        </Text>
       </Page>
     </Document>
   )
 }
 
-// Minimalist PDF Component (simplified version)
+// Minimalist PDF Component
 export const MinimalistPDF = ({ test, questions }: { test: Test; questions: Question[] }) => {
-  const questionCount = questions.length
-  const fullMarks = (Number(test.marks_per_correct) || 0) * questionCount
-  const negativeMarks = test.negative_marks_per_incorrect || 0
-  const positiveMarks = test.marks_per_correct || 0
+  const minimalistStyles = StyleSheet.create({
+    page: {
+      flexDirection: 'column',
+      backgroundColor: '#FFFFFF',
+      padding: 30,
+      fontFamily: 'Helvetica',
+      fontSize: 12,
+      lineHeight: 1.5,
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      textAlign: 'center',
+      marginBottom: 20,
+    },
+    question: {
+      marginBottom: 20,
+    },
+    questionText: {
+      marginBottom: 10,
+    },
+    options: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+    },
+    option: {
+      width: '50%',
+      marginBottom: 5,
+    },
+  })
 
   return (
     <Document>
-      <Page size="A4" style={[styles.page, { padding: 20 }]}>
-        {/* Simple Header */}
-        <View style={{ marginBottom: 20, textAlign: 'center' }}>
-          <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 10 }}>
-            {test.name || 'Test'}
-          </Text>
-          <Text style={{ fontSize: 10, color: '#666' }}>
-            Duration: {test.total_time_minutes} minutes | 
-            Questions: {questionCount} | 
-            Marks: {fullMarks} | 
-            Marking: +{positiveMarks}/-{negativeMarks}
-          </Text>
-        </View>
-
-        {/* Questions */}
+      <Page size="A4" style={minimalistStyles.page}>
+        <Text style={minimalistStyles.title}>{test.name || 'Test Paper'}</Text>
+        
         {questions.map((question, index) => (
-          <View key={question.id} style={{ marginBottom: 15 }}>
-            <Text style={{ fontWeight: 'bold', marginBottom: 5 }}>
-              {index + 1}. {renderMathContent(question.question_text || '')}
+          <View key={question.id} style={minimalistStyles.question}>
+            <Text style={minimalistStyles.questionText}>
+              {index + 1}. <SmartLatexRenderer text={question.question_text || ''} />
             </Text>
-            <View style={{ marginLeft: 10 }}>
+            
+            <View style={minimalistStyles.options}>
               {question.options?.a && (
-                <Text style={{ fontSize: 10, marginBottom: 2 }}>
-                  A) {renderMathContent(question.options.a)}
-                </Text>
+                <Text style={minimalistStyles.option}>(A) <SmartLatexRenderer text={question.options.a} /></Text>
               )}
               {question.options?.b && (
-                <Text style={{ fontSize: 10, marginBottom: 2 }}>
-                  B) {renderMathContent(question.options.b)}
-                </Text>
+                <Text style={minimalistStyles.option}>(B) <SmartLatexRenderer text={question.options.b} /></Text>
               )}
               {question.options?.c && (
-                <Text style={{ fontSize: 10, marginBottom: 2 }}>
-                  C) {renderMathContent(question.options.c)}
-                </Text>
+                <Text style={minimalistStyles.option}>(C) <SmartLatexRenderer text={question.options.c} /></Text>
               )}
               {question.options?.d && (
-                <Text style={{ fontSize: 10, marginBottom: 2 }}>
-                  D) {renderMathContent(question.options.d)}
-                </Text>
+                <Text style={minimalistStyles.option}>(D) <SmartLatexRenderer text={question.options.d} /></Text>
               )}
             </View>
           </View>
