@@ -291,9 +291,7 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
         )}
 
         {/* Questions */}
-        {pageQuestions.map((question, index) => {
-          console.log('Debug - Question:', question.id, 'Options:', question.options, 'includeOptions:', settings.includeOptions)
-          return (
+        {pageQuestions.map((question, index) => (
           <div key={question.id} style={questionContainerStyle}>
             <div style={questionHeaderStyle}>
               <div style={questionNumberStyle}>{getQuestionNumber(pageNumber, index)}.</div>
@@ -331,8 +329,7 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
               </div>
             )}
           </div>
-          )
-        })}
+        ))}
 
         {/* Footer */}
         {settings.showFooter && (

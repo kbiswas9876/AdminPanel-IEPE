@@ -200,5 +200,25 @@ export function convertLatexToPlainText(text: string): string {
  * Renders LaTeX content for PDF with proper formatting
  */
 export function renderMathContent(text: string): string {
-  return convertLatexToPlainText(text)
+  if (!text) return ''
+  
+  let processedText = convertLatexToPlainText(text)
+  
+  // Additional processing for better PDF readability
+  // Handle inline math expressions $...$ and \(...\)
+  processedText = processedText.replace(/\$([^$]+)\$/g, '$1')
+  processedText = processedText.replace(/\\\(([^)]+)\\\)/g, '$1')
+  
+  // Handle display math expressions $$...$$ and \[...\]
+  processedText = processedText.replace(/\$\$([^$]+)\$\$/g, '$1')
+  processedText = processedText.replace(/\\\[([^\]]+)\\\]/g, '$1')
+  
+  // Clean up any remaining LaTeX commands
+  processedText = processedText.replace(/\\[a-zA-Z]+\{[^}]*\}/g, '')
+  processedText = processedText.replace(/\\[a-zA-Z]+/g, '')
+  
+  // Final cleanup
+  processedText = processedText.replace(/\s+/g, ' ').trim()
+  
+  return processedText
 }
