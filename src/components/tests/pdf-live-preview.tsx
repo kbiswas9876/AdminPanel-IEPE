@@ -66,6 +66,7 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
   const pageStyle = {
     width: `${210 * zoom}mm`, // A4 width
     minHeight: `${297 * zoom}mm`, // A4 height
+    maxWidth: '100%', // Ensure it doesn't exceed container
     backgroundColor: '#FFFFFF',
     margin: '0 auto 20px auto', // Add bottom margin between pages
     padding: `${settings.margins * zoom}px`,
@@ -350,9 +351,9 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0">
       {/* Header Bar with Controls */}
-      <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200">
+      <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200 flex-shrink-0">
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
@@ -392,10 +393,12 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
         </div>
       </div>
 
-      {/* Scrollable PDF Preview */}
-      <div className="flex-1 overflow-auto bg-gray-100 p-6">
-        <div className="max-w-none">
-          {Array.from({ length: totalPages }, (_, index) => renderPage(index + 1))}
+      {/* Scrollable PDF Preview - Properly constrained */}
+      <div className="flex-1 overflow-auto bg-gray-100 p-6 min-h-0">
+        <div className="w-full max-w-none flex justify-center">
+          <div className="w-full max-w-4xl">
+            {Array.from({ length: totalPages }, (_, index) => renderPage(index + 1))}
+          </div>
         </div>
       </div>
     </div>

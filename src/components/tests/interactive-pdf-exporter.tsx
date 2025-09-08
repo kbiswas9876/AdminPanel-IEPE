@@ -132,7 +132,7 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
     showPageNumbers: true,
     customHeaderText: '',
     customFooterText: '© 2025 Professional Test Platform',
-    questionsPerPage: 5,
+    questionsPerPage: 8,
     fontSize: 12,
     lineSpacing: 1.4,
     margins: 30
@@ -213,18 +213,19 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] w-[95vw] h-[95vh] p-0 overflow-hidden">
-        <DialogHeader className="p-6 pb-0">
+      <DialogContent className="max-w-[90vw] w-[90vw] h-[90vh] p-0 overflow-hidden flex flex-col">
+        <DialogHeader className="p-6 pb-4 flex-shrink-0">
           <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
             <FileText className="h-6 w-6" />
             Interactive PDF Exporter
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex h-full">
-          {/* Control Panel - Fixed Width 400px */}
-          <div className="w-[400px] bg-gray-50 border-r border-gray-200 overflow-y-auto">
-            <div className="p-6 space-y-8">
+        <div className="flex flex-1 min-h-0">
+          {/* Control Panel - Fixed Width 420px with proper scrolling */}
+          <div className="w-[420px] bg-gray-50 border-r border-gray-200 flex flex-col">
+            <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+              <div className="p-6 space-y-8">
               
               {/* Design Theme Section */}
               <div>
@@ -541,12 +542,14 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
                   </Button>
                 </div>
               </div>
-
+              </div>
             </div>
+            {/* Scroll indicator */}
+            <div className="h-1 bg-gradient-to-t from-gray-200 to-transparent flex-shrink-0"></div>
           </div>
 
-          {/* Preview Area - Flexible Column */}
-          <div className="flex-1 flex flex-col">
+          {/* Preview Area - Flexible Column with proper constraints */}
+          <div className="flex-1 flex flex-col min-w-0">
             <PDFLivePreview
               test={test}
               questions={questions}
