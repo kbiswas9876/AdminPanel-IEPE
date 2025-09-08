@@ -222,10 +222,10 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
         </DialogHeader>
 
         <div className="flex flex-1 min-h-0">
-          {/* Control Panel - Much smaller to maximize preview space */}
-          <div className="w-[300px] bg-gray-50 border-r border-gray-200 flex flex-col">
+          {/* Control Panel - Minimal width to maximize preview space */}
+          <div className="w-[250px] bg-gray-50 border-r border-gray-200 flex flex-col">
             <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-              <div className="p-6 space-y-8">
+              <div className="p-4 space-y-6">
               
               {/* Design Theme Section */}
               <div>

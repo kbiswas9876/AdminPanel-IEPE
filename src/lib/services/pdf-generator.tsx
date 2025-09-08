@@ -226,38 +226,30 @@ export const QuestionPaperPDF = ({ test, questions, settings }: { test: Test; qu
             
             {settings?.includeOptions && (
               <View style={styles.optionsGrid}>
-                {question.options?.a && (
-                  <View style={styles.option}>
-                    <Text style={styles.optionLabel}>(A)</Text>
-                    <Text style={styles.optionText}>
-                      <SmartLatexRenderer text={question.options.a} />
-                    </Text>
-                  </View>
-                )}
-                {question.options?.b && (
-                  <View style={styles.option}>
-                    <Text style={styles.optionLabel}>(B)</Text>
-                    <Text style={styles.optionText}>
-                      <SmartLatexRenderer text={question.options.b} />
-                    </Text>
-                  </View>
-                )}
-                {question.options?.c && (
-                  <View style={styles.option}>
-                    <Text style={styles.optionLabel}>(C)</Text>
-                    <Text style={styles.optionText}>
-                      <SmartLatexRenderer text={question.options.c} />
-                    </Text>
-                  </View>
-                )}
-                {question.options?.d && (
-                  <View style={styles.option}>
-                    <Text style={styles.optionLabel}>(D)</Text>
-                    <Text style={styles.optionText}>
-                      <SmartLatexRenderer text={question.options.d} />
-                    </Text>
-                  </View>
-                )}
+                <View style={styles.option}>
+                  <Text style={styles.optionLabel}>(A)</Text>
+                  <Text style={styles.optionText}>
+                    <SmartLatexRenderer text={question.options?.a || 'Option A'} />
+                  </Text>
+                </View>
+                <View style={styles.option}>
+                  <Text style={styles.optionLabel}>(B)</Text>
+                  <Text style={styles.optionText}>
+                    <SmartLatexRenderer text={question.options?.b || 'Option B'} />
+                  </Text>
+                </View>
+                <View style={styles.option}>
+                  <Text style={styles.optionLabel}>(C)</Text>
+                  <Text style={styles.optionText}>
+                    <SmartLatexRenderer text={question.options?.c || 'Option C'} />
+                  </Text>
+                </View>
+                <View style={styles.option}>
+                  <Text style={styles.optionLabel}>(D)</Text>
+                  <Text style={styles.optionText}>
+                    <SmartLatexRenderer text={question.options?.d || 'Option D'} />
+                  </Text>
+                </View>
               </View>
             )}
           </View>

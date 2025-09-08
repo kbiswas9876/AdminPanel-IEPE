@@ -37,7 +37,7 @@ interface PDFLivePreviewProps {
 }
 
 export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProps) {
-  const [zoom, setZoom] = useState(1.0)
+  const [zoom, setZoom] = useState(1.3)
 
   const totalMarks = questions.length * (test.marks_per_correct || 1)
 
@@ -216,7 +216,7 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
   }
 
   const handleResetZoom = () => {
-    setZoom(1.0)
+    setZoom(1.3)
   }
 
   // Render a single page
@@ -291,7 +291,9 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
         )}
 
         {/* Questions */}
-        {pageQuestions.map((question, index) => (
+        {pageQuestions.map((question, index) => {
+          console.log('Debug - Question:', question.id, 'Options:', question.options, 'includeOptions:', settings.includeOptions)
+          return (
           <div key={question.id} style={questionContainerStyle}>
             <div style={questionHeaderStyle}>
               <div style={questionNumberStyle}>{getQuestionNumber(pageNumber, index)}.</div>
@@ -302,42 +304,35 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
             
             {settings.includeOptions && (
               <div style={optionsGridStyle}>
-                {question.options?.a && (
-                  <div style={optionStyle}>
-                    <div style={optionLabelStyle}>(A)</div>
-                    <div style={optionTextStyle}>
-                      <SmartLatexRenderer text={question.options.a} />
-                    </div>
+                <div style={optionStyle}>
+                  <div style={optionLabelStyle}>(A)</div>
+                  <div style={optionTextStyle}>
+                    <SmartLatexRenderer text={question.options?.a || 'Option A'} />
                   </div>
-                )}
-                {question.options?.b && (
-                  <div style={optionStyle}>
-                    <div style={optionLabelStyle}>(B)</div>
-                    <div style={optionTextStyle}>
-                      <SmartLatexRenderer text={question.options.b} />
-                    </div>
+                </div>
+                <div style={optionStyle}>
+                  <div style={optionLabelStyle}>(B)</div>
+                  <div style={optionTextStyle}>
+                    <SmartLatexRenderer text={question.options?.b || 'Option B'} />
                   </div>
-                )}
-                {question.options?.c && (
-                  <div style={optionStyle}>
-                    <div style={optionLabelStyle}>(C)</div>
-                    <div style={optionTextStyle}>
-                      <SmartLatexRenderer text={question.options.c} />
-                    </div>
+                </div>
+                <div style={optionStyle}>
+                  <div style={optionLabelStyle}>(C)</div>
+                  <div style={optionTextStyle}>
+                    <SmartLatexRenderer text={question.options?.c || 'Option C'} />
                   </div>
-                )}
-                {question.options?.d && (
-                  <div style={optionStyle}>
-                    <div style={optionLabelStyle}>(D)</div>
-                    <div style={optionTextStyle}>
-                      <SmartLatexRenderer text={question.options.d} />
-                    </div>
+                </div>
+                <div style={optionStyle}>
+                  <div style={optionLabelStyle}>(D)</div>
+                  <div style={optionTextStyle}>
+                    <SmartLatexRenderer text={question.options?.d || 'Option D'} />
                   </div>
-                )}
+                </div>
               </div>
             )}
           </div>
-        ))}
+          )
+        })}
 
         {/* Footer */}
         {settings.showFooter && (
@@ -393,10 +388,10 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
         </div>
       </div>
 
-      {/* Scrollable PDF Preview - Much larger for proper A4 display */}
-      <div className="flex-1 overflow-auto bg-gray-100 p-2 min-h-0">
-        <div className="w-full max-w-none flex justify-center">
-          <div className="w-full max-w-7xl">
+      {/* Scrollable PDF Preview - Full width for proper A4 display */}
+      <div className="flex-1 overflow-auto bg-gray-100 p-1 min-h-0">
+        <div className="w-full flex justify-center">
+          <div className="w-full">
             {Array.from({ length: totalPages }, (_, index) => renderPage(index + 1))}
           </div>
         </div>
