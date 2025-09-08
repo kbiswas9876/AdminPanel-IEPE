@@ -1293,27 +1293,54 @@ export async function exportMinimalistPdf(testId: number): Promise<{ success: bo
 </body>
 </html>`
 
-    // Simple Puppeteer Configuration
-    const puppeteer = await import('puppeteer')
-    const browser = await puppeteer.launch({ 
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    })
-    
-    const page = await browser.newPage()
-    await page.setContent(html, { waitUntil: 'networkidle0' })
-    
-    const pdfBuffer = await page.pdf({ 
-      format: 'A4',
-      margin: { top: '20mm', bottom: '20mm', left: '15mm', right: '15mm' },
-      printBackground: true
-    })
-    
-    await browser.close()
+    // Simple Puppeteer Configuration with error handling
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let browser: any = null
+    try {
+      const puppeteer = await import('puppeteer')
+      browser = await puppeteer.launch({ 
+        headless: true,
+        args: [
+          '--no-sandbox', 
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu'
+        ],
+        timeout: 60000
+      })
+      
+      const page = await browser.newPage()
+      await page.setContent(html, { waitUntil: 'networkidle0', timeout: 30000 })
+      
+      const pdfBuffer = await page.pdf({ 
+        format: 'A4',
+        margin: { top: '20mm', bottom: '20mm', left: '15mm', right: '15mm' },
+        printBackground: true,
+        timeout: 30000
+      })
+      
+      await browser.close()
+      browser = null
 
-    const base64 = Buffer.from(pdfBuffer).toString('base64')
-    const safeName = `${test.name || 'Test'}-Minimalist-${testId}.pdf`.replace(/[^a-z0-9\-_.]/gi, '_')
-    return { success: true, fileName: safeName, base64 }
+      const base64 = Buffer.from(pdfBuffer).toString('base64')
+      const safeName = `${test.name || 'Test'}-Minimalist-${testId}.pdf`.replace(/[^a-z0-9\-_.]/gi, '_')
+      return { success: true, fileName: safeName, base64 }
+    } catch (puppeteerError) {
+      console.error('Puppeteer error:', puppeteerError)
+      
+      // Clean up browser if it exists
+      if (browser) {
+        try {
+          await browser.close()
+        } catch (closeError) {
+          console.warn('Error closing browser:', closeError)
+        }
+      }
+      
+      // Return more specific error message
+      const errorMessage = puppeteerError instanceof Error ? puppeteerError.message : 'Unknown Puppeteer error'
+      return { success: false, message: `PDF generation failed: ${errorMessage}` }
+    }
   } catch (error) {
     console.error('Minimalist PDF export failed:', error)
     return { success: false, message: 'Failed to export minimalist PDF' }
@@ -1482,7 +1509,7 @@ export async function exportQuestionPaperPdf(testId: number): Promise<{ success:
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(pdfSettings.bodyFont || 'Inter')}:wght@300;400;500;600;700&family=${encodeURIComponent(pdfSettings.titleFont || 'Source Serif Pro')}:wght@400;600;700&display=swap" rel="stylesheet">
   
-  <style>
+<style>
     /* Print-optimized CSS with professional design */
     @page { 
       size: A4; 
@@ -1707,9 +1734,9 @@ export async function exportQuestionPaperPdf(testId: number): Promise<{ success:
         gap: 8px;
       }
     }
-  </style>
-</head>
-<body>
+</style>
+  </head>
+  <body>
   <!-- Professional Document Header -->
   <div class="document-header">
     <h1 class="test-title">${(test.name || 'Test').replace(/</g, '&lt;')}</h1>
@@ -1718,11 +1745,11 @@ export async function exportQuestionPaperPdf(testId: number): Promise<{ success:
       <div class="meta-item">
         <span class="meta-label">Duration</span>
         <span class="meta-value">${test.total_time_minutes} minutes</span>
-      </div>
+  </div>
       <div class="meta-item">
         <span class="meta-label">Marking Scheme</span>
         <span class="meta-value">+${positiveMarks} correct, -${negativeMarks} incorrect</span>
-      </div>
+    </div>
       <div class="meta-item">
         <span class="meta-label">Total Marks</span>
         <span class="meta-value">${fullMarks}</span>
@@ -1755,19 +1782,19 @@ export async function exportQuestionPaperPdf(testId: number): Promise<{ success:
         <div class="question-header">
           <span class="question-number">${idx + 1}.</span>
           <div class="question-text">${renderWithKaTeX(q.question_text)}</div>
-        </div>
+      </div>
         
         <div class="options-grid">
           ${optionKeys.map((key) => {
-            const lower = key.toLowerCase()
+              const lower = key.toLowerCase()
             return `
             <div class="option-item">
               <span class="option-label">(${lower})</span>
               <div class="option-content">${renderWithKaTeX(opts[key] || '')}</div>
             </div>`
-          }).join('')}
-        </div>
-      </div>`
+            }).join('')}
+          </div>
+        </div>`
     }).join('')}
   </div>
   
@@ -1775,67 +1802,96 @@ export async function exportQuestionPaperPdf(testId: number): Promise<{ success:
   <div class="page-footer">
     <span>${pdfSettings.footerText || `© ${new Date().getFullYear()} Professional Test Platform - Question Paper`}</span>
   </div>
-</body>
+  </body>
 </html>`
 
     // Enhanced Puppeteer Configuration for Premium PDF Generation
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let browser: any = null
+    try {
     const puppeteer = await import('puppeteer')
-    const browser = await puppeteer.launch({ 
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--disable-gpu'
-      ]
-    })
-    
+      
+      // Try to launch browser with comprehensive error handling
+      browser = await puppeteer.launch({ 
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--disable-gpu',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor'
+        ],
+        timeout: 60000
+      })
+      
     const page = await browser.newPage()
-    
-    // Set viewport for consistent rendering
-    await page.setViewport({ width: 1200, height: 800, deviceScaleFactor: 2 })
-    
-    // Wait for fonts and resources to load
-    await page.setContent(html, { 
-      waitUntil: ['networkidle0', 'domcontentloaded'],
-      timeout: 30000
-    })
-    
-    // Wait for KaTeX rendering to complete
-    await page.waitForFunction(() => {
-      const katexElements = document.querySelectorAll('.katex')
-      return katexElements.length > 0 ? Array.from(katexElements).every(el => el.textContent && el.textContent.trim() !== '') : true
-    }, { timeout: 10000 })
-    
-    // Generate high-quality PDF with professional settings
-    const pdfBuffer = await page.pdf({ 
-      format: 'A4',
-      printBackground: true,
-      margin: { 
-        top: '20mm', 
-        bottom: '25mm', 
-        left: '15mm', 
-        right: '15mm' 
-      },
-      displayHeaderFooter: true,
-      headerTemplate: '<div></div>',
-      footerTemplate: `
-        <div style="font-size: 10px; color: #666; text-align: center; width: 100%; margin: 0 auto;">
-          <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
-        </div>
-      `,
-      preferCSSPageSize: true,
-      timeout: 30000
-    })
-    
+      
+      // Set viewport for consistent rendering
+      await page.setViewport({ width: 1200, height: 800, deviceScaleFactor: 2 })
+      
+      // Wait for fonts and resources to load
+      await page.setContent(html, { 
+        waitUntil: ['networkidle0', 'domcontentloaded'],
+        timeout: 30000
+      })
+      
+      // Wait for KaTeX rendering to complete with better error handling
+      try {
+        await page.waitForFunction(() => {
+          const katexElements = document.querySelectorAll('.katex')
+          return katexElements.length > 0 ? Array.from(katexElements).every(el => el.textContent && el.textContent.trim() !== '') : true
+        }, { timeout: 10000 })
+      } catch (katexError) {
+        console.warn('KaTeX rendering timeout, proceeding with PDF generation:', katexError)
+      }
+      
+      // Generate high-quality PDF with professional settings
+      const pdfBuffer = await page.pdf({ 
+        format: 'A4',
+        printBackground: true,
+        margin: { 
+          top: '20mm', 
+          bottom: '25mm', 
+          left: '15mm', 
+          right: '15mm' 
+        },
+        displayHeaderFooter: true,
+        headerTemplate: '<div></div>',
+        footerTemplate: `
+          <div style="font-size: 10px; color: #666; text-align: center; width: 100%; margin: 0 auto;">
+            <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
+          </div>
+        `,
+        preferCSSPageSize: true,
+        timeout: 30000
+      })
+      
     await browser.close()
+      browser = null
 
     const base64 = Buffer.from(pdfBuffer).toString('base64')
     const safeName = `${test.name || 'Test'}-Question-Paper-${testId}.pdf`.replace(/[^a-z0-9\-_.]/gi, '_')
     return { success: true, fileName: safeName, base64 }
+    } catch (puppeteerError) {
+      console.error('Puppeteer error:', puppeteerError)
+      
+      // Clean up browser if it exists
+      if (browser) {
+        try {
+          await browser.close()
+        } catch (closeError) {
+          console.warn('Error closing browser:', closeError)
+        }
+      }
+      
+      // Return more specific error message
+      const errorMessage = puppeteerError instanceof Error ? puppeteerError.message : 'Unknown Puppeteer error'
+      return { success: false, message: `PDF generation failed: ${errorMessage}` }
+    }
   } catch (error) {
     console.error('Premium Question Paper export failed:', error)
     return { success: false, message: 'Failed to export Question Paper' }
@@ -2087,7 +2143,7 @@ export async function exportAnswerKeyPdf(testId: number): Promise<{ success: boo
       <div class="meta-item">
         <span class="meta-label">Total Questions</span>
         <span class="meta-value">${questionCount}</span>
-      </div>
+  </div>
       <div class="meta-item">
         <span class="meta-label">Total Marks</span>
         <span class="meta-value">${fullMarks}</span>
@@ -2102,14 +2158,14 @@ export async function exportAnswerKeyPdf(testId: number): Promise<{ success: boo
   <!-- Answers Section -->
   <div class="answers-section">
     <div class="answers-grid">
-      ${questions.map((q, idx) => {
-        const letter = ((q as unknown as { correct_option?: string }).correct_option || '-').toString().trim().toLowerCase() || '-'
+    ${questions.map((q, idx) => {
+      const letter = ((q as unknown as { correct_option?: string }).correct_option || '-').toString().trim().toLowerCase() || '-'
         return `
         <div class="answer-item">
           <span class="answer-number">${idx + 1}.</span>
           <span class="answer-letter">${letter.toUpperCase()}</span>
         </div>`
-      }).join('')}
+    }).join('')}
     </div>
   </div>
   
@@ -2144,57 +2200,82 @@ export async function exportAnswerKeyPdf(testId: number): Promise<{ success: boo
 </html>`
 
     // Enhanced Puppeteer Configuration for Premium PDF Generation
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let browser: any = null
+    try {
     const puppeteer = await import('puppeteer')
-    const browser = await puppeteer.launch({ 
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--disable-gpu'
-      ]
-    })
-    
+      
+      // Try to launch browser with comprehensive error handling
+      browser = await puppeteer.launch({ 
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--disable-gpu',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor'
+        ],
+        timeout: 60000
+      })
+      
     const page = await browser.newPage()
-    
-    // Set viewport for consistent rendering
-    await page.setViewport({ width: 1200, height: 800, deviceScaleFactor: 2 })
-    
-    // Wait for fonts and resources to load
-    await page.setContent(html, { 
-      waitUntil: ['networkidle0', 'domcontentloaded'],
-      timeout: 30000
-    })
-    
-    // Generate high-quality PDF with professional settings
-    const pdfBuffer = await page.pdf({ 
-      format: 'A4',
-      printBackground: true,
-      margin: { 
-        top: '20mm', 
-        bottom: '25mm', 
-        left: '15mm', 
-        right: '15mm' 
-      },
-      displayHeaderFooter: true,
-      headerTemplate: '<div></div>',
-      footerTemplate: `
-        <div style="font-size: 10px; color: #666; text-align: center; width: 100%; margin: 0 auto;">
-          <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
-        </div>
-      `,
-      preferCSSPageSize: true,
-      timeout: 30000
-    })
-    
+      
+      // Set viewport for consistent rendering
+      await page.setViewport({ width: 1200, height: 800, deviceScaleFactor: 2 })
+      
+      // Wait for fonts and resources to load
+      await page.setContent(html, { 
+        waitUntil: ['networkidle0', 'domcontentloaded'],
+        timeout: 30000
+      })
+      
+      // Generate high-quality PDF with professional settings
+      const pdfBuffer = await page.pdf({ 
+        format: 'A4',
+        printBackground: true,
+        margin: { 
+          top: '20mm', 
+          bottom: '25mm', 
+          left: '15mm', 
+          right: '15mm' 
+        },
+        displayHeaderFooter: true,
+        headerTemplate: '<div></div>',
+        footerTemplate: `
+          <div style="font-size: 10px; color: #666; text-align: center; width: 100%; margin: 0 auto;">
+            <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
+          </div>
+        `,
+        preferCSSPageSize: true,
+        timeout: 30000
+      })
+      
     await browser.close()
+      browser = null
 
     const base64 = Buffer.from(pdfBuffer).toString('base64')
     const safeName = `${test.name || 'Test'}-Answer-Key-${testId}.pdf`.replace(/[^a-z0-9\-_.]/gi, '_')
     return { success: true, fileName: safeName, base64 }
+    } catch (puppeteerError) {
+      console.error('Puppeteer error:', puppeteerError)
+      
+      // Clean up browser if it exists
+      if (browser) {
+        try {
+          await browser.close()
+        } catch (closeError) {
+          console.warn('Error closing browser:', closeError)
+        }
+      }
+      
+      // Return more specific error message
+      const errorMessage = puppeteerError instanceof Error ? puppeteerError.message : 'Unknown Puppeteer error'
+      return { success: false, message: `PDF generation failed: ${errorMessage}` }
+    }
   } catch (error) {
     console.error('Premium Answer Key export failed:', error)
     return { success: false, message: 'Failed to export Answer Key' }

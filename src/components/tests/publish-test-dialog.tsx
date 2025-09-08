@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Calendar } from 'lucide-react'
+import { Calendar, Loader2 } from 'lucide-react'
 import type { Test } from '@/lib/supabase/admin'
 
 interface PublishTestDialogProps {
@@ -81,9 +81,10 @@ export function PublishTestDialog({ test, onPublish }: PublishTestDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="bg-green-600 hover:bg-green-700">
-          <Calendar className="h-4 w-4 mr-1" />
-          Publish
+        <Button size="sm" className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+          <Calendar className="h-4 w-4 mr-1 relative z-10" />
+          <span className="relative z-10">Publish</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
@@ -158,6 +159,7 @@ export function PublishTestDialog({ test, onPublish }: PublishTestDialogProps) {
               variant="outline"
               size="sm"
               onClick={setDefaultTimes}
+              className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-all duration-200 transform hover:scale-105 active:scale-95"
             >
               Set Default Times
             </Button>
@@ -169,15 +171,27 @@ export function PublishTestDialog({ test, onPublish }: PublishTestDialogProps) {
             variant="outline"
             onClick={() => setOpen(false)}
             disabled={isPublishing}
+            className="hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 transform hover:scale-105 active:scale-95"
           >
             Cancel
           </Button>
           <Button
             onClick={handlePublish}
             disabled={isPublishing || !startTime || !endTime}
-            className="bg-green-600 hover:bg-green-700"
+            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
           >
-            {isPublishing ? 'Publishing...' : 'Publish Test'}
+            {isPublishing ? (
+              <>
+                <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 opacity-75 animate-pulse"></div>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin relative z-10" />
+                <span className="relative z-10">Publishing...</span>
+              </>
+            ) : (
+              <>
+                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                <span className="relative z-10">Publish Test</span>
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

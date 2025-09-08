@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { deleteTest, cloneTest, exportTestToPdf, exportAnswerKeyPdf, exportMinimalistPdf, exportQuestionPaperPdf } from '@/lib/actions/tests'
+import { deleteTest, cloneTest, exportAnswerKeyPdf, exportMinimalistPdf, exportQuestionPaperPdf } from '@/lib/actions/tests'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -122,7 +122,7 @@ export function TestActions({ test, onAction }: TestActionsProps) {
       {/* Edit Button - Allowed if start_time is in the future */}
       {canEdit && (
         <Link href={`/tests/edit/${test.id}`}>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-all duration-200 transform hover:scale-105 active:scale-95">
             <Edit className="h-4 w-4 mr-1" />
             {test.status === 'draft' ? 'Edit' : 'Edit (Pending)'}
           </Button>
@@ -139,7 +139,7 @@ export function TestActions({ test, onAction }: TestActionsProps) {
 
       {/* View Results Button - Only for Completed tests */}
       {test.status === 'completed' && (
-        <Button variant="outline" size="sm" disabled>
+        <Button variant="outline" size="sm" disabled className="hover:bg-green-50 hover:border-green-200 hover:text-green-700 transition-all duration-200 transform hover:scale-105 active:scale-95">
           <BarChart3 className="h-4 w-4 mr-1" />
           View Results
         </Button>
@@ -151,7 +151,7 @@ export function TestActions({ test, onAction }: TestActionsProps) {
           <Button 
             variant="outline" 
             size="sm" 
-            className="text-red-600 border-red-300 hover:bg-red-50"
+            className="text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 transition-all duration-200 transform hover:scale-105 active:scale-95"
           >
             <Trash2 className="h-4 w-4 mr-1" />
             Delete
@@ -179,9 +179,16 @@ export function TestActions({ test, onAction }: TestActionsProps) {
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-red-600 hover:bg-red-700 transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isDeleting ? 'Deleting...' : 'Delete Test'}
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete Test'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -190,7 +197,7 @@ export function TestActions({ test, onAction }: TestActionsProps) {
       {/* More actions dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 transform hover:scale-105 active:scale-95">
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>

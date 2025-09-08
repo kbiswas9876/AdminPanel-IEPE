@@ -107,3 +107,4 @@ export async function resetPDFCustomizationSettings(): Promise<{ success: boolea
     return { success: false, message: 'Failed to reset PDF settings' }
   }
 }
+

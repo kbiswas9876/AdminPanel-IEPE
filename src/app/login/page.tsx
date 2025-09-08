@@ -158,15 +158,19 @@ export default function LoginPage({
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group"
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Signing in...
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 opacity-75 animate-pulse"></div>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin relative z-10" />
+                    <span className="relative z-10">Signing in...</span>
                   </>
                 ) : (
-                  'Sign In'
+                  <>
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                    <span className="relative z-10">Sign In</span>
+                  </>
                 )}
               </Button>
             </form>
@@ -241,15 +245,19 @@ export default function LoginPage({
                 <Button
                   type="submit"
                   disabled={isResetting || !forgotPasswordEmail}
-                  className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold transition-all duration-200 disabled:opacity-50"
+                  className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold transition-all duration-300 disabled:opacity-50 transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group"
                 >
                   {isResetting ? (
                     <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Sending...
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 opacity-75 animate-pulse"></div>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin relative z-10" />
+                      <span className="relative z-10">Sending...</span>
                     </>
                   ) : (
-                    'Send Reset Link'
+                    <>
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                      <span className="relative z-10">Send Reset Link</span>
+                    </>
                   )}
                 </Button>
               </div>

@@ -142,9 +142,10 @@ export function TestManagement() {
           </p>
         </div>
         <Link href="/tests/new">
-          <Button className="bg-blue-600 hover:bg-blue-700">
-            <Plus className="h-4 w-4 mr-2" />
-            Create New Mock Test
+          <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+            <Plus className="h-4 w-4 mr-2 relative z-10" />
+            <span className="relative z-10">Create New Mock Test</span>
           </Button>
         </Link>
       </div>
@@ -156,9 +157,10 @@ export function TestManagement() {
           <h3 className="text-lg font-medium text-gray-900 mb-2">No Mock Tests Created</h3>
           <p className="text-gray-500 mb-4">Get started by creating your first mock test.</p>
           <Link href="/tests/new">
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Your First Test
+            <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+              <Plus className="h-4 w-4 mr-2 relative z-10" />
+              <span className="relative z-10">Create Your First Test</span>
             </Button>
           </Link>
         </div>

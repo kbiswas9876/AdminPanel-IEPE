@@ -3,18 +3,26 @@
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
-import { LogOut, User, Bell, AlertTriangle, UserPlus, FileText, BookOpen, TestTube } from 'lucide-react'
-import { getNotifications, getUnreadNotificationCount, markNotificationAsRead, type Notification } from '@/lib/actions/notifications'
+import { LogOut, User, Bell, AlertTriangle, UserPlus, BookOpen, TestTube, Loader2 } from 'lucide-react'
+import { getNotifications, markNotificationAsRead, type Notification } from '@/lib/actions/notifications'
 
 export function Header() {
   const { user, signOut } = useAuth()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [, setLoading] = useState(true)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const notificationRef = useRef<HTMLDivElement>(null)
 
   const handleSignOut = async () => {
-    await signOut()
+    setIsLoggingOut(true)
+    try {
+      await signOut()
+    } catch (error) {
+      console.error('Logout error:', error)
+    } finally {
+      setIsLoggingOut(false)
+    }
   }
 
   // Fetch notifications on component mount and set up polling
@@ -49,15 +57,15 @@ export function Header() {
 
   const unreadCount = notifications.filter(n => !n.read).length
 
-  const markAsRead = (id: number) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === id 
-          ? { ...notification, read: true }
-          : notification
-      )
-    )
-  }
+  // const markAsRead = (id: number) => {
+  //   setNotifications(prev => 
+  //     prev.map(notification => 
+  //       notification.id === id 
+  //         ? { ...notification, read: true }
+  //         : notification
+  //     )
+  //   )
+  // }
 
   const markAllAsRead = () => {
     setNotifications(prev => 
@@ -227,12 +235,24 @@ export function Header() {
           {/* Enhanced Logout Button */}
           <Button
             onClick={handleSignOut}
+            disabled={isLoggingOut}
             variant="outline"
             size="sm"
-            className="flex items-center space-x-2 hover:bg-red-50 hover:border-red-200 hover:text-red-700 transition-all duration-200 hover:scale-105 border-gray-200/60"
+            className="flex items-center space-x-2 hover:bg-red-50 hover:border-red-200 hover:text-red-700 transition-all duration-300 hover:scale-105 border-gray-200/60 disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95 relative overflow-hidden group"
           >
-            <LogOut className="h-4 w-4" />
-            <span className="font-medium">Logout</span>
+            {isLoggingOut ? (
+              <>
+                <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-red-600/10 animate-pulse"></div>
+                <Loader2 className="h-4 w-4 animate-spin relative z-10" />
+                <span className="font-medium relative z-10">Logging out...</span>
+              </>
+            ) : (
+              <>
+                <div className="absolute inset-0 bg-gradient-to-r from-red-500/0 via-red-500/10 to-red-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                <LogOut className="h-4 w-4 relative z-10" />
+                <span className="font-medium relative z-10">Logout</span>
+              </>
+            )}
           </Button>
         </div>
       </div>
