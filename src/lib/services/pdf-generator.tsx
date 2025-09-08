@@ -224,7 +224,7 @@ export const QuestionPaperPDF = ({ test, questions, settings }: { test: Test; qu
               </Text>
             </View>
             
-            {settings?.includeOptions !== false && (
+            {settings?.includeOptions && (
               <View style={styles.optionsGrid}>
                 {question.options?.a && (
                   <View style={styles.option}>

@@ -213,7 +213,7 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[90vw] w-[90vw] h-[90vh] p-0 overflow-hidden flex flex-col">
+      <DialogContent className="max-w-[95vw] w-[95vw] h-[95vh] p-0 overflow-hidden flex flex-col">
         <DialogHeader className="p-6 pb-4 flex-shrink-0">
           <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
             <FileText className="h-6 w-6" />
@@ -222,8 +222,8 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
         </DialogHeader>
 
         <div className="flex flex-1 min-h-0">
-          {/* Control Panel - Reduced Width 350px to give more space to preview */}
-          <div className="w-[350px] bg-gray-50 border-r border-gray-200 flex flex-col">
+          {/* Control Panel - Much smaller to maximize preview space */}
+          <div className="w-[300px] bg-gray-50 border-r border-gray-200 flex flex-col">
             <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
               <div className="p-6 space-y-8">
               
