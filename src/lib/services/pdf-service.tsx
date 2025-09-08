@@ -16,10 +16,42 @@ export class PDFService {
    */
   static async generateQuestionPaperPDF(test: Test, questions: Question[]): Promise<PDFResult> {
     try {
-      const doc = <QuestionPaperPDF test={test} questions={questions} />
+      // Validate input data
+      if (!test || !questions || questions.length === 0) {
+        return {
+          success: false,
+          message: 'Invalid test data or no questions provided'
+        }
+      }
+
+      // Ensure test has required properties
+      const safeTest = {
+        id: test.id || 0,
+        name: test.name || 'Untitled Test',
+        total_time_minutes: test.total_time_minutes || 60,
+        marks_per_correct: test.marks_per_correct || 1,
+        negative_marks_per_incorrect: test.negative_marks_per_incorrect || 0,
+        status: test.status || 'draft',
+        created_at: test.created_at || new Date().toISOString()
+      }
+
+      // Ensure questions have required properties
+      const safeQuestions = questions.map(q => ({
+        id: q.id || 0,
+        question_id: String(q.question_id || 0),
+        book_source: q.book_source || '',
+        chapter_name: q.chapter_name || '',
+        question_text: q.question_text || '',
+        options: q.options || { a: '', b: '', c: '', d: '' },
+        correct_option: q.correct_option || 'A',
+        solution_text: q.solution_text || '',
+        created_at: q.created_at || new Date().toISOString()
+      }))
+
+      const doc = <QuestionPaperPDF test={safeTest} questions={safeQuestions} />
       const blob = await pdf(doc).toBlob()
       
-      const fileName = `${(test.name || 'Test').replace(/[^a-zA-Z0-9]/g, '_')}_Question_Paper.pdf`
+      const fileName = `${safeTest.name.replace(/[^a-zA-Z0-9]/g, '_')}_Question_Paper.pdf`
       
       return {
         success: true,
@@ -40,10 +72,42 @@ export class PDFService {
    */
   static async generateAnswerKeyPDF(test: Test, questions: Question[]): Promise<PDFResult> {
     try {
-      const doc = <AnswerKeyPDF test={test} questions={questions} />
+      // Validate input data
+      if (!test || !questions || questions.length === 0) {
+        return {
+          success: false,
+          message: 'Invalid test data or no questions provided'
+        }
+      }
+
+      // Ensure test has required properties
+      const safeTest = {
+        id: test.id || 0,
+        name: test.name || 'Untitled Test',
+        total_time_minutes: test.total_time_minutes || 60,
+        marks_per_correct: test.marks_per_correct || 1,
+        negative_marks_per_incorrect: test.negative_marks_per_incorrect || 0,
+        status: test.status || 'draft',
+        created_at: test.created_at || new Date().toISOString()
+      }
+
+      // Ensure questions have required properties
+      const safeQuestions = questions.map(q => ({
+        id: q.id || 0,
+        question_id: String(q.question_id || 0),
+        book_source: q.book_source || '',
+        chapter_name: q.chapter_name || '',
+        question_text: q.question_text || '',
+        options: q.options || { a: '', b: '', c: '', d: '' },
+        correct_option: q.correct_option || 'A',
+        solution_text: q.solution_text || '',
+        created_at: q.created_at || new Date().toISOString()
+      }))
+
+      const doc = <AnswerKeyPDF test={safeTest} questions={safeQuestions} />
       const blob = await pdf(doc).toBlob()
       
-      const fileName = `${(test.name || 'Test').replace(/[^a-zA-Z0-9]/g, '_')}_Answer_Key.pdf`
+      const fileName = `${safeTest.name.replace(/[^a-zA-Z0-9]/g, '_')}_Answer_Key.pdf`
       
       return {
         success: true,
@@ -64,10 +128,42 @@ export class PDFService {
    */
   static async generateMinimalistPDF(test: Test, questions: Question[]): Promise<PDFResult> {
     try {
-      const doc = <MinimalistPDF test={test} questions={questions} />
+      // Validate input data
+      if (!test || !questions || questions.length === 0) {
+        return {
+          success: false,
+          message: 'Invalid test data or no questions provided'
+        }
+      }
+
+      // Ensure test has required properties
+      const safeTest = {
+        id: test.id || 0,
+        name: test.name || 'Untitled Test',
+        total_time_minutes: test.total_time_minutes || 60,
+        marks_per_correct: test.marks_per_correct || 1,
+        negative_marks_per_incorrect: test.negative_marks_per_incorrect || 0,
+        status: test.status || 'draft',
+        created_at: test.created_at || new Date().toISOString()
+      }
+
+      // Ensure questions have required properties
+      const safeQuestions = questions.map(q => ({
+        id: q.id || 0,
+        question_id: String(q.question_id || 0),
+        book_source: q.book_source || '',
+        chapter_name: q.chapter_name || '',
+        question_text: q.question_text || '',
+        options: q.options || { a: '', b: '', c: '', d: '' },
+        correct_option: q.correct_option || 'A',
+        solution_text: q.solution_text || '',
+        created_at: q.created_at || new Date().toISOString()
+      }))
+
+      const doc = <MinimalistPDF test={safeTest} questions={safeQuestions} />
       const blob = await pdf(doc).toBlob()
       
-      const fileName = `${(test.name || 'Test').replace(/[^a-zA-Z0-9]/g, '_')}_Minimalist.pdf`
+      const fileName = `${safeTest.name.replace(/[^a-zA-Z0-9]/g, '_')}_Minimalist.pdf`
       
       return {
         success: true,

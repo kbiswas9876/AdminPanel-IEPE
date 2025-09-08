@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import { signInWithRoleCheck, resetPassword } from '@/lib/actions/auth'
+import { resetPassword } from '@/lib/actions/auth'
+import { useAuth } from '@/lib/auth'
 import { Eye, EyeOff, Shield, Lock, Mail, AlertCircle, Loader2, CheckCircle, X } from 'lucide-react'
 
 export default function LoginPage({
@@ -23,19 +24,35 @@ export default function LoginPage({
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('')
   const [isResetting, setIsResetting] = useState(false)
   const [loginSuccess, setLoginSuccess] = useState(false)
+  const { signIn } = useAuth()
 
   const handleSubmit = async (formData: FormData) => {
     setIsLoading(true)
     setLoginSuccess(false)
     try {
-      // The server action will handle the redirect
-      await signInWithRoleCheck(formData)
-      // If we reach here, login was successful
+      const email = formData.get('email') as string
+      const password = formData.get('password') as string
+      
+      const { error } = await signIn(email, password)
+      
+      if (error) {
+        console.error('Login error:', error)
+        setIsLoading(false)
+        // Show error message
+        window.location.href = '/login?error=Invalid email or password'
+        return
+      }
+      
+      // Login successful, redirect to dashboard
       setLoginSuccess(true)
+      setTimeout(() => {
+        window.location.href = '/'
+      }, 1000)
+      
     } catch (error) {
       console.error('Login error:', error)
-      // Reset loading state on error
       setIsLoading(false)
+      window.location.href = '/login?error=Login failed'
     }
   }
 

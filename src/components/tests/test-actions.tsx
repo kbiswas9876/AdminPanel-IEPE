@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { deleteTest, cloneTest } from '@/lib/actions/tests'
 import { PDFService } from '@/lib/services/pdf-service'
+import { InteractivePDFExporter } from './interactive-pdf-exporter'
 import type { Question as AdminQuestion } from '@/lib/supabase/admin'
 import { Button } from '@/components/ui/button'
 import {
@@ -46,6 +47,8 @@ export function TestActions({ test, onAction }: TestActionsProps) {
   const [showProgressModal, setShowProgressModal] = useState(false)
   const [exportProgress, setExportProgress] = useState('')
   const [exportStatus, setExportStatus] = useState<'idle' | 'generating' | 'success' | 'error'>('idle')
+  const [showInteractiveExporter, setShowInteractiveExporter] = useState(false)
+  const [testData, setTestData] = useState<{ test: Test; questions: AdminQuestion[] } | null>(null)
 
   const handleDelete = async () => {
     setIsDeleting(true)
@@ -79,6 +82,25 @@ export function TestActions({ test, onAction }: TestActionsProps) {
       }
     } catch (e) {
       console.error('Clone error:', e)
+    }
+  }
+
+  const handleOpenInteractiveExporter = async () => {
+    try {
+      // Fetch test and questions data
+      const { getTestDetailsForEdit } = await import('@/lib/actions/tests')
+      const testDetails = await getTestDetailsForEdit(test.id)
+      
+      if (testDetails && testDetails.test && testDetails.questions) {
+        // Convert TestQuestionSlot[] to Question[]
+        const questionData = testDetails.questions.map(slot => slot.question) as AdminQuestion[]
+        setTestData({ test: testDetails.test, questions: questionData })
+        setShowInteractiveExporter(true)
+      } else {
+        console.error('Failed to fetch test data')
+      }
+    } catch (error) {
+      console.error('Error opening interactive exporter:', error)
     }
   }
 
@@ -265,37 +287,11 @@ export function TestActions({ test, onAction }: TestActionsProps) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem 
-            onClick={() => handleExport('premium')}
+            onClick={handleOpenInteractiveExporter}
             disabled={isExporting}
           >
-            {isExporting && exportType === 'premium' ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <FileDown className="h-4 w-4 mr-2" />
-            )}
-            {isExporting && exportType === 'premium' ? 'Exporting...' : 'Export Premium PDF'}
-          </DropdownMenuItem>
-          <DropdownMenuItem 
-            onClick={() => handleExport('minimalist')}
-            disabled={isExporting}
-          >
-            {isExporting && exportType === 'minimalist' ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <FileDown className="h-4 w-4 mr-2" />
-            )}
-            {isExporting && exportType === 'minimalist' ? 'Exporting...' : 'Export Minimalist PDF'}
-          </DropdownMenuItem>
-          <DropdownMenuItem 
-            onClick={() => handleExport('answer-key')}
-            disabled={isExporting}
-          >
-            {isExporting && exportType === 'answer-key' ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <FileDown className="h-4 w-4 mr-2" />
-            )}
-            {isExporting && exportType === 'answer-key' ? 'Exporting...' : 'Export Answer Key'}
+            <FileDown className="h-4 w-4 mr-2" />
+            Export PDF
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleClone}>
             <Copy className="h-4 w-4 mr-2" />
@@ -363,6 +359,19 @@ export function TestActions({ test, onAction }: TestActionsProps) {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Interactive PDF Exporter */}
+      {testData && (
+        <InteractivePDFExporter
+          test={testData.test}
+          questions={testData.questions}
+          isOpen={showInteractiveExporter}
+          onClose={() => {
+            setShowInteractiveExporter(false)
+            setTestData(null)
+          }}
+        />
+      )}
     </div>
   )
 }

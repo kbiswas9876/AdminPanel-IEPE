@@ -2,16 +2,8 @@ import React from 'react'
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer'
 import { Test, Question } from '@/lib/supabase/admin'
 
-// Register fonts for better typography
-Font.register({
-  family: 'Inter',
-  src: 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiJ-Ek-_EeA.woff2'
-})
-
-Font.register({
-  family: 'Source Serif Pro',
-  src: 'https://fonts.gstatic.com/s/sourceserifpro/v15/neIQzD-0qpwxpaWvjeD0X88SAOeaiXM0oSOL2Uw.woff2'
-})
+// Use system fonts to avoid font loading issues
+// Font registration removed to prevent DataView errors
 
 // PDF Styles
 const styles = StyleSheet.create({
@@ -19,7 +11,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: '#FFFFFF',
     padding: 30,
-    fontFamily: 'Inter',
+    fontFamily: 'Helvetica',
     fontSize: 12,
     lineHeight: 1.6,
   },
@@ -36,7 +28,7 @@ const styles = StyleSheet.create({
     color: '#2563eb',
     textAlign: 'center',
     marginBottom: 15,
-    fontFamily: 'Source Serif Pro',
+    fontFamily: 'Helvetica-Bold',
   },
   testInfo: {
     flexDirection: 'row',
