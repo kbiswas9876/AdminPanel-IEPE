@@ -75,21 +75,26 @@ export function convertLatexToPlainText(text: string): string {
   // Handle common LaTeX patterns and convert to readable text
   let processedText = text
   
-  // Handle fractions
+  // Handle fractions - more comprehensive patterns
   processedText = processedText.replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1)/($2)')
   processedText = processedText.replace(/\{([^}]+)\}\/\{([^}]+)\}/g, '($1)/($2)')
+  processedText = processedText.replace(/\\dfrac\{([^}]+)\}\{([^}]+)\}/g, '($1)/($2)')
+  processedText = processedText.replace(/\\tfrac\{([^}]+)\}\{([^}]+)\}/g, '($1)/($2)')
   
-  // Handle superscripts
+  // Handle superscripts - more comprehensive
   processedText = processedText.replace(/\^(\d+)/g, '^$1')
   processedText = processedText.replace(/\^\{([^}]+)\}/g, '^$1')
+  processedText = processedText.replace(/\^([a-zA-Z])/g, '^$1')
   
-  // Handle subscripts
+  // Handle subscripts - more comprehensive
   processedText = processedText.replace(/_(\d+)/g, '_$1')
   processedText = processedText.replace(/_\{([^}]+)\}/g, '_$1')
+  processedText = processedText.replace(/_([a-zA-Z])/g, '_$1')
   
-  // Handle square roots
+  // Handle square roots - more comprehensive
   processedText = processedText.replace(/\\sqrt\{([^}]+)\}/g, '√($1)')
   processedText = processedText.replace(/\\sqrt\[(\d+)\]\{([^}]+)\}/g, '^$1√($2)')
+  processedText = processedText.replace(/\\sqrt\[([^]]+)\]\{([^}]+)\}/g, '^$1√($2)')
   
   // Handle common symbols
   processedText = processedText.replace(/\\alpha/g, 'α')
@@ -154,10 +159,39 @@ export function convertLatexToPlainText(text: string): string {
   processedText = processedText.replace(/\\,/g, ' ')
   processedText = processedText.replace(/\\;/g, ' ')
   processedText = processedText.replace(/\\!/g, '')
+  processedText = processedText.replace(/\\quad/g, '    ')
+  processedText = processedText.replace(/\\qquad/g, '        ')
+  
+  // Handle common mathematical functions
+  processedText = processedText.replace(/\\sin/g, 'sin')
+  processedText = processedText.replace(/\\cos/g, 'cos')
+  processedText = processedText.replace(/\\tan/g, 'tan')
+  processedText = processedText.replace(/\\log/g, 'log')
+  processedText = processedText.replace(/\\ln/g, 'ln')
+  processedText = processedText.replace(/\\exp/g, 'exp')
+  
+  // Handle limits
+  processedText = processedText.replace(/\\lim/g, 'lim')
+  processedText = processedText.replace(/\\lim_\{([^}]+)\}/g, 'lim_$1')
+  
+  // Handle common operators
+  processedText = processedText.replace(/\\cdot/g, '·')
+  processedText = processedText.replace(/\\times/g, '×')
+  processedText = processedText.replace(/\\div/g, '÷')
+  processedText = processedText.replace(/\\pm/g, '±')
+  processedText = processedText.replace(/\\mp/g, '∓')
+  
+  // Handle text formatting
+  processedText = processedText.replace(/\\text\{([^}]+)\}/g, '$1')
+  processedText = processedText.replace(/\\textbf\{([^}]+)\}/g, '$1')
+  processedText = processedText.replace(/\\textit\{([^}]+)\}/g, '$1')
   
   // Clean up any remaining LaTeX commands
   processedText = processedText.replace(/\\[a-zA-Z]+\{[^}]*\}/g, '')
   processedText = processedText.replace(/\\[a-zA-Z]+/g, '')
+  
+  // Clean up extra spaces
+  processedText = processedText.replace(/\s+/g, ' ').trim()
   
   return processedText
 }
