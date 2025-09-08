@@ -393,10 +393,10 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
         </div>
       </div>
 
-      {/* Scrollable PDF Preview - Properly constrained */}
-      <div className="flex-1 overflow-auto bg-gray-100 p-6 min-h-0">
+      {/* Scrollable PDF Preview - Much larger for proper A4 display */}
+      <div className="flex-1 overflow-auto bg-gray-100 p-4 min-h-0">
         <div className="w-full max-w-none flex justify-center">
-          <div className="w-full max-w-4xl">
+          <div className="w-full max-w-6xl">
             {Array.from({ length: totalPages }, (_, index) => renderPage(index + 1))}
           </div>
         </div>

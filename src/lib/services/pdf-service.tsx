@@ -3,6 +3,32 @@ import React from 'react'
 import { QuestionPaperPDF, AnswerKeyPDF, MinimalistPDF } from './pdf-generator'
 import { Test, Question } from '@/lib/supabase/admin'
 
+interface PDFSettings {
+  theme: {
+    id: string
+    name: string
+    primaryColor: string
+    secondaryColor: string
+    fontFamily: string
+    fontSize: number
+  }
+  showHeader: boolean
+  showDuration: boolean
+  showTotalQuestions: boolean
+  showFullMarks: boolean
+  showMarking: boolean
+  includeOptions: boolean
+  showInstructions: boolean
+  showFooter: boolean
+  showPageNumbers: boolean
+  customHeaderText: string
+  customFooterText: string
+  questionsPerPage: number
+  fontSize: number
+  lineSpacing: number
+  margins: number
+}
+
 export interface PDFResult {
   success: boolean
   fileName?: string
@@ -14,7 +40,7 @@ export class PDFService {
   /**
    * Generate Premium Question Paper PDF
    */
-  static async generateQuestionPaperPDF(test: Test, questions: Question[]): Promise<PDFResult> {
+  static async generateQuestionPaperPDF(test: Test, questions: Question[], settings?: PDFSettings): Promise<PDFResult> {
     try {
       // Validate input data
       if (!test || !questions || questions.length === 0) {
@@ -48,7 +74,7 @@ export class PDFService {
         created_at: q.created_at || new Date().toISOString()
       }))
 
-      const doc = <QuestionPaperPDF test={safeTest} questions={safeQuestions} />
+      const doc = <QuestionPaperPDF test={safeTest} questions={safeQuestions} settings={settings} />
       const blob = await pdf(doc).toBlob()
       
       const fileName = `${safeTest.name.replace(/[^a-zA-Z0-9]/g, '_')}_Question_Paper.pdf`
@@ -70,7 +96,7 @@ export class PDFService {
   /**
    * Generate Answer Key PDF
    */
-  static async generateAnswerKeyPDF(test: Test, questions: Question[]): Promise<PDFResult> {
+  static async generateAnswerKeyPDF(test: Test, questions: Question[], settings?: PDFSettings): Promise<PDFResult> {
     try {
       // Validate input data
       if (!test || !questions || questions.length === 0) {
@@ -104,7 +130,7 @@ export class PDFService {
         created_at: q.created_at || new Date().toISOString()
       }))
 
-      const doc = <AnswerKeyPDF test={safeTest} questions={safeQuestions} />
+      const doc = <AnswerKeyPDF test={safeTest} questions={safeQuestions} settings={settings} />
       const blob = await pdf(doc).toBlob()
       
       const fileName = `${safeTest.name.replace(/[^a-zA-Z0-9]/g, '_')}_Answer_Key.pdf`

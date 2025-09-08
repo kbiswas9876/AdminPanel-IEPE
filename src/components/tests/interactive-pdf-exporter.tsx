@@ -157,7 +157,7 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
     setIsGenerating(true)
     
     try {
-      const result = await PDFService.generateQuestionPaperPDF(test, questions)
+      const result = await PDFService.generateQuestionPaperPDF(test, questions, settings)
       
       if (result.success && result.blob && result.fileName) {
         PDFService.downloadPDF(result.blob, result.fileName)
@@ -186,7 +186,7 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
     setIsGenerating(true)
     
     try {
-      const result = await PDFService.generateAnswerKeyPDF(test, questions)
+      const result = await PDFService.generateAnswerKeyPDF(test, questions, settings)
       
       if (result.success && result.blob && result.fileName) {
         PDFService.downloadPDF(result.blob, result.fileName)
@@ -222,8 +222,8 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
         </DialogHeader>
 
         <div className="flex flex-1 min-h-0">
-          {/* Control Panel - Fixed Width 420px with proper scrolling */}
-          <div className="w-[420px] bg-gray-50 border-r border-gray-200 flex flex-col">
+          {/* Control Panel - Reduced Width 350px to give more space to preview */}
+          <div className="w-[350px] bg-gray-50 border-r border-gray-200 flex flex-col">
             <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
               <div className="p-6 space-y-8">
               

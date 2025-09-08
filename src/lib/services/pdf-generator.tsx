@@ -3,6 +3,32 @@ import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
 import { Test, Question } from '@/lib/supabase/admin'
 import { renderMathContent } from '@/lib/utils/latex-pdf-renderer'
 
+interface PDFSettings {
+  theme: {
+    id: string
+    name: string
+    primaryColor: string
+    secondaryColor: string
+    fontFamily: string
+    fontSize: number
+  }
+  showHeader: boolean
+  showDuration: boolean
+  showTotalQuestions: boolean
+  showFullMarks: boolean
+  showMarking: boolean
+  includeOptions: boolean
+  showInstructions: boolean
+  showFooter: boolean
+  showPageNumbers: boolean
+  customHeaderText: string
+  customFooterText: string
+  questionsPerPage: number
+  fontSize: number
+  lineSpacing: number
+  margins: number
+}
+
 // Professional PDF Styles - Optimized for space and readability
 const styles = StyleSheet.create({
   page: {
@@ -134,47 +160,59 @@ const SmartLatexRenderer = ({ text }: { text: string }) => {
 }
 
 // Premium Question Paper PDF Component
-export const QuestionPaperPDF = ({ test, questions }: { test: Test; questions: Question[] }) => {
+export const QuestionPaperPDF = ({ test, questions, settings }: { test: Test; questions: Question[]; settings?: PDFSettings }) => {
   const totalMarks = questions.length * (test.marks_per_correct || 1)
   
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         {/* Professional Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>{test.name || 'Test Paper'}</Text>
-          
-          <View style={styles.testInfo}>
-            <View style={styles.infoItem}>
-              <Text style={{ fontWeight: 'bold' }}>Duration</Text>
-              <Text>{test.total_time_minutes || 60} minutes</Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Text style={{ fontWeight: 'bold' }}>Total Questions</Text>
-              <Text>{questions.length}</Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Text style={{ fontWeight: 'bold' }}>Full Marks</Text>
-              <Text>{totalMarks}</Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Text style={{ fontWeight: 'bold' }}>Marking</Text>
-              <Text>+{test.marks_per_correct || 1} for correct, -{test.negative_marks_per_incorrect || 0} for incorrect</Text>
+        {settings?.showHeader !== false && (
+          <View style={styles.header}>
+            <Text style={styles.title}>{settings?.customHeaderText || test.name || 'Test Paper'}</Text>
+            
+            <View style={styles.testInfo}>
+              {settings?.showDuration !== false && (
+                <View style={styles.infoItem}>
+                  <Text style={{ fontWeight: 'bold' }}>Duration</Text>
+                  <Text>{test.total_time_minutes || 60} minutes</Text>
+                </View>
+              )}
+              {settings?.showTotalQuestions !== false && (
+                <View style={styles.infoItem}>
+                  <Text style={{ fontWeight: 'bold' }}>Total Questions</Text>
+                  <Text>{questions.length}</Text>
+                </View>
+              )}
+              {settings?.showFullMarks !== false && (
+                <View style={styles.infoItem}>
+                  <Text style={{ fontWeight: 'bold' }}>Full Marks</Text>
+                  <Text>{totalMarks}</Text>
+                </View>
+              )}
+              {settings?.showMarking !== false && (
+                <View style={styles.infoItem}>
+                  <Text style={{ fontWeight: 'bold' }}>Marking</Text>
+                  <Text>+{test.marks_per_correct || 1} for correct, -{test.negative_marks_per_incorrect || 0} for incorrect</Text>
+                </View>
+              )}
             </View>
           </View>
-        </View>
+        )}
 
         {/* Instructions */}
-        <View style={styles.instructions}>
-          <Text style={styles.instructionsTitle}>Instructions</Text>
-          <Text style={styles.instructionItem}>• Read all questions carefully before answering.</Text>
-          <Text style={styles.instructionItem}>• Each question carries {test.marks_per_correct || 1} mark(s) for correct answer.</Text>
-          {test.negative_marks_per_incorrect && test.negative_marks_per_incorrect > 0 && (
-            <Text style={styles.instructionItem}>• There is negative marking of {test.negative_marks_per_incorrect} mark(s) for each incorrect answer.</Text>
-          )}
-          <Text style={styles.instructionItem}>• Choose the most appropriate answer from the given options.</Text>
-          <Text style={styles.instructionItem}>• Use only black or blue ink pen for marking answers.</Text>
-        </View>
+        {settings?.showInstructions !== false && (
+          <View style={styles.instructions}>
+            <Text style={styles.instructionsTitle}>Instructions</Text>
+            <Text style={styles.instructionItem}>• Read all questions carefully before answering.</Text>
+            <Text style={styles.instructionItem}>• Each question carries {test.marks_per_correct || 1} mark(s) for correct answer.</Text>
+            {test.negative_marks_per_incorrect && test.negative_marks_per_incorrect > 0 && (
+              <Text style={styles.instructionItem}>• There is negative marking of {test.negative_marks_per_incorrect} mark(s) for each incorrect answer.</Text>
+            )}
+            <Text style={styles.instructionItem}>• Choose the most appropriate answer from the given options.</Text>
+            <Text style={styles.instructionItem}>• Use only black or blue ink pen for marking answers.</Text>
+          </View>
+        )}
 
         {/* Questions */}
         {questions.map((question, index) => (
@@ -186,40 +224,42 @@ export const QuestionPaperPDF = ({ test, questions }: { test: Test; questions: Q
               </Text>
             </View>
             
-            <View style={styles.optionsGrid}>
-              {question.options?.a && (
-                <View style={styles.option}>
-                  <Text style={styles.optionLabel}>(A)</Text>
-                  <Text style={styles.optionText}>
-                    <SmartLatexRenderer text={question.options.a} />
-                  </Text>
-                </View>
-              )}
-              {question.options?.b && (
-                <View style={styles.option}>
-                  <Text style={styles.optionLabel}>(B)</Text>
-                  <Text style={styles.optionText}>
-                    <SmartLatexRenderer text={question.options.b} />
-                  </Text>
-                </View>
-              )}
-              {question.options?.c && (
-                <View style={styles.option}>
-                  <Text style={styles.optionLabel}>(C)</Text>
-                  <Text style={styles.optionText}>
-                    <SmartLatexRenderer text={question.options.c} />
-                  </Text>
-                </View>
-              )}
-              {question.options?.d && (
-                <View style={styles.option}>
-                  <Text style={styles.optionLabel}>(D)</Text>
-                  <Text style={styles.optionText}>
-                    <SmartLatexRenderer text={question.options.d} />
-                  </Text>
-                </View>
-              )}
-            </View>
+            {settings?.includeOptions !== false && (
+              <View style={styles.optionsGrid}>
+                {question.options?.a && (
+                  <View style={styles.option}>
+                    <Text style={styles.optionLabel}>(A)</Text>
+                    <Text style={styles.optionText}>
+                      <SmartLatexRenderer text={question.options.a} />
+                    </Text>
+                  </View>
+                )}
+                {question.options?.b && (
+                  <View style={styles.option}>
+                    <Text style={styles.optionLabel}>(B)</Text>
+                    <Text style={styles.optionText}>
+                      <SmartLatexRenderer text={question.options.b} />
+                    </Text>
+                  </View>
+                )}
+                {question.options?.c && (
+                  <View style={styles.option}>
+                    <Text style={styles.optionLabel}>(C)</Text>
+                    <Text style={styles.optionText}>
+                      <SmartLatexRenderer text={question.options.c} />
+                    </Text>
+                  </View>
+                )}
+                {question.options?.d && (
+                  <View style={styles.option}>
+                    <Text style={styles.optionLabel}>(D)</Text>
+                    <Text style={styles.optionText}>
+                      <SmartLatexRenderer text={question.options.d} />
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
           </View>
         ))}
 
@@ -233,7 +273,7 @@ export const QuestionPaperPDF = ({ test, questions }: { test: Test; questions: Q
 }
 
 // Answer Key PDF Component
-export const AnswerKeyPDF = ({ test, questions }: { test: Test; questions: Question[] }) => {
+export const AnswerKeyPDF = ({ test, questions, settings }: { test: Test; questions: Question[]; settings?: PDFSettings }) => {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
