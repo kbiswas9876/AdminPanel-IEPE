@@ -213,7 +213,7 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] w-[95vw] h-[95vh] p-0 overflow-hidden flex flex-col">
+      <DialogContent className="max-w-[90vw] w-[90vw] max-w-[1600px] h-[95vh] p-0 overflow-hidden flex flex-col">
         <DialogHeader className="p-6 pb-4 flex-shrink-0">
           <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
             <FileText className="h-6 w-6" />
@@ -222,10 +222,10 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
         </DialogHeader>
 
         <div className="flex flex-1 min-h-0">
-          {/* Control Panel - Minimal width to maximize preview space */}
-          <div className="w-[250px] bg-gray-50 border-r border-gray-200 flex flex-col">
+          {/* Control Panel - Fixed width for stability and full functionality */}
+          <div className="w-[360px] bg-gray-50 border-r border-gray-200 flex flex-col flex-shrink-0">
             <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-              <div className="p-4 space-y-6">
+              <div className="p-6 space-y-8">
               
               {/* Design Theme Section */}
               <div>
@@ -548,8 +548,8 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
             <div className="h-1 bg-gradient-to-t from-gray-200 to-transparent flex-shrink-0"></div>
           </div>
 
-          {/* Preview Area - Flexible Column with proper constraints */}
-          <div className="flex-1 flex flex-col min-w-0">
+          {/* Preview Area - Flexible Column occupying all remaining space */}
+          <div className="flex-1 flex flex-col min-w-0 flex-grow">
             <PDFLivePreview
               test={test}
               questions={questions}

@@ -37,7 +37,7 @@ interface PDFLivePreviewProps {
 }
 
 export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProps) {
-  const [zoom, setZoom] = useState(1.3)
+  const [zoom, setZoom] = useState(1.1)
 
   const totalMarks = questions.length * (test.marks_per_correct || 1)
 
@@ -216,7 +216,7 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
   }
 
   const handleResetZoom = () => {
-    setZoom(1.3)
+    setZoom(1.1)
   }
 
   // Render a single page
@@ -385,10 +385,10 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
         </div>
       </div>
 
-      {/* Scrollable PDF Preview - Full width for proper A4 display */}
-      <div className="flex-1 overflow-auto bg-gray-100 p-1 min-h-0">
+      {/* Scrollable PDF Preview - Optimized for spacious layout */}
+      <div className="flex-1 overflow-auto bg-gray-100 p-4 min-h-0">
         <div className="w-full flex justify-center">
-          <div className="w-full">
+          <div className="w-full max-w-5xl">
             {Array.from({ length: totalPages }, (_, index) => renderPage(index + 1))}
           </div>
         </div>
