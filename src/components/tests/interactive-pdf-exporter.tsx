@@ -213,7 +213,7 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[90vw] w-[90vw] h-[85vh] p-0 overflow-hidden">
+      <DialogContent className="max-w-[95vw] w-[95vw] h-[95vh] p-0 overflow-hidden">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
             <FileText className="h-6 w-6" />
@@ -222,8 +222,8 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
         </DialogHeader>
 
         <div className="flex h-full">
-          {/* Control Panel - Fixed Width 360px */}
-          <div className="w-[360px] bg-gray-50 border-r border-gray-200 overflow-y-auto">
+          {/* Control Panel - Fixed Width 400px */}
+          <div className="w-[400px] bg-gray-50 border-r border-gray-200 overflow-y-auto">
             <div className="p-6 space-y-8">
               
               {/* Design Theme Section */}
@@ -355,10 +355,13 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
                       value={[settings.questionsPerPage]}
                       onValueChange={([value]) => setSettings(prev => ({ ...prev, questionsPerPage: value }))}
                       min={1}
-                      max={10}
+                      max={15}
                       step={1}
                       className="mt-2"
                     />
+                    <div className="text-xs text-gray-500 mt-1">
+                      More questions = more pages, fewer questions = larger text
+                    </div>
                   </div>
                   <div>
                     <Label className="text-xs text-gray-600 mb-2 block">Margins: {settings.margins}px</Label>
@@ -366,10 +369,13 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
                       value={[settings.margins]}
                       onValueChange={([value]) => setSettings(prev => ({ ...prev, margins: value }))}
                       min={10}
-                      max={50}
+                      max={60}
                       step={5}
                       className="mt-2"
                     />
+                    <div className="text-xs text-gray-500 mt-1">
+                      Larger margins = more white space around content
+                    </div>
                   </div>
                 </div>
               </div>
@@ -425,7 +431,10 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
                   )}
 
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="includeOptions" className="text-sm font-medium">Include Options</Label>
+                    <div>
+                      <Label htmlFor="includeOptions" className="text-sm font-medium">Include Options</Label>
+                      <div className="text-xs text-gray-500">Show multiple choice options (A, B, C, D)</div>
+                    </div>
                     <ToggleSwitch
                       id="includeOptions"
                       checked={settings.includeOptions}
@@ -485,6 +494,17 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
                       rows={2}
                       placeholder="Enter custom footer text..."
                     />
+                  </div>
+                </div>
+              </div>
+
+              {/* Preview Mode Section */}
+              <div>
+                <Label className="text-sm font-semibold mb-3 block text-gray-800">Preview Mode</Label>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <div className="text-xs text-blue-800 font-medium mb-1">Live Preview Active</div>
+                  <div className="text-xs text-blue-600">
+                    Changes update instantly in the preview. Use zoom controls to inspect details.
                   </div>
                 </div>
               </div>

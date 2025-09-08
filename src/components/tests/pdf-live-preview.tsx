@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { ZoomIn, ZoomOut, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
 import { SmartLatexRenderer } from './smart-latex-renderer'
 import type { Test, Question } from '@/lib/supabase/admin'
 
@@ -37,11 +37,9 @@ interface PDFLivePreviewProps {
 }
 
 export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProps) {
-  const [zoom, setZoom] = useState(0.8)
-  const [currentPage, setCurrentPage] = useState(1)
+  const [zoom, setZoom] = useState(0.7)
 
   const totalMarks = questions.length * (test.marks_per_correct || 1)
-  const totalPages = Math.ceil(questions.length / settings.questionsPerPage)
 
   // Intelligent header alignment logic
   const getHeaderAlignment = () => {
@@ -60,19 +58,24 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
 
   const headerAlignment = getHeaderAlignment()
 
+  // Calculate how many questions fit per page based on settings
+  const questionsPerPage = Math.max(1, Math.min(settings.questionsPerPage, 15))
+  const totalPages = Math.ceil(questions.length / questionsPerPage)
+
   // Dynamic styles based on zoom and settings
   const pageStyle = {
     width: `${210 * zoom}mm`, // A4 width
     minHeight: `${297 * zoom}mm`, // A4 height
     backgroundColor: '#FFFFFF',
-    margin: '0 auto',
+    margin: '0 auto 20px auto', // Add bottom margin between pages
     padding: `${settings.margins * zoom}px`,
     fontFamily: settings.theme.fontFamily,
     fontSize: `${settings.fontSize * zoom}px`,
     lineHeight: settings.lineSpacing,
     color: '#000000',
     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-    borderRadius: '8px'
+    borderRadius: '8px',
+    pageBreakAfter: 'always' as const
   }
 
   const headerStyle = {
@@ -192,34 +195,158 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
     color: '#6b7280'
   }
 
-  const getCurrentPageQuestions = () => {
-    const startIndex = (currentPage - 1) * settings.questionsPerPage
-    const endIndex = startIndex + settings.questionsPerPage
+  // Split questions into pages
+  const getQuestionsForPage = (pageNumber: number) => {
+    const startIndex = (pageNumber - 1) * questionsPerPage
+    const endIndex = startIndex + questionsPerPage
     return questions.slice(startIndex, endIndex)
   }
 
-  const getQuestionNumber = (index: number) => {
-    return (currentPage - 1) * settings.questionsPerPage + index + 1
+  const getQuestionNumber = (pageNumber: number, index: number) => {
+    return (pageNumber - 1) * questionsPerPage + index + 1
   }
 
   const handleZoomIn = () => {
-    setZoom(prev => Math.min(prev + 0.1, 1.5))
+    setZoom(prev => Math.min(prev + 0.1, 1.2))
   }
 
   const handleZoomOut = () => {
-    setZoom(prev => Math.max(prev - 0.1, 0.5))
+    setZoom(prev => Math.max(prev - 0.1, 0.4))
   }
 
   const handleResetZoom = () => {
-    setZoom(0.8)
+    setZoom(0.7)
   }
 
-  const handlePreviousPage = () => {
-    setCurrentPage(prev => Math.max(prev - 1, 1))
-  }
+  // Render a single page
+  const renderPage = (pageNumber: number) => {
+    const pageQuestions = getQuestionsForPage(pageNumber)
+    
+    return (
+      <div key={pageNumber} style={pageStyle}>
+        
+        {/* Header */}
+        {settings.showHeader && (
+          <div style={headerStyle}>
+            <div style={titleStyle}>
+              {settings.customHeaderText || test.name || 'Test Paper'}
+            </div>
+            
+            <div style={testInfoStyle}>
+              {settings.showDuration && (
+                <div style={infoItemStyle}>
+                  <div style={{ fontWeight: 'bold', fontSize: `${10 * zoom}px` }}>Duration</div>
+                  <div style={{ fontSize: `${9 * zoom}px` }}>{test.total_time_minutes || 60} minutes</div>
+                </div>
+              )}
+              {settings.showTotalQuestions && (
+                <div style={infoItemStyle}>
+                  <div style={{ fontWeight: 'bold', fontSize: `${10 * zoom}px` }}>Total Questions</div>
+                  <div style={{ fontSize: `${9 * zoom}px` }}>{questions.length}</div>
+                </div>
+              )}
+              {settings.showFullMarks && (
+                <div style={infoItemStyle}>
+                  <div style={{ fontWeight: 'bold', fontSize: `${10 * zoom}px` }}>Full Marks</div>
+                  <div style={{ fontSize: `${9 * zoom}px` }}>{totalMarks}</div>
+                </div>
+              )}
+              {settings.showMarking && (
+                <div style={infoItemStyle}>
+                  <div style={{ fontWeight: 'bold', fontSize: `${10 * zoom}px` }}>Marking</div>
+                  <div style={{ fontSize: `${9 * zoom}px` }}>
+                    +{test.marks_per_correct || 1} for correct, -{test.negative_marks_per_incorrect || 0} for incorrect
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
-  const handleNextPage = () => {
-    setCurrentPage(prev => Math.min(prev + 1, totalPages))
+        {/* Instructions - only on first page */}
+        {pageNumber === 1 && settings.showInstructions && (
+          <div style={instructionsStyle}>
+            <div style={{ fontSize: `${12 * zoom}px`, fontWeight: 'bold', color: '#1f2937', marginBottom: `${8 * zoom}px` }}>
+              Instructions
+            </div>
+            <div style={{ marginBottom: `${4 * zoom}px`, color: '#374151', paddingLeft: `${8 * zoom}px` }}>
+              • Read all questions carefully before answering.
+            </div>
+            <div style={{ marginBottom: `${4 * zoom}px`, color: '#374151', paddingLeft: `${8 * zoom}px` }}>
+              • Each question carries {test.marks_per_correct || 1} mark(s) for correct answer.
+            </div>
+            {test.negative_marks_per_incorrect && test.negative_marks_per_incorrect > 0 && (
+              <div style={{ marginBottom: `${4 * zoom}px`, color: '#374151', paddingLeft: `${8 * zoom}px` }}>
+                • There is negative marking of {test.negative_marks_per_incorrect} mark(s) for each incorrect answer.
+              </div>
+            )}
+            <div style={{ marginBottom: `${4 * zoom}px`, color: '#374151', paddingLeft: `${8 * zoom}px` }}>
+              • Choose the most appropriate answer from the given options.
+            </div>
+            <div style={{ marginBottom: `${4 * zoom}px`, color: '#374151', paddingLeft: `${8 * zoom}px` }}>
+              • Use only black or blue ink pen for marking answers.
+            </div>
+          </div>
+        )}
+
+        {/* Questions */}
+        {pageQuestions.map((question, index) => (
+          <div key={question.id} style={questionContainerStyle}>
+            <div style={questionHeaderStyle}>
+              <div style={questionNumberStyle}>{getQuestionNumber(pageNumber, index)}.</div>
+              <div style={questionTextStyle}>
+                <SmartLatexRenderer text={question.question_text || ''} />
+              </div>
+            </div>
+            
+            {settings.includeOptions && (
+              <div style={optionsGridStyle}>
+                {question.options?.a && (
+                  <div style={optionStyle}>
+                    <div style={optionLabelStyle}>(A)</div>
+                    <div style={optionTextStyle}>
+                      <SmartLatexRenderer text={question.options.a} />
+                    </div>
+                  </div>
+                )}
+                {question.options?.b && (
+                  <div style={optionStyle}>
+                    <div style={optionLabelStyle}>(B)</div>
+                    <div style={optionTextStyle}>
+                      <SmartLatexRenderer text={question.options.b} />
+                    </div>
+                  </div>
+                )}
+                {question.options?.c && (
+                  <div style={optionStyle}>
+                    <div style={optionLabelStyle}>(C)</div>
+                    <div style={optionTextStyle}>
+                      <SmartLatexRenderer text={question.options.c} />
+                    </div>
+                  </div>
+                )}
+                {question.options?.d && (
+                  <div style={optionStyle}>
+                    <div style={optionLabelStyle}>(D)</div>
+                    <div style={optionTextStyle}>
+                      <SmartLatexRenderer text={question.options.d} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* Footer */}
+        {settings.showFooter && (
+          <div style={footerStyle}>
+            {settings.customFooterText || '© 2025 Professional Test Platform - Question Paper'}
+            {settings.showPageNumbers && ` | Page ${pageNumber} of ${totalPages}`}
+          </div>
+        )}
+      </div>
+    )
   }
 
   return (
@@ -231,7 +358,7 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
             variant="outline"
             size="sm"
             onClick={handleZoomOut}
-            disabled={zoom <= 0.5}
+            disabled={zoom <= 0.4}
           >
             <ZoomOut className="h-4 w-4" />
           </Button>
@@ -242,7 +369,7 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
             variant="outline"
             size="sm"
             onClick={handleZoomIn}
-            disabled={zoom >= 1.5}
+            disabled={zoom >= 1.2}
           >
             <ZoomIn className="h-4 w-4" />
           </Button>
@@ -255,155 +382,20 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
           </Button>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePreviousPage}
-            disabled={currentPage <= 1}
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Previous
-          </Button>
-          <span className="text-sm font-medium min-w-[100px] text-center">
-            Page {currentPage} of {totalPages}
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-gray-600">
+            {totalPages} page{totalPages !== 1 ? 's' : ''} • {questions.length} question{questions.length !== 1 ? 's' : ''}
           </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleNextPage}
-            disabled={currentPage >= totalPages}
-          >
-            Next
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+          <span className="text-sm text-gray-500">
+            {settings.includeOptions ? 'With Options' : 'Questions Only'}
+          </span>
         </div>
       </div>
 
-      {/* PDF Preview */}
-      <div className="flex-1 overflow-auto p-6 bg-gray-100">
-        <div style={pageStyle}>
-          
-          {/* Header */}
-          {settings.showHeader && (
-            <div style={headerStyle}>
-              <div style={titleStyle}>
-                {settings.customHeaderText || test.name || 'Test Paper'}
-              </div>
-              
-              <div style={testInfoStyle}>
-                {settings.showDuration && (
-                  <div style={infoItemStyle}>
-                    <div style={{ fontWeight: 'bold', fontSize: `${10 * zoom}px` }}>Duration</div>
-                    <div style={{ fontSize: `${9 * zoom}px` }}>{test.total_time_minutes || 60} minutes</div>
-                  </div>
-                )}
-                {settings.showTotalQuestions && (
-                  <div style={infoItemStyle}>
-                    <div style={{ fontWeight: 'bold', fontSize: `${10 * zoom}px` }}>Total Questions</div>
-                    <div style={{ fontSize: `${9 * zoom}px` }}>{questions.length}</div>
-                  </div>
-                )}
-                {settings.showFullMarks && (
-                  <div style={infoItemStyle}>
-                    <div style={{ fontWeight: 'bold', fontSize: `${10 * zoom}px` }}>Full Marks</div>
-                    <div style={{ fontSize: `${9 * zoom}px` }}>{totalMarks}</div>
-                  </div>
-                )}
-                {settings.showMarking && (
-                  <div style={infoItemStyle}>
-                    <div style={{ fontWeight: 'bold', fontSize: `${10 * zoom}px` }}>Marking</div>
-                    <div style={{ fontSize: `${9 * zoom}px` }}>
-                      +{test.marks_per_correct || 1} for correct, -{test.negative_marks_per_incorrect || 0} for incorrect
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Instructions */}
-          {settings.showInstructions && (
-            <div style={instructionsStyle}>
-              <div style={{ fontSize: `${12 * zoom}px`, fontWeight: 'bold', color: '#1f2937', marginBottom: `${8 * zoom}px` }}>
-                Instructions
-              </div>
-              <div style={{ marginBottom: `${4 * zoom}px`, color: '#374151', paddingLeft: `${8 * zoom}px` }}>
-                • Read all questions carefully before answering.
-              </div>
-              <div style={{ marginBottom: `${4 * zoom}px`, color: '#374151', paddingLeft: `${8 * zoom}px` }}>
-                • Each question carries {test.marks_per_correct || 1} mark(s) for correct answer.
-              </div>
-              {test.negative_marks_per_incorrect && test.negative_marks_per_incorrect > 0 && (
-                <div style={{ marginBottom: `${4 * zoom}px`, color: '#374151', paddingLeft: `${8 * zoom}px` }}>
-                  • There is negative marking of {test.negative_marks_per_incorrect} mark(s) for each incorrect answer.
-                </div>
-              )}
-              <div style={{ marginBottom: `${4 * zoom}px`, color: '#374151', paddingLeft: `${8 * zoom}px` }}>
-                • Choose the most appropriate answer from the given options.
-              </div>
-              <div style={{ marginBottom: `${4 * zoom}px`, color: '#374151', paddingLeft: `${8 * zoom}px` }}>
-                • Use only black or blue ink pen for marking answers.
-              </div>
-            </div>
-          )}
-
-          {/* Questions */}
-          {getCurrentPageQuestions().map((question, index) => (
-            <div key={question.id} style={questionContainerStyle}>
-              <div style={questionHeaderStyle}>
-                <div style={questionNumberStyle}>{getQuestionNumber(index)}.</div>
-                <div style={questionTextStyle}>
-                  <SmartLatexRenderer text={question.question_text || ''} />
-                </div>
-              </div>
-              
-              {settings.includeOptions && (
-                <div style={optionsGridStyle}>
-                  {question.options?.a && (
-                    <div style={optionStyle}>
-                      <div style={optionLabelStyle}>(A)</div>
-                      <div style={optionTextStyle}>
-                        <SmartLatexRenderer text={question.options.a} />
-                      </div>
-                    </div>
-                  )}
-                  {question.options?.b && (
-                    <div style={optionStyle}>
-                      <div style={optionLabelStyle}>(B)</div>
-                      <div style={optionTextStyle}>
-                        <SmartLatexRenderer text={question.options.b} />
-                      </div>
-                    </div>
-                  )}
-                  {question.options?.c && (
-                    <div style={optionStyle}>
-                      <div style={optionLabelStyle}>(C)</div>
-                      <div style={optionTextStyle}>
-                        <SmartLatexRenderer text={question.options.c} />
-                      </div>
-                    </div>
-                  )}
-                  {question.options?.d && (
-                    <div style={optionStyle}>
-                      <div style={optionLabelStyle}>(D)</div>
-                      <div style={optionTextStyle}>
-                        <SmartLatexRenderer text={question.options.d} />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
-
-          {/* Footer */}
-          {settings.showFooter && (
-            <div style={footerStyle}>
-              {settings.customFooterText || '© 2025 Professional Test Platform - Question Paper'}
-              {settings.showPageNumbers && ` | Page ${currentPage} of ${totalPages}`}
-            </div>
-          )}
+      {/* Scrollable PDF Preview */}
+      <div className="flex-1 overflow-auto bg-gray-100 p-6">
+        <div className="max-w-none">
+          {Array.from({ length: totalPages }, (_, index) => renderPage(index + 1))}
         </div>
       </div>
     </div>
