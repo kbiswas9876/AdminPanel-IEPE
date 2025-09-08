@@ -1,15 +1,14 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
-import { Checkbox } from '@/components/ui/checkbox'
+import { ToggleSwitch } from '@/components/ui/toggle-switch'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { X, Download, Eye, Palette, Type, Layout, Settings, FileText, CheckCircle, Loader2 } from 'lucide-react'
+import { Download, FileText, Loader2, ZoomIn, ZoomOut, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { PDFService } from '@/lib/services/pdf-service'
 import { PDFLivePreview } from './pdf-live-preview'
@@ -36,21 +35,20 @@ interface PDFTheme {
 interface PDFSettings {
   theme: PDFTheme
   showHeader: boolean
+  showDuration: boolean
+  showTotalQuestions: boolean
+  showFullMarks: boolean
+  showMarking: boolean
+  includeOptions: boolean
+  showInstructions: boolean
   showFooter: boolean
   showPageNumbers: boolean
-  showInstructions: boolean
-  includeOptions: boolean
-  showMarking: boolean
+  customHeaderText: string
+  customFooterText: string
   questionsPerPage: number
   fontSize: number
   lineSpacing: number
   margins: number
-  customHeaderText: string
-  customFooterText: string
-  customInstructions: string
-  showDuration: boolean
-  showTotalQuestions: boolean
-  showFullMarks: boolean
 }
 
 const THEMES: PDFTheme[] = [
@@ -65,22 +63,32 @@ const THEMES: PDFTheme[] = [
     layout: 'minimalist'
   },
   {
-    id: 'premium-blue',
+    id: 'premium',
+    name: 'Premium',
+    description: 'Professional design with modern styling',
+    primaryColor: '#2563eb',
+    secondaryColor: '#64748b',
+    fontFamily: 'Arial',
+    fontSize: 12,
+    layout: 'premium'
+  },
+  {
+    id: 'corporate-blue',
     name: 'Corporate Blue',
     description: 'Professional blue theme for corporate environments',
-    primaryColor: '#2563eb',
-    secondaryColor: '#1e40af',
-    fontFamily: 'Helvetica',
+    primaryColor: '#1e40af',
+    secondaryColor: '#475569',
+    fontFamily: 'Calibri',
     fontSize: 12,
     layout: 'premium'
   },
   {
     id: 'academic-light',
     name: 'Academic Light',
-    description: 'Clean academic design with subtle colors',
-    primaryColor: '#374151',
+    description: 'Clean academic theme with subtle colors',
+    primaryColor: '#059669',
     secondaryColor: '#6b7280',
-    fontFamily: 'Helvetica',
+    fontFamily: 'Times New Roman',
     fontSize: 12,
     layout: 'academic'
   },
@@ -89,25 +97,23 @@ const THEMES: PDFTheme[] = [
     name: 'Modern Dark',
     description: 'Contemporary dark theme with high contrast',
     primaryColor: '#1f2937',
-    secondaryColor: '#374151',
-    fontFamily: 'Helvetica',
+    secondaryColor: '#9ca3af',
+    fontFamily: 'Inter',
     fontSize: 12,
     layout: 'premium'
   }
 ]
 
 const FONT_FAMILIES = [
-  { value: 'Helvetica', label: 'Helvetica' },
   { value: 'Arial', label: 'Arial' },
-  { value: 'Times-Roman', label: 'Times New Roman' },
+  { value: 'Helvetica', label: 'Helvetica' },
+  { value: 'Times New Roman', label: 'Times New Roman' },
   { value: 'Georgia', label: 'Georgia' },
+  { value: 'Inter', label: 'Inter (Modern)' },
+  { value: 'Poppins', label: 'Poppins (Google Fonts)' },
+  { value: 'Calibri', label: 'Calibri (Professional)' },
   { value: 'Cambria', label: 'Cambria (Professional)' },
-  { value: 'Calibri', label: 'Calibri (Modern)' },
-  { value: 'Courier', label: 'Courier' },
-  { value: 'Poppins', label: 'Poppins (Modern)' },
-  { value: 'Lato', label: 'Lato (Clean)' },
-  { value: 'TeX-Gyre-Termes', label: 'TeX Gyre Termes (Math)' },
-  { value: 'Computer-Modern', label: 'Computer Modern (LaTeX)' },
+  { value: 'TeX-Gyre-Termes-Math', label: 'TeX Gyre Termes Math (LaTeX)' },
   { value: 'Noto-Sans-Bengali', label: 'Noto Sans Bengali' },
   { value: 'Kalpurush', label: 'Kalpurush (Bengali)' }
 ]
@@ -116,43 +122,41 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
   const [settings, setSettings] = useState<PDFSettings>({
     theme: THEMES[0],
     showHeader: true,
-    showFooter: true,
-    showPageNumbers: true,
-    showInstructions: true,
-    includeOptions: true,
-    showMarking: true,
-    questionsPerPage: 2,
-    fontSize: 12,
-    lineSpacing: 1.6,
-    margins: 30,
-    customHeaderText: '',
-    customFooterText: '© 2025 Professional Test Platform',
-    customInstructions: '',
     showDuration: true,
     showTotalQuestions: true,
-    showFullMarks: true
+    showFullMarks: true,
+    showMarking: true,
+    includeOptions: true,
+    showInstructions: true,
+    showFooter: true,
+    showPageNumbers: true,
+    customHeaderText: '',
+    customFooterText: '© 2025 Professional Test Platform',
+    questionsPerPage: 5,
+    fontSize: 12,
+    lineSpacing: 1.4,
+    margins: 30
   })
 
   const [isGenerating, setIsGenerating] = useState(false)
-  const [previewMode, setPreviewMode] = useState<'preview' | 'generating' | 'success'>('preview')
 
   const handleThemeChange = (themeId: string) => {
-    const theme = THEMES.find(t => t.id === themeId)
-    if (theme) {
+    const selectedTheme = THEMES.find(theme => theme.id === themeId)
+    if (selectedTheme) {
       setSettings(prev => ({
         ...prev,
-        theme,
-        fontSize: theme.fontSize
+        theme: selectedTheme,
+        fontSize: selectedTheme.fontSize,
+        primaryColor: selectedTheme.primaryColor,
+        secondaryColor: selectedTheme.secondaryColor
       }))
     }
   }
 
   const handleGeneratePDF = async () => {
     setIsGenerating(true)
-    setPreviewMode('generating')
     
     try {
-      // Generate PDF with current settings
       const result = await PDFService.generateQuestionPaperPDF(test, questions)
       
       if (result.success && result.blob && result.fileName) {
@@ -161,24 +165,24 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
           description: 'Your document has been downloaded.',
           duration: 3000,
         })
-        setPreviewMode('preview')
       } else {
-        console.error('PDF generation failed:', result.message)
         toast.error('PDF Generation Failed', {
           description: result.message || 'Please try again.',
           duration: 4000,
         })
-        setPreviewMode('preview')
       }
     } catch (error) {
       console.error('PDF generation error:', error)
-      setPreviewMode('preview')
+      toast.error('PDF Generation Failed', {
+        description: 'An unexpected error occurred.',
+        duration: 4000,
+      })
     } finally {
       setIsGenerating(false)
     }
   }
 
-  const handleExportAnswerKey = async () => {
+  const handleGenerateAnswerKey = async () => {
     setIsGenerating(true)
     
     try {
@@ -191,7 +195,6 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
           duration: 3000,
         })
       } else {
-        console.error('Answer key generation failed:', result.message)
         toast.error('Answer Key Generation Failed', {
           description: result.message || 'Please try again.',
           duration: 4000,
@@ -199,6 +202,10 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
       }
     } catch (error) {
       console.error('Answer key generation error:', error)
+      toast.error('Answer Key Generation Failed', {
+        description: 'An unexpected error occurred.',
+        duration: 4000,
+      })
     } finally {
       setIsGenerating(false)
     }
@@ -206,20 +213,21 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[90vw] w-[90vw] h-[90vh] p-0 overflow-hidden">
+      <DialogContent className="max-w-[90vw] w-[90vw] h-[85vh] p-0 overflow-hidden">
         <DialogHeader className="p-6 pb-0">
-          <DialogTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
+          <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
+            <FileText className="h-6 w-6" />
             Interactive PDF Exporter
           </DialogTitle>
         </DialogHeader>
 
         <div className="flex h-full">
-          {/* Control Panel */}
-          <div className="w-96 bg-gradient-to-b from-gray-50 to-gray-100 border-r border-gray-200 overflow-y-auto">
+          {/* Control Panel - Fixed Width 360px */}
+          <div className="w-[360px] bg-gray-50 border-r border-gray-200 overflow-y-auto">
             <div className="p-6 space-y-8">
-              {/* Theme Selection */}
-              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+              
+              {/* Design Theme Section */}
+              <div>
                 <Label className="text-sm font-semibold mb-3 block text-gray-800">Design Theme</Label>
                 <Select value={settings.theme.id} onValueChange={handleThemeChange}>
                   <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
@@ -244,8 +252,8 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
                 </Select>
               </div>
 
-              {/* Color Customization */}
-              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+              {/* Color Palette Section */}
+              <div>
                 <Label className="text-sm font-semibold mb-3 block text-gray-800">Color Palette</Label>
                 <div className="space-y-4">
                   <div>
@@ -287,8 +295,8 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
                 </div>
               </div>
 
-              {/* Typography */}
-              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+              {/* Typography Section */}
+              <div>
                 <Label className="text-sm font-semibold mb-3 block text-gray-800">Typography</Label>
                 <div className="space-y-4">
                   <div>
@@ -317,8 +325,8 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
                     <Slider
                       value={[settings.fontSize]}
                       onValueChange={([value]) => setSettings(prev => ({ ...prev, fontSize: value }))}
-                      min={10}
-                      max={16}
+                      min={8}
+                      max={24}
                       step={1}
                       className="mt-2"
                     />
@@ -328,7 +336,7 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
                     <Slider
                       value={[settings.lineSpacing]}
                       onValueChange={([value]) => setSettings(prev => ({ ...prev, lineSpacing: value }))}
-                      min={1.2}
+                      min={1.0}
                       max={2.0}
                       step={0.1}
                       className="mt-2"
@@ -337,27 +345,27 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
                 </div>
               </div>
 
-              {/* Layout Options */}
+              {/* Layout & Spacing Section */}
               <div>
-                <Label className="text-sm font-semibold mb-3 block">Layout & Spacing</Label>
-                <div className="space-y-3">
+                <Label className="text-sm font-semibold mb-3 block text-gray-800">Layout & Spacing</Label>
+                <div className="space-y-4">
                   <div>
-                    <Label className="text-xs text-gray-600">Questions per Page: {settings.questionsPerPage}</Label>
+                    <Label className="text-xs text-gray-600 mb-2 block">Questions per Page: {settings.questionsPerPage}</Label>
                     <Slider
                       value={[settings.questionsPerPage]}
                       onValueChange={([value]) => setSettings(prev => ({ ...prev, questionsPerPage: value }))}
                       min={1}
-                      max={5}
+                      max={10}
                       step={1}
                       className="mt-2"
                     />
                   </div>
                   <div>
-                    <Label className="text-xs text-gray-600">Margins: {settings.margins}px</Label>
+                    <Label className="text-xs text-gray-600 mb-2 block">Margins: {settings.margins}px</Label>
                     <Slider
                       value={[settings.margins]}
                       onValueChange={([value]) => setSettings(prev => ({ ...prev, margins: value }))}
-                      min={20}
+                      min={10}
                       max={50}
                       step={5}
                       className="mt-2"
@@ -366,91 +374,96 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
                 </div>
               </div>
 
-              {/* Content Options */}
-              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+              {/* Content Options Section */}
+              <div>
                 <Label className="text-sm font-semibold mb-3 block text-gray-800">Content Options</Label>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="includeOptions" className="text-sm font-medium">Include Options</Label>
-                    <Checkbox
-                      id="includeOptions"
-                      checked={settings.includeOptions}
-                      onCheckedChange={(checked) => setSettings(prev => ({ ...prev, includeOptions: !!checked }))}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
                     <Label htmlFor="showHeader" className="text-sm font-medium">Show Header</Label>
-                    <Checkbox
+                    <ToggleSwitch
                       id="showHeader"
                       checked={settings.showHeader}
-                      onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showHeader: !!checked }))}
+                      onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showHeader: checked }))}
                     />
                   </div>
+                  
                   {settings.showHeader && (
                     <div className="ml-4 space-y-2 border-l-2 border-gray-200 pl-4">
                       <div className="flex items-center justify-between">
                         <Label htmlFor="showDuration" className="text-xs text-gray-600">Show Duration</Label>
-                        <Checkbox
+                        <ToggleSwitch
                           id="showDuration"
                           checked={settings.showDuration}
-                          onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showDuration: !!checked }))}
+                          onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showDuration: checked }))}
                         />
                       </div>
                       <div className="flex items-center justify-between">
                         <Label htmlFor="showTotalQuestions" className="text-xs text-gray-600">Show Total Questions</Label>
-                        <Checkbox
+                        <ToggleSwitch
                           id="showTotalQuestions"
                           checked={settings.showTotalQuestions}
-                          onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showTotalQuestions: !!checked }))}
+                          onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showTotalQuestions: checked }))}
                         />
                       </div>
                       <div className="flex items-center justify-between">
                         <Label htmlFor="showFullMarks" className="text-xs text-gray-600">Show Full Marks</Label>
-                        <Checkbox
+                        <ToggleSwitch
                           id="showFullMarks"
                           checked={settings.showFullMarks}
-                          onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showFullMarks: !!checked }))}
+                          onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showFullMarks: checked }))}
                         />
                       </div>
                       <div className="flex items-center justify-between">
                         <Label htmlFor="showMarking" className="text-xs text-gray-600">Show Marking</Label>
-                        <Checkbox
+                        <ToggleSwitch
                           id="showMarking"
                           checked={settings.showMarking}
-                          onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showMarking: !!checked }))}
+                          onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showMarking: checked }))}
                         />
                       </div>
                     </div>
                   )}
+
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="showFooter" className="text-sm font-medium">Show Footer</Label>
-                    <Checkbox
-                      id="showFooter"
-                      checked={settings.showFooter}
-                      onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showFooter: !!checked }))}
+                    <Label htmlFor="includeOptions" className="text-sm font-medium">Include Options</Label>
+                    <ToggleSwitch
+                      id="includeOptions"
+                      checked={settings.includeOptions}
+                      onCheckedChange={(checked) => setSettings(prev => ({ ...prev, includeOptions: checked }))}
                     />
                   </div>
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="showPageNumbers" className="text-sm font-medium">Show Page Numbers</Label>
-                    <Checkbox
-                      id="showPageNumbers"
-                      checked={settings.showPageNumbers}
-                      onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showPageNumbers: !!checked }))}
-                    />
-                  </div>
+
                   <div className="flex items-center justify-between">
                     <Label htmlFor="showInstructions" className="text-sm font-medium">Show Instructions</Label>
-                    <Checkbox
+                    <ToggleSwitch
                       id="showInstructions"
                       checked={settings.showInstructions}
-                      onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showInstructions: !!checked }))}
+                      onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showInstructions: checked }))}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="showFooter" className="text-sm font-medium">Show Footer</Label>
+                    <ToggleSwitch
+                      id="showFooter"
+                      checked={settings.showFooter}
+                      onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showFooter: checked }))}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="showPageNumbers" className="text-sm font-medium">Show Page Numbers</Label>
+                    <ToggleSwitch
+                      id="showPageNumbers"
+                      checked={settings.showPageNumbers}
+                      onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showPageNumbers: checked }))}
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Custom Text Options */}
-              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+              {/* Custom Text Section */}
+              <div>
                 <Label className="text-sm font-semibold mb-3 block text-gray-800">Custom Text</Label>
                 <div className="space-y-4">
                   <div>
@@ -473,21 +486,11 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
                       placeholder="Enter custom footer text..."
                     />
                   </div>
-                  <div>
-                    <Label className="text-xs text-gray-600 mb-2 block">Custom Instructions (optional)</Label>
-                    <Textarea
-                      value={settings.customInstructions}
-                      onChange={(e) => setSettings(prev => ({ ...prev, customInstructions: e.target.value }))}
-                      className="text-xs border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                      rows={3}
-                      placeholder="Leave empty to use default instructions..."
-                    />
-                  </div>
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+              {/* Actions Section */}
+              <div className="pt-4 border-t border-gray-200">
                 <div className="space-y-3">
                   <Button
                     onClick={handleGeneratePDF}
@@ -508,38 +511,27 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
                   </Button>
                   
                   <Button
-                    onClick={handleExportAnswerKey}
+                    onClick={handleGenerateAnswerKey}
                     disabled={isGenerating}
                     variant="outline"
                     className="w-full border-gray-300 hover:border-gray-400 hover:bg-gray-50 font-medium py-2.5 transition-all duration-200"
                   >
                     <FileText className="h-4 w-4 mr-2" />
-                    Export Answer Key
+                    Generate Answer Key
                   </Button>
                 </div>
               </div>
+
             </div>
           </div>
 
-          {/* Preview Area */}
-          <div className="flex-1 p-6">
-            <div className="h-full bg-white border rounded-lg overflow-hidden">
-              {previewMode === 'generating' ? (
-                <div className="h-full flex items-center justify-center">
-                  <div className="text-center">
-                    <Loader2 className="h-16 w-16 text-blue-600 mx-auto mb-4 animate-spin" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Generating PDF...</h3>
-                    <p className="text-gray-600">Please wait while we create your document</p>
-                  </div>
-                </div>
-              ) : (
-                <PDFLivePreview
-                  test={test}
-                  questions={questions}
-                  settings={settings}
-                />
-              )}
-            </div>
+          {/* Preview Area - Flexible Column */}
+          <div className="flex-1 flex flex-col">
+            <PDFLivePreview
+              test={test}
+              questions={questions}
+              settings={settings}
+            />
           </div>
         </div>
       </DialogContent>
