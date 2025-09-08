@@ -7,8 +7,10 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { X, Download, Eye, Palette, Type, Layout, Settings, FileText, CheckCircle, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { PDFService } from '@/lib/services/pdf-service'
 import { PDFLivePreview } from './pdf-live-preview'
 import type { Test, Question } from '@/lib/supabase/admin'
@@ -41,6 +43,12 @@ interface PDFSettings {
   fontSize: number
   lineSpacing: number
   margins: number
+  customHeaderText: string
+  customFooterText: string
+  customInstructions: string
+  showDuration: boolean
+  showTotalQuestions: boolean
+  showFullMarks: boolean
 }
 
 const THEMES: PDFTheme[] = [
@@ -88,8 +96,14 @@ const THEMES: PDFTheme[] = [
 
 const FONT_FAMILIES = [
   { value: 'Helvetica', label: 'Helvetica' },
-  { value: 'Times-Roman', label: 'Times Roman' },
-  { value: 'Courier', label: 'Courier' }
+  { value: 'Arial', label: 'Arial' },
+  { value: 'Times-Roman', label: 'Times New Roman' },
+  { value: 'Georgia', label: 'Georgia' },
+  { value: 'Courier', label: 'Courier' },
+  { value: 'Poppins', label: 'Poppins (Modern)' },
+  { value: 'Lato', label: 'Lato (Clean)' },
+  { value: 'Noto-Sans-Bengali', label: 'Noto Sans Bengali' },
+  { value: 'Kalpurush', label: 'Kalpurush (Bengali)' }
 ]
 
 export function InteractivePDFExporter({ test, questions, isOpen, onClose }: InteractivePDFExporterProps) {
@@ -102,7 +116,13 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
     questionsPerPage: 2,
     fontSize: 12,
     lineSpacing: 1.6,
-    margins: 30
+    margins: 30,
+    customHeaderText: '',
+    customFooterText: '© 2025 Professional Test Platform',
+    customInstructions: '',
+    showDuration: true,
+    showTotalQuestions: true,
+    showFullMarks: true
   })
 
   const [isGenerating, setIsGenerating] = useState(false)
@@ -129,15 +149,17 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
       
       if (result.success && result.blob && result.fileName) {
         PDFService.downloadPDF(result.blob, result.fileName)
-        setPreviewMode('success')
-        
-        // Close modal after 2 seconds
-        setTimeout(() => {
-          onClose()
-          setPreviewMode('preview')
-        }, 2000)
+        toast.success('PDF Generated Successfully!', {
+          description: 'Your document has been downloaded.',
+          duration: 3000,
+        })
+        setPreviewMode('preview')
       } else {
         console.error('PDF generation failed:', result.message)
+        toast.error('PDF Generation Failed', {
+          description: result.message || 'Please try again.',
+          duration: 4000,
+        })
         setPreviewMode('preview')
       }
     } catch (error) {
@@ -156,8 +178,16 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
       
       if (result.success && result.blob && result.fileName) {
         PDFService.downloadPDF(result.blob, result.fileName)
+        toast.success('Answer Key Generated!', {
+          description: 'Your answer key has been downloaded.',
+          duration: 3000,
+        })
       } else {
         console.error('Answer key generation failed:', result.message)
+        toast.error('Answer Key Generation Failed', {
+          description: result.message || 'Please try again.',
+          duration: 4000,
+        })
       }
     } catch (error) {
       console.error('Answer key generation error:', error)
@@ -168,7 +198,7 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl h-[90vh] p-0">
+      <DialogContent className="max-w-[95vw] w-[95vw] h-[95vh] p-0">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
@@ -334,6 +364,34 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
                     />
                     <Label htmlFor="showHeader" className="text-sm">Show Header</Label>
                   </div>
+                  {settings.showHeader && (
+                    <div className="ml-6 space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="showDuration"
+                          checked={settings.showDuration}
+                          onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showDuration: !!checked }))}
+                        />
+                        <Label htmlFor="showDuration" className="text-xs">Show Duration</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="showTotalQuestions"
+                          checked={settings.showTotalQuestions}
+                          onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showTotalQuestions: !!checked }))}
+                        />
+                        <Label htmlFor="showTotalQuestions" className="text-xs">Show Total Questions</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="showFullMarks"
+                          checked={settings.showFullMarks}
+                          onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showFullMarks: !!checked }))}
+                        />
+                        <Label htmlFor="showFullMarks" className="text-xs">Show Full Marks</Label>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="showFooter"
@@ -357,6 +415,33 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
                       onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showInstructions: !!checked }))}
                     />
                     <Label htmlFor="showInstructions" className="text-sm">Show Instructions</Label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Custom Text Options */}
+              <div>
+                <Label className="text-sm font-semibold mb-3 block">Custom Text</Label>
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-xs text-gray-600">Custom Footer Text</Label>
+                    <Textarea
+                      value={settings.customFooterText}
+                      onChange={(e) => setSettings(prev => ({ ...prev, customFooterText: e.target.value }))}
+                      className="mt-1 text-xs"
+                      rows={2}
+                      placeholder="Enter custom footer text..."
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-gray-600">Custom Instructions (optional)</Label>
+                    <Textarea
+                      value={settings.customInstructions}
+                      onChange={(e) => setSettings(prev => ({ ...prev, customInstructions: e.target.value }))}
+                      className="mt-1 text-xs"
+                      rows={3}
+                      placeholder="Leave empty to use default instructions..."
+                    />
                   </div>
                 </div>
               </div>
@@ -397,15 +482,7 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
           {/* Preview Area */}
           <div className="flex-1 p-6">
             <div className="h-full bg-white border rounded-lg overflow-hidden">
-              {previewMode === 'preview' && (
-                <PDFLivePreview
-                  test={test}
-                  questions={questions}
-                  settings={settings}
-                />
-              )}
-
-              {previewMode === 'generating' && (
+              {previewMode === 'generating' ? (
                 <div className="h-full flex items-center justify-center">
                   <div className="text-center">
                     <Loader2 className="h-16 w-16 text-blue-600 mx-auto mb-4 animate-spin" />
@@ -413,16 +490,12 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
                     <p className="text-gray-600">Please wait while we create your document</p>
                   </div>
                 </div>
-              )}
-
-              {previewMode === 'success' && (
-                <div className="h-full flex items-center justify-center">
-                  <div className="text-center">
-                    <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">PDF Generated Successfully!</h3>
-                    <p className="text-gray-600">Your document has been downloaded</p>
-                  </div>
-                </div>
+              ) : (
+                <PDFLivePreview
+                  test={test}
+                  questions={questions}
+                  settings={settings}
+                />
               )}
             </div>
           </div>

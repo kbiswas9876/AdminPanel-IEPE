@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
 import { renderMathContent } from '@/lib/utils/latex-pdf-renderer'
+import { SmartLatexRenderer } from './smart-latex-renderer'
 import type { Test, Question } from '@/lib/supabase/admin'
 
 interface PDFLivePreviewProps {
@@ -27,6 +28,12 @@ interface PDFLivePreviewProps {
     fontSize: number
     lineSpacing: number
     margins: number
+    customHeaderText: string
+    customFooterText: string
+    customInstructions: string
+    showDuration: boolean
+    showTotalQuestions: boolean
+    showFullMarks: boolean
   }
 }
 
@@ -233,18 +240,24 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
               <div style={titleStyle}>{test.name || 'Test Paper'}</div>
               
               <div style={testInfoStyle}>
-                <div style={infoItemStyle}>
-                  <div style={{ fontWeight: 'bold' }}>Duration</div>
-                  <div>{test.total_time_minutes || 60} minutes</div>
-                </div>
-                <div style={infoItemStyle}>
-                  <div style={{ fontWeight: 'bold' }}>Total Questions</div>
-                  <div>{questions.length}</div>
-                </div>
-                <div style={infoItemStyle}>
-                  <div style={{ fontWeight: 'bold' }}>Full Marks</div>
-                  <div>{totalMarks}</div>
-                </div>
+                {settings.showDuration && (
+                  <div style={infoItemStyle}>
+                    <div style={{ fontWeight: 'bold' }}>Duration</div>
+                    <div>{test.total_time_minutes || 60} minutes</div>
+                  </div>
+                )}
+                {settings.showTotalQuestions && (
+                  <div style={infoItemStyle}>
+                    <div style={{ fontWeight: 'bold' }}>Total Questions</div>
+                    <div>{questions.length}</div>
+                  </div>
+                )}
+                {settings.showFullMarks && (
+                  <div style={infoItemStyle}>
+                    <div style={{ fontWeight: 'bold' }}>Full Marks</div>
+                    <div>{totalMarks}</div>
+                  </div>
+                )}
                 <div style={infoItemStyle}>
                   <div style={{ fontWeight: 'bold' }}>Marking</div>
                   <div>+{test.marks_per_correct || 1} for correct, -{test.negative_marks_per_incorrect || 0} for incorrect</div>
@@ -259,23 +272,35 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
               <div style={{ fontSize: `${12 * zoom}px`, fontWeight: 'bold', color: '#1f2937', marginBottom: `${6 * zoom}px` }}>
                 Instructions
               </div>
-              <div style={{ marginBottom: `${3 * zoom}px`, color: '#374151', paddingLeft: `${6 * zoom}px` }}>
-                • Read all questions carefully before answering.
-              </div>
-              <div style={{ marginBottom: `${3 * zoom}px`, color: '#374151', paddingLeft: `${6 * zoom}px` }}>
-                • Each question carries {test.marks_per_correct || 1} mark(s) for correct answer.
-              </div>
-              {test.negative_marks_per_incorrect && test.negative_marks_per_incorrect > 0 && (
-                <div style={{ marginBottom: `${3 * zoom}px`, color: '#374151', paddingLeft: `${6 * zoom}px` }}>
-                  • There is negative marking of {test.negative_marks_per_incorrect} mark(s) for each incorrect answer.
+              {settings.customInstructions ? (
+                <div style={{ color: '#374151', lineHeight: 1.4 }}>
+                  {settings.customInstructions.split('\n').map((line, index) => (
+                    <div key={index} style={{ marginBottom: `${3 * zoom}px`, paddingLeft: line.startsWith('•') ? 0 : `${6 * zoom}px` }}>
+                      {line}
+                    </div>
+                  ))}
                 </div>
+              ) : (
+                <>
+                  <div style={{ marginBottom: `${3 * zoom}px`, color: '#374151', paddingLeft: `${6 * zoom}px` }}>
+                    • Read all questions carefully before answering.
+                  </div>
+                  <div style={{ marginBottom: `${3 * zoom}px`, color: '#374151', paddingLeft: `${6 * zoom}px` }}>
+                    • Each question carries {test.marks_per_correct || 1} mark(s) for correct answer.
+                  </div>
+                  {test.negative_marks_per_incorrect && test.negative_marks_per_incorrect > 0 && (
+                    <div style={{ marginBottom: `${3 * zoom}px`, color: '#374151', paddingLeft: `${6 * zoom}px` }}>
+                      • There is negative marking of {test.negative_marks_per_incorrect} mark(s) for each incorrect answer.
+                    </div>
+                  )}
+                  <div style={{ marginBottom: `${3 * zoom}px`, color: '#374151', paddingLeft: `${6 * zoom}px` }}>
+                    • Choose the most appropriate answer from the given options.
+                  </div>
+                  <div style={{ marginBottom: `${3 * zoom}px`, color: '#374151', paddingLeft: `${6 * zoom}px` }}>
+                    • Use only black or blue ink pen for marking answers.
+                  </div>
+                </>
               )}
-              <div style={{ marginBottom: `${3 * zoom}px`, color: '#374151', paddingLeft: `${6 * zoom}px` }}>
-                • Choose the most appropriate answer from the given options.
-              </div>
-              <div style={{ marginBottom: `${3 * zoom}px`, color: '#374151', paddingLeft: `${6 * zoom}px` }}>
-                • Use only black or blue ink pen for marking answers.
-              </div>
             </div>
           )}
 
@@ -285,7 +310,7 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
               <div style={questionHeaderStyle}>
                 <div style={questionNumberStyle}>{getQuestionNumber(index)}.</div>
                 <div style={questionTextStyle}>
-                  {renderMathContent(question.question_text || '')}
+                  <SmartLatexRenderer text={question.question_text || ''} />
                 </div>
               </div>
               
@@ -294,7 +319,7 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
                   <div style={optionStyle}>
                     <div style={optionLabelStyle}>(A)</div>
                     <div style={optionTextStyle}>
-                      {renderMathContent(question.options.a)}
+                      <SmartLatexRenderer text={question.options.a} />
                     </div>
                   </div>
                 )}
@@ -302,7 +327,7 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
                   <div style={optionStyle}>
                     <div style={optionLabelStyle}>(B)</div>
                     <div style={optionTextStyle}>
-                      {renderMathContent(question.options.b)}
+                      <SmartLatexRenderer text={question.options.b} />
                     </div>
                   </div>
                 )}
@@ -310,7 +335,7 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
                   <div style={optionStyle}>
                     <div style={optionLabelStyle}>(C)</div>
                     <div style={optionTextStyle}>
-                      {renderMathContent(question.options.c)}
+                      <SmartLatexRenderer text={question.options.c} />
                     </div>
                   </div>
                 )}
@@ -318,7 +343,7 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
                   <div style={optionStyle}>
                     <div style={optionLabelStyle}>(D)</div>
                     <div style={optionTextStyle}>
-                      {renderMathContent(question.options.d)}
+                      <SmartLatexRenderer text={question.options.d} />
                     </div>
                   </div>
                 )}
@@ -329,7 +354,7 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
           {/* Footer */}
           {settings.showFooter && (
             <div style={footerStyle}>
-              © 2025 Professional Test Platform - Question Paper
+              {settings.customFooterText || '© 2025 Professional Test Platform - Question Paper'}
               {settings.showPageNumbers && ` | Page ${currentPage} of ${totalPages}`}
             </div>
           )}
