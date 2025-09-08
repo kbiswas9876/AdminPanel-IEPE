@@ -39,6 +39,8 @@ interface PDFSettings {
   showFooter: boolean
   showPageNumbers: boolean
   showInstructions: boolean
+  includeOptions: boolean
+  showMarking: boolean
   questionsPerPage: number
   fontSize: number
   lineSpacing: number
@@ -99,9 +101,13 @@ const FONT_FAMILIES = [
   { value: 'Arial', label: 'Arial' },
   { value: 'Times-Roman', label: 'Times New Roman' },
   { value: 'Georgia', label: 'Georgia' },
+  { value: 'Cambria', label: 'Cambria (Professional)' },
+  { value: 'Calibri', label: 'Calibri (Modern)' },
   { value: 'Courier', label: 'Courier' },
   { value: 'Poppins', label: 'Poppins (Modern)' },
   { value: 'Lato', label: 'Lato (Clean)' },
+  { value: 'TeX-Gyre-Termes', label: 'TeX Gyre Termes (Math)' },
+  { value: 'Computer-Modern', label: 'Computer Modern (LaTeX)' },
   { value: 'Noto-Sans-Bengali', label: 'Noto Sans Bengali' },
   { value: 'Kalpurush', label: 'Kalpurush (Bengali)' }
 ]
@@ -113,6 +119,8 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
     showFooter: true,
     showPageNumbers: true,
     showInstructions: true,
+    includeOptions: true,
+    showMarking: true,
     questionsPerPage: 2,
     fontSize: 12,
     lineSpacing: 1.6,
@@ -198,7 +206,7 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] w-[95vw] h-[95vh] p-0">
+      <DialogContent className="max-w-[90vw] w-[90vw] h-[90vh] p-0 overflow-hidden">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
@@ -208,21 +216,27 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
 
         <div className="flex h-full">
           {/* Control Panel */}
-          <div className="w-80 border-r bg-gray-50 p-6 overflow-y-auto">
-            <div className="space-y-6">
+          <div className="w-96 bg-gradient-to-b from-gray-50 to-gray-100 border-r border-gray-200 overflow-y-auto">
+            <div className="p-6 space-y-8">
               {/* Theme Selection */}
-              <div>
-                <Label className="text-sm font-semibold mb-3 block">Design Theme</Label>
+              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                <Label className="text-sm font-semibold mb-3 block text-gray-800">Design Theme</Label>
                 <Select value={settings.theme.id} onValueChange={handleThemeChange}>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {THEMES.map(theme => (
                       <SelectItem key={theme.id} value={theme.id}>
-                        <div>
-                          <div className="font-medium">{theme.name}</div>
-                          <div className="text-xs text-gray-500">{theme.description}</div>
+                        <div className="flex items-center gap-3">
+                          <div 
+                            className="w-4 h-4 rounded border border-gray-300"
+                            style={{ backgroundColor: theme.primaryColor }}
+                          />
+                          <div>
+                            <div className="font-medium">{theme.name}</div>
+                            <div className="text-xs text-gray-500">{theme.description}</div>
+                          </div>
                         </div>
                       </SelectItem>
                     ))}
@@ -231,14 +245,14 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
               </div>
 
               {/* Color Customization */}
-              <div>
-                <Label className="text-sm font-semibold mb-3 block">Color Palette</Label>
-                <div className="space-y-3">
+              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                <Label className="text-sm font-semibold mb-3 block text-gray-800">Color Palette</Label>
+                <div className="space-y-4">
                   <div>
-                    <Label className="text-xs text-gray-600">Primary Color</Label>
-                    <div className="flex items-center gap-2 mt-1">
+                    <Label className="text-xs text-gray-600 mb-2 block">Primary Color</Label>
+                    <div className="flex items-center gap-3">
                       <div 
-                        className="w-6 h-6 rounded border"
+                        className="w-8 h-8 rounded-lg border-2 border-gray-300 shadow-sm"
                         style={{ backgroundColor: settings.theme.primaryColor }}
                       />
                       <input
@@ -248,15 +262,15 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
                           ...prev,
                           theme: { ...prev.theme, primaryColor: e.target.value }
                         }))}
-                        className="w-8 h-6 rounded border"
+                        className="w-10 h-8 rounded border border-gray-300 cursor-pointer"
                       />
                     </div>
                   </div>
                   <div>
-                    <Label className="text-xs text-gray-600">Secondary Color</Label>
-                    <div className="flex items-center gap-2 mt-1">
+                    <Label className="text-xs text-gray-600 mb-2 block">Secondary Color</Label>
+                    <div className="flex items-center gap-3">
                       <div 
-                        className="w-6 h-6 rounded border"
+                        className="w-8 h-8 rounded-lg border-2 border-gray-300 shadow-sm"
                         style={{ backgroundColor: settings.theme.secondaryColor }}
                       />
                       <input
@@ -266,7 +280,7 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
                           ...prev,
                           theme: { ...prev.theme, secondaryColor: e.target.value }
                         }))}
-                        className="w-8 h-6 rounded border"
+                        className="w-10 h-8 rounded border border-gray-300 cursor-pointer"
                       />
                     </div>
                   </div>
@@ -274,11 +288,11 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
               </div>
 
               {/* Typography */}
-              <div>
-                <Label className="text-sm font-semibold mb-3 block">Typography</Label>
-                <div className="space-y-3">
+              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                <Label className="text-sm font-semibold mb-3 block text-gray-800">Typography</Label>
+                <div className="space-y-4">
                   <div>
-                    <Label className="text-xs text-gray-600">Font Family</Label>
+                    <Label className="text-xs text-gray-600 mb-2 block">Font Family</Label>
                     <Select 
                       value={settings.theme.fontFamily} 
                       onValueChange={(value) => setSettings(prev => ({
@@ -286,7 +300,7 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
                         theme: { ...prev.theme, fontFamily: value }
                       }))}
                     >
-                      <SelectTrigger className="mt-1">
+                      <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -299,7 +313,7 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
                     </Select>
                   </div>
                   <div>
-                    <Label className="text-xs text-gray-600">Font Size: {settings.fontSize}px</Label>
+                    <Label className="text-xs text-gray-600 mb-2 block">Font Size: {settings.fontSize}px</Label>
                     <Slider
                       value={[settings.fontSize]}
                       onValueChange={([value]) => setSettings(prev => ({ ...prev, fontSize: value }))}
@@ -310,7 +324,7 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
                     />
                   </div>
                   <div>
-                    <Label className="text-xs text-gray-600">Line Spacing: {settings.lineSpacing}</Label>
+                    <Label className="text-xs text-gray-600 mb-2 block">Line Spacing: {settings.lineSpacing}</Label>
                     <Slider
                       value={[settings.lineSpacing]}
                       onValueChange={([value]) => setSettings(prev => ({ ...prev, lineSpacing: value }))}
@@ -353,92 +367,118 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
               </div>
 
               {/* Content Options */}
-              <div>
-                <Label className="text-sm font-semibold mb-3 block">Content Options</Label>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
+              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                <Label className="text-sm font-semibold mb-3 block text-gray-800">Content Options</Label>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="includeOptions" className="text-sm font-medium">Include Options</Label>
+                    <Checkbox
+                      id="includeOptions"
+                      checked={settings.includeOptions}
+                      onCheckedChange={(checked) => setSettings(prev => ({ ...prev, includeOptions: !!checked }))}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="showHeader" className="text-sm font-medium">Show Header</Label>
                     <Checkbox
                       id="showHeader"
                       checked={settings.showHeader}
                       onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showHeader: !!checked }))}
                     />
-                    <Label htmlFor="showHeader" className="text-sm">Show Header</Label>
                   </div>
                   {settings.showHeader && (
-                    <div className="ml-6 space-y-2">
-                      <div className="flex items-center space-x-2">
+                    <div className="ml-4 space-y-2 border-l-2 border-gray-200 pl-4">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="showDuration" className="text-xs text-gray-600">Show Duration</Label>
                         <Checkbox
                           id="showDuration"
                           checked={settings.showDuration}
                           onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showDuration: !!checked }))}
                         />
-                        <Label htmlFor="showDuration" className="text-xs">Show Duration</Label>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="showTotalQuestions" className="text-xs text-gray-600">Show Total Questions</Label>
                         <Checkbox
                           id="showTotalQuestions"
                           checked={settings.showTotalQuestions}
                           onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showTotalQuestions: !!checked }))}
                         />
-                        <Label htmlFor="showTotalQuestions" className="text-xs">Show Total Questions</Label>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="showFullMarks" className="text-xs text-gray-600">Show Full Marks</Label>
                         <Checkbox
                           id="showFullMarks"
                           checked={settings.showFullMarks}
                           onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showFullMarks: !!checked }))}
                         />
-                        <Label htmlFor="showFullMarks" className="text-xs">Show Full Marks</Label>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="showMarking" className="text-xs text-gray-600">Show Marking</Label>
+                        <Checkbox
+                          id="showMarking"
+                          checked={settings.showMarking}
+                          onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showMarking: !!checked }))}
+                        />
                       </div>
                     </div>
                   )}
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="showFooter" className="text-sm font-medium">Show Footer</Label>
                     <Checkbox
                       id="showFooter"
                       checked={settings.showFooter}
                       onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showFooter: !!checked }))}
                     />
-                    <Label htmlFor="showFooter" className="text-sm">Show Footer</Label>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="showPageNumbers" className="text-sm font-medium">Show Page Numbers</Label>
                     <Checkbox
                       id="showPageNumbers"
                       checked={settings.showPageNumbers}
                       onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showPageNumbers: !!checked }))}
                     />
-                    <Label htmlFor="showPageNumbers" className="text-sm">Show Page Numbers</Label>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="showInstructions" className="text-sm font-medium">Show Instructions</Label>
                     <Checkbox
                       id="showInstructions"
                       checked={settings.showInstructions}
                       onCheckedChange={(checked) => setSettings(prev => ({ ...prev, showInstructions: !!checked }))}
                     />
-                    <Label htmlFor="showInstructions" className="text-sm">Show Instructions</Label>
                   </div>
                 </div>
               </div>
 
               {/* Custom Text Options */}
-              <div>
-                <Label className="text-sm font-semibold mb-3 block">Custom Text</Label>
-                <div className="space-y-3">
+              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                <Label className="text-sm font-semibold mb-3 block text-gray-800">Custom Text</Label>
+                <div className="space-y-4">
                   <div>
-                    <Label className="text-xs text-gray-600">Custom Footer Text</Label>
+                    <Label className="text-xs text-gray-600 mb-2 block">Custom Header Text (optional)</Label>
+                    <Textarea
+                      value={settings.customHeaderText}
+                      onChange={(e) => setSettings(prev => ({ ...prev, customHeaderText: e.target.value }))}
+                      className="text-xs border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      rows={2}
+                      placeholder="Enter custom header text (e.g., paper code)..."
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-gray-600 mb-2 block">Custom Footer Text</Label>
                     <Textarea
                       value={settings.customFooterText}
                       onChange={(e) => setSettings(prev => ({ ...prev, customFooterText: e.target.value }))}
-                      className="mt-1 text-xs"
+                      className="text-xs border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                       rows={2}
                       placeholder="Enter custom footer text..."
                     />
                   </div>
                   <div>
-                    <Label className="text-xs text-gray-600">Custom Instructions (optional)</Label>
+                    <Label className="text-xs text-gray-600 mb-2 block">Custom Instructions (optional)</Label>
                     <Textarea
                       value={settings.customInstructions}
                       onChange={(e) => setSettings(prev => ({ ...prev, customInstructions: e.target.value }))}
-                      className="mt-1 text-xs"
+                      className="text-xs border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                       rows={3}
                       placeholder="Leave empty to use default instructions..."
                     />
@@ -447,34 +487,36 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
               </div>
 
               {/* Action Buttons */}
-              <div className="space-y-3 pt-4 border-t">
-                <Button
-                  onClick={handleGeneratePDF}
-                  disabled={isGenerating}
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Generating PDF...
-                    </>
-                  ) : (
-                    <>
-                      <Download className="h-4 w-4 mr-2" />
-                      Generate & Download PDF
-                    </>
-                  )}
-                </Button>
-                
-                <Button
-                  onClick={handleExportAnswerKey}
-                  disabled={isGenerating}
-                  variant="outline"
-                  className="w-full"
-                >
-                  <FileText className="h-4 w-4 mr-2" />
-                  Export Answer Key
-                </Button>
+              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                <div className="space-y-3">
+                  <Button
+                    onClick={handleGeneratePDF}
+                    disabled={isGenerating}
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-2.5 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Generating PDF...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="h-4 w-4 mr-2" />
+                        Generate & Download PDF
+                      </>
+                    )}
+                  </Button>
+                  
+                  <Button
+                    onClick={handleExportAnswerKey}
+                    disabled={isGenerating}
+                    variant="outline"
+                    className="w-full border-gray-300 hover:border-gray-400 hover:bg-gray-50 font-medium py-2.5 transition-all duration-200"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Export Answer Key
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

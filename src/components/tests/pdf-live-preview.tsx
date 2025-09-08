@@ -24,6 +24,8 @@ interface PDFLivePreviewProps {
     showFooter: boolean
     showPageNumbers: boolean
     showInstructions: boolean
+    includeOptions: boolean
+    showMarking: boolean
     questionsPerPage: number
     fontSize: number
     lineSpacing: number
@@ -237,7 +239,9 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
           {/* Header */}
           {settings.showHeader && (
             <div style={headerStyle}>
-              <div style={titleStyle}>{test.name || 'Test Paper'}</div>
+              <div style={titleStyle}>
+                {settings.customHeaderText || test.name || 'Test Paper'}
+              </div>
               
               <div style={testInfoStyle}>
                 {settings.showDuration && (
@@ -258,10 +262,12 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
                     <div>{totalMarks}</div>
                   </div>
                 )}
-                <div style={infoItemStyle}>
-                  <div style={{ fontWeight: 'bold' }}>Marking</div>
-                  <div>+{test.marks_per_correct || 1} for correct, -{test.negative_marks_per_incorrect || 0} for incorrect</div>
-                </div>
+                {settings.showMarking && (
+                  <div style={infoItemStyle}>
+                    <div style={{ fontWeight: 'bold' }}>Marking</div>
+                    <div>+{test.marks_per_correct || 1} for correct, -{test.negative_marks_per_incorrect || 0} for incorrect</div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -314,40 +320,42 @@ export function PDFLivePreview({ test, questions, settings }: PDFLivePreviewProp
                 </div>
               </div>
               
-              <div style={optionsGridStyle}>
-                {question.options?.a && (
-                  <div style={optionStyle}>
-                    <div style={optionLabelStyle}>(A)</div>
-                    <div style={optionTextStyle}>
-                      <SmartLatexRenderer text={question.options.a} />
+              {settings.includeOptions && (
+                <div style={optionsGridStyle}>
+                  {question.options?.a && (
+                    <div style={optionStyle}>
+                      <div style={optionLabelStyle}>(A)</div>
+                      <div style={optionTextStyle}>
+                        <SmartLatexRenderer text={question.options.a} />
+                      </div>
                     </div>
-                  </div>
-                )}
-                {question.options?.b && (
-                  <div style={optionStyle}>
-                    <div style={optionLabelStyle}>(B)</div>
-                    <div style={optionTextStyle}>
-                      <SmartLatexRenderer text={question.options.b} />
+                  )}
+                  {question.options?.b && (
+                    <div style={optionStyle}>
+                      <div style={optionLabelStyle}>(B)</div>
+                      <div style={optionTextStyle}>
+                        <SmartLatexRenderer text={question.options.b} />
+                      </div>
                     </div>
-                  </div>
-                )}
-                {question.options?.c && (
-                  <div style={optionStyle}>
-                    <div style={optionLabelStyle}>(C)</div>
-                    <div style={optionTextStyle}>
-                      <SmartLatexRenderer text={question.options.c} />
+                  )}
+                  {question.options?.c && (
+                    <div style={optionStyle}>
+                      <div style={optionLabelStyle}>(C)</div>
+                      <div style={optionTextStyle}>
+                        <SmartLatexRenderer text={question.options.c} />
+                      </div>
                     </div>
-                  </div>
-                )}
-                {question.options?.d && (
-                  <div style={optionStyle}>
-                    <div style={optionLabelStyle}>(D)</div>
-                    <div style={optionTextStyle}>
-                      <SmartLatexRenderer text={question.options.d} />
+                  )}
+                  {question.options?.d && (
+                    <div style={optionStyle}>
+                      <div style={optionLabelStyle}>(D)</div>
+                      <div style={optionTextStyle}>
+                        <SmartLatexRenderer text={question.options.d} />
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
           ))}
 
