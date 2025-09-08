@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { deleteTest, cloneTest, exportAnswerKeyPdf, exportMinimalistPdf, exportQuestionPaperPdf } from '@/lib/actions/tests'
+import { deleteTest, cloneTest } from '@/lib/actions/tests'
+import { PDFService } from '@/lib/services/pdf-service'
+import type { Question as AdminQuestion } from '@/lib/supabase/admin'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -92,8 +94,8 @@ export function TestActions({ test, onAction }: TestActionsProps) {
       const progressSteps = [
         'Initializing PDF generation...',
         'Loading test data...',
-        'Rendering HTML template...',
-        'Generating PDF document...',
+        'Rendering PDF document...',
+        'Generating file...',
         'Finalizing export...'
       ]
       
@@ -103,18 +105,36 @@ export function TestActions({ test, onAction }: TestActionsProps) {
           currentStep++
           setExportProgress(progressSteps[currentStep])
         }
-      }, 1000)
+      }, 800)
       
-      let res
+      // Fetch test and questions data
+      setExportProgress('Loading test data...')
+      const { getTestDetailsForEdit } = await import('@/lib/actions/tests')
+      
+      const testDetails = await getTestDetailsForEdit(test.id)
+      
+      if (!testDetails || !testDetails.test || !testDetails.questions) {
+        throw new Error('Failed to fetch test data')
+      }
+      
+      const { test: testData, questions } = testDetails
+      
+      // Convert TestQuestionSlot[] to Question[]
+      const questionData = questions.map(slot => slot.question) as AdminQuestion[]
+      
+      setExportProgress('Generating PDF document...')
+      
+      // Generate PDF using the new service
+      let result
       switch (type) {
         case 'premium':
-          res = await exportQuestionPaperPdf(test.id)
+          result = await PDFService.generateQuestionPaperPDF(testData, questionData)
           break
         case 'minimalist':
-          res = await exportMinimalistPdf(test.id)
+          result = await PDFService.generateMinimalistPDF(testData, questionData)
           break
         case 'answer-key':
-          res = await exportAnswerKeyPdf(test.id)
+          result = await PDFService.generateAnswerKeyPDF(testData, questionData)
           break
         default:
           throw new Error('Invalid export type')
@@ -123,18 +143,15 @@ export function TestActions({ test, onAction }: TestActionsProps) {
       clearInterval(progressInterval)
       setExportProgress('Export completed!')
 
-      if (res.success && res.base64 && res.fileName) {
+      if (result.success && result.blob && result.fileName) {
         setExportStatus('success')
-        setExportProgress(`Successfully generated ${res.fileName}`)
+        setExportProgress(`Successfully generated ${result.fileName}`)
         
         // Download the file
-        const link = document.createElement('a')
-        link.href = `data:application/pdf;base64,${res.base64}`
-        link.download = res.fileName
-        link.click()
+        PDFService.downloadPDF(result.blob, result.fileName)
         
         // Show success feedback
-        console.log(`✅ ${type} PDF exported successfully: ${res.fileName}`)
+        console.log(`✅ ${type} PDF exported successfully: ${result.fileName}`)
         
         // Close modal after 2 seconds
         setTimeout(() => {
@@ -143,8 +160,8 @@ export function TestActions({ test, onAction }: TestActionsProps) {
         }, 2000)
       } else {
         setExportStatus('error')
-        setExportProgress(`Export failed: ${res.message || 'Unknown error'}`)
-        console.error(`❌ Export failed:`, res.message)
+        setExportProgress(`Export failed: ${result.message || 'Unknown error'}`)
+        console.error(`❌ Export failed:`, result.message)
       }
     } catch (e) {
       setExportStatus('error')

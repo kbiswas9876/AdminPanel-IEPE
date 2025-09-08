@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ArrowRight, Shuffle, RotateCcw, Pencil, Edit3, Trash2, ChevronDown, Plus } from 'lucide-react'
+import { ArrowRight, Shuffle, RotateCcw, Pencil, Edit3, Trash2, ChevronDown, Plus, Eye, EyeOff } from 'lucide-react'
 import { SmartLatexRenderer } from './smart-latex-renderer'
 import type { Question, TestQuestionSlot } from '@/lib/types'
 import { UnifiedQuestionBankModal } from './unified-question-bank-modal'
@@ -42,6 +42,11 @@ export function ReviewRefineInterface({
     solution_text: string
   } | null>(null)
   const [expandedSolutionIds, setExpandedSolutionIds] = useState<Set<string | number>>(new Set())
+  const [showPreview, setShowPreview] = useState({
+    question: true,
+    options: true,
+    solution: true
+  })
   const [isShuffling, setIsShuffling] = useState(false)
 
   const handleShuffleQuestions = async () => {
@@ -345,44 +350,96 @@ export function ReviewRefineInterface({
                       {editingIndex === index && editForm ? (
                         <div className="space-y-6">
                           <div>
-                            <Label className="text-sm">Question Text</Label>
-                            <Textarea
-                              value={editForm.question_text}
-                              onChange={(e) => setEditForm({ ...editForm, question_text: e.target.value })}
-                              className="mt-1"
-                              rows={5}
-                            />
+                            <div className="flex items-center justify-between mb-2">
+                              <Label className="text-sm">Question Text</Label>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setShowPreview({ ...showPreview, question: !showPreview.question })}
+                                className="flex items-center gap-2"
+                              >
+                                {showPreview.question ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                {showPreview.question ? 'Hide Preview' : 'Show Preview'}
+                              </Button>
+                            </div>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                              <div>
+                                <Textarea
+                                  value={editForm.question_text}
+                                  onChange={(e) => setEditForm({ ...editForm, question_text: e.target.value })}
+                                  className="mt-1"
+                                  rows={5}
+                                  placeholder="Enter your question text here..."
+                                />
+                              </div>
+                              {showPreview.question && (
+                                <div className="border rounded-lg p-4 bg-gray-50">
+                                  <div className="text-sm font-medium text-gray-700 mb-2">Preview:</div>
+                                  <div className="prose prose-sm max-w-none">
+                                    <SmartLatexRenderer text={editForm.question_text} />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           <div>
                             <div className="flex items-center justify-between mb-3">
-                              <Label className="text-sm">Options</Label>
-                              <Button variant="outline" size="sm" onClick={addEditOption}>+ Add Option</Button>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {Object.keys(editForm.options).sort().map((k) => (
-                              <div key={k} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <div className="w-8 h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-sm font-bold">
-                                  {k.toUpperCase()}
-                                </div>
-                                <Input
-                                  value={editForm.options[k]}
-                                  onChange={(e) => setEditForm({ ...editForm, options: { ...editForm.options, [k]: e.target.value } })}
-                                  placeholder={`Option ${k.toUpperCase()}`}
-                                  className="flex-1 transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                />
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
-                                  onClick={() => removeEditOption(k)}
-                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
-                                  title="Delete Option"
-                                  disabled={Object.keys(editForm.options).length <= 2}
+                              <div className="flex items-center gap-3">
+                                <Label className="text-sm">Options</Label>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setShowPreview({ ...showPreview, options: !showPreview.options })}
+                                  className="flex items-center gap-2"
                                 >
-                                  <Trash2 className="h-3 w-3" />
+                                  {showPreview.options ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                  {showPreview.options ? 'Hide Preview' : 'Show Preview'}
                                 </Button>
                               </div>
-                            ))}
+                              <Button variant="outline" size="sm" onClick={addEditOption}>+ Add Option</Button>
+                            </div>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                              <div className="space-y-3">
+                                {Object.keys(editForm.options).sort().map((k) => (
+                                  <div key={k} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                    <div className="w-8 h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-sm font-bold">
+                                      {k.toUpperCase()}
+                                    </div>
+                                    <Input
+                                      value={editForm.options[k]}
+                                      onChange={(e) => setEditForm({ ...editForm, options: { ...editForm.options, [k]: e.target.value } })}
+                                      placeholder={`Option ${k.toUpperCase()}`}
+                                      className="flex-1 transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    />
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      onClick={() => removeEditOption(k)}
+                                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
+                                      title="Delete Option"
+                                      disabled={Object.keys(editForm.options).length <= 2}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                              {showPreview.options && (
+                                <div className="border rounded-lg p-4 bg-gray-50">
+                                  <div className="text-sm font-medium text-gray-700 mb-3">Options Preview:</div>
+                                  <div className="space-y-2">
+                                    {Object.keys(editForm.options).sort().map((k) => (
+                                      <div key={k} className="flex items-start gap-2">
+                                        <span className="font-semibold text-blue-600 min-w-[20px]">{k.toUpperCase()})</span>
+                                        <div className="prose prose-sm max-w-none flex-1">
+                                          <SmartLatexRenderer text={editForm.options[k]} />
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
 
@@ -405,13 +462,37 @@ export function ReviewRefineInterface({
                             </div>
 
                             <div>
-                              <Label className="text-sm">Solution</Label>
-                              <Textarea
-                                value={editForm.solution_text}
-                                onChange={(e) => setEditForm({ ...editForm, solution_text: e.target.value })}
-                                className="mt-1"
-                                rows={3}
-                              />
+                              <div className="flex items-center justify-between mb-2">
+                                <Label className="text-sm">Solution</Label>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setShowPreview({ ...showPreview, solution: !showPreview.solution })}
+                                  className="flex items-center gap-2"
+                                >
+                                  {showPreview.solution ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                  {showPreview.solution ? 'Hide Preview' : 'Show Preview'}
+                                </Button>
+                              </div>
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <div>
+                                  <Textarea
+                                    value={editForm.solution_text}
+                                    onChange={(e) => setEditForm({ ...editForm, solution_text: e.target.value })}
+                                    className="mt-1"
+                                    rows={3}
+                                    placeholder="Enter solution explanation here..."
+                                  />
+                                </div>
+                                {showPreview.solution && (
+                                  <div className="border rounded-lg p-4 bg-gray-50">
+                                    <div className="text-sm font-medium text-gray-700 mb-2">Solution Preview:</div>
+                                    <div className="prose prose-sm max-w-none">
+                                      <SmartLatexRenderer text={editForm.solution_text} />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
 

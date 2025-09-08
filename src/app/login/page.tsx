@@ -22,11 +22,21 @@ export default function LoginPage({
   const [showForgotPassword, setShowForgotPassword] = useState(false)
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('')
   const [isResetting, setIsResetting] = useState(false)
+  const [loginSuccess, setLoginSuccess] = useState(false)
 
   const handleSubmit = async (formData: FormData) => {
     setIsLoading(true)
-    // The server action will handle the redirect, so we don't need to await it
-    signInWithRoleCheck(formData)
+    setLoginSuccess(false)
+    try {
+      // The server action will handle the redirect
+      await signInWithRoleCheck(formData)
+      // If we reach here, login was successful
+      setLoginSuccess(true)
+    } catch (error) {
+      console.error('Login error:', error)
+      // Reset loading state on error
+      setIsLoading(false)
+    }
   }
 
   const handleForgotPassword = async (e: React.FormEvent) => {
@@ -151,6 +161,14 @@ export default function LoginPage({
                 <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-lg">
                   <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0" />
                   <p className="text-sm text-red-700">{error}</p>
+                </div>
+              )}
+              
+              {/* Success Message */}
+              {loginSuccess && (
+                <div className="flex items-center space-x-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  <p className="text-sm text-green-700">Login successful! Redirecting...</p>
                 </div>
               )}
 
