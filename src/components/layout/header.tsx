@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
 import { LogOut, User, Bell, AlertTriangle, UserPlus, BookOpen, TestTube, Loader2 } from 'lucide-react'
 import { getNotifications, markNotificationAsRead, type Notification } from '@/lib/actions/notifications'
+import { clearProfileCache } from '@/components/auth/protected-route'
 
 export function Header() {
   const { user, signOut } = useAuth()
@@ -17,6 +18,8 @@ export function Header() {
   const handleSignOut = async () => {
     setIsLoggingOut(true)
     try {
+      // Clear profile cache before signing out
+      clearProfileCache()
       await signOut()
     } catch (error) {
       console.error('Logout error:', error)

@@ -1293,19 +1293,24 @@ export async function exportMinimalistPdf(testId: number): Promise<{ success: bo
 </body>
 </html>`
 
-    // Simple Puppeteer Configuration with error handling
+    // Serverless-compatible Puppeteer Configuration
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let browser: any = null
     try {
-      const puppeteer = await import('puppeteer')
-      browser = await puppeteer.launch({ 
-        headless: true,
+      const puppeteer = await import('puppeteer-core')
+      const chromium = await import('@sparticuz/chromium')
+      
+      browser = await puppeteer.launch({
         args: [
-          '--no-sandbox', 
+          '--no-sandbox',
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
-          '--disable-gpu'
+          '--disable-gpu',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor'
         ],
+        executablePath: await chromium.default.executablePath(),
+        headless: true,
         timeout: 60000
       })
       
@@ -1805,26 +1810,25 @@ export async function exportQuestionPaperPdf(testId: number): Promise<{ success:
   </body>
 </html>`
 
-    // Enhanced Puppeteer Configuration for Premium PDF Generation
+    // Serverless-compatible Puppeteer Configuration for Premium PDF Generation
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let browser: any = null
     try {
-    const puppeteer = await import('puppeteer')
+      const puppeteer = await import('puppeteer-core')
+      const chromium = await import('@sparticuz/chromium')
       
-      // Try to launch browser with comprehensive error handling
-      browser = await puppeteer.launch({ 
-        headless: true,
+      // Launch browser with serverless-compatible configuration
+      browser = await puppeteer.launch({
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--no-first-run',
-          '--no-zygote',
           '--disable-gpu',
           '--disable-web-security',
           '--disable-features=VizDisplayCompositor'
         ],
+        executablePath: await chromium.default.executablePath(),
+        headless: true,
         timeout: 60000
       })
       
@@ -2199,26 +2203,25 @@ export async function exportAnswerKeyPdf(testId: number): Promise<{ success: boo
 </body>
 </html>`
 
-    // Enhanced Puppeteer Configuration for Premium PDF Generation
+    // Serverless-compatible Puppeteer Configuration for Premium PDF Generation
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let browser: any = null
     try {
-    const puppeteer = await import('puppeteer')
+      const puppeteer = await import('puppeteer-core')
+      const chromium = await import('@sparticuz/chromium')
       
-      // Try to launch browser with comprehensive error handling
-      browser = await puppeteer.launch({ 
-        headless: true,
+      // Launch browser with serverless-compatible configuration
+      browser = await puppeteer.launch({
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--no-first-run',
-          '--no-zygote',
           '--disable-gpu',
           '--disable-web-security',
           '--disable-features=VizDisplayCompositor'
         ],
+        executablePath: await chromium.default.executablePath(),
+        headless: true,
         timeout: 60000
       })
       

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/client'
@@ -12,6 +12,15 @@ interface ProtectedRouteProps {
 interface UserProfile {
   role: string
   status: string
+  lastChecked: number
+}
+
+// Global cache for user profiles to avoid repeated checks
+const profileCache = new Map<string, UserProfile>()
+
+// Function to clear profile cache (useful for logout)
+export const clearProfileCache = () => {
+  profileCache.clear()
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
@@ -20,14 +29,27 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const [profileLoading, setProfileLoading] = useState(true)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [profileError, setProfileError] = useState<string | null>(null)
+  const hasCheckedProfile = useRef(false)
 
-  // Check user profile and role
+  // Check user profile and role with caching
   useEffect(() => {
-    if (!authLoading && user) {
+    if (!authLoading && user && !hasCheckedProfile.current) {
       const checkUserProfile = async () => {
         try {
           setProfileLoading(true)
           setProfileError(null)
+          
+          // Check cache first (valid for 5 minutes)
+          const cachedProfile = profileCache.get(user.id)
+          const now = Date.now()
+          const cacheValid = cachedProfile && (now - cachedProfile.lastChecked) < 5 * 60 * 1000
+          
+          if (cacheValid) {
+            setUserProfile(cachedProfile)
+            setProfileLoading(false)
+            hasCheckedProfile.current = true
+            return
+          }
           
           const supabase = createClient()
           const { data, error } = await supabase
@@ -52,8 +74,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
             return
           }
 
-          setUserProfile(data)
-
           // Check if user is admin
           if (data.role !== 'admin') {
             await supabase.auth.signOut()
@@ -67,6 +87,12 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
             router.push('/login?error=Account is not active')
             return
           }
+
+          // Cache the profile
+          const profileWithTimestamp = { ...data, lastChecked: now }
+          profileCache.set(user.id, profileWithTimestamp)
+          setUserProfile(profileWithTimestamp)
+          hasCheckedProfile.current = true
 
         } catch (error) {
           console.error('Unexpected error during profile check:', error)

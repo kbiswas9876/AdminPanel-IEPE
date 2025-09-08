@@ -16,6 +16,11 @@ export async function getNotifications(limit: number = 10): Promise<Notification
   try {
     const supabase = createAdminClient()
     const notifications: Notification[] = []
+    const currentUser = (await supabase.auth.getUser()).data.user
+
+    if (!currentUser) {
+      return []
+    }
 
     // Get pending user registrations
     const { data: pendingUsers, error: usersError } = await supabase
@@ -26,17 +31,27 @@ export async function getNotifications(limit: number = 10): Promise<Notification
       .limit(5)
 
     if (!usersError && pendingUsers) {
-      pendingUsers.forEach((user, index) => {
+      for (const [index, user] of pendingUsers.entries()) {
+        const notificationId = 1000 + index
+        
+        // Check if this notification has been read
+        const { data: readStatus } = await supabase
+          .from('notification_read_status')
+          .select('read_at')
+          .eq('notification_id', notificationId)
+          .eq('user_id', currentUser.id)
+          .single()
+
         notifications.push({
-          id: 1000 + index, // Unique ID range for user notifications
+          id: notificationId,
           type: 'user_registration',
           title: 'New User Registration',
           message: `${user.full_name} (${user.email}) has registered and is awaiting approval`,
           timestamp: new Date(user.created_at),
-          read: false,
+          read: !!readStatus,
           metadata: { userId: user.id }
         })
-      })
+      }
     }
 
     // Get new error reports
@@ -48,17 +63,27 @@ export async function getNotifications(limit: number = 10): Promise<Notification
       .limit(3)
 
     if (!reportsError && newReports) {
-      newReports.forEach((report, index) => {
+      for (const [index, report] of newReports.entries()) {
+        const notificationId = 2000 + index
+        
+        // Check if this notification has been read
+        const { data: readStatus } = await supabase
+          .from('notification_read_status')
+          .select('read_at')
+          .eq('notification_id', notificationId)
+          .eq('user_id', currentUser.id)
+          .single()
+
         notifications.push({
-          id: 2000 + index, // Unique ID range for error reports
+          id: notificationId,
           type: 'error_report',
           title: 'Error Report Submitted',
           message: report.title || 'New error report submitted',
           timestamp: new Date(report.created_at),
-          read: false,
+          read: !!readStatus,
           metadata: { reportId: report.id }
         })
-      })
+      }
     }
 
     // Get recently added questions (last 24 hours)
@@ -73,13 +98,23 @@ export async function getNotifications(limit: number = 10): Promise<Notification
       .limit(3)
 
     if (!questionsError && recentQuestions && recentQuestions.length > 0) {
+      const notificationId = 3000
+      
+      // Check if this notification has been read
+      const { data: readStatus } = await supabase
+        .from('notification_read_status')
+        .select('read_at')
+        .eq('notification_id', notificationId)
+        .eq('user_id', currentUser.id)
+        .single()
+
       notifications.push({
-        id: 3000,
+        id: notificationId,
         type: 'question_added',
         title: 'New Questions Added',
         message: `${recentQuestions.length} new question${recentQuestions.length > 1 ? 's' : ''} added to the question bank`,
         timestamp: new Date(recentQuestions[0].created_at),
-        read: false,
+        read: !!readStatus,
         metadata: { questionCount: recentQuestions.length }
       })
     }
@@ -94,17 +129,27 @@ export async function getNotifications(limit: number = 10): Promise<Notification
       .limit(2)
 
     if (!testsError && recentTests && recentTests.length > 0) {
-      recentTests.forEach((test, index) => {
+      for (const [index, test] of recentTests.entries()) {
+        const notificationId = 4000 + index
+        
+        // Check if this notification has been read
+        const { data: readStatus } = await supabase
+          .from('notification_read_status')
+          .select('read_at')
+          .eq('notification_id', notificationId)
+          .eq('user_id', currentUser.id)
+          .single()
+
         notifications.push({
-          id: 4000 + index,
+          id: notificationId,
           type: 'test_published',
           title: 'Test Published',
           message: `"${test.title}" has been published and is now available`,
           timestamp: new Date(test.created_at),
-          read: false,
+          read: !!readStatus,
           metadata: { testId: test.id }
         })
-      })
+      }
     }
 
     // Sort all notifications by timestamp (newest first) and limit
@@ -130,8 +175,24 @@ export async function getUnreadNotificationCount(): Promise<number> {
 
 export async function markNotificationAsRead(notificationId: number): Promise<{ success: boolean }> {
   try {
-    // In a real implementation, you would store read status in the database
-    // For now, we'll just return success since notifications are generated dynamically
+    const supabase = createAdminClient()
+    
+    // Create or update the read status in the database
+    const { error } = await supabase
+      .from('notification_read_status')
+      .upsert({
+        notification_id: notificationId,
+        read_at: new Date().toISOString(),
+        user_id: (await supabase.auth.getUser()).data.user?.id
+      }, {
+        onConflict: 'notification_id,user_id'
+      })
+    
+    if (error) {
+      console.error('Error marking notification as read:', error)
+      return { success: false }
+    }
+    
     return { success: true }
   } catch (error) {
     console.error('Error marking notification as read:', error)

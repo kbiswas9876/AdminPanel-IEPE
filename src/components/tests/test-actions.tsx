@@ -20,8 +20,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { PublishTestDialog } from './publish-test-dialog'
-import { Edit, Trash2, BarChart3, MoreHorizontal, FileDown, Copy, Loader2 } from 'lucide-react'
+import { Edit, Trash2, BarChart3, MoreHorizontal, FileDown, Copy, Loader2, CheckCircle, XCircle } from 'lucide-react'
 import Link from 'next/link'
 import type { Test } from '@/lib/supabase/admin'
 
@@ -34,6 +41,9 @@ export function TestActions({ test, onAction }: TestActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [exportType, setExportType] = useState<string | null>(null)
+  const [showProgressModal, setShowProgressModal] = useState(false)
+  const [exportProgress, setExportProgress] = useState('')
+  const [exportStatus, setExportStatus] = useState<'idle' | 'generating' | 'success' | 'error'>('idle')
 
   const handleDelete = async () => {
     setIsDeleting(true)
@@ -73,8 +83,28 @@ export function TestActions({ test, onAction }: TestActionsProps) {
   const handleExport = async (type: 'premium' | 'minimalist' | 'answer-key') => {
     setIsExporting(true)
     setExportType(type)
+    setShowProgressModal(true)
+    setExportStatus('generating')
+    setExportProgress('Initializing PDF generation...')
     
     try {
+      // Simulate progress updates
+      const progressSteps = [
+        'Initializing PDF generation...',
+        'Loading test data...',
+        'Rendering HTML template...',
+        'Generating PDF document...',
+        'Finalizing export...'
+      ]
+      
+      let currentStep = 0
+      const progressInterval = setInterval(() => {
+        if (currentStep < progressSteps.length - 1) {
+          currentStep++
+          setExportProgress(progressSteps[currentStep])
+        }
+      }, 1000)
+      
       let res
       switch (type) {
         case 'premium':
@@ -90,7 +120,14 @@ export function TestActions({ test, onAction }: TestActionsProps) {
           throw new Error('Invalid export type')
       }
 
+      clearInterval(progressInterval)
+      setExportProgress('Export completed!')
+
       if (res.success && res.base64 && res.fileName) {
+        setExportStatus('success')
+        setExportProgress(`Successfully generated ${res.fileName}`)
+        
+        // Download the file
         const link = document.createElement('a')
         link.href = `data:application/pdf;base64,${res.base64}`
         link.download = res.fileName
@@ -98,13 +135,21 @@ export function TestActions({ test, onAction }: TestActionsProps) {
         
         // Show success feedback
         console.log(`✅ ${type} PDF exported successfully: ${res.fileName}`)
+        
+        // Close modal after 2 seconds
+        setTimeout(() => {
+          setShowProgressModal(false)
+          setExportStatus('idle')
+        }, 2000)
       } else {
+        setExportStatus('error')
+        setExportProgress(`Export failed: ${res.message || 'Unknown error'}`)
         console.error(`❌ Export failed:`, res.message)
-        alert(`Export failed: ${res.message || 'Unknown error'}`)
       }
     } catch (e) {
+      setExportStatus('error')
+      setExportProgress(`Export failed: ${e instanceof Error ? e.message : 'Unknown error'}`)
       console.error(`❌ Export error:`, e)
-      alert(`Export failed: ${e instanceof Error ? e.message : 'Unknown error'}`)
     } finally {
       setIsExporting(false)
       setExportType(null)
@@ -241,6 +286,66 @@ export function TestActions({ test, onAction }: TestActionsProps) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* PDF Export Progress Modal */}
+      <Dialog open={showProgressModal} onOpenChange={setShowProgressModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              {exportStatus === 'generating' && <Loader2 className="h-5 w-5 animate-spin text-blue-600" />}
+              {exportStatus === 'success' && <CheckCircle className="h-5 w-5 text-green-600" />}
+              {exportStatus === 'error' && <XCircle className="h-5 w-5 text-red-600" />}
+              <span>
+                {exportStatus === 'generating' && 'Generating PDF...'}
+                {exportStatus === 'success' && 'Export Successful!'}
+                {exportStatus === 'error' && 'Export Failed'}
+              </span>
+            </DialogTitle>
+            <DialogDescription>
+              {exportProgress}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {exportStatus === 'generating' && (
+            <div className="space-y-4">
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '60%' }}></div>
+              </div>
+              <p className="text-sm text-gray-600 text-center">
+                Please wait while we generate your PDF document...
+              </p>
+            </div>
+          )}
+          
+          {exportStatus === 'success' && (
+            <div className="text-center space-y-4">
+              <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                <CheckCircle className="h-8 w-8 text-green-600" />
+              </div>
+              <p className="text-sm text-gray-600">
+                Your PDF has been generated and downloaded successfully!
+              </p>
+            </div>
+          )}
+          
+          {exportStatus === 'error' && (
+            <div className="text-center space-y-4">
+              <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                <XCircle className="h-8 w-8 text-red-600" />
+              </div>
+              <p className="text-sm text-gray-600">
+                There was an error generating your PDF. Please try again.
+              </p>
+              <Button 
+                onClick={() => setShowProgressModal(false)}
+                className="w-full"
+              >
+                Close
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
