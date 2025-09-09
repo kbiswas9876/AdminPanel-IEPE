@@ -1,7 +1,7 @@
 'use client'
 
 import { ReactNode } from 'react'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Table } from '@/components/ui/table'
 
 interface MobileResponsiveTableProps {
   children: ReactNode

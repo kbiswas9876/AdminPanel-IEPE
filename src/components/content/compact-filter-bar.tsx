@@ -170,19 +170,19 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
   const hasActiveFilters = selectedBooks.length > 0 || selectedChapters.length > 0 || selectedDifficulties.length > 0 || selectedTags.length > 0
 
   return (
-    <div className="bg-white border border-gray-200/60 rounded-xl p-4 sm:p-6 space-y-4 shadow-sm">
-      {/* Mobile-First Filter Controls */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+    <div className="bg-white border border-gray-200/60 rounded-xl mobile-p shadow-sm">
+      {/* Compact Mobile-First Filter Controls */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mobile-gap">
         {/* Book Source Filter */}
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-gray-700">Book Source</label>
+        <div className="space-y-1">
+          <label className="mobile-text-xs font-medium text-gray-600">Book Source</label>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="w-full h-10 justify-between bg-white hover:bg-gray-50 border-gray-300">
-                <span className="truncate">
+              <Button variant="outline" size="sm" className="w-full h-8 justify-between bg-white hover:bg-gray-50 border-gray-300">
+                <span className="truncate mobile-text-sm">
                   {selectedBooks.length > 0 ? `${selectedBooks.length} selected` : 'All Books'}
                 </span>
-                <Filter className="h-4 w-4 ml-2 flex-shrink-0" />
+                <Filter className="h-3 w-3 ml-2 flex-shrink-0" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-full min-w-[200px] max-h-64 overflow-y-auto">
@@ -201,15 +201,15 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
         </div>
 
         {/* Chapter Filter */}
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-gray-700">Chapter</label>
+        <div className="space-y-1">
+          <label className="mobile-text-xs font-medium text-gray-600">Chapter</label>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="w-full h-10 justify-between bg-white hover:bg-gray-50 border-gray-300">
-                <span className="truncate">
+              <Button variant="outline" size="sm" className="w-full h-8 justify-between bg-white hover:bg-gray-50 border-gray-300">
+                <span className="truncate mobile-text-sm">
                   {selectedChapters.length > 0 ? `${selectedChapters.length} selected` : 'All Chapters'}
                 </span>
-                <Filter className="h-4 w-4 ml-2 flex-shrink-0" />
+                <Filter className="h-3 w-3 ml-2 flex-shrink-0" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-full min-w-[200px] max-h-64 overflow-y-auto">
@@ -228,15 +228,15 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
         </div>
 
         {/* Difficulty Filter */}
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-gray-700">Difficulty</label>
+        <div className="space-y-1">
+          <label className="mobile-text-xs font-medium text-gray-600">Difficulty</label>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="w-full h-10 justify-between bg-white hover:bg-gray-50 border-gray-300">
-                <span className="truncate">
+              <Button variant="outline" size="sm" className="w-full h-8 justify-between bg-white hover:bg-gray-50 border-gray-300">
+                <span className="truncate mobile-text-sm">
                   {selectedDifficulties.length > 0 ? `${selectedDifficulties.length} selected` : 'All Levels'}
                 </span>
-                <Filter className="h-4 w-4 ml-2 flex-shrink-0" />
+                <Filter className="h-3 w-3 ml-2 flex-shrink-0" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-full min-w-[200px]">
@@ -255,15 +255,15 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
         </div>
 
         {/* Tags Filter */}
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-gray-700">Tags</label>
+        <div className="space-y-1">
+          <label className="mobile-text-xs font-medium text-gray-600">Tags</label>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="w-full h-10 justify-between bg-white hover:bg-gray-50 border-gray-300">
-                <span className="truncate">
+              <Button variant="outline" size="sm" className="w-full h-8 justify-between bg-white hover:bg-gray-50 border-gray-300">
+                <span className="truncate mobile-text-sm">
                   {selectedTags.length > 0 ? `${selectedTags.length} selected` : 'All Tags'}
                 </span>
-                <Filter className="h-4 w-4 ml-2 flex-shrink-0" />
+                <Filter className="h-3 w-3 ml-2 flex-shrink-0" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-full min-w-[200px] max-h-64 overflow-y-auto">
@@ -283,25 +283,25 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
 
       </div>
 
-      {/* Action Buttons - Mobile-First Layout */}
-      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+      {/* Compact Action Buttons */}
+      <div className="flex flex-col sm:flex-row mobile-gap">
         {cascading && (
-          <div className="flex items-center gap-2 text-sm text-blue-600">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-            <span>Updating filters...</span>
+          <div className="flex items-center gap-2 mobile-text-sm text-blue-600">
+            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
+            <span>Updating...</span>
           </div>
         )}
         
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row mobile-gap w-full sm:w-auto">
           {hasActiveFilters && (
             <Button 
               variant="outline" 
               size="sm" 
               onClick={resetFilters} 
-              className="w-full sm:w-auto h-10 touch-target"
+              className="w-full sm:w-auto h-8 touch-target mobile-text-sm"
             >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Reset Filters
+              <RotateCcw className="h-3 w-3 mr-1" />
+              Reset
             </Button>
           )}
           
@@ -309,66 +309,66 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
             onClick={applyFilters} 
             disabled={loading}
             size="sm"
-            className="w-full sm:w-auto h-10 bg-blue-600 hover:bg-blue-700 touch-target"
+            className="w-full sm:w-auto h-8 bg-blue-600 hover:bg-blue-700 touch-target mobile-text-sm"
           >
-            {loading ? 'Applying...' : 'Apply Filters'}
+            {loading ? 'Applying...' : 'Apply'}
           </Button>
         </div>
       </div>
 
-      {/* Active Filter Badges - Premium Design */}
+      {/* Compact Active Filter Badges */}
       {hasActiveFilters && (
-        <div className="space-y-3">
+        <div className="mobile-space-y-sm">
           <div className="flex items-center gap-2">
-            <div className="h-1 w-8 bg-blue-500 rounded-full"></div>
-            <span className="text-sm font-semibold text-gray-700">Active Filters</span>
+            <div className="h-1 w-6 bg-blue-500 rounded-full"></div>
+            <span className="mobile-text-xs font-medium text-gray-600">Active Filters</span>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap mobile-gap-sm">
             {selectedBooks.map((book) => (
-              <Badge key={book} variant="secondary" className="text-xs flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-full">
+              <Badge key={book} variant="secondary" className="mobile-text-xs flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-full">
                 <span className="font-medium">Book:</span>
-                <span className="truncate max-w-[120px]">{book}</span>
+                <span className="truncate max-w-[100px]">{book}</span>
                 <button 
                   onClick={() => removeBook(book)} 
                   className="hover:text-red-600 hover:bg-red-50 rounded-full p-0.5 transition-colors touch-target"
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-2 w-2" />
                 </button>
               </Badge>
             ))}
             {selectedChapters.map((chapter) => (
-              <Badge key={chapter} variant="secondary" className="text-xs flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded-full">
-                <span className="font-medium">Chapter:</span>
-                <span className="truncate max-w-[120px]">{chapter}</span>
+              <Badge key={chapter} variant="secondary" className="mobile-text-xs flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full">
+                <span className="font-medium">Ch:</span>
+                <span className="truncate max-w-[100px]">{chapter}</span>
                 <button 
                   onClick={() => removeChapter(chapter)} 
                   className="hover:text-red-600 hover:bg-red-50 rounded-full p-0.5 transition-colors touch-target"
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-2 w-2" />
                 </button>
               </Badge>
             ))}
             {selectedDifficulties.map((difficulty) => (
-              <Badge key={difficulty} variant="secondary" className="text-xs flex items-center gap-2 px-3 py-1.5 bg-orange-50 text-orange-700 border border-orange-200 rounded-full">
+              <Badge key={difficulty} variant="secondary" className="mobile-text-xs flex items-center gap-1 px-2 py-1 bg-orange-50 text-orange-700 border border-orange-200 rounded-full">
                 <span className="font-medium">Level:</span>
-                <span className="truncate max-w-[120px]">{difficulty}</span>
+                <span className="truncate max-w-[100px]">{difficulty}</span>
                 <button 
                   onClick={() => removeDifficulty(difficulty)} 
                   className="hover:text-red-600 hover:bg-red-50 rounded-full p-0.5 transition-colors touch-target"
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-2 w-2" />
                 </button>
               </Badge>
             ))}
             {selectedTags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-xs flex items-center gap-2 px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 rounded-full">
+              <Badge key={tag} variant="secondary" className="mobile-text-xs flex items-center gap-1 px-2 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-full">
                 <span className="font-medium">Tag:</span>
-                <span className="truncate max-w-[120px]">{tag}</span>
+                <span className="truncate max-w-[100px]">{tag}</span>
                 <button 
                   onClick={() => removeTag(tag)} 
                   className="hover:text-red-600 hover:bg-red-50 rounded-full p-0.5 transition-colors touch-target"
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-2 w-2" />
                 </button>
               </Badge>
             ))}
@@ -376,17 +376,17 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
         </div>
       )}
 
-      {/* Smart Filtering Info */}
+      {/* Compact Smart Filtering Info */}
       {(selectedBooks.length > 0 || selectedChapters.length > 0) && (
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/60 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/60 rounded-lg mobile-p-sm">
+          <div className="flex items-start gap-2">
+            <div className="flex-shrink-0 w-4 h-4 bg-blue-100 rounded-full flex items-center justify-center">
+              <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
             </div>
             <div>
-              <p className="text-sm font-semibold text-blue-800 mb-1">Smart Filtering Active</p>
-              <p className="text-xs text-blue-700">
-                Chapter and tag options are automatically updated based on your selections for more relevant results.
+              <p className="mobile-text-xs font-medium text-blue-800 mb-1">Smart Filtering Active</p>
+              <p className="mobile-text-xs text-blue-700">
+                Options are automatically updated for more relevant results.
               </p>
             </div>
           </div>

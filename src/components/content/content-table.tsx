@@ -18,7 +18,6 @@ import type { Question } from '@/lib/types'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
-  Table,
   TableBody,
   TableCell,
   TableHead,
@@ -95,6 +94,7 @@ export function ContentTable() {
             checked={table.getIsAllPageRowsSelected()}
             onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
             aria-label="Select all"
+            className="h-3.5 w-3.5"
           />
         ),
         cell: ({ row }) => (
@@ -102,6 +102,7 @@ export function ContentTable() {
             checked={row.getIsSelected()}
             onCheckedChange={(value) => row.toggleSelected(!!value)}
             aria-label="Select row"
+            className="h-3.5 w-3.5"
           />
         ),
         enableSorting: false,
@@ -383,6 +384,7 @@ export function ContentTable() {
                       checked={isSelected}
                       onCheckedChange={(value) => row.toggleSelected(!!value)}
                       aria-label="Select row"
+                      className="h-3.5 w-3.5"
                     />
                     <span className="font-mono text-sm font-medium text-gray-900">
                       {question.question_id}

@@ -42,14 +42,14 @@ export default async function StudentsPage() {
   return (
     <ProtectedRoute>
       <MainLayout>
-        <div className="space-y-6 lg:space-y-8">
+        <div className="mobile-space-y">
           {/* Header Section */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mobile-gap">
             <div className="min-w-0 flex-1">
-              <h1 className="mobile-text-xl font-bold text-gray-900 tracking-tight">
+              <h1 className="mobile-heading-1 text-gray-900 tracking-tight">
                 Student Management
               </h1>
-              <p className="mt-2 sm:mt-3 mobile-text-sm text-gray-600 font-medium">
+              <p className="mt-2 sm:mt-3 mobile-body-sm text-gray-600">
                 Manage student registrations and control access to your platform.
               </p>
             </div>

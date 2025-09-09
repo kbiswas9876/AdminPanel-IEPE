@@ -2,7 +2,6 @@
 
 import type { UserProfile } from '@/lib/supabase/admin'
 import {
-  Table,
   TableBody,
   TableCell,
   TableHead,

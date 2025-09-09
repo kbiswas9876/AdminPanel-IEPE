@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
-import { LogOut, User, Bell, AlertTriangle, UserPlus, BookOpen, TestTube, Loader2, Menu, X } from 'lucide-react'
+import { LogOut, User, Bell, AlertTriangle, UserPlus, BookOpen, TestTube, Loader2, Menu } from 'lucide-react'
 import { getNotifications, markNotificationAsRead, type Notification } from '@/lib/actions/notifications'
 import { clearProfileCache } from '@/components/auth/protected-route'
 

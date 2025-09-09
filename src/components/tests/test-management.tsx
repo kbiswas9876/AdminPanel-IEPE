@@ -5,7 +5,6 @@ import { getAllTestsWithCounts } from '@/lib/actions/tests'
 import type { Test } from '@/lib/supabase/admin'
 import { Button } from '@/components/ui/button'
 import {
-  Table,
   TableBody,
   TableCell,
   TableHead,

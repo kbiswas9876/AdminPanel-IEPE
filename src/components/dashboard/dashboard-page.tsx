@@ -95,15 +95,15 @@ export function DashboardPage() {
                 <LayoutDashboard className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-2xl sm:text-3xl lg:text-5xl font-bold text-white tracking-tight">
+                <h1 className="mobile-heading-1 sm:text-3xl lg:text-5xl font-bold text-white tracking-tight">
                   Mission Control
                 </h1>
-                <p className="mt-1 sm:mt-2 text-sm sm:text-lg lg:text-xl text-blue-100 font-medium">
+                <p className="mt-1 sm:mt-2 mobile-body text-blue-100">
                   Admin Dashboard
                 </p>
               </div>
             </div>
-            <p className="text-sm sm:text-base lg:text-lg text-blue-200/80 font-medium max-w-2xl leading-relaxed">
+            <p className="mobile-body-sm text-blue-200/80 max-w-2xl leading-relaxed">
               Welcome to your command center. Monitor system status, manage your platform, and oversee all operations from this central hub.
             </p>
           </div>

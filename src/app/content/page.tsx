@@ -12,14 +12,14 @@ export default function ContentPage() {
   return (
     <ProtectedRoute>
       <MainLayout>
-        <div className="space-y-6 lg:space-y-8">
+        <div className="mobile-space-y">
           {/* Header Section */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mobile-gap">
             <div className="min-w-0 flex-1">
-              <h1 className="mobile-text-xl font-bold text-gray-900 tracking-tight">
+              <h1 className="mobile-heading-1 text-gray-900 tracking-tight">
                 Content Management
               </h1>
-              <p className="mt-2 sm:mt-3 mobile-text-sm text-gray-600 font-medium">
+              <p className="mt-2 mobile-body-sm text-gray-600">
                 Manage and view all questions in the master question bank.
               </p>
             </div>
@@ -27,7 +27,7 @@ export default function ContentPage() {
               <Link href="/content/new">
                 <Button className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 touch-target">
                   <Plus className="mr-2 h-4 w-4" />
-                  <span className="text-sm sm:text-base">Add New Question</span>
+                  <span className="mobile-text-sm">Add New Question</span>
                 </Button>
               </Link>
             </div>
@@ -59,29 +59,29 @@ export default function ContentPage() {
                 </div>
                 
                 <TabsContent value="manage" className="flex flex-col min-h-[400px] lg:h-[calc(100vh-280px)] m-0">
-                  <div className="flex-shrink-0 p-4 sm:p-6 border-b border-gray-100/50 bg-gradient-to-r from-gray-50/30 to-white/50">
+                  <div className="flex-shrink-0 mobile-p border-b border-gray-100/50 bg-gradient-to-r from-gray-50/30 to-white/50">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h2 className="mobile-text-lg font-bold text-gray-900 tracking-tight">
+                        <h2 className="mobile-heading-2 text-gray-900 tracking-tight">
                           Individual Question Management
                         </h2>
-                        <p className="mobile-text-sm text-gray-600 font-medium mt-1">
+                        <p className="mobile-body-sm text-gray-600 mt-1">
                           Add, edit, and delete individual questions with precision.
                         </p>
                       </div>
                     </div>
                   </div>
-                  <div className="flex-1 min-h-0 p-4 sm:p-6">
+                  <div className="flex-1 min-h-0 mobile-p">
                     <ContentManagement />
                   </div>
                 </TabsContent>
                 
-                <TabsContent value="import" className="space-y-4 sm:space-y-6 m-0 p-4 sm:p-6">
-                  <div className="border-b border-gray-100/50 pb-4 sm:pb-6">
-                    <h2 className="mobile-text-lg font-bold text-gray-900 tracking-tight">
+                <TabsContent value="import" className="mobile-space-y m-0 mobile-p">
+                  <div className="border-b border-gray-100/50 mobile-py">
+                    <h2 className="mobile-heading-2 text-gray-900 tracking-tight">
                       Bulk Import Questions
                     </h2>
-                    <p className="mobile-text-sm text-gray-600 font-medium mt-1">
+                    <p className="mobile-body-sm text-gray-600 mt-1">
                       Import hundreds of questions at once using a CSV file.
                     </p>
                   </div>

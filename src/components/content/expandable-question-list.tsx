@@ -258,103 +258,99 @@ export function ExpandableQuestionList({
             const questionKey = question.id || question.question_id || `staged-${index}`
             
             return (
-              <Card key={questionKey} className="group border-0 bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-lg transition-all duration-300 rounded-xl overflow-hidden">
+              <Card key={questionKey} className="group border border-gray-100 bg-white shadow-sm hover:shadow-lg transition-all duration-300 rounded-xl overflow-hidden">
                 <CardContent className="p-0">
-                  {/* Modern Question Card Header */}
-                  <div className="p-4 sm:p-6">
-                    <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-                      {/* Multi-select Checkbox */}
-                      {multiSelect && (
-                        <div className="flex-shrink-0">
+                  {/* Premium Mobile Question Card */}
+                  <div className="p-4 sm:p-5">
+                    {/* Dedicated Header Row for Controls */}
+                    <div className="flex items-center justify-between mb-4">
+                      {/* Left Side - Selection Checkbox */}
+                      <div className="flex items-center gap-2">
+                        {multiSelect && (
                           <Checkbox
                             checked={isQuestionSelected(question)}
                             onCheckedChange={() => toggleQuestionSelection(question)}
-                            className="mt-1 touch-target"
+                            className="h-4 w-4 touch-target"
                           />
-                        </div>
-                      )}
-                      
-                      {/* Question Content */}
-                      <div className="flex-1 min-w-0 space-y-4">
-                        {/* Question Text with Modern Typography */}
-                        <div className="prose prose-lg max-w-none">
-                          <SmartLatexRenderer text={question.question_text} />
-                        </div>
-                        
-                        {/* Premium Metadata Badges */}
-                        <div className="flex flex-wrap gap-2">
-                          <Badge variant="outline" className="text-xs px-3 py-1.5 bg-blue-50 text-blue-700 border-blue-200 rounded-full">
-                            ID: {question.question_id}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs px-3 py-1.5 bg-green-50 text-green-700 border-green-200 rounded-full">
-                            {question.book_source}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs px-3 py-1.5 bg-purple-50 text-purple-700 border-purple-200 rounded-full">
-                            {question.chapter_name}
-                          </Badge>
-                          {question.difficulty && (
-                            <Badge 
-                              variant="outline" 
-                              className={`text-xs px-3 py-1.5 rounded-full ${
-                                question.difficulty === 'Easy' ? 'bg-green-50 text-green-700 border-green-200' :
-                                question.difficulty === 'Easy-Moderate' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                                question.difficulty === 'Moderate' ? 'bg-orange-50 text-orange-700 border-orange-200' :
-                                question.difficulty === 'Moderate-Hard' ? 'bg-red-50 text-red-700 border-red-200' :
-                                'bg-gray-50 text-gray-700 border-gray-200'
-                              }`}
-                            >
-                              {question.difficulty}
-                            </Badge>
-                          )}
-                          {question.admin_tags && question.admin_tags.length > 0 && (
-                            <Badge variant="outline" className="text-xs px-3 py-1.5 bg-indigo-50 text-indigo-700 border-indigo-200 rounded-full">
-                              {question.admin_tags.length} tag{question.admin_tags.length !== 1 ? 's' : ''}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {/* Action Buttons */}
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        {/* Action Button based on actionType */}
+                        )}
                         {actionType === 'select' && (
                           <Button
                             size="sm"
                             onClick={() => onQuestionAction?.(question, 'select')}
-                            className="bg-blue-600 hover:bg-blue-700 touch-target"
+                            className="bg-blue-600 hover:bg-blue-700 touch-target mobile-text-xs h-7 px-3"
                           >
                             Select
                           </Button>
                         )}
-                        
-                        {/* Expand/Collapse Button */}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleToggleQuestion(question.id!)}
-                          className="touch-target"
-                        >
-                          <ChevronDown 
-                            className={`h-4 w-4 transition-transform duration-200 ${
-                              isExpanded ? 'rotate-180' : ''
-                            }`} 
-                          />
-                        </Button>
+                      </div>
+                      
+                      {/* Right Side - Expand/Collapse Button */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleToggleQuestion(question.id!)}
+                        className="touch-target h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
+                      >
+                        <ChevronDown 
+                          className={`h-4 w-4 transition-transform duration-200 ${
+                            isExpanded ? 'rotate-180' : ''
+                          }`} 
+                        />
+                      </Button>
+                    </div>
+                    
+                    {/* Full-Width Content Area */}
+                    <div className="space-y-3">
+                      {/* Question Text - Full Width Premium Typography */}
+                      <div className="prose prose-sm max-w-none leading-relaxed">
+                        <SmartLatexRenderer text={question.question_text} />
+                      </div>
+                      
+                      {/* Premium Metadata Row - Full Width */}
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="outline" className="mobile-text-xs px-2 py-1 bg-blue-50 text-blue-700 border-blue-200 rounded-full">
+                          ID: {question.question_id}
+                        </Badge>
+                        <Badge variant="outline" className="mobile-text-xs px-2 py-1 bg-green-50 text-green-700 border-green-200 rounded-full">
+                          {question.book_source}
+                        </Badge>
+                        <Badge variant="outline" className="mobile-text-xs px-2 py-1 bg-purple-50 text-purple-700 border-purple-200 rounded-full">
+                          {question.chapter_name}
+                        </Badge>
+                        {question.difficulty && (
+                          <Badge 
+                            variant="outline" 
+                            className={`mobile-text-xs px-2 py-1 rounded-full ${
+                              question.difficulty === 'Easy' ? 'bg-green-50 text-green-700 border-green-200' :
+                              question.difficulty === 'Easy-Moderate' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                              question.difficulty === 'Moderate' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                              question.difficulty === 'Moderate-Hard' ? 'bg-red-50 text-red-700 border-red-200' :
+                              'bg-gray-50 text-gray-700 border-gray-200'
+                            }`}
+                          >
+                            {question.difficulty}
+                          </Badge>
+                        )}
+                        {question.admin_tags && question.admin_tags.length > 0 && (
+                          <Badge variant="outline" className="mobile-text-xs px-2 py-1 bg-indigo-50 text-indigo-700 border-indigo-200 rounded-full">
+                            {question.admin_tags.length} tag{question.admin_tags.length !== 1 ? 's' : ''}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </div>
 
-                  {/* Modern Expanded Detail Panel */}
+                  {/* Premium Expanded Panel */}
                   {isExpanded && (
-                    <div className="border-t border-gray-200/60 bg-gradient-to-b from-gray-50/30 to-white/50">
-                      <div className="p-4 sm:p-6 space-y-6">
-                        {/* Options Section */}
-                        <div className="space-y-4">
-                          <div className="flex items-center gap-3">
-                            <div className="h-1 w-8 bg-blue-500 rounded-full"></div>
-                            <h4 className="text-lg font-semibold text-gray-900">Answer Options</h4>
+                    <div className="border-t border-gray-200/60 bg-gray-50/30">
+                      <div className="p-4 sm:p-5 space-y-4">
+                        {/* Compact Options Section */}
+                        <div className="mobile-space-y-sm">
+                          <div className="flex items-center gap-2">
+                            <div className="h-1 w-6 bg-blue-500 rounded-full"></div>
+                            <h4 className="mobile-heading-3 text-gray-900">Answer Options</h4>
                           </div>
-                          <div className="grid gap-3">
+                          <div className="mobile-space-y-sm">
                             {optionKeys.map((optionKey) => {
                               const optionText = options[optionKey]
                               const isCorrect = question.correct_option?.toUpperCase() === optionKey.toUpperCase()
@@ -362,29 +358,29 @@ export function ExpandableQuestionList({
                               return (
                                 <div
                                   key={optionKey}
-                                  className={`group flex items-start gap-4 p-4 rounded-xl border transition-all duration-200 ${
+                                  className={`group flex items-start gap-3 mobile-p-sm rounded-lg border transition-all duration-200 ${
                                     isCorrect 
-                                      ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 shadow-sm' 
-                                      : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                                      ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200' 
+                                      : 'bg-white border-gray-200'
                                   }`}
                                 >
-                                  <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-200 ${
+                                  <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center mobile-text-xs font-bold transition-all duration-200 ${
                                     isCorrect
-                                      ? 'bg-green-500 text-white shadow-lg'
-                                      : 'bg-gray-100 text-gray-700 group-hover:bg-gray-200'
+                                      ? 'bg-green-500 text-white'
+                                      : 'bg-gray-100 text-gray-700'
                                   }`}>
                                     {optionKey.toUpperCase()}
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <div className="prose prose-sm max-w-none">
+                                    <div className="prose prose-xs max-w-none">
                                       <SmartLatexRenderer text={String(optionText || '')} />
                                     </div>
                                     {isCorrect && (
-                                      <div className="mt-2 flex items-center gap-2 text-green-600 text-sm font-medium">
-                                        <div className="w-4 h-4 bg-green-100 rounded-full flex items-center justify-center">
+                                      <div className="mt-1 flex items-center gap-1 text-green-600 mobile-text-xs font-medium">
+                                        <div className="w-3 h-3 bg-green-100 rounded-full flex items-center justify-center">
                                           <span className="text-xs">✓</span>
                                         </div>
-                                        <span>Correct Answer</span>
+                                        <span>Correct</span>
                                       </div>
                                     )}
                                   </div>
@@ -394,52 +390,59 @@ export function ExpandableQuestionList({
                           </div>
                         </div>
 
-                        {/* Solution Section */}
+                        {/* Premium Solution Box */}
                         {question.solution_text && (
-                          <div className="space-y-4">
-                            <div className="flex items-center gap-3">
-                              <div className="h-1 w-8 bg-indigo-500 rounded-full"></div>
-                              <h4 className="text-lg font-semibold text-gray-900">Solution</h4>
+                          <div className="mobile-space-y-sm">
+                            <div className="flex items-center gap-2">
+                              <div className="h-1 w-6 bg-emerald-500 rounded-full"></div>
+                              <h4 className="mobile-heading-3 text-gray-900">Solution</h4>
                             </div>
-                            <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200/60 rounded-xl p-4 sm:p-6 shadow-sm">
-                              <div className="prose prose-sm max-w-none text-indigo-800">
-                                <SmartLatexRenderer text={question.solution_text} />
+                            <div className="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-lg mobile-p shadow-sm">
+                              <div className="flex items-start gap-2">
+                                <div className="flex-shrink-0 w-5 h-5 bg-emerald-100 rounded-full flex items-center justify-center mt-0.5">
+                                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="prose prose-xs max-w-none text-emerald-800">
+                                    <SmartLatexRenderer text={question.solution_text} />
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
                         )}
 
-                        {/* Premium Metadata Section */}
-                        <div className="space-y-4">
-                          <div className="flex items-center gap-3">
-                            <div className="h-1 w-8 bg-gray-500 rounded-full"></div>
-                            <h4 className="text-lg font-semibold text-gray-900">Question Details</h4>
+                        {/* Compact Metadata Section */}
+                        <div className="mobile-space-y-sm">
+                          <div className="flex items-center gap-2">
+                            <div className="h-1 w-6 bg-gray-500 rounded-full"></div>
+                            <h4 className="mobile-heading-3 text-gray-900">Details</h4>
                           </div>
-                          <div className="bg-white border border-gray-200/60 rounded-xl p-4 sm:p-6 shadow-sm">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                              <div className="space-y-2">
-                                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Question ID</div>
-                                <div className="font-mono text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">{question.question_id}</div>
+                          <div className="bg-white border border-gray-200/60 rounded-lg mobile-p shadow-sm">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 mobile-gap">
+                              <div className="space-y-1">
+                                <div className="mobile-text-xs font-medium text-gray-500 uppercase tracking-wide">ID</div>
+                                <div className="font-mono mobile-text-xs text-gray-900 bg-gray-50 mobile-px mobile-py rounded">{question.question_id}</div>
                               </div>
-                              <div className="space-y-2">
-                                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Book Source</div>
-                                <div className="text-sm text-gray-900 font-medium">{question.book_source}</div>
+                              <div className="space-y-1">
+                                <div className="mobile-text-xs font-medium text-gray-500 uppercase tracking-wide">Book</div>
+                                <div className="mobile-text-xs text-gray-900 font-medium">{question.book_source}</div>
                               </div>
-                              <div className="space-y-2">
-                                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Chapter</div>
-                                <div className="text-sm text-gray-900 font-medium">{question.chapter_name}</div>
+                              <div className="space-y-1">
+                                <div className="mobile-text-xs font-medium text-gray-500 uppercase tracking-wide">Chapter</div>
+                                <div className="mobile-text-xs text-gray-900 font-medium">{question.chapter_name}</div>
                               </div>
-                              <div className="space-y-2">
-                                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Question Number</div>
-                                <div className="text-sm text-gray-900 font-medium">{question.question_number_in_book || '—'}</div>
+                              <div className="space-y-1">
+                                <div className="mobile-text-xs font-medium text-gray-500 uppercase tracking-wide">Number</div>
+                                <div className="mobile-text-xs text-gray-900 font-medium">{question.question_number_in_book || '—'}</div>
                               </div>
-                              <div className="space-y-2">
-                                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Difficulty</div>
-                                <div className="text-sm text-gray-900 font-medium">{question.difficulty || '—'}</div>
+                              <div className="space-y-1">
+                                <div className="mobile-text-xs font-medium text-gray-500 uppercase tracking-wide">Difficulty</div>
+                                <div className="mobile-text-xs text-gray-900 font-medium">{question.difficulty || '—'}</div>
                               </div>
-                              <div className="space-y-2">
-                                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Created</div>
-                                <div className="text-sm text-gray-900 font-medium">
+                              <div className="space-y-1">
+                                <div className="mobile-text-xs font-medium text-gray-500 uppercase tracking-wide">Created</div>
+                                <div className="mobile-text-xs text-gray-900 font-medium">
                                   {new Date(question.created_at).toLocaleDateString('en-US', {
                                     year: 'numeric',
                                     month: 'short',
@@ -451,11 +454,11 @@ export function ExpandableQuestionList({
                             
                             {/* Admin Tags */}
                             {question.admin_tags && question.admin_tags.length > 0 && (
-                              <div className="mt-6 pt-4 border-t border-gray-200/60">
-                                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Admin Tags</div>
-                                <div className="flex flex-wrap gap-2">
+                              <div className="mt-3 pt-3 border-t border-gray-200/60">
+                                <div className="mobile-text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Tags</div>
+                                <div className="flex flex-wrap mobile-gap-sm">
                                   {question.admin_tags.map((tag, index) => (
-                                    <Badge key={index} variant="outline" className="text-xs px-3 py-1.5 bg-indigo-50 text-indigo-700 border-indigo-200 rounded-full">
+                                    <Badge key={index} variant="outline" className="mobile-text-xs px-2 py-1 bg-indigo-50 text-indigo-700 border-indigo-200 rounded-full">
                                       {tag}
                                     </Badge>
                                   ))}
@@ -465,17 +468,17 @@ export function ExpandableQuestionList({
                           </div>
                         </div>
 
-                        {/* Premium Action Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200/60">
+                        {/* Full-Width Action Buttons */}
+                        <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200/60">
                           {actionType === 'edit' && (
                             <>
                               <Button 
                                 variant="outline" 
                                 size="sm"
                                 onClick={() => onQuestionAction?.(question, 'edit')}
-                                className="w-full sm:w-auto touch-target bg-white hover:bg-gray-50 border-gray-300"
+                                className="w-full sm:w-auto touch-target bg-white hover:bg-gray-50 border-gray-300 mobile-text-xs h-8"
                               >
-                                <Edit className="h-4 w-4 mr-2" />
+                                <Edit className="h-3 w-3 mr-2" />
                                 Edit Question
                               </Button>
                               <DeleteQuestionDialog 
@@ -490,7 +493,7 @@ export function ExpandableQuestionList({
                             <Button
                               size="sm"
                               onClick={() => onQuestionAction?.(question, 'select')}
-                              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 touch-target"
+                              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 touch-target mobile-text-xs h-8"
                             >
                               Select This Question
                             </Button>
@@ -501,10 +504,10 @@ export function ExpandableQuestionList({
                               <Checkbox
                                 checked={isQuestionSelected(question)}
                                 onCheckedChange={() => toggleQuestionSelection(question)}
-                                className="touch-target"
+                                className="h-4 w-4 touch-target"
                               />
-                              <span className="text-sm text-gray-600 font-medium">
-                                {isQuestionSelected(question) ? 'Selected' : 'Select'}
+                              <span className="mobile-text-sm text-gray-600 font-medium">
+                                {isQuestionSelected(question) ? 'Selected' : 'Select this question'}
                               </span>
                             </div>
                           )}

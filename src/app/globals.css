@@ -146,7 +146,57 @@
     @apply mx-4 sm:mx-6 lg:mx-8;
   }
   
-  /* Responsive text sizes */
+  /* Mobile spacing utilities */
+  .mobile-space-y {
+    @apply space-y-3 sm:space-y-4;
+  }
+  
+  .mobile-space-y-sm {
+    @apply space-y-2 sm:space-y-3;
+  }
+  
+  .mobile-space-y-lg {
+    @apply space-y-4 sm:space-y-6;
+  }
+  
+  .mobile-gap {
+    @apply gap-3 sm:gap-4;
+  }
+  
+  .mobile-gap-sm {
+    @apply gap-2 sm:gap-3;
+  }
+  
+  .mobile-gap-lg {
+    @apply gap-4 sm:gap-6;
+  }
+  
+  /* Mobile padding utilities */
+  .mobile-p {
+    @apply p-3 sm:p-4;
+  }
+  
+  .mobile-p-sm {
+    @apply p-2 sm:p-3;
+  }
+  
+  .mobile-p-lg {
+    @apply p-4 sm:p-6;
+  }
+  
+  .mobile-px {
+    @apply px-3 sm:px-4;
+  }
+  
+  .mobile-py {
+    @apply py-3 sm:py-4;
+  }
+  
+  /* Mobile-optimized typography scaling */
+  .mobile-text-xs {
+    @apply text-xs;
+  }
+  
   .mobile-text-sm {
     @apply text-xs sm:text-sm;
   }
@@ -156,11 +206,41 @@
   }
   
   .mobile-text-lg {
-    @apply text-base sm:text-lg;
+    @apply text-sm sm:text-lg;
   }
   
   .mobile-text-xl {
-    @apply text-lg sm:text-xl;
+    @apply text-base sm:text-xl;
+  }
+  
+  .mobile-text-2xl {
+    @apply text-lg sm:text-2xl;
+  }
+  
+  .mobile-text-3xl {
+    @apply text-xl sm:text-3xl;
+  }
+  
+  /* Mobile-optimized headings */
+  .mobile-heading-1 {
+    @apply text-lg sm:text-2xl font-bold;
+  }
+  
+  .mobile-heading-2 {
+    @apply text-base sm:text-xl font-semibold;
+  }
+  
+  .mobile-heading-3 {
+    @apply text-sm sm:text-lg font-semibold;
+  }
+  
+  /* Mobile body text */
+  .mobile-body {
+    @apply text-sm sm:text-base leading-relaxed;
+  }
+  
+  .mobile-body-sm {
+    @apply text-xs sm:text-sm leading-relaxed;
   }
   
   /* Mobile-friendly form elements */
