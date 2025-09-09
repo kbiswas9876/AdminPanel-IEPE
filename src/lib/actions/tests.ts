@@ -1151,7 +1151,12 @@ export async function exportTestToPdf(testId: number): Promise<{ success: boolea
 }
 
 // Minimalist PDF Export - Simple, clean format
-export async function exportMinimalistPdf(testId: number): Promise<{ success: boolean; fileName?: string; base64?: string; message?: string }> {
+export async function exportMinimalistPdf(_testId: number): Promise<{ success: boolean; fileName?: string; base64?: string; message?: string }> {
+  // PDF generation disabled for Vercel deployment
+  return { success: false, message: 'PDF generation not available in serverless environment' }
+}
+
+export async function exportMinimalistPdfOriginal(testId: number): Promise<{ success: boolean; fileName?: string; base64?: string; message?: string }> {
   try {
     const fetched = await (async () => {
       // Try with overrides; fall back to base
@@ -1430,7 +1435,12 @@ async function fetchTestAndQuestionsApplied(testId: number): Promise<{ test: Tes
 }
 
 // Premium Professional Test Paper Generator
-export async function exportQuestionPaperPdf(testId: number): Promise<{ success: boolean; fileName?: string; base64?: string; message?: string }> {
+export async function exportQuestionPaperPdf(_testId: number): Promise<{ success: boolean; fileName?: string; base64?: string; message?: string }> {
+  // PDF generation disabled for Vercel deployment
+  return { success: false, message: 'PDF generation not available in serverless environment' }
+}
+
+export async function exportQuestionPaperPdfOriginal(testId: number): Promise<{ success: boolean; fileName?: string; base64?: string; message?: string }> {
   try {
     const fetched = await (async () => {
       // Try with overrides; fall back to base
@@ -1903,7 +1913,12 @@ export async function exportQuestionPaperPdf(testId: number): Promise<{ success:
 }
 
 // 2) Premium Professional Answer Key PDF
-export async function exportAnswerKeyPdf(testId: number): Promise<{ success: boolean; fileName?: string; base64?: string; message?: string }> {
+export async function exportAnswerKeyPdf(_testId: number): Promise<{ success: boolean; fileName?: string; base64?: string; message?: string }> {
+  // PDF generation disabled for Vercel deployment
+  return { success: false, message: 'PDF generation not available in serverless environment' }
+}
+
+export async function exportAnswerKeyPdfOriginal(testId: number): Promise<{ success: boolean; fileName?: string; base64?: string; message?: string }> {
   try {
     const fetched = await (async () => {
       const withOverrides = await (async () => {
