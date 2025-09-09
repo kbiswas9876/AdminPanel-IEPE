@@ -84,118 +84,118 @@ export function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* Enhanced Header Section */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-8 shadow-2xl">
+      <div className="relative overflow-hidden rounded-2xl lg:rounded-3xl bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 sm:p-6 lg:p-8 shadow-2xl">
         {/* Background Pattern */}
         <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-40" />
         
-        <div className="relative z-10 flex items-center justify-between">
-          <div className="space-y-4">
-            <div className="flex items-center space-x-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 shadow-xl ring-4 ring-white/10">
-                <LayoutDashboard className="h-8 w-8 text-white" />
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div className="space-y-3 lg:space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+              <div className="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 shadow-xl ring-4 ring-white/10">
+                <LayoutDashboard className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
               </div>
-              <div>
-                <h1 className="text-5xl font-bold text-white tracking-tight">
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl lg:text-5xl font-bold text-white tracking-tight">
                   Mission Control
                 </h1>
-                <p className="mt-2 text-xl text-blue-100 font-medium">
+                <p className="mt-1 sm:mt-2 text-sm sm:text-lg lg:text-xl text-blue-100 font-medium">
                   Admin Dashboard
                 </p>
               </div>
             </div>
-            <p className="text-lg text-blue-200/80 font-medium max-w-2xl leading-relaxed">
+            <p className="text-sm sm:text-base lg:text-lg text-blue-200/80 font-medium max-w-2xl leading-relaxed">
               Welcome to your command center. Monitor system status, manage your platform, and oversee all operations from this central hub.
             </p>
           </div>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center justify-center lg:justify-end">
             <Button 
               variant="outline" 
               size="lg" 
               onClick={fetchDashboardData}
               disabled={loading}
-              className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 hover:text-white transition-all duration-300 hover:scale-105 backdrop-blur-sm"
+              className="w-full sm:w-auto bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 hover:text-white transition-all duration-300 hover:scale-105 backdrop-blur-sm touch-target"
             >
-              <RefreshCw className={`h-5 w-5 mr-3 ${loading ? 'animate-spin' : ''}`} />
-              <span className="font-semibold">Refresh Data</span>
+              <RefreshCw className={`h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3 ${loading ? 'animate-spin' : ''}`} />
+              <span className="font-semibold text-sm sm:text-base">Refresh Data</span>
             </Button>
           </div>
         </div>
         
         {/* Decorative Elements */}
-        <div className="absolute top-4 right-4 w-32 h-32 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-4 left-4 w-24 h-24 bg-gradient-to-br from-indigo-400/20 to-blue-400/20 rounded-full blur-2xl" />
+        <div className="absolute top-4 right-4 w-16 h-16 sm:w-32 sm:h-32 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-4 left-4 w-12 h-12 sm:w-24 sm:h-24 bg-gradient-to-br from-indigo-400/20 to-blue-400/20 rounded-full blur-2xl" />
       </div>
 
       {/* Stats Cards */}
       <DashboardStats stats={stats} />
 
       {/* Enhanced Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Recent Activity - Takes 2 columns on large screens */}
         <div className="lg:col-span-2">
           <RecentActivity activities={activities} />
         </div>
 
         {/* Enhanced Quick Actions & System Status */}
-        <div className="space-y-6">
+        <div className="space-y-4 lg:space-y-6">
           {/* Enhanced Quick Actions Card */}
           <Card className="border-0 bg-white/90 backdrop-blur-md shadow-xl shadow-gray-200/50 rounded-2xl overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-blue-50/80 via-indigo-50/60 to-purple-50/80 border-b border-gray-100/50 p-6">
+            <CardHeader className="bg-gradient-to-r from-blue-50/80 via-indigo-50/60 to-purple-50/80 border-b border-gray-100/50 p-4 sm:p-6">
               <div className="flex items-center space-x-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
-                  <Zap className="h-5 w-5 text-white" />
+                <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
+                  <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl font-bold text-gray-900 tracking-tight">
+                  <CardTitle className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">
                     Quick Actions
                   </CardTitle>
-                  <p className="text-sm text-gray-600 font-medium">Common tasks</p>
+                  <p className="text-xs sm:text-sm text-gray-600 font-medium">Common tasks</p>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4 p-6">
-              <Button asChild className="w-full justify-start group hover:scale-[1.02] transition-all duration-200 h-auto p-0" variant="outline">
-                <Link href="/content/new" className="flex items-center space-x-4 p-4 rounded-xl border-2 border-blue-200/50 hover:border-blue-300 hover:bg-blue-50/50 w-full">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 group-hover:from-blue-200 group-hover:to-blue-300 transition-all duration-200">
-                    <Plus className="h-5 w-5 text-blue-600" />
+            <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
+              <Button asChild className="w-full justify-start group hover:scale-[1.02] transition-all duration-200 h-auto p-0 touch-target" variant="outline">
+                <Link href="/content/new" className="flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 rounded-xl border-2 border-blue-200/50 hover:border-blue-300 hover:bg-blue-50/50 w-full">
+                  <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 group-hover:from-blue-200 group-hover:to-blue-300 transition-all duration-200">
+                    <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                   </div>
-                  <div className="text-left">
-                    <span className="font-semibold text-gray-900">Add New Question</span>
-                    <p className="text-sm text-gray-600">Create content</p>
-                  </div>
-                </Link>
-              </Button>
-              <Button asChild className="w-full justify-start group hover:scale-[1.02] transition-all duration-200 h-auto p-0" variant="outline">
-                <Link href="/tests/new" className="flex items-center space-x-4 p-4 rounded-xl border-2 border-purple-200/50 hover:border-purple-300 hover:bg-purple-50/50 w-full">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-100 to-purple-200 group-hover:from-purple-200 group-hover:to-purple-300 transition-all duration-200">
-                    <BookOpen className="h-5 w-5 text-purple-600" />
-                  </div>
-                  <div className="text-left">
-                    <span className="font-semibold text-gray-900">Create Mock Test</span>
-                    <p className="text-sm text-gray-600">Build assessments</p>
+                  <div className="text-left min-w-0 flex-1">
+                    <span className="font-semibold text-gray-900 text-sm sm:text-base">Add New Question</span>
+                    <p className="text-xs sm:text-sm text-gray-600">Create content</p>
                   </div>
                 </Link>
               </Button>
-              <Button asChild className="w-full justify-start group hover:scale-[1.02] transition-all duration-200 h-auto p-0" variant="outline">
-                <Link href="/students" className="flex items-center space-x-4 p-4 rounded-xl border-2 border-green-200/50 hover:border-green-300 hover:bg-green-50/50 w-full">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-100 to-green-200 group-hover:from-green-200 group-hover:to-green-300 transition-all duration-200">
-                    <Users className="h-5 w-5 text-green-600" />
+              <Button asChild className="w-full justify-start group hover:scale-[1.02] transition-all duration-200 h-auto p-0 touch-target" variant="outline">
+                <Link href="/tests/new" className="flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 rounded-xl border-2 border-purple-200/50 hover:border-purple-300 hover:bg-purple-50/50 w-full">
+                  <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-100 to-purple-200 group-hover:from-purple-200 group-hover:to-purple-300 transition-all duration-200">
+                    <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
                   </div>
-                  <div className="text-left">
-                    <span className="font-semibold text-gray-900">Manage Students</span>
-                    <p className="text-sm text-gray-600">User management</p>
+                  <div className="text-left min-w-0 flex-1">
+                    <span className="font-semibold text-gray-900 text-sm sm:text-base">Create Mock Test</span>
+                    <p className="text-xs sm:text-sm text-gray-600">Build assessments</p>
                   </div>
                 </Link>
               </Button>
-              <Button asChild className="w-full justify-start group hover:scale-[1.02] transition-all duration-200 h-auto p-0" variant="outline">
-                <Link href="/reports" className="flex items-center space-x-4 p-4 rounded-xl border-2 border-red-200/50 hover:border-red-300 hover:bg-red-50/50 w-full">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-red-100 to-red-200 group-hover:from-red-200 group-hover:to-red-300 transition-all duration-200">
-                    <AlertTriangle className="h-5 w-5 text-red-600" />
+              <Button asChild className="w-full justify-start group hover:scale-[1.02] transition-all duration-200 h-auto p-0 touch-target" variant="outline">
+                <Link href="/students" className="flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 rounded-xl border-2 border-green-200/50 hover:border-green-300 hover:bg-green-50/50 w-full">
+                  <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-100 to-green-200 group-hover:from-green-200 group-hover:to-green-300 transition-all duration-200">
+                    <Users className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
                   </div>
-                  <div className="text-left">
-                    <span className="font-semibold text-gray-900">View Error Reports</span>
-                    <p className="text-sm text-gray-600">System monitoring</p>
+                  <div className="text-left min-w-0 flex-1">
+                    <span className="font-semibold text-gray-900 text-sm sm:text-base">Manage Students</span>
+                    <p className="text-xs sm:text-sm text-gray-600">User management</p>
+                  </div>
+                </Link>
+              </Button>
+              <Button asChild className="w-full justify-start group hover:scale-[1.02] transition-all duration-200 h-auto p-0 touch-target" variant="outline">
+                <Link href="/reports" className="flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 rounded-xl border-2 border-red-200/50 hover:border-red-300 hover:bg-red-50/50 w-full">
+                  <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-gradient-to-br from-red-100 to-red-200 group-hover:from-red-200 group-hover:to-red-300 transition-all duration-200">
+                    <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
+                  </div>
+                  <div className="text-left min-w-0 flex-1">
+                    <span className="font-semibold text-gray-900 text-sm sm:text-base">View Error Reports</span>
+                    <p className="text-xs sm:text-sm text-gray-600">System monitoring</p>
                   </div>
                 </Link>
               </Button>
@@ -204,63 +204,63 @@ export function DashboardPage() {
 
           {/* Enhanced System Status Card */}
           <Card className="border-0 bg-white/90 backdrop-blur-md shadow-xl shadow-gray-200/50 rounded-2xl overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-green-50/80 via-emerald-50/60 to-teal-50/80 border-b border-gray-100/50 p-6">
+            <CardHeader className="bg-gradient-to-r from-green-50/80 via-emerald-50/60 to-teal-50/80 border-b border-gray-100/50 p-4 sm:p-6">
               <div className="flex items-center space-x-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg">
-                  <Activity className="h-5 w-5 text-white" />
+                <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg">
+                  <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl font-bold text-gray-900 tracking-tight">
+                  <CardTitle className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">
                     System Status
                   </CardTitle>
-                  <p className="text-sm text-gray-600 font-medium">All systems operational</p>
+                  <p className="text-xs sm:text-sm text-gray-600 font-medium">All systems operational</p>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4 p-6">
-              <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-green-50/80 to-emerald-50/60 border border-green-200/50 hover:shadow-md transition-all duration-200">
-                <div className="flex items-center space-x-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100">
-                    <Database className="h-4 w-4 text-green-600" />
+            <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
+              <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl bg-gradient-to-r from-green-50/80 to-emerald-50/60 border border-green-200/50 hover:shadow-md transition-all duration-200">
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                  <div className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-green-100">
+                    <Database className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
                   </div>
-                  <span className="text-sm font-semibold text-gray-800">Database</span>
+                  <span className="text-xs sm:text-sm font-semibold text-gray-800">Database</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="relative">
-                    <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-pulse shadow-lg shadow-green-400/50"></div>
-                    <div className="absolute inset-0 w-3 h-3 bg-green-400/30 rounded-full animate-ping"></div>
+                    <div className="w-2 h-2 sm:w-3 sm:h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-pulse shadow-lg shadow-green-400/50"></div>
+                    <div className="absolute inset-0 w-2 h-2 sm:w-3 sm:h-3 bg-green-400/30 rounded-full animate-ping"></div>
                   </div>
-                  <span className="text-sm font-bold text-green-600">Online</span>
+                  <span className="text-xs sm:text-sm font-bold text-green-600">Online</span>
                 </div>
               </div>
-              <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-green-50/80 to-emerald-50/60 border border-green-200/50 hover:shadow-md transition-all duration-200">
-                <div className="flex items-center space-x-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100">
-                    <Globe className="h-4 w-4 text-green-600" />
+              <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl bg-gradient-to-r from-green-50/80 to-emerald-50/60 border border-green-200/50 hover:shadow-md transition-all duration-200">
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                  <div className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-green-100">
+                    <Globe className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
                   </div>
-                  <span className="text-sm font-semibold text-gray-800">API Services</span>
+                  <span className="text-xs sm:text-sm font-semibold text-gray-800">API Services</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="relative">
-                    <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-pulse shadow-lg shadow-green-400/50"></div>
-                    <div className="absolute inset-0 w-3 h-3 bg-green-400/30 rounded-full animate-ping"></div>
+                    <div className="w-2 h-2 sm:w-3 sm:h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-pulse shadow-lg shadow-green-400/50"></div>
+                    <div className="absolute inset-0 w-2 h-2 sm:w-3 sm:h-3 bg-green-400/30 rounded-full animate-ping"></div>
                   </div>
-                  <span className="text-sm font-bold text-green-600">Online</span>
+                  <span className="text-xs sm:text-sm font-bold text-green-600">Online</span>
                 </div>
               </div>
-              <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-green-50/80 to-emerald-50/60 border border-green-200/50 hover:shadow-md transition-all duration-200">
-                <div className="flex items-center space-x-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100">
-                    <HardDrive className="h-4 w-4 text-green-600" />
+              <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl bg-gradient-to-r from-green-50/80 to-emerald-50/60 border border-green-200/50 hover:shadow-md transition-all duration-200">
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                  <div className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-green-100">
+                    <HardDrive className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
                   </div>
-                  <span className="text-sm font-semibold text-gray-800">File Storage</span>
+                  <span className="text-xs sm:text-sm font-semibold text-gray-800">File Storage</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="relative">
-                    <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-pulse shadow-lg shadow-green-400/50"></div>
-                    <div className="absolute inset-0 w-3 h-3 bg-green-400/30 rounded-full animate-ping"></div>
+                    <div className="w-2 h-2 sm:w-3 sm:h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-pulse shadow-lg shadow-green-400/50"></div>
+                    <div className="absolute inset-0 w-2 h-2 sm:w-3 sm:h-3 bg-green-400/30 rounded-full animate-ping"></div>
                   </div>
-                  <span className="text-sm font-bold text-green-600">Online</span>
+                  <span className="text-xs sm:text-sm font-bold text-green-600">Online</span>
                 </div>
               </div>
             </CardContent>

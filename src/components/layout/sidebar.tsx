@@ -11,7 +11,8 @@ import {
   Users, 
   FileText,
   Shield,
-  ChevronRight
+  ChevronRight,
+  X
 } from 'lucide-react'
 
 const navigation = [
@@ -47,13 +48,17 @@ const navigation = [
   },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  onClose?: () => void
+}
+
+export function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname()
 
   return (
     <div className="flex h-full w-72 flex-col bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-r border-slate-700/50 shadow-2xl backdrop-blur-xl">
       {/* Enhanced Header Section */}
-      <div className="flex h-24 items-center px-6 border-b border-slate-700/50 bg-gradient-to-r from-slate-800/50 to-slate-700/30">
+      <div className="flex h-24 items-center justify-between px-6 border-b border-slate-700/50 bg-gradient-to-r from-slate-800/50 to-slate-700/30">
         <div className="flex items-center space-x-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 shadow-xl ring-2 ring-blue-400/20">
             <Shield className="h-7 w-7 text-white" />
@@ -63,6 +68,14 @@ export function Sidebar() {
             <p className="text-xs text-slate-400 font-medium">Mission Control Center</p>
           </div>
         </div>
+        
+        {/* Mobile Close Button */}
+        <button
+          onClick={onClose}
+          className="lg:hidden p-2 rounded-lg hover:bg-slate-700/50 transition-colors"
+        >
+          <X className="h-5 w-5 text-slate-300" />
+        </button>
       </div>
 
       {/* Enhanced Navigation Section */}
@@ -75,6 +88,7 @@ export function Sidebar() {
             <Link
               key={item.name}
               href={item.href}
+              onClick={() => onClose?.()}
               className={cn(
                 'group relative flex items-center rounded-2xl px-4 py-4 text-sm font-medium transition-all duration-300 ease-out',
                 'hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] transform-gpu',

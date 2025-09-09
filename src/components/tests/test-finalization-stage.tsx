@@ -222,32 +222,33 @@ export function TestFinalizationStage({
     <div className="min-h-screen">
       {/* Header Section */}
       <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200/50 shadow-sm">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
+        <div className="px-4 sm:px-6 py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
+              <div className="flex items-center space-x-2 sm:space-x-3">
                 <div className="p-2 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100">
-                  <Calendar className="h-5 w-5 text-purple-600" />
+                  <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900 tracking-tight">
+                <div className="min-w-0 flex-1">
+                  <h2 className="mobile-text-lg font-bold text-gray-900 tracking-tight">
                     Test Rules & Publishing
                   </h2>
-                  <p className="text-sm text-gray-600 font-medium">
+                  <p className="mobile-text-sm text-gray-600 font-medium">
                     {questions.length} questions ready for finalization
                   </p>
                 </div>
               </div>
             </div>
             
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center justify-center sm:justify-end">
               <Button 
                 variant="outline" 
                 onClick={onPrevious}
-                className="hover:bg-gray-50 transition-colors duration-200"
+                className="hover:bg-gray-50 transition-colors duration-200 touch-target w-full sm:w-auto"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Previous: Review & Refine
+                <span className="hidden sm:inline">Previous: Review & Refine</span>
+                <span className="sm:hidden">Previous</span>
               </Button>
             </div>
           </div>
@@ -255,47 +256,49 @@ export function TestFinalizationStage({
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6">
         {/* Test Summary */}
-        <div className="mb-8 p-6 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 rounded-xl border border-blue-200/50 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-bold text-blue-900 tracking-tight">Test Summary</h3>
-              <p className="text-sm text-blue-700 font-medium mt-1">
+        <div className="mb-6 sm:mb-8 p-4 sm:p-6 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 rounded-xl border border-blue-200/50 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+            <div className="min-w-0 flex-1">
+              <h3 className="mobile-text-lg font-bold text-blue-900 tracking-tight">Test Summary</h3>
+              <p className="mobile-text-sm text-blue-700 font-medium mt-1">
                 {questions.length} questions ready for finalization
               </p>
             </div>
-            <div className="px-4 py-2 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-lg border border-blue-200/50">
-              <span className="text-sm font-semibold text-blue-600">
-                {isEditMode ? 'Ready to update' : 'Ready to publish'}
-              </span>
+            <div className="flex justify-center sm:justify-end">
+              <div className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-lg border border-blue-200/50">
+                <span className="text-xs sm:text-sm font-semibold text-blue-600">
+                  {isEditMode ? 'Ready to update' : 'Ready to publish'}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Main Form */}
         <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-gray-200/50 overflow-hidden">
-          <CardHeader className="bg-gradient-to-r from-gray-50/50 to-white/50 border-b border-gray-100/50">
-            <CardTitle className="flex items-center space-x-3">
+          <CardHeader className="bg-gradient-to-r from-gray-50/50 to-white/50 border-b border-gray-100/50 p-4 sm:p-6">
+            <CardTitle className="flex items-center space-x-2 sm:space-x-3">
               <div className="p-2 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100">
-                <Calendar className="h-5 w-5 text-purple-600" />
+                <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
               </div>
-              <span className="text-xl font-bold text-gray-900 tracking-tight">Finalize Test Details</span>
+              <span className="mobile-text-lg font-bold text-gray-900 tracking-tight">Finalize Test Details</span>
             </CardTitle>
-            <CardDescription className="text-gray-600 font-medium">
+            <CardDescription className="mobile-text-sm text-gray-600 font-medium">
               Set the essential rules for your test. You can choose result release while publishing.
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-8 space-y-8">
+          <CardContent className="p-4 sm:p-8 space-y-6 sm:space-y-8">
             {/* A) Basic Settings */}
-            <div className="space-y-6">
-              <div className="flex items-center space-x-3">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="flex items-center space-x-2 sm:space-x-3">
                 <div className="p-2 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100">
                   <Save className="h-4 w-4 text-blue-600" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 tracking-tight">Basic Settings</h3>
+                <h3 className="mobile-text-base font-bold text-gray-900 tracking-tight">Basic Settings</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-3">
                   <Label htmlFor="test-name" className="text-sm font-semibold text-gray-700">Test Name *</Label>
                   <Input
@@ -303,7 +306,7 @@ export function TestFinalizationStage({
                     value={formData.name}
                     onChange={(e) => updateFormData('name', e.target.value)}
                     placeholder="Enter test name..."
-                    className={`transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.name ? 'border-red-300' : ''}`}
+                    className={`mobile-input transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.name ? 'border-red-300' : ''}`}
                   />
                   {errors.name && (
                     <p className="text-sm text-red-600 font-medium">{errors.name}</p>
@@ -316,22 +319,22 @@ export function TestFinalizationStage({
                     value={formData.description}
                     onChange={(e) => updateFormData('description', e.target.value)}
                     placeholder="Enter test description..."
-                    className="transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  rows={3}
-                />
+                    className="mobile-input transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    rows={3}
+                  />
               </div>
             </div>
           </div>
 
             {/* B) Scoring & Timing */}
-            <div className="space-y-6">
-              <div className="flex items-center space-x-3">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="flex items-center space-x-2 sm:space-x-3">
                 <div className="p-2 rounded-lg bg-gradient-to-br from-green-100 to-emerald-100">
                   <Clock className="h-4 w-4 text-green-600" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 tracking-tight">Scoring & Timing</h3>
+                <h3 className="mobile-text-base font-bold text-gray-900 tracking-tight">Scoring & Timing</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <div className="space-y-3">
                   <Label htmlFor="total-time" className="text-sm font-semibold text-gray-700">Total Time (minutes) *</Label>
                   <Input
@@ -340,7 +343,7 @@ export function TestFinalizationStage({
                     min="1"
                     value={formData.totalTimeMinutes}
                     onChange={(e) => updateFormData('totalTimeMinutes', Number(e.target.value))}
-                    className={`transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.totalTimeMinutes ? 'border-red-300' : ''}`}
+                    className={`mobile-input transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.totalTimeMinutes ? 'border-red-300' : ''}`}
                   />
                   {errors.totalTimeMinutes && (
                     <p className="text-sm text-red-600 font-medium">{errors.totalTimeMinutes}</p>
@@ -355,7 +358,7 @@ export function TestFinalizationStage({
                     min="0"
                     value={formData.marksPerCorrect}
                     onChange={(e) => updateFormData('marksPerCorrect', Number(e.target.value))}
-                    className={`transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.marksPerCorrect ? 'border-red-300' : ''}`}
+                    className={`mobile-input transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.marksPerCorrect ? 'border-red-300' : ''}`}
                   />
                   {errors.marksPerCorrect && (
                     <p className="text-sm text-red-600 font-medium">{errors.marksPerCorrect}</p>
@@ -370,7 +373,7 @@ export function TestFinalizationStage({
                     min="0"
                     value={formData.negativeMarksPerIncorrect}
                     onChange={(e) => updateFormData('negativeMarksPerIncorrect', Number(e.target.value))}
-                    className={`transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.negativeMarksPerIncorrect ? 'border-red-300' : ''}`}
+                    className={`mobile-input transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.negativeMarksPerIncorrect ? 'border-red-300' : ''}`}
                   />
                   {errors.negativeMarksPerIncorrect && (
                     <p className="text-sm text-red-600 font-medium">{errors.negativeMarksPerIncorrect}</p>
@@ -384,34 +387,35 @@ export function TestFinalizationStage({
       </Card>
 
         {/* Action Buttons */}
-        <div className="flex justify-between mt-8">
+        <div className="flex flex-col sm:flex-row justify-between gap-4 mt-6 sm:mt-8">
           <Button 
             variant="outline" 
             onClick={onPrevious}
-            className="hover:bg-gray-50 transition-colors duration-200"
+            className="w-full sm:w-auto hover:bg-gray-50 transition-colors duration-200 touch-target"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Previous: Review & Refine
+            <span className="hidden sm:inline">Previous: Review & Refine</span>
+            <span className="sm:hidden">Previous</span>
           </Button>
           
-          <div className="flex space-x-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
             <Button
               variant="outline"
               onClick={handleSaveAsDraft}
               disabled={isSaving}
-              className="flex items-center space-x-2 hover:bg-gray-50 transition-colors duration-200"
+              className="w-full sm:w-auto flex items-center justify-center space-x-2 hover:bg-gray-50 transition-colors duration-200 touch-target"
             >
               <Save className="h-4 w-4" />
-              <span>{isSaving ? (isEditMode ? 'Updating...' : 'Saving...') : (isEditMode ? 'Update Draft' : 'Save as Draft')}</span>
+              <span className="mobile-text-sm">{isSaving ? (isEditMode ? 'Updating...' : 'Saving...') : (isEditMode ? 'Update Draft' : 'Save as Draft')}</span>
             </Button>
             
             <Button
               onClick={handlePublishClick}
               disabled={isSaving}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center space-x-2"
+              className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 touch-target"
             >
               <Clock className="h-4 w-4" />
-              <span>{isEditMode ? 'Update & Publish' : 'Publish Test'}</span>
+              <span className="mobile-text-sm">{isEditMode ? 'Update & Publish' : 'Publish Test'}</span>
             </Button>
           </div>
         </div>

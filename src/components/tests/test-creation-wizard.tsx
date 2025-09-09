@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+// Card components removed - not used in this component
 import { ArrowRight, FileText } from 'lucide-react'
-import Link from 'next/link'
+// Link removed - not used in this component
 import type { TestQuestionSlot, ChapterInfo, BlueprintRule, ChapterBlueprint, TestBlueprint } from '@/lib/types'
 import type { Test } from '@/lib/supabase/admin'
 import { ReviewRefineInterface } from './review-refine-interface'
@@ -250,18 +250,18 @@ export function TestCreationWizard({
     <div className="min-h-screen">
       {/* Unified Header */}
       <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200/50 shadow-sm">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
+        <div className="px-4 sm:px-6 py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
+              <div className="flex items-center space-x-2 sm:space-x-3">
                 <div className="p-2 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100">
-                  <FileText className="h-5 w-5 text-purple-600" />
+                  <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900 tracking-tight">
+                <div className="min-w-0 flex-1">
+                  <h2 className="mobile-text-lg font-bold text-gray-900 tracking-tight">
                     {isEditMode ? 'Edit Mock Test' : 'Create Mock Test'}
                   </h2>
-                  <p className="text-sm text-gray-600 font-medium">
+                  <p className="mobile-text-sm text-gray-600 font-medium">
                     {currentStep === 1 && 'Design your test blueprint'}
                     {currentStep === 2 && 'Review and refine questions'}
                     {currentStep === 3 && 'Set rules and publish'}
@@ -270,14 +270,15 @@ export function TestCreationWizard({
               </div>
             </div>
             
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 sm:space-x-3">
               {currentStep > 1 && (
                 <Button 
                   variant="outline" 
                   onClick={handlePrevious}
-                  className="hover:bg-gray-50 transition-colors duration-200"
+                  className="hover:bg-gray-50 transition-colors duration-200 touch-target w-full sm:w-auto"
                 >
-                  ← Previous
+                  <span className="hidden sm:inline">← Previous</span>
+                  <span className="sm:hidden">← Back</span>
                 </Button>
               )}
               
@@ -285,16 +286,18 @@ export function TestCreationWizard({
                 <Button 
                   onClick={handleNext} 
                   disabled={totalQuestions === 0 || isGenerating}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed touch-target"
                 >
                   {isGenerating ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Generating Questions...
+                      <span className="hidden sm:inline">Generating Questions...</span>
+                      <span className="sm:hidden">Generating...</span>
                     </>
                   ) : (
                     <>
-                      Next: Review & Refine
+                      <span className="hidden sm:inline">Next: Review & Refine</span>
+                      <span className="sm:hidden">Next</span>
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </>
                   )}
@@ -306,7 +309,7 @@ export function TestCreationWizard({
       </div>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="max-w-6xl mx-auto p-4 sm:p-6">
 
         {/* Error Message */}
         {error && (
@@ -319,30 +322,30 @@ export function TestCreationWizard({
         {currentStep === 1 && (
           <div className="space-y-6">
             {/* Header Section */}
-            <div className="flex items-center justify-between p-6 bg-gradient-to-r from-gray-50/50 to-white/50 border-b border-gray-100/50">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-6 bg-gradient-to-r from-gray-50/50 to-white/50 border-b border-gray-100/50">
               <div className="flex items-center space-x-3">
                 <div className="p-2 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100">
-                  <FileText className="h-5 w-5 text-blue-600" />
+                  <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900 tracking-tight">
+                  <h2 className="mobile-text-lg font-bold text-gray-900 tracking-tight">
                     Test Blueprint
                   </h2>
-                  <p className="text-sm text-gray-600 font-medium">
+                  <p className="mobile-text-sm text-gray-600 font-medium">
                     Design your blueprint by chapter and difficulty
                   </p>
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
-                <div className="px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200/50">
-                  <span className="text-sm font-medium text-gray-700">Total Questions</span>
-                  <span className="ml-2 text-lg font-bold text-blue-600">{totalQuestions}</span>
+              <div className="flex items-center justify-center sm:justify-end">
+                <div className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200/50">
+                  <span className="text-xs sm:text-sm font-medium text-gray-700">Total Questions</span>
+                  <span className="ml-2 text-base sm:text-lg font-bold text-blue-600">{totalQuestions}</span>
                 </div>
               </div>
             </div>
 
             {/* Content */}
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
 
               <div className="space-y-4">
                 {chapters.map((chapter) => {
@@ -352,19 +355,19 @@ export function TestCreationWizard({
                   
                   return (
                     <details key={chapter.name} className="group border border-gray-200/50 rounded-xl overflow-hidden bg-white/50 hover:bg-white/80 transition-all duration-200">
-                      <summary className="cursor-pointer flex items-center justify-between p-6 hover:bg-gray-50/50 transition-colors duration-200">
-                        <div className="flex items-center space-x-4">
+                      <summary className="cursor-pointer flex items-center justify-between p-4 sm:p-6 hover:bg-gray-50/50 transition-colors duration-200">
+                        <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
                           <div className="p-2 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 group-hover:from-blue-100 group-hover:to-indigo-100 transition-all duration-200">
                             <FileText className="h-4 w-4 text-gray-600 group-hover:text-blue-600 transition-colors duration-200" />
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900">{chapter.name}</h3>
-                            <p className="text-sm text-gray-600 font-medium">{chapter.available} questions available</p>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-semibold text-gray-900 truncate">{chapter.name}</h3>
+                            <p className="text-xs sm:text-sm text-gray-600 font-medium">{chapter.available} questions available</p>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-3">
-                          <div className="px-3 py-1 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200/50">
-                            <span className="text-sm font-semibold text-blue-600">
+                        <div className="flex items-center space-x-2 sm:space-x-3 ml-2">
+                          <div className="px-2 sm:px-3 py-1 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200/50">
+                            <span className="text-xs sm:text-sm font-semibold text-blue-600">
                               {selectedCount} selected
                             </span>
                           </div>
@@ -374,17 +377,17 @@ export function TestCreationWizard({
                         </div>
                       </summary>
 
-                      <div className="p-6 bg-gray-50/50 border-t border-gray-100/50">
-                        <div className="space-y-6">
+                      <div className="p-4 sm:p-6 bg-gray-50/50 border-t border-gray-100/50">
+                        <div className="space-y-4 sm:space-y-6">
                           {/* A) Quantity (Simple Mode) */}
                           <div className="space-y-3">
                             <Label className="text-sm font-semibold text-gray-700">Random questions from this chapter</Label>
-                            <div className="flex items-center space-x-3">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                               <Input
                                 type="text"
                                 inputMode="numeric"
                                 pattern="[0-9]*"
-                                className="w-24 transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                className="w-20 sm:w-24 transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mobile-input"
                                 value={(chState.random ?? 0).toString()}
                                 onChange={(e) => {
                                   const digitsOnly = e.target.value.replace(/[^0-9]/g, '')
@@ -392,7 +395,7 @@ export function TestCreationWizard({
                                   setChapterRandom(chapter.name, num)
                                 }}
                               />
-                              <span className="text-sm text-gray-600 font-medium">0 - {chapter.available}</span>
+                              <span className="text-xs sm:text-sm text-gray-600 font-medium">0 - {chapter.available}</span>
                             </div>
                           </div>
 
@@ -481,7 +484,7 @@ export function TestCreationWizard({
             // Placeholder for edit functionality
             console.log('Edit question at index:', index)
           }}
-          onPrevious={handlePrevious}
+          // onPrevious removed - not used in ReviewRefineInterface
           onNext={() => setCurrentStep(3)}
         />
       )}

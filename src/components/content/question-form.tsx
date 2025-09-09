@@ -59,14 +59,14 @@ export function QuestionForm({ question, isEditing = false, onSubmit }: Question
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center space-x-4">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
         <Link href="/content">
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" className="w-fit">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Content
           </Button>
         </Link>
-        <h1 className="text-3xl font-bold text-gray-900">
+        <h1 className="mobile-text-xl font-bold text-gray-900">
           {isEditing ? 'Edit Question' : 'Add New Question'}
         </h1>
       </div>
@@ -80,7 +80,7 @@ export function QuestionForm({ question, isEditing = false, onSubmit }: Question
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="mobile-form-grid gap-6">
               {/* Question ID */}
               <div className="space-y-2">
                 <Label htmlFor="question_id">Question ID *</Label>
@@ -89,6 +89,7 @@ export function QuestionForm({ question, isEditing = false, onSubmit }: Question
                   name="question_id"
                   defaultValue={question?.question_id || ''}
                   placeholder="e.g., PIN6800_PER_1"
+                  className="mobile-input"
                   required
                 />
               </div>
@@ -124,6 +125,7 @@ export function QuestionForm({ question, isEditing = false, onSubmit }: Question
                   name="chapter_name"
                   defaultValue={question?.chapter_name || ''}
                   placeholder="e.g., Percentage"
+                  className="mobile-input"
                   required
                 />
               </div>
@@ -137,6 +139,7 @@ export function QuestionForm({ question, isEditing = false, onSubmit }: Question
                   type="number"
                   defaultValue={question?.question_number_in_book || ''}
                   placeholder="e.g., 1"
+                  className="mobile-input"
                 />
               </div>
             </div>
@@ -150,6 +153,7 @@ export function QuestionForm({ question, isEditing = false, onSubmit }: Question
                 defaultValue={question?.question_text || ''}
                 placeholder="Enter the question text..."
                 rows={4}
+                className="mobile-input"
                 required
               />
             </div>
@@ -157,7 +161,7 @@ export function QuestionForm({ question, isEditing = false, onSubmit }: Question
             {/* Options */}
             <div className="space-y-4">
               <Label>Options</Label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="mobile-form-grid gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="option_a">Option A</Label>
                   <Input
@@ -165,6 +169,7 @@ export function QuestionForm({ question, isEditing = false, onSubmit }: Question
                     name="option_a"
                     defaultValue={question?.options?.a || ''}
                     placeholder="Option A text"
+                    className="mobile-input"
                   />
                 </div>
                 <div className="space-y-2">
@@ -174,6 +179,7 @@ export function QuestionForm({ question, isEditing = false, onSubmit }: Question
                     name="option_b"
                     defaultValue={question?.options?.b || ''}
                     placeholder="Option B text"
+                    className="mobile-input"
                   />
                 </div>
                 <div className="space-y-2">
@@ -183,6 +189,7 @@ export function QuestionForm({ question, isEditing = false, onSubmit }: Question
                     name="option_c"
                     defaultValue={question?.options?.c || ''}
                     placeholder="Option C text"
+                    className="mobile-input"
                   />
                 </div>
                 <div className="space-y-2">
@@ -192,12 +199,13 @@ export function QuestionForm({ question, isEditing = false, onSubmit }: Question
                     name="option_d"
                     defaultValue={question?.options?.d || ''}
                     placeholder="Option D text"
+                    className="mobile-input"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="mobile-form-grid gap-6">
               {/* Correct Option */}
               <div className="space-y-2">
                 <Label htmlFor="correct_option">Correct Option</Label>
@@ -222,6 +230,7 @@ export function QuestionForm({ question, isEditing = false, onSubmit }: Question
                   name="exam_metadata"
                   defaultValue={question?.exam_metadata || ''}
                   placeholder="e.g., CAT 2023, Slot 1"
+                  className="mobile-input"
                 />
               </div>
             </div>
@@ -235,6 +244,7 @@ export function QuestionForm({ question, isEditing = false, onSubmit }: Question
                 defaultValue={question?.solution_text || ''}
                 placeholder="Enter the solution explanation..."
                 rows={4}
+                className="mobile-input"
               />
             </div>
 
@@ -246,6 +256,7 @@ export function QuestionForm({ question, isEditing = false, onSubmit }: Question
                 name="admin_tags"
                 defaultValue={question?.admin_tags?.join(', ') || ''}
                 placeholder="e.g., Election Based, Successive Discount"
+                className="mobile-input"
               />
               <p className="text-sm text-gray-500">
                 Enter tags separated by commas
@@ -253,12 +264,12 @@ export function QuestionForm({ question, isEditing = false, onSubmit }: Question
             </div>
 
             {/* Form Actions */}
-            <div className="flex items-center space-x-4 pt-6">
-              <Button type="submit">
+            <div className="mobile-button-group pt-6">
+              <Button type="submit" className="touch-target">
                 {isEditing ? 'Save Changes' : 'Save Question'}
               </Button>
               <Link href="/content">
-                <Button type="button" variant="outline">
+                <Button type="button" variant="outline" className="touch-target">
                   Cancel
                 </Button>
               </Link>

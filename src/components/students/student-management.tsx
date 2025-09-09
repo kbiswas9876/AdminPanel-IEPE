@@ -28,25 +28,28 @@ export function StudentManagement({
 
   return (
     <Tabs defaultValue="pending" className="w-full">
-      <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="pending" className="relative">
-          Pending Approval
+      <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 gap-1 h-auto">
+        <TabsTrigger value="pending" className="relative flex items-center justify-center py-3">
+          <span className="hidden sm:inline">Pending Approval</span>
+          <span className="sm:hidden">Pending</span>
           {pendingUsers.length > 0 && (
             <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
               {pendingUsers.length}
             </span>
           )}
         </TabsTrigger>
-        <TabsTrigger value="active">
-          Active Students
+        <TabsTrigger value="active" className="flex items-center justify-center py-3">
+          <span className="hidden sm:inline">Active Students</span>
+          <span className="sm:hidden">Active</span>
           {activeUsers.length > 0 && (
             <span className="ml-2 bg-green-500 text-white text-xs rounded-full px-2 py-1">
               {activeUsers.length}
             </span>
           )}
         </TabsTrigger>
-        <TabsTrigger value="all">
-          All Students
+        <TabsTrigger value="all" className="flex items-center justify-center py-3">
+          <span className="hidden sm:inline">All Students</span>
+          <span className="sm:hidden">All</span>
           {allUsers.length > 0 && (
             <span className="ml-2 bg-blue-500 text-white text-xs rounded-full px-2 py-1">
               {allUsers.length}

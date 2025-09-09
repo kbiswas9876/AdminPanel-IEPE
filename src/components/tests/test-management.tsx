@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { MobileResponsiveTable, MobileTableCard, MobileCardRow } from '@/components/shared/mobile-responsive-table'
 import { Plus, FileText, Calendar, Clock, CheckCircle, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { TestActions } from './test-actions'
@@ -132,17 +133,17 @@ export function TestManagement() {
   return (
     <div className="space-y-6">
       {/* Header with Create Button */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 className="mobile-text-xl font-semibold text-gray-900">
             All Mock Tests
           </h2>
-          <p className="text-sm text-gray-600">
+          <p className="mobile-text-sm text-gray-600">
             Manage your competitive exam mock tests
           </p>
         </div>
         <Link href="/tests/new">
-          <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group">
+          <Button className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group touch-target">
             <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
             <Plus className="h-4 w-4 mr-2 relative z-10" />
             <span className="relative z-10">Create New Mock Test</span>
@@ -154,10 +155,10 @@ export function TestManagement() {
       {tests.length === 0 ? (
         <div className="text-center py-12">
           <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Mock Tests Created</h3>
-          <p className="text-gray-500 mb-4">Get started by creating your first mock test.</p>
+          <h3 className="mobile-text-lg font-medium text-gray-900 mb-2">No Mock Tests Created</h3>
+          <p className="mobile-text-sm text-gray-500 mb-4">Get started by creating your first mock test.</p>
           <Link href="/tests/new">
-            <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group">
+            <Button className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group touch-target">
               <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
               <Plus className="h-4 w-4 mr-2 relative z-10" />
               <span className="relative z-10">Create Your First Test</span>
@@ -165,67 +166,130 @@ export function TestManagement() {
           </Link>
         </div>
       ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Test Name</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Total Questions</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Start Time</TableHead>
-                <TableHead>End Time</TableHead>
-                <TableHead className="w-[200px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tests.map((test) => (
-                <TableRow key={test.id}>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <p className="font-medium text-gray-900">{test.name}</p>
-                      {test.description && (
-                        <p className="text-sm text-gray-500">{test.description}</p>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      {getStatusIcon(test.status)}
-                      {getStatusBadge(test.status)}
-                    </div>
-                  </TableCell>
-                  <TableCell>
+        <>
+          {/* Desktop Table */}
+          <div className="hidden lg:block rounded-md border">
+            <MobileResponsiveTable>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Test Name</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Total Questions</TableHead>
+                  <TableHead>Duration</TableHead>
+                  <TableHead>Start Time</TableHead>
+                  <TableHead>End Time</TableHead>
+                  <TableHead className="w-[200px]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {tests.map((test) => (
+                  <TableRow key={test.id}>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <p className="font-medium text-gray-900">{test.name}</p>
+                        {test.description && (
+                          <p className="text-sm text-gray-500">{test.description}</p>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        {getStatusIcon(test.status)}
+                        {getStatusBadge(test.status)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm text-gray-600">
+                        {typeof test.question_count === 'number' ? test.question_count : '—'}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm text-gray-600">
+                        {test.total_time_minutes} minutes
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm text-gray-600">
+                        {formatDateTime(test.start_time)}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm text-gray-600">
+                        {formatDateTime(test.end_time)}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <TestActions 
+                        test={test} 
+                        onAction={handleTestAction}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </MobileResponsiveTable>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="lg:hidden space-y-3">
+            {tests.map((test) => (
+              <MobileTableCard key={test.id}>
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-gray-900 truncate">{test.name}</h3>
+                    {test.description && (
+                      <p className="text-sm text-gray-500 line-clamp-2 mt-1">{test.description}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-2 ml-2">
+                    {getStatusIcon(test.status)}
+                    {getStatusBadge(test.status)}
+                  </div>
+                </div>
+                
+                <MobileCardRow 
+                  label="Questions" 
+                  value={
                     <span className="text-sm text-gray-600">
                       {typeof test.question_count === 'number' ? test.question_count : '—'}
                     </span>
-                  </TableCell>
-                  <TableCell>
+                  } 
+                />
+                <MobileCardRow 
+                  label="Duration" 
+                  value={
                     <span className="text-sm text-gray-600">
                       {test.total_time_minutes} minutes
                     </span>
-                  </TableCell>
-                  <TableCell>
+                  } 
+                />
+                <MobileCardRow 
+                  label="Start Time" 
+                  value={
                     <span className="text-sm text-gray-600">
                       {formatDateTime(test.start_time)}
                     </span>
-                  </TableCell>
-                  <TableCell>
+                  } 
+                />
+                <MobileCardRow 
+                  label="End Time" 
+                  value={
                     <span className="text-sm text-gray-600">
                       {formatDateTime(test.end_time)}
                     </span>
-                  </TableCell>
-                  <TableCell>
-                    <TestActions 
-                      test={test} 
-                      onAction={handleTestAction}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+                  } 
+                />
+                
+                <div className="pt-3 border-t border-gray-100">
+                  <TestActions 
+                    test={test} 
+                    onAction={handleTestAction}
+                  />
+                </div>
+              </MobileTableCard>
+            ))}
+          </div>
+        </>
       )}
     </div>
   )

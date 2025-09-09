@@ -50,8 +50,22 @@ export function SmartLatexRenderer({ text, className }: SmartLatexRendererProps)
   return (
     <span className={className}>
       {parts.map((p, idx) => {
-        if (p.type === 'inline') return <InlineMath key={idx} math={p.content} />
-        if (p.type === 'block') return <BlockMath key={idx} math={p.content} />
+        if (p.type === 'inline') {
+          try {
+            return <InlineMath key={idx} math={p.content} />
+          } catch (error) {
+            console.warn('LaTeX rendering error:', error)
+            return <span key={idx} className="text-red-500 italic">[Math: {p.content}]</span>
+          }
+        }
+        if (p.type === 'block') {
+          try {
+            return <BlockMath key={idx} math={p.content} />
+          } catch (error) {
+            console.warn('LaTeX rendering error:', error)
+            return <div key={idx} className="text-red-500 italic">[Math: {p.content}]</div>
+          }
+        }
         return (
           <span key={idx} className="whitespace-pre-wrap">{p.content}</span>
         )

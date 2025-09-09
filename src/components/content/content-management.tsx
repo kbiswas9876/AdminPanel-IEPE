@@ -69,18 +69,19 @@ export function ContentManagement() {
   return (
     <>
       {editingQuestion ? (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 rounded-lg border border-blue-200/50">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Edit Question</h1>
-              <p className="text-sm text-gray-600 font-medium mt-1">Make changes to the question details</p>
+        <div className="space-y-4 sm:space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-4 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 rounded-lg border border-blue-200/50">
+            <div className="min-w-0 flex-1">
+              <h1 className="mobile-text-lg font-bold text-gray-900 tracking-tight">Edit Question</h1>
+              <p className="mobile-text-sm text-gray-600 font-medium mt-1">Make changes to the question details</p>
             </div>
             <button
               onClick={handleQuestionEditCancel}
-              className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-white/50 rounded-lg transition-all duration-200"
+              className="flex items-center justify-center space-x-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-white/50 rounded-lg transition-all duration-200 touch-target w-full sm:w-auto"
             >
               <span>←</span>
-              <span>Back to Content Management</span>
+              <span className="hidden sm:inline">Back to Content Management</span>
+              <span className="sm:hidden">Back</span>
             </button>
           </div>
           <div className="bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200/50 shadow-gray-200/50">

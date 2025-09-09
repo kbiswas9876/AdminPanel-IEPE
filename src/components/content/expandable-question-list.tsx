@@ -258,60 +258,70 @@ export function ExpandableQuestionList({
             const questionKey = question.id || question.question_id || `staged-${index}`
             
             return (
-              <Card key={questionKey} className="border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-shadow">
+              <Card key={questionKey} className="group border-0 bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-lg transition-all duration-300 rounded-xl overflow-hidden">
                 <CardContent className="p-0">
-                  {/* Compact Row (Default View) */}
-                  <div className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-3 flex-1 min-w-0">
-                        {/* Multi-select Checkbox */}
-                        {multiSelect && (
+                  {/* Modern Question Card Header */}
+                  <div className="p-4 sm:p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                      {/* Multi-select Checkbox */}
+                      {multiSelect && (
+                        <div className="flex-shrink-0">
                           <Checkbox
                             checked={isQuestionSelected(question)}
                             onCheckedChange={() => toggleQuestionSelection(question)}
-                            className="mt-1"
+                            className="mt-1 touch-target"
                           />
-                        )}
+                        </div>
+                      )}
+                      
+                      {/* Question Content */}
+                      <div className="flex-1 min-w-0 space-y-4">
+                        {/* Question Text with Modern Typography */}
+                        <div className="prose prose-lg max-w-none">
+                          <SmartLatexRenderer text={question.question_text} />
+                        </div>
                         
-                        <div className="flex-1 min-w-0">
-                          {/* Question Text - Full LaTeX Rendering */}
-                          <div className="prose prose-lg max-w-none mb-3">
-                            <SmartLatexRenderer text={question.question_text} />
-                          </div>
-                          
-                          {/* Quick Info Badges */}
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <Badge variant="outline" className="text-xs">
-                              {question.question_id}
+                        {/* Premium Metadata Badges */}
+                        <div className="flex flex-wrap gap-2">
+                          <Badge variant="outline" className="text-xs px-3 py-1.5 bg-blue-50 text-blue-700 border-blue-200 rounded-full">
+                            ID: {question.question_id}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs px-3 py-1.5 bg-green-50 text-green-700 border-green-200 rounded-full">
+                            {question.book_source}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs px-3 py-1.5 bg-purple-50 text-purple-700 border-purple-200 rounded-full">
+                            {question.chapter_name}
+                          </Badge>
+                          {question.difficulty && (
+                            <Badge 
+                              variant="outline" 
+                              className={`text-xs px-3 py-1.5 rounded-full ${
+                                question.difficulty === 'Easy' ? 'bg-green-50 text-green-700 border-green-200' :
+                                question.difficulty === 'Easy-Moderate' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                                question.difficulty === 'Moderate' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                                question.difficulty === 'Moderate-Hard' ? 'bg-red-50 text-red-700 border-red-200' :
+                                'bg-gray-50 text-gray-700 border-gray-200'
+                              }`}
+                            >
+                              {question.difficulty}
                             </Badge>
-                            <Badge variant="secondary" className="text-xs">
-                              {question.book_source}
+                          )}
+                          {question.admin_tags && question.admin_tags.length > 0 && (
+                            <Badge variant="outline" className="text-xs px-3 py-1.5 bg-indigo-50 text-indigo-700 border-indigo-200 rounded-full">
+                              {question.admin_tags.length} tag{question.admin_tags.length !== 1 ? 's' : ''}
                             </Badge>
-                            <Badge variant="secondary" className="text-xs">
-                              {question.chapter_name}
-                            </Badge>
-                            {question.difficulty && (
-                              <Badge variant="outline" className="text-xs">
-                                {question.difficulty}
-                              </Badge>
-                            )}
-                            {question.admin_tags && question.admin_tags.length > 0 && (
-                              <Badge variant="outline" className="text-xs">
-                                {question.admin_tags.length} tag{question.admin_tags.length !== 1 ? 's' : ''}
-                              </Badge>
-                            )}
-                          </div>
+                          )}
                         </div>
                       </div>
                       
-                      {/* Action Buttons and Expand/Collapse */}
-                      <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2 flex-shrink-0">
                         {/* Action Button based on actionType */}
                         {actionType === 'select' && (
                           <Button
                             size="sm"
                             onClick={() => onQuestionAction?.(question, 'select')}
-                            className="bg-blue-600 hover:bg-blue-700"
+                            className="bg-blue-600 hover:bg-blue-700 touch-target"
                           >
                             Select
                           </Button>
@@ -322,6 +332,7 @@ export function ExpandableQuestionList({
                           variant="ghost"
                           size="sm"
                           onClick={() => handleToggleQuestion(question.id!)}
+                          className="touch-target"
                         >
                           <ChevronDown 
                             className={`h-4 w-4 transition-transform duration-200 ${
@@ -333,14 +344,17 @@ export function ExpandableQuestionList({
                     </div>
                   </div>
 
-                  {/* Expanded Detail Panel */}
+                  {/* Modern Expanded Detail Panel */}
                   {isExpanded && (
-                    <div className="border-t bg-gray-50/50">
-                      <div className="p-6 space-y-6">
-                        {/* Options */}
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-3">Options:</h4>
-                          <div className="space-y-2">
+                    <div className="border-t border-gray-200/60 bg-gradient-to-b from-gray-50/30 to-white/50">
+                      <div className="p-4 sm:p-6 space-y-6">
+                        {/* Options Section */}
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-1 w-8 bg-blue-500 rounded-full"></div>
+                            <h4 className="text-lg font-semibold text-gray-900">Answer Options</h4>
+                          </div>
+                          <div className="grid gap-3">
                             {optionKeys.map((optionKey) => {
                               const optionText = options[optionKey]
                               const isCorrect = question.correct_option?.toUpperCase() === optionKey.toUpperCase()
@@ -348,24 +362,31 @@ export function ExpandableQuestionList({
                               return (
                                 <div
                                   key={optionKey}
-                                  className={`flex items-start space-x-3 p-3 rounded-lg border ${
+                                  className={`group flex items-start gap-4 p-4 rounded-xl border transition-all duration-200 ${
                                     isCorrect 
-                                      ? 'bg-green-50 border-green-200' 
-                                      : 'bg-white border-gray-200'
+                                      ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 shadow-sm' 
+                                      : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
                                   }`}
                                 >
-                                  <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+                                  <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-200 ${
                                     isCorrect
-                                      ? 'bg-green-100 text-green-800'
-                                      : 'bg-gray-100 text-gray-800'
+                                      ? 'bg-green-500 text-white shadow-lg'
+                                      : 'bg-gray-100 text-gray-700 group-hover:bg-gray-200'
                                   }`}>
                                     {optionKey.toUpperCase()}
-                                    {isCorrect && (
-                                      <span className="ml-1 text-green-600">✓</span>
-                                    )}
                                   </div>
-                                  <div className="flex-1 prose prose-sm max-w-none">
-                                    <SmartLatexRenderer text={String(optionText || '')} />
+                                  <div className="flex-1 min-w-0">
+                                    <div className="prose prose-sm max-w-none">
+                                      <SmartLatexRenderer text={String(optionText || '')} />
+                                    </div>
+                                    {isCorrect && (
+                                      <div className="mt-2 flex items-center gap-2 text-green-600 text-sm font-medium">
+                                        <div className="w-4 h-4 bg-green-100 rounded-full flex items-center justify-center">
+                                          <span className="text-xs">✓</span>
+                                        </div>
+                                        <span>Correct Answer</span>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               )
@@ -373,46 +394,52 @@ export function ExpandableQuestionList({
                           </div>
                         </div>
 
-                        {/* Solution */}
+                        {/* Solution Section */}
                         {question.solution_text && (
-                          <div>
-                            <h4 className="font-semibold text-gray-900 mb-3">Solution:</h4>
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                              <div className="prose prose-sm max-w-none text-blue-800">
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-3">
+                              <div className="h-1 w-8 bg-indigo-500 rounded-full"></div>
+                              <h4 className="text-lg font-semibold text-gray-900">Solution</h4>
+                            </div>
+                            <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200/60 rounded-xl p-4 sm:p-6 shadow-sm">
+                              <div className="prose prose-sm max-w-none text-indigo-800">
                                 <SmartLatexRenderer text={question.solution_text} />
                               </div>
                             </div>
                           </div>
                         )}
 
-                        {/* Admin Metadata */}
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-3">Metadata:</h4>
-                          <div className="bg-gray-50 rounded-lg p-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-                              <div>
-                                <span className="font-medium text-gray-700">Question ID:</span>
-                                <div className="font-mono text-gray-900">{question.question_id}</div>
+                        {/* Premium Metadata Section */}
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-1 w-8 bg-gray-500 rounded-full"></div>
+                            <h4 className="text-lg font-semibold text-gray-900">Question Details</h4>
+                          </div>
+                          <div className="bg-white border border-gray-200/60 rounded-xl p-4 sm:p-6 shadow-sm">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                              <div className="space-y-2">
+                                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Question ID</div>
+                                <div className="font-mono text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">{question.question_id}</div>
                               </div>
-                              <div>
-                                <span className="font-medium text-gray-700">Book Source:</span>
-                                <div className="text-gray-900">{question.book_source}</div>
+                              <div className="space-y-2">
+                                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Book Source</div>
+                                <div className="text-sm text-gray-900 font-medium">{question.book_source}</div>
                               </div>
-                              <div>
-                                <span className="font-medium text-gray-700">Chapter:</span>
-                                <div className="text-gray-900">{question.chapter_name}</div>
+                              <div className="space-y-2">
+                                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Chapter</div>
+                                <div className="text-sm text-gray-900 font-medium">{question.chapter_name}</div>
                               </div>
-                              <div>
-                                <span className="font-medium text-gray-700">Question Number:</span>
-                                <div className="text-gray-900">{question.question_number_in_book || '—'}</div>
+                              <div className="space-y-2">
+                                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Question Number</div>
+                                <div className="text-sm text-gray-900 font-medium">{question.question_number_in_book || '—'}</div>
                               </div>
-                              <div>
-                                <span className="font-medium text-gray-700">Difficulty:</span>
-                                <div className="text-gray-900">{question.difficulty || '—'}</div>
+                              <div className="space-y-2">
+                                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Difficulty</div>
+                                <div className="text-sm text-gray-900 font-medium">{question.difficulty || '—'}</div>
                               </div>
-                              <div>
-                                <span className="font-medium text-gray-700">Created:</span>
-                                <div className="text-gray-900">
+                              <div className="space-y-2">
+                                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Created</div>
+                                <div className="text-sm text-gray-900 font-medium">
                                   {new Date(question.created_at).toLocaleDateString('en-US', {
                                     year: 'numeric',
                                     month: 'short',
@@ -424,11 +451,11 @@ export function ExpandableQuestionList({
                             
                             {/* Admin Tags */}
                             {question.admin_tags && question.admin_tags.length > 0 && (
-                              <div className="mt-4">
-                                <span className="font-medium text-gray-700">Admin Tags:</span>
-                                <div className="flex flex-wrap gap-2 mt-2">
+                              <div className="mt-6 pt-4 border-t border-gray-200/60">
+                                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Admin Tags</div>
+                                <div className="flex flex-wrap gap-2">
                                   {question.admin_tags.map((tag, index) => (
-                                    <Badge key={index} variant="outline" className="text-xs">
+                                    <Badge key={index} variant="outline" className="text-xs px-3 py-1.5 bg-indigo-50 text-indigo-700 border-indigo-200 rounded-full">
                                       {tag}
                                     </Badge>
                                   ))}
@@ -438,14 +465,15 @@ export function ExpandableQuestionList({
                           </div>
                         </div>
 
-                        {/* Action Buttons */}
-                        <div className="flex items-center justify-end gap-3 pt-4 border-t">
+                        {/* Premium Action Buttons */}
+                        <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200/60">
                           {actionType === 'edit' && (
                             <>
                               <Button 
                                 variant="outline" 
                                 size="sm"
                                 onClick={() => onQuestionAction?.(question, 'edit')}
+                                className="w-full sm:w-auto touch-target bg-white hover:bg-gray-50 border-gray-300"
                               >
                                 <Edit className="h-4 w-4 mr-2" />
                                 Edit Question
@@ -462,19 +490,20 @@ export function ExpandableQuestionList({
                             <Button
                               size="sm"
                               onClick={() => onQuestionAction?.(question, 'select')}
-                              className="bg-blue-600 hover:bg-blue-700"
+                              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 touch-target"
                             >
                               Select This Question
                             </Button>
                           )}
                           
                           {actionType === 'select-multiple' && (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-3 touch-target">
                               <Checkbox
                                 checked={isQuestionSelected(question)}
                                 onCheckedChange={() => toggleQuestionSelection(question)}
+                                className="touch-target"
                               />
-                              <span className="text-sm text-gray-600">
+                              <span className="text-sm text-gray-600 font-medium">
                                 {isQuestionSelected(question) ? 'Selected' : 'Select'}
                               </span>
                             </div>

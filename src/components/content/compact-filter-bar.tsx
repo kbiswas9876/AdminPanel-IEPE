@@ -170,25 +170,28 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
   const hasActiveFilters = selectedBooks.length > 0 || selectedChapters.length > 0 || selectedDifficulties.length > 0 || selectedTags.length > 0
 
   return (
-    <div className="bg-white border rounded-lg p-4 space-y-3">
-      {/* Compact Filter Controls - Single Row */}
-      <div className="flex flex-wrap items-center gap-3">
+    <div className="bg-white border border-gray-200/60 rounded-xl p-4 sm:p-6 space-y-4 shadow-sm">
+      {/* Mobile-First Filter Controls */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Book Source Filter */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700 whitespace-nowrap">Book:</span>
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-gray-700">Book Source</label>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 min-w-[120px] justify-between">
-                {selectedBooks.length > 0 ? `${selectedBooks.length} selected` : 'All'}
-                <Filter className="h-3 w-3 ml-1" />
+              <Button variant="outline" size="sm" className="w-full h-10 justify-between bg-white hover:bg-gray-50 border-gray-300">
+                <span className="truncate">
+                  {selectedBooks.length > 0 ? `${selectedBooks.length} selected` : 'All Books'}
+                </span>
+                <Filter className="h-4 w-4 ml-2 flex-shrink-0" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-64 max-h-64 overflow-y-auto">
+            <DropdownMenuContent className="w-full min-w-[200px] max-h-64 overflow-y-auto">
               {filterOptions.bookSources.map((book) => (
                 <DropdownMenuCheckboxItem
                   key={book}
                   checked={selectedBooks.includes(book)}
                   onCheckedChange={() => toggleBookSelection(book)}
+                  className="touch-target"
                 >
                   {book}
                 </DropdownMenuCheckboxItem>
@@ -198,21 +201,24 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
         </div>
 
         {/* Chapter Filter */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700 whitespace-nowrap">Chapter:</span>
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-gray-700">Chapter</label>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 min-w-[120px] justify-between">
-                {selectedChapters.length > 0 ? `${selectedChapters.length} selected` : 'All'}
-                <Filter className="h-3 w-3 ml-1" />
+              <Button variant="outline" size="sm" className="w-full h-10 justify-between bg-white hover:bg-gray-50 border-gray-300">
+                <span className="truncate">
+                  {selectedChapters.length > 0 ? `${selectedChapters.length} selected` : 'All Chapters'}
+                </span>
+                <Filter className="h-4 w-4 ml-2 flex-shrink-0" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-64 max-h-64 overflow-y-auto">
+            <DropdownMenuContent className="w-full min-w-[200px] max-h-64 overflow-y-auto">
               {filterOptions.chapters.map((chapter) => (
                 <DropdownMenuCheckboxItem
                   key={chapter}
                   checked={selectedChapters.includes(chapter)}
                   onCheckedChange={() => toggleChapterSelection(chapter)}
+                  className="touch-target"
                 >
                   {chapter}
                 </DropdownMenuCheckboxItem>
@@ -222,21 +228,24 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
         </div>
 
         {/* Difficulty Filter */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700 whitespace-nowrap">Difficulty:</span>
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-gray-700">Difficulty</label>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 min-w-[120px] justify-between">
-                {selectedDifficulties.length > 0 ? `${selectedDifficulties.length} selected` : 'All'}
-                <Filter className="h-3 w-3 ml-1" />
+              <Button variant="outline" size="sm" className="w-full h-10 justify-between bg-white hover:bg-gray-50 border-gray-300">
+                <span className="truncate">
+                  {selectedDifficulties.length > 0 ? `${selectedDifficulties.length} selected` : 'All Levels'}
+                </span>
+                <Filter className="h-4 w-4 ml-2 flex-shrink-0" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-64">
+            <DropdownMenuContent className="w-full min-w-[200px]">
               {filterOptions.difficulties.map((difficulty) => (
                 <DropdownMenuCheckboxItem
                   key={difficulty}
                   checked={selectedDifficulties.includes(difficulty)}
                   onCheckedChange={() => toggleDifficultySelection(difficulty)}
+                  className="touch-target"
                 >
                   {difficulty}
                 </DropdownMenuCheckboxItem>
@@ -246,21 +255,24 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
         </div>
 
         {/* Tags Filter */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700 whitespace-nowrap">Tags:</span>
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-gray-700">Tags</label>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 min-w-[120px] justify-between">
-                {selectedTags.length > 0 ? `${selectedTags.length} selected` : 'All'}
-                <Filter className="h-3 w-3 ml-1" />
+              <Button variant="outline" size="sm" className="w-full h-10 justify-between bg-white hover:bg-gray-50 border-gray-300">
+                <span className="truncate">
+                  {selectedTags.length > 0 ? `${selectedTags.length} selected` : 'All Tags'}
+                </span>
+                <Filter className="h-4 w-4 ml-2 flex-shrink-0" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-64 max-h-64 overflow-y-auto">
+            <DropdownMenuContent className="w-full min-w-[200px] max-h-64 overflow-y-auto">
               {filterOptions.tags.map((tag) => (
                 <DropdownMenuCheckboxItem
                   key={tag}
                   checked={selectedTags.includes(tag)}
                   onCheckedChange={() => toggleTagSelection(tag)}
+                  className="touch-target"
                 >
                   {tag}
                 </DropdownMenuCheckboxItem>
@@ -269,19 +281,27 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
           </DropdownMenu>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2 ml-auto">
-          {cascading && (
-            <div className="flex items-center gap-1 text-xs text-blue-600">
-              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
-              <span>Updating...</span>
-            </div>
-          )}
-          
+      </div>
+
+      {/* Action Buttons - Mobile-First Layout */}
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+        {cascading && (
+          <div className="flex items-center gap-2 text-sm text-blue-600">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+            <span>Updating filters...</span>
+          </div>
+        )}
+        
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
           {hasActiveFilters && (
-            <Button variant="outline" size="sm" onClick={resetFilters} className="h-8">
-              <RotateCcw className="h-3 w-3 mr-1" />
-              Reset
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={resetFilters} 
+              className="w-full sm:w-auto h-10 touch-target"
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Reset Filters
             </Button>
           )}
           
@@ -289,57 +309,87 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
             onClick={applyFilters} 
             disabled={loading}
             size="sm"
-            className="h-8 bg-blue-600 hover:bg-blue-700"
+            className="w-full sm:w-auto h-10 bg-blue-600 hover:bg-blue-700 touch-target"
           >
-            {loading ? 'Applying...' : 'Apply'}
+            {loading ? 'Applying...' : 'Apply Filters'}
           </Button>
         </div>
       </div>
 
-      {/* Active Filter Badges - Compact Row */}
+      {/* Active Filter Badges - Premium Design */}
       {hasActiveFilters && (
-        <div className="flex flex-wrap gap-1">
-          {selectedBooks.map((book) => (
-            <Badge key={book} variant="secondary" className="text-xs flex items-center gap-1">
-              Book: {book}
-              <button onClick={() => removeBook(book)} className="hover:text-red-600">
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-          {selectedChapters.map((chapter) => (
-            <Badge key={chapter} variant="secondary" className="text-xs flex items-center gap-1">
-              Chapter: {chapter}
-              <button onClick={() => removeChapter(chapter)} className="hover:text-red-600">
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-          {selectedDifficulties.map((difficulty) => (
-            <Badge key={difficulty} variant="secondary" className="text-xs flex items-center gap-1">
-              Difficulty: {difficulty}
-              <button onClick={() => removeDifficulty(difficulty)} className="hover:text-red-600">
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-          {selectedTags.map((tag) => (
-            <Badge key={tag} variant="secondary" className="text-xs flex items-center gap-1">
-              Tag: {tag}
-              <button onClick={() => removeTag(tag)} className="hover:text-red-600">
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="h-1 w-8 bg-blue-500 rounded-full"></div>
+            <span className="text-sm font-semibold text-gray-700">Active Filters</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {selectedBooks.map((book) => (
+              <Badge key={book} variant="secondary" className="text-xs flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-full">
+                <span className="font-medium">Book:</span>
+                <span className="truncate max-w-[120px]">{book}</span>
+                <button 
+                  onClick={() => removeBook(book)} 
+                  className="hover:text-red-600 hover:bg-red-50 rounded-full p-0.5 transition-colors touch-target"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+            {selectedChapters.map((chapter) => (
+              <Badge key={chapter} variant="secondary" className="text-xs flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded-full">
+                <span className="font-medium">Chapter:</span>
+                <span className="truncate max-w-[120px]">{chapter}</span>
+                <button 
+                  onClick={() => removeChapter(chapter)} 
+                  className="hover:text-red-600 hover:bg-red-50 rounded-full p-0.5 transition-colors touch-target"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+            {selectedDifficulties.map((difficulty) => (
+              <Badge key={difficulty} variant="secondary" className="text-xs flex items-center gap-2 px-3 py-1.5 bg-orange-50 text-orange-700 border border-orange-200 rounded-full">
+                <span className="font-medium">Level:</span>
+                <span className="truncate max-w-[120px]">{difficulty}</span>
+                <button 
+                  onClick={() => removeDifficulty(difficulty)} 
+                  className="hover:text-red-600 hover:bg-red-50 rounded-full p-0.5 transition-colors touch-target"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+            {selectedTags.map((tag) => (
+              <Badge key={tag} variant="secondary" className="text-xs flex items-center gap-2 px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 rounded-full">
+                <span className="font-medium">Tag:</span>
+                <span className="truncate max-w-[120px]">{tag}</span>
+                <button 
+                  onClick={() => removeTag(tag)} 
+                  className="hover:text-red-600 hover:bg-red-50 rounded-full p-0.5 transition-colors touch-target"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
         </div>
       )}
 
       {/* Smart Filtering Info */}
       {(selectedBooks.length > 0 || selectedChapters.length > 0) && (
-        <div className="bg-blue-50 border border-blue-200 rounded-md p-2">
-          <p className="text-xs text-blue-800">
-            <strong>Smart Filtering:</strong> Chapter and tag options are automatically updated based on your selections.
-          </p>
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/60 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-blue-800 mb-1">Smart Filtering Active</p>
+              <p className="text-xs text-blue-700">
+                Chapter and tag options are automatically updated based on your selections for more relevant results.
+              </p>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -166,7 +166,7 @@ export function InPlaceQuestionEditor({
   return (
     <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-xl">
       <CardHeader className="pb-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg">
-        <CardTitle className="text-xl font-bold flex items-center justify-between">
+        <CardTitle className="mobile-text-lg font-bold flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <span className="flex items-center gap-2">
             <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
             {isStaged ? 'Edit Staged Question' : 'Edit Question'}
@@ -175,20 +175,20 @@ export function InPlaceQuestionEditor({
             variant="ghost"
             size="sm"
             onClick={onCancel}
-            className="h-8 w-8 p-0 text-white hover:bg-white/20 transition-colors"
+            className="h-8 w-8 p-0 text-white hover:bg-white/20 transition-colors touch-target self-end sm:self-auto"
           >
             <X className="h-4 w-4" />
           </Button>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6 p-6">
+      <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         {/* Basic Information */}
-        <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <div className="bg-white rounded-lg p-4 sm:p-6 border border-gray-200 shadow-sm">
+          <h3 className="mobile-text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
             Basic Information
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <div className="space-y-2">
               <Label className="text-sm font-medium text-gray-700">
                 Book Source *
@@ -230,9 +230,9 @@ export function InPlaceQuestionEditor({
         </div>
 
         {/* Question Text */}
-        <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+        <div className="bg-white rounded-lg p-4 sm:p-6 border border-gray-200 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <h3 className="mobile-text-base font-semibold text-gray-900 flex items-center gap-2">
               <div className="w-1 h-6 bg-green-600 rounded-full"></div>
               Question Content
             </h3>
@@ -241,7 +241,7 @@ export function InPlaceQuestionEditor({
               variant="outline"
               size="sm"
               onClick={() => setShowPreview(prev => ({ ...prev, question: !prev.question }))}
-              className="text-green-600 border-green-200 hover:bg-green-50"
+              className="w-full sm:w-auto text-green-600 border-green-200 hover:bg-green-50 touch-target"
             >
               {showPreview.question ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
               {showPreview.question ? 'Hide Preview' : 'Show Preview'}
@@ -256,26 +256,26 @@ export function InPlaceQuestionEditor({
               value={formData.question_text}
               onChange={(e) => handleInputChange('question_text', e.target.value)}
               placeholder="Enter the question text with LaTeX formatting..."
-              className="min-h-[120px] transition-all duration-200 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              className="mobile-input min-h-[120px] transition-all duration-200 focus:ring-2 focus:ring-green-500 focus:border-green-500"
             />
             <LivePreview content={formData.question_text} type="question" />
           </div>
         </div>
 
         {/* Options */}
-        <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+        <div className="bg-white rounded-lg p-4 sm:p-6 border border-gray-200 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <h3 className="mobile-text-base font-semibold text-gray-900 flex items-center gap-2">
               <div className="w-1 h-6 bg-purple-600 rounded-full"></div>
               Answer Options
             </h3>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => setShowPreview(prev => ({ ...prev, options: !prev.options }))}
-                className="text-purple-600 border-purple-200 hover:bg-purple-50"
+                className="w-full sm:w-auto text-purple-600 border-purple-200 hover:bg-purple-50 touch-target"
               >
                 {showPreview.options ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
                 {showPreview.options ? 'Hide Preview' : 'Show Preview'}
@@ -285,7 +285,7 @@ export function InPlaceQuestionEditor({
                 variant="outline"
                 size="sm"
                 onClick={addOption}
-                className="h-9 px-4 bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100 transition-colors"
+                className="w-full sm:w-auto h-9 px-4 bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100 transition-colors touch-target"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Option
@@ -304,7 +304,7 @@ export function InPlaceQuestionEditor({
                     value={options[key]}
                     onChange={(e) => handleOptionChange(key, e.target.value)}
                     placeholder={`Option ${key.toUpperCase()}`}
-                    className="flex-1 transition-all duration-200 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className="mobile-input flex-1 transition-all duration-200 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                   />
                   {optionKeys.length > 2 && (
                     <Button
@@ -332,8 +332,8 @@ export function InPlaceQuestionEditor({
         </div>
 
         {/* Correct Option */}
-        <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <div className="bg-white rounded-lg p-4 sm:p-6 border border-gray-200 shadow-sm">
+          <h3 className="mobile-text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <div className="w-1 h-6 bg-orange-600 rounded-full"></div>
             Correct Answer
           </h3>
@@ -360,15 +360,15 @@ export function InPlaceQuestionEditor({
         </div>
 
         {/* Optional Fields */}
-        <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <div className="bg-white rounded-lg p-4 sm:p-6 border border-gray-200 shadow-sm">
+          <h3 className="mobile-text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <div className="w-1 h-6 bg-gray-600 rounded-full"></div>
             Optional Information
           </h3>
           <div className="space-y-4">
             {/* Solution Text */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <Label htmlFor="solution_text" className="text-sm font-medium text-gray-700">
                   Solution Text
                 </Label>
@@ -377,7 +377,7 @@ export function InPlaceQuestionEditor({
                   variant="outline"
                   size="sm"
                   onClick={() => setShowPreview(prev => ({ ...prev, solution: !prev.solution }))}
-                  className="text-gray-600 border-gray-200 hover:bg-gray-50"
+                  className="w-full sm:w-auto text-gray-600 border-gray-200 hover:bg-gray-50 touch-target"
                 >
                   {showPreview.solution ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
                   {showPreview.solution ? 'Hide Preview' : 'Show Preview'}
@@ -388,7 +388,7 @@ export function InPlaceQuestionEditor({
                 value={formData.solution_text || ''}
                 onChange={(e) => handleInputChange('solution_text', e.target.value)}
                 placeholder="Enter the solution with LaTeX formatting..."
-                className="min-h-[100px] transition-all duration-200 focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+                className="mobile-input min-h-[100px] transition-all duration-200 focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
               />
               <LivePreview content={formData.solution_text || ''} type="solution" />
             </div>
@@ -430,7 +430,7 @@ export function InPlaceQuestionEditor({
                     e.currentTarget.value = ''
                   }
                 }}
-                className="transition-all duration-200 focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+                className="mobile-input transition-all duration-200 focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
               />
               {adminTags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
@@ -460,19 +460,19 @@ export function InPlaceQuestionEditor({
                 value={formData.exam_metadata || ''}
                 onChange={(e) => handleInputChange('exam_metadata', e.target.value)}
                 placeholder="Additional exam-related information..."
-                className="min-h-[60px] transition-all duration-200 focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+                className="mobile-input min-h-[60px] transition-all duration-200 focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
               />
             </div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-6 border-t border-gray-200">
           <Button
             variant="outline"
             onClick={onCancel}
             disabled={isSaving}
-            className="px-6 py-2 border-gray-300 text-gray-700 hover:bg-gray-50 transition-all duration-200"
+            className="w-full sm:w-auto px-6 py-2 border-gray-300 text-gray-700 hover:bg-gray-50 transition-all duration-200 touch-target"
           >
             <XCircle className="h-4 w-4 mr-2" />
             Cancel
@@ -480,7 +480,7 @@ export function InPlaceQuestionEditor({
           <Button
             onClick={handleSave}
             disabled={isSaving}
-            className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+            className="w-full sm:w-auto px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 touch-target"
           >
             {isSaving ? (
               <>

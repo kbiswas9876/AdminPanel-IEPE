@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "katex/dist/katex.min.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -118,5 +119,91 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  /* Mobile-specific utilities */
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  /* Touch-friendly button sizes */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Mobile-optimized spacing */
+  .mobile-padding {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+  
+  .mobile-margin {
+    @apply mx-4 sm:mx-6 lg:mx-8;
+  }
+  
+  /* Responsive text sizes */
+  .mobile-text-sm {
+    @apply text-xs sm:text-sm;
+  }
+  
+  .mobile-text-base {
+    @apply text-sm sm:text-base;
+  }
+  
+  .mobile-text-lg {
+    @apply text-base sm:text-lg;
+  }
+  
+  .mobile-text-xl {
+    @apply text-lg sm:text-xl;
+  }
+  
+  /* Mobile-friendly form elements */
+  .mobile-input {
+    @apply text-base; /* Prevents zoom on iOS */
+  }
+  
+  /* Mobile table responsive wrapper */
+  .mobile-table-wrapper {
+    @apply overflow-x-auto -mx-4 sm:mx-0;
+  }
+  
+  .mobile-table-wrapper table {
+    @apply min-w-full;
+  }
+  
+  /* Mobile card layouts */
+  .mobile-card-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4;
+  }
+  
+  /* Mobile navigation improvements */
+  .mobile-nav-item {
+    @apply min-h-[44px] flex items-center px-4 py-3;
+  }
+  
+  /* Mobile modal improvements */
+  .mobile-modal {
+    @apply max-h-[90vh] overflow-y-auto;
+  }
+  
+  /* Mobile button groups */
+  .mobile-button-group {
+    @apply flex flex-col sm:flex-row gap-2 sm:gap-4;
+  }
+  
+  /* Mobile form layouts */
+  .mobile-form-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 gap-4;
+  }
+  
+  /* Mobile text truncation */
+  .mobile-truncate {
+    @apply truncate max-w-[200px] sm:max-w-none;
   }
 }
