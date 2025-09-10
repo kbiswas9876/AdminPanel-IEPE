@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { ArrowRight, FileText } from 'lucide-react'
+import { ArrowRight, ArrowLeft, FileText, BookOpen, Plus, Settings, Target, Zap, Hash, Trash2, Tag, Award, Sparkles } from 'lucide-react'
 import type { TestQuestionSlot, ChapterInfo, BlueprintRule, ChapterBlueprint, TestBlueprint } from '@/lib/types'
 import type { Test } from '@/lib/supabase/admin'
 import { ReviewRefineInterface } from './review-refine-interface'
@@ -245,21 +245,34 @@ export function TestCreationWizard({
 
 
   return (
-    <div className="min-h-screen">
-      {/* Unified Header */}
-      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200/50 shadow-sm">
-        <div className="px-6 py-4">
+    <div>
+      {/* Premium Mobile Header */}
+      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200/50 shadow-sm">
+        <div className="px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100">
-                  <FileText className="h-5 w-5 text-purple-600" />
+            {/* Left Section - Back Button & Title */}
+            <div className="flex items-center space-x-3 min-w-0 flex-1">
+              {currentStep > 1 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePrevious}
+                  className="flex-shrink-0 h-8 w-8 p-0 hover:bg-gray-50 transition-colors duration-200"
+                  title="Go back"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              )}
+              
+              <div className="flex items-center space-x-3 min-w-0 flex-1">
+                <div className="flex-shrink-0 p-2 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100 shadow-sm">
+                  <FileText className="h-4 w-4 text-purple-600" />
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900 tracking-tight">
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-lg font-bold text-gray-900 tracking-tight">
                     {isEditMode ? 'Edit Mock Test' : 'Create Mock Test'}
-                  </h2>
-                  <p className="text-sm text-gray-600 font-medium">
+                  </h1>
+                  <p className="text-xs text-gray-600 font-medium">
                     {currentStep === 1 && 'Design your test blueprint'}
                     {currentStep === 2 && 'Review and refine questions'}
                     {currentStep === 3 && 'Set rules and publish'}
@@ -268,32 +281,25 @@ export function TestCreationWizard({
               </div>
             </div>
             
-            <div className="flex items-center space-x-3">
-              {currentStep > 1 && (
-                <Button 
-                  variant="outline" 
-                  onClick={handlePrevious}
-                  className="hover:bg-gray-50 transition-colors duration-200"
-                >
-                  ← Previous
-                </Button>
-              )}
-              
+            {/* Right Section - Primary Action */}
+            <div className="flex-shrink-0 ml-3">
               {currentStep === 1 && (
                 <Button 
                   onClick={handleNext} 
                   disabled={totalQuestions === 0 || isGenerating}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm px-4 py-2 h-8"
                 >
                   {isGenerating ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Generating Questions...
+                      <span className="hidden sm:inline">Generating...</span>
+                      <span className="sm:hidden">Gen...</span>
                     </>
                   ) : (
                     <>
-                      Next: Review & Refine
-                      <ArrowRight className="h-4 w-4 ml-2" />
+                      <span className="hidden sm:inline">Next: Review & Refine</span>
+                      <span className="sm:hidden">Next</span>
+                      <ArrowRight className="h-4 w-4 ml-1" />
                     </>
                   )}
                 </Button>
@@ -303,8 +309,8 @@ export function TestCreationWizard({
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-6xl mx-auto p-6">
+      {/* Main Content - Perfectly Aligned with Header */}
+      <div className="px-4 sm:px-6 pb-4">
 
         {/* Error Message */}
         {error && (
@@ -313,144 +319,201 @@ export function TestCreationWizard({
           </div>
         )}
 
-        {/* Step 1: Test Blueprint */}
+        {/* Step 1: Test Blueprint - Premium Design */}
         {currentStep === 1 && (
-          <div className="space-y-6">
-            {/* Header Section */}
-            <div className="flex items-center justify-between p-6 bg-gradient-to-r from-gray-50/50 to-white/50 border-b border-gray-100/50">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100">
-                  <FileText className="h-5 w-5 text-blue-600" />
+          <div className="space-y-4">
+            {/* Ultra-Premium Blueprint Summary */}
+            <div className="bg-gradient-to-r from-white to-blue-50/30 rounded-xl border border-gray-200/50 shadow-lg p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 shadow-md">
+                    <Target className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">Test Blueprint</h3>
+                    <p className="text-sm text-gray-600 font-medium">Design by chapter and difficulty</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900 tracking-tight">
-                    Test Blueprint
-                  </h2>
-                  <p className="text-sm text-gray-600 font-medium">
-                    Design your blueprint by chapter and difficulty
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200/50">
-                  <span className="text-sm font-medium text-gray-700">Total Questions</span>
-                  <span className="ml-2 text-lg font-bold text-blue-600">{totalQuestions}</span>
+                <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200/50 shadow-sm">
+                  <span className="text-sm font-medium text-gray-700">Total: </span>
+                  <span className="text-lg font-bold text-blue-600">{totalQuestions}</span>
                 </div>
               </div>
             </div>
 
-            {/* Content */}
-            <div className="p-6">
+            {/* Ultra-Premium Chapter Selection */}
+            <div className="space-y-4">
+              {chapters.map((chapter) => {
+                const chState = blueprint[chapter.name] || {}
+                const rules = chState.rules || []
+                const selectedCount = (chState.random || 0) + rules.reduce((sum, r) => sum + (r.quantity || 0), 0)
+                
+                return (
+                  <details key={chapter.name} className="group border border-gray-200/50 rounded-xl overflow-hidden bg-white hover:bg-white shadow-sm hover:shadow-lg transition-all duration-300">
+                    <summary className="cursor-pointer flex items-center justify-between p-5 hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50/30 transition-all duration-300">
+                      <div className="flex items-center space-x-4 min-w-0 flex-1">
+                        <div className="p-3 rounded-xl bg-gradient-to-br from-purple-100 to-indigo-100 shadow-md group-hover:from-blue-100 group-hover:to-indigo-100 group-hover:shadow-lg transition-all duration-300">
+                          <BookOpen className="h-5 w-5 text-purple-600 group-hover:text-blue-600 transition-colors duration-300" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-bold text-gray-900 text-base truncate">{chapter.name}</h3>
+                          <p className="text-sm text-gray-600 font-medium">{chapter.available} questions available</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3 ml-4">
+                        <div className="px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200/50 shadow-sm">
+                          <span className="text-sm font-bold text-blue-600">
+                            {selectedCount}
+                          </span>
+                        </div>
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 group-hover:from-blue-200 group-hover:to-indigo-200 group-hover:scale-110 transition-all duration-300 flex items-center justify-center shadow-md group-hover:shadow-lg">
+                          <Plus className="h-4 w-4 text-blue-600" />
+                        </div>
+                      </div>
+                    </summary>
 
-              <div className="space-y-4">
-                {chapters.map((chapter) => {
-                  const chState = blueprint[chapter.name] || {}
-                  const rules = chState.rules || []
-                  const selectedCount = (chState.random || 0) + rules.reduce((sum, r) => sum + (r.quantity || 0), 0)
-                  
-                  return (
-                    <details key={chapter.name} className="group border border-gray-200/50 rounded-xl overflow-hidden bg-white/50 hover:bg-white/80 transition-all duration-200">
-                      <summary className="cursor-pointer flex items-center justify-between p-6 hover:bg-gray-50/50 transition-colors duration-200">
-                        <div className="flex items-center space-x-4">
-                          <div className="p-2 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 group-hover:from-blue-100 group-hover:to-indigo-100 transition-all duration-200">
-                            <FileText className="h-4 w-4 text-gray-600 group-hover:text-blue-600 transition-colors duration-200" />
+                    <div className="p-3 bg-gray-50/50 border-t border-gray-100/50">
+                      <div className="space-y-3">
+                        {/* Premium Random Questions Input */}
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <div className="p-1 rounded-md bg-gradient-to-br from-green-100 to-emerald-100">
+                              <Zap className="h-3 w-3 text-green-600" />
+                            </div>
+                            <Label className="text-xs font-bold text-gray-700">Random questions</Label>
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900">{chapter.name}</h3>
-                            <p className="text-sm text-gray-600 font-medium">{chapter.available} questions available</p>
+                          <div className="flex items-center space-x-2">
+                            <Input
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              className="w-16 h-8 text-xs transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              value={(chState.random ?? 0).toString()}
+                              onChange={(e) => {
+                                const digitsOnly = e.target.value.replace(/[^0-9]/g, '')
+                                const num = Math.min(Math.max(parseInt(digitsOnly || '0', 10), 0), chapter.available)
+                                setChapterRandom(chapter.name, num)
+                              }}
+                            />
+                            <span className="text-xs text-gray-600 font-medium">0-{chapter.available}</span>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-3">
-                          <div className="px-3 py-1 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200/50">
-                            <span className="text-sm font-semibold text-blue-600">
-                              {selectedCount} selected
-                            </span>
-                          </div>
-                          <div className="w-5 h-5 rounded-full bg-gray-200 group-hover:bg-blue-200 transition-colors duration-200 flex items-center justify-center">
-                            <span className="text-xs text-gray-600 group-hover:text-blue-600 transition-colors duration-200">+</span>
-                          </div>
-                        </div>
-                      </summary>
 
-                      <div className="p-6 bg-gray-50/50 border-t border-gray-100/50">
-                        <div className="space-y-6">
-                          {/* A) Quantity (Simple Mode) */}
-                          <div className="space-y-3">
-                            <Label className="text-sm font-semibold text-gray-700">Random questions from this chapter</Label>
-                            <div className="flex items-center space-x-3">
-                              <Input
-                                type="text"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                className="w-24 transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                value={(chState.random ?? 0).toString()}
-                                onChange={(e) => {
-                                  const digitsOnly = e.target.value.replace(/[^0-9]/g, '')
-                                  const num = Math.min(Math.max(parseInt(digitsOnly || '0', 10), 0), chapter.available)
-                                  setChapterRandom(chapter.name, num)
-                                }}
-                              />
-                              <span className="text-sm text-gray-600 font-medium">0 - {chapter.available}</span>
-                            </div>
-                          </div>
-
-                          {/* B) Ultra-Granular Rule Builder */}
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                              <Label className="text-sm font-semibold text-gray-700">Custom Rules</Label>
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                onClick={() => addRule(chapter.name)}
-                                className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-all duration-200"
-                              >
-                                + Add Custom Rule
-                              </Button>
-                            </div>
-                            {rules.length === 0 ? (
-                              <div className="p-4 text-center bg-gray-50/50 rounded-lg border border-gray-200/50">
-                                <p className="text-sm text-gray-600 font-medium">No custom rules added.</p>
-                                <p className="text-xs text-gray-500 mt-1">Add specific difficulty or tag-based rules</p>
+                        {/* Premium Custom Rules */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <div className="p-1 rounded-md bg-gradient-to-br from-orange-100 to-amber-100">
+                                <Settings className="h-3 w-3 text-orange-600" />
                               </div>
-                            ) : (
-                              <div className="space-y-3">
-                                {rules.map((rule, idx) => (
-                                  <div key={idx} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center p-4 bg-white/80 rounded-lg border border-gray-200/50 shadow-sm">
-                                <div className="md:col-span-5">
-                                  <Label className="text-xs">Tag</Label>
-                                  <Select value={rule.tag ?? 'any'} onValueChange={(v) => updateRule(chapter.name, idx, { tag: v === 'any' ? null : v })}>
-                                    <SelectTrigger className="w-full"><SelectValue placeholder="Any Tag" /></SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="any">Any Tag</SelectItem>
-                                      {chapter.tags.filter(Boolean).map((t: string) => (
-                                        <SelectItem key={t} value={t}>{t}</SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div className="md:col-span-5">
-                                  <Label className="text-xs">Difficulty</Label>
-                                  <Select value={rule.difficulty ?? 'any'} onValueChange={(v) => updateRule(chapter.name, idx, { difficulty: v === 'any' ? null : v })}>
-                                    <SelectTrigger className="w-full"><SelectValue placeholder="Any Difficulty" /></SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="any">Any Difficulty</SelectItem>
-                                      {difficultyLevels.map((d) => (
-                                        <SelectItem key={d} value={d}>{d}</SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div className="md:col-span-2">
-                                  <Label className="text-xs">Qty</Label>
-                                  <Input type="number" min={0} value={rule.quantity} onChange={(e) => updateRule(chapter.name, idx, { quantity: Number(e.target.value) })} />
-                                </div>
-                                <div className="md:col-span-12 flex justify-end">
-                                  <Button variant="outline" size="sm" className="text-red-600 border-red-300 hover:bg-red-50" onClick={() => removeRule(chapter.name, idx)}>🗑️ Remove</Button>
-                                </div>
+                              <Label className="text-xs font-bold text-gray-700">Custom Rules</Label>
+                            </div>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => addRule(chapter.name)}
+                              className="bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border-blue-200 hover:border-blue-300 text-blue-700 hover:text-blue-800 transition-all duration-200 text-xs h-8 px-3 shadow-sm hover:shadow-md"
+                            >
+                              <Plus className="h-3.5 w-3.5 mr-1.5" />
+                              <span className="font-semibold">Add Rule</span>
+                            </Button>
+                          </div>
+                          {rules.length === 0 ? (
+                            <div className="p-4 text-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200/50 shadow-sm">
+                              <div className="w-12 h-12 mx-auto mb-3 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center">
+                                <Sparkles className="h-6 w-6 text-gray-500" />
+                              </div>
+                              <p className="text-sm font-medium text-gray-600">No custom rules added</p>
+                              <p className="text-xs text-gray-500 mt-1">Add specific question selection criteria</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              {rules.map((rule, idx) => (
+                                <div key={idx} className="bg-gradient-to-r from-white to-gray-50/50 rounded-xl border border-gray-200/50 shadow-sm p-4 hover:shadow-md transition-all duration-200">
+                                  {/* Rule Header */}
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center space-x-2">
+                                      <div className="w-6 h-6 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg flex items-center justify-center">
+                                        <Hash className="h-3 w-3 text-blue-600" />
+                                      </div>
+                                      <span className="text-sm font-bold text-gray-700">Rule #{idx + 1}</span>
+                                    </div>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      onClick={() => removeRule(chapter.name, idx)}
+                                      className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:border-red-200 transition-all duration-200 shadow-sm hover:shadow-md"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
                                   </div>
-                                ))}
-                              </div>
-                            )}
+                                  
+                                  {/* Form Controls Grid */}
+                                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    {/* Tag Selection */}
+                                    <div className="space-y-2">
+                                      <div className="flex items-center space-x-2">
+                                        <div className="w-5 h-5 bg-gradient-to-br from-purple-100 to-pink-100 rounded-md flex items-center justify-center">
+                                          <Tag className="h-3 w-3 text-purple-600" />
+                                        </div>
+                                        <Label className="text-xs font-bold text-gray-700">Tag</Label>
+                                      </div>
+                                      <Select value={rule.tag ?? 'any'} onValueChange={(v) => updateRule(chapter.name, idx, { tag: v === 'any' ? null : v })}>
+                                        <SelectTrigger className="w-full h-9 text-sm border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200">
+                                          <SelectValue placeholder="Any" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="any">Any</SelectItem>
+                                          {chapter.tags.filter(Boolean).map((t: string) => (
+                                            <SelectItem key={t} value={t}>{t}</SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+
+                                    {/* Difficulty Selection */}
+                                    <div className="space-y-2">
+                                      <div className="flex items-center space-x-2">
+                                        <div className="w-5 h-5 bg-gradient-to-br from-orange-100 to-amber-100 rounded-md flex items-center justify-center">
+                                          <Award className="h-3 w-3 text-orange-600" />
+                                        </div>
+                                        <Label className="text-xs font-bold text-gray-700">Difficulty</Label>
+                                      </div>
+                                      <Select value={rule.difficulty ?? 'any'} onValueChange={(v) => updateRule(chapter.name, idx, { difficulty: v === 'any' ? null : v })}>
+                                        <SelectTrigger className="w-full h-9 text-sm border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200">
+                                          <SelectValue placeholder="Any" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="any">Any</SelectItem>
+                                          {difficultyLevels.map((d) => (
+                                            <SelectItem key={d} value={d}>{d}</SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+
+                                    {/* Quantity Input */}
+                                    <div className="space-y-2">
+                                      <div className="flex items-center space-x-2">
+                                        <div className="w-5 h-5 bg-gradient-to-br from-green-100 to-emerald-100 rounded-md flex items-center justify-center">
+                                          <Hash className="h-3 w-3 text-green-600" />
+                                        </div>
+                                        <Label className="text-xs font-bold text-gray-700">Quantity</Label>
+                                      </div>
+                                      <Input 
+                                        type="number" 
+                                        min={0} 
+                                        value={rule.quantity} 
+                                        onChange={(e) => updateRule(chapter.name, idx, { quantity: Number(e.target.value) })}
+                                        className="h-9 text-sm border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+                                        placeholder="0"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                           </div>
                         </div>
                       </div>
@@ -459,12 +522,14 @@ export function TestCreationWizard({
               })}
 
               {chapters.length === 0 && (
-                <div className="text-center py-8">
-                  <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                  <p className="text-gray-500">No chapters found. Please add some questions first.</p>
+                <div className="text-center py-12">
+                  <div className="mx-auto w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-4 shadow-sm">
+                    <BookOpen className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">No Chapters Available</h3>
+                  <p className="text-gray-500 font-medium">Please add some questions first to create your test blueprint.</p>
                 </div>
-                )}
-              </div>
+              )}
             </div>
           </div>
         )}

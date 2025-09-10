@@ -4,15 +4,16 @@ import { useState, useEffect } from 'react'
 import { getAllTestsWithCounts } from '@/lib/actions/tests'
 import type { Test } from '@/lib/supabase/admin'
 import { Button } from '@/components/ui/button'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Plus, FileText, Calendar, Clock, CheckCircle, AlertCircle } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { 
+  Plus, 
+  FileText, 
+  Calendar, 
+  Clock, 
+  CheckCircle, 
+  AlertCircle
+} from 'lucide-react'
 import Link from 'next/link'
 import { TestActions } from './test-actions'
 
@@ -55,15 +56,15 @@ export function TestManagement() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'draft':
-        return <FileText className="h-4 w-4 text-gray-600" />
+        return <FileText className="h-3.5 w-3.5 text-gray-500" />
       case 'scheduled':
-        return <Calendar className="h-4 w-4 text-blue-600" />
+        return <Calendar className="h-3.5 w-3.5 text-blue-500" />
       case 'live':
-        return <Clock className="h-4 w-4 text-green-600" />
+        return <Clock className="h-3.5 w-3.5 text-green-500" />
       case 'completed':
-        return <CheckCircle className="h-4 w-4 text-green-600" />
+        return <CheckCircle className="h-3.5 w-3.5 text-green-500" />
       default:
-        return <AlertCircle className="h-4 w-4 text-gray-600" />
+        return <AlertCircle className="h-3.5 w-3.5 text-gray-500" />
     }
   }
 
@@ -71,33 +72,33 @@ export function TestManagement() {
     switch (status) {
       case 'draft':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+          <Badge variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs px-2 py-0.5">
             Draft
-          </span>
+          </Badge>
         )
       case 'scheduled':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+          <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs px-2 py-0.5">
             Scheduled
-          </span>
+          </Badge>
         )
       case 'live':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-200 text-xs px-2 py-0.5">
             Live
-          </span>
+          </Badge>
         )
       case 'completed':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-200 text-xs px-2 py-0.5">
             Completed
-          </span>
+          </Badge>
         )
       default:
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+          <Badge variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs px-2 py-0.5">
             Unknown
-          </span>
+          </Badge>
         )
     }
   }
@@ -130,27 +131,7 @@ export function TestManagement() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header with Create Button */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900">
-            All Mock Tests
-          </h2>
-          <p className="text-sm text-gray-600">
-            Manage your competitive exam mock tests
-          </p>
-        </div>
-        <Link href="/tests/new">
-          <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-            <Plus className="h-4 w-4 mr-2 relative z-10" />
-            <span className="relative z-10">Create New Mock Test</span>
-          </Button>
-        </Link>
-      </div>
-
-      {/* Tests Table */}
+    <div className="space-y-4">
       {tests.length === 0 ? (
         <div className="text-center py-12">
           <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
@@ -165,66 +146,91 @@ export function TestManagement() {
           </Link>
         </div>
       ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Test Name</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Total Questions</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Start Time</TableHead>
-                <TableHead>End Time</TableHead>
-                <TableHead className="w-[200px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tests.map((test) => (
-                <TableRow key={test.id}>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <p className="font-medium text-gray-900">{test.name}</p>
+        <div className="space-y-3">
+          {tests.map((test) => (
+            <Card key={test.id} className="group border border-gray-200/50 rounded-lg overflow-hidden bg-white hover:bg-white shadow-sm hover:shadow-md transition-all duration-200 w-full">
+              <CardContent className="p-4">
+                <div className="flex flex-col gap-3">
+                  {/* Premium Header Row */}
+                  <div className="flex items-start justify-between">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-bold text-gray-900 tracking-tight">
+                        {test.name}
+                      </h3>
                       {test.description && (
-                        <p className="text-sm text-gray-500">{test.description}</p>
+                        <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                          {test.description}
+                        </p>
                       )}
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 ml-3">
                       {getStatusIcon(test.status)}
                       {getStatusBadge(test.status)}
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm text-gray-600">
-                      {typeof test.question_count === 'number' ? test.question_count : '—'}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm text-gray-600">
-                      {test.total_time_minutes} minutes
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm text-gray-600">
-                      {formatDateTime(test.start_time)}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm text-gray-600">
-                      {formatDateTime(test.end_time)}
-                    </span>
-                  </TableCell>
-                  <TableCell>
+                  </div>
+                  
+                  {/* Premium Stats Grid - Full Width */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-2.5 border border-blue-200/50">
+                      <div className="flex items-center space-x-2">
+                        <FileText className="h-3.5 w-3.5 text-blue-600" />
+                        <div>
+                          <p className="text-xs text-blue-600 font-medium">Questions</p>
+                          <p className="text-sm font-bold text-blue-900">
+                            {typeof test.question_count === 'number' ? test.question_count : '—'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-2.5 border border-green-200/50">
+                      <div className="flex items-center space-x-2">
+                        <Clock className="h-3.5 w-3.5 text-green-600" />
+                        <div>
+                          <p className="text-xs text-green-600 font-medium">Duration</p>
+                          <p className="text-sm font-bold text-green-900">
+                            {test.total_time_minutes}m
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-2.5 border border-purple-200/50">
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="h-3.5 w-3.5 text-purple-600" />
+                        <div>
+                          <p className="text-xs text-purple-600 font-medium">Start</p>
+                          <p className="text-xs font-medium text-purple-900">
+                            {formatDateTime(test.start_time)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-2.5 border border-orange-200/50">
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="h-3.5 w-3.5 text-orange-600" />
+                        <div>
+                          <p className="text-xs text-orange-600 font-medium">End</p>
+                          <p className="text-xs font-medium text-orange-900">
+                            {formatDateTime(test.end_time)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Premium Actions Row - Full Width */}
+                  <div className="flex items-center justify-end pt-3 border-t border-gray-100">
                     <TestActions 
                       test={test} 
                       onAction={handleTestAction}
                     />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
     </div>

@@ -81,10 +81,9 @@ export function PublishTestDialog({ test, onPublish }: PublishTestDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-          <Calendar className="h-4 w-4 mr-1 relative z-10" />
-          <span className="relative z-10">Publish</span>
+        <Button size="sm" className="h-7 px-2.5 text-xs font-medium bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white transition-all duration-200 shadow-sm hover:shadow-md">
+          <Calendar className="h-3 w-3 mr-1" />
+          <span>Publish</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">

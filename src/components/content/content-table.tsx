@@ -298,12 +298,12 @@ export function ContentTable() {
   return (
     <div className="space-y-4">
       {/* Search Input and Bulk Actions */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <Input
           placeholder="Search questions by text or ID..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
+          className="w-full sm:max-w-sm"
         />
         
         {/* Bulk Actions */}
@@ -330,13 +330,13 @@ export function ContentTable() {
       </div>
 
       {/* Table */}
-      <div className="rounded-md border">
-        <Table>
+      <div className="rounded-md border overflow-x-auto">
+        <Table className="min-w-full">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead key={header.id} className="whitespace-nowrap">
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
@@ -350,7 +350,7 @@ export function ContentTable() {
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="whitespace-nowrap">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -368,8 +368,8 @@ export function ContentTable() {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-gray-700">
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <div className="text-sm text-gray-700 text-center sm:text-left">
           Showing {data.length > 0 ? (currentPage - 1) * pageSize + 1 : 0} to{' '}
           {Math.min(currentPage * pageSize, totalCount)} of {totalCount} questions
         </div>
@@ -380,6 +380,7 @@ export function ContentTable() {
             size="sm"
             onClick={() => setCurrentPage(1)}
             disabled={currentPage === 1}
+            className="hidden sm:flex"
           >
             <ChevronsLeft className="h-4 w-4" />
           </Button>
@@ -407,6 +408,7 @@ export function ContentTable() {
             size="sm"
             onClick={() => setCurrentPage(totalPages)}
             disabled={currentPage === totalPages}
+            className="hidden sm:flex"
           >
             <ChevronsRight className="h-4 w-4" />
           </Button>

@@ -226,88 +226,95 @@ export function ReviewRefineInterface({
 
 
   return (
-    <div className="min-h-screen">
-      {/* Premium Global Control Bar */}
+    <div className="min-h-screen bg-gray-50/30">
+      {/* Ultra-Compact Mobile Header */}
       <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200/50 shadow-sm">
-        <div className="px-6 py-4">
-          <div className="flex flex-wrap items-center gap-4 justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 rounded-lg bg-gradient-to-br from-green-100 to-emerald-100">
-                  <Edit3 className="h-5 w-5 text-green-600" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900 tracking-tight">
-                    Review & Refine
-                  </h2>
-                  <p className="text-sm text-gray-600 font-medium">
-                    {questions.length} questions ready for review
-                  </p>
-                </div>
+        <div className="px-4 py-3">
+          <div className="flex items-center justify-between">
+            {/* Left Section - Title & Icon */}
+            <div className="flex items-center space-x-3 min-w-0 flex-1">
+              <div className="flex-shrink-0 p-2 rounded-lg bg-gradient-to-br from-green-100 to-emerald-100">
+                <Edit3 className="h-4 w-4 text-green-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-base font-bold text-gray-900 tracking-tight truncate">
+                  Review & Refine
+                </h2>
+                <p className="text-xs text-gray-600 font-medium truncate">
+                  {questions.length} questions ready
+                </p>
               </div>
             </div>
             
-            <div className="flex items-center gap-3">
+            {/* Right Section - Primary Actions */}
+            <div className="flex-shrink-0 ml-3 flex items-center gap-2">
               <Button 
                 onClick={() => setChooseOpen(true)}
-                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 text-sm px-3 py-2"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Add New Question
+                <Plus className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline">Add</span>
+                <span className="sm:hidden">+</span>
               </Button>
-              
-              <Button 
-                onClick={handleShuffleQuestions}
-                disabled={isShuffling}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isShuffling ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Shuffling...
-                  </>
-                ) : (
-                  <>
-                    <Shuffle className="h-4 w-4 mr-2" />
-                    Shuffle Questions
-                  </>
-                )}
-              </Button>
-              
-              <div className="flex items-center gap-3 px-3 py-2 bg-gray-50/80 rounded-lg border border-gray-200/50">
-                <span className="text-sm font-semibold text-gray-700">Shuffle Options</span>
-                <button
-                  onClick={() => setShuffleOptions(!shuffleOptions)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-200 ${
-                    shuffleOptions ? 'bg-gradient-to-r from-blue-500 to-indigo-500' : 'bg-gray-300'
-                  }`}
-                  aria-pressed={shuffleOptions}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-200 ${
-                      shuffleOptions ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
               
               <Button 
                 onClick={onNext}
-                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 text-sm px-3 py-2"
               >
-                Next: Set Rules & Publish
-                <ArrowRight className="h-4 w-4 ml-2" />
+                <span className="hidden sm:inline">Next</span>
+                <span className="sm:hidden">Next</span>
+                <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
+            </div>
+          </div>
+          
+          {/* Ultra-Compact Secondary Actions */}
+          <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200/50">
+            <Button 
+              onClick={handleShuffleQuestions}
+              disabled={isShuffling}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm px-3 py-2"
+            >
+              {isShuffling ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <span className="hidden sm:inline">Shuffling...</span>
+                  <span className="sm:hidden">Shuffling</span>
+                </>
+              ) : (
+                <>
+                  <Shuffle className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Shuffle</span>
+                  <span className="sm:hidden">Shuffle</span>
+                </>
+              )}
+            </Button>
+            
+            {/* Ultra-Compact Shuffle Options Toggle */}
+            <div className="flex items-center gap-2 px-2 py-1 bg-gray-50/80 rounded-lg border border-gray-200/50">
+              <span className="text-xs font-semibold text-gray-700">Options</span>
+              <button
+                onClick={() => setShuffleOptions(!shuffleOptions)}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-all duration-200 ${
+                  shuffleOptions ? 'bg-gradient-to-r from-blue-500 to-indigo-500' : 'bg-gray-300'
+                }`}
+                aria-pressed={shuffleOptions}
+              >
+                <span
+                  className={`inline-block h-3 w-3 transform rounded-full bg-white shadow-lg transition-transform duration-200 ${
+                    shuffleOptions ? 'translate-x-5' : 'translate-x-1'
+                  }`}
+                />
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-6xl mx-auto p-6">
-
-        {/* Questions List */}
-        <div className="space-y-6">
+      {/* Main Content - Full Width */}
+      <div className="p-4">
+        {/* Ultra-Compact Questions List */}
+        <div className="space-y-3">
           {questions.map((item, index) => {
             const q = item.question
             const options = q.options || {}
@@ -315,72 +322,117 @@ export function ReviewRefineInterface({
             const optionKeys = Object.keys(options).filter(key => options[key] && options[key].trim()) as Array<keyof typeof options>
             
             return (
-              <Card key={index} className="group border border-gray-200/50 rounded-xl overflow-hidden bg-white/80 hover:bg-white shadow-sm hover:shadow-lg transition-all duration-200">
-                <CardContent className="p-6">
-                  <div className="flex gap-6">
-                    {/* Question Content */}
-                    <div className="flex-1">
-                      {/* Question Header */}
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center space-x-4">
-                          <div className="p-2 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100">
-                            <span className="text-lg font-bold text-blue-600">{index + 1}</span>
-                          </div>
-                          <div>
-                            <h3 className="text-xl font-bold text-gray-900 tracking-tight">
-                              Question {index + 1}
-                            </h3>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                          <div className="px-3 py-1 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200/50">
-                            <span className="text-sm font-semibold text-blue-600">
-                              {item.chapter_name}
-                            </span>
-                          </div>
-                          <div className="px-3 py-1 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200/50">
-                            <span className="text-sm font-medium text-gray-600">
-                              {item.source_type}
-                              {item.source_value && `: ${item.source_value}`}
-                            </span>
-                          </div>
+              <Card key={index} className="group border border-gray-200/50 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-lg transition-all duration-200">
+                <CardContent className="p-4">
+                  {/* Ultra-Compact Question Header */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center space-x-3 min-w-0 flex-1">
+                      <div className="flex-shrink-0 p-1.5 rounded-md bg-gradient-to-br from-blue-100 to-indigo-100">
+                        <span className="text-xs font-bold text-blue-600">{index + 1}</span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-sm font-bold text-gray-900 tracking-tight truncate">
+                          Question {index + 1}
+                        </h3>
+                        <div className="flex flex-wrap items-center gap-1 mt-1">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
+                            {item.chapter_name}
+                          </span>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-50 text-gray-700">
+                            {item.source_type}
+                            {item.source_value && `: ${item.source_value}`}
+                          </span>
                         </div>
                       </div>
-                      {editingIndex === index && editForm ? (
-                        <div className="space-y-6">
-                          <div>
-                            <div className="flex items-center justify-between mb-2">
-                              <Label className="text-sm">Question Text</Label>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setShowPreview({ ...showPreview, question: !showPreview.question })}
-                                className="flex items-center gap-2"
-                              >
-                                {showPreview.question ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                {showPreview.question ? 'Hide Preview' : 'Show Preview'}
-                              </Button>
-                            </div>
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                              <div>
-                                <Textarea
-                                  value={editForm.question_text}
-                                  onChange={(e) => setEditForm({ ...editForm, question_text: e.target.value })}
-                                  className="mt-1"
-                                  rows={5}
-                                  placeholder="Enter your question text here..."
-                                />
-                              </div>
-                              {showPreview.question && (
-                                <div className="border rounded-lg p-4 bg-gray-50">
-                                  <div className="text-sm font-medium text-gray-700 mb-2">Preview:</div>
-                                  <div className="prose prose-sm max-w-none">
-                                    <SmartLatexRenderer text={editForm.question_text} />
-                                  </div>
-                                </div>
-                              )}
-                            </div>
+                    </div>
+                    
+                    {/* Ultra-Compact Action Buttons */}
+                    <div className="flex items-center gap-1 ml-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onRegenerate(index)}
+                        className="h-7 w-7 p-0 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-all duration-200"
+                        title="Regenerate"
+                      >
+                        <RotateCcw className="h-3 w-3" />
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOverride(index)}
+                        className="h-7 w-7 p-0 hover:bg-green-50 hover:border-green-200 hover:text-green-600 transition-all duration-200"
+                        title="Override"
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (editingIndex === index) {
+                            cancelEdit()
+                          } else {
+                            beginEdit(index)
+                          }
+                          onEdit(index)
+                        }}
+                        className="h-7 w-7 p-0 hover:bg-purple-50 hover:border-purple-200 hover:text-purple-600 transition-all duration-200"
+                        title="Edit"
+                      >
+                        <Edit3 className="h-3 w-3" />
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDelete(index)}
+                        className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300 transition-all duration-200"
+                        title="Delete"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                  {/* Ultra-Compact Question Content */}
+                  <div className="space-y-3">
+                    {editingIndex === index && editForm ? (
+                      <div className="space-y-3">
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <Label className="text-xs font-medium">Question Text</Label>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setShowPreview({ ...showPreview, question: !showPreview.question })}
+                              className="flex items-center gap-1 text-xs h-7 px-2"
+                            >
+                              {showPreview.question ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                              {showPreview.question ? 'Hide' : 'Show'}
+                            </Button>
                           </div>
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                            <div>
+                              <Textarea
+                                value={editForm.question_text}
+                                onChange={(e) => setEditForm({ ...editForm, question_text: e.target.value })}
+                                className="mt-1 text-sm"
+                                rows={3}
+                                placeholder="Enter your question text here..."
+                              />
+                            </div>
+                            {showPreview.question && (
+                              <div className="border rounded-lg p-2 bg-gray-50">
+                                <div className="text-xs font-medium text-gray-700 mb-1">Preview:</div>
+                                <div className="prose prose-sm max-w-none">
+                                  <SmartLatexRenderer text={editForm.question_text} />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
 
                           <div>
                             <div className="flex items-center justify-between mb-3">
@@ -500,174 +552,124 @@ export function ReviewRefineInterface({
                             <Button variant="outline" onClick={cancelEdit}>Cancel</Button>
                           </div>
                         </div>
-                      ) : (
-                        <>
-                          {/* Question Text */}
-                          <div className="mb-8 p-6 bg-gradient-to-r from-gray-50/50 to-white/50 rounded-xl border border-gray-100/50">
-                            <div className="prose prose-lg max-w-none text-gray-800">
-                              {renderMathContent(q.question_text)}
-                            </div>
+                    ) : (
+                      <>
+                        {/* Ultra-Compact Question Text */}
+                        <div className="mb-3 p-3 bg-gradient-to-r from-gray-50/50 to-white/50 rounded-lg border border-gray-100/50">
+                          <div className="prose prose-sm max-w-none text-gray-800">
+                            {renderMathContent(q.question_text)}
                           </div>
+                        </div>
 
-                          {/* Options */}
-                          <div className="space-y-4 mb-8">
-                            {optionKeys.map((optionKey) => {
-                              const optionText = options[optionKey]
-                              const isCorrect = q.correct_option === optionKey
-                              
-                              return (
-                                <div
-                                  key={optionKey}
-                                  className={`flex items-start space-x-4 p-4 rounded-xl border transition-all duration-200 ${
-                                    isCorrect 
-                                      ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200/50 shadow-sm' 
-                                      : 'bg-white/80 border-gray-200/50 hover:bg-gray-50/50'
-                                  }`}
-                                >
-                                  <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-200 ${
-                                    isCorrect
-                                      ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 shadow-sm'
-                                      : 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700'
-                                  }`}>
-                                    {getOptionLabel(String(optionKey))}
-                                    {isCorrect && (
-                                      <span className="ml-1 text-green-600">✓</span>
-                                    )}
-                                  </div>
-                                  <div className="flex-1 prose prose-sm max-w-none text-gray-800">
-                                    {renderMathContent(String(optionText))}
-                                  </div>
-                                </div>
-                              )
-                            })}
-                          </div>
-
-                          {/* Admin Metadata */}
-                          <div className="bg-gradient-to-r from-gray-50/50 to-white/50 rounded-xl p-6 border border-gray-100/50">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                              <div>
-                                <span className="font-medium">Source:</span> {q.book_source || '—'}
-                              </div>
-                              <div>
-                                <span className="font-medium">Original No:</span> {q.question_number_in_book || '—'}
-                              </div>
-                              <div>
-                                <span className="font-medium">Difficulty:</span> {(q as unknown as { difficulty?: string }).difficulty || '—'}
-                              </div>
-                              <div>
-                                <span className="font-medium">Tags:</span> {(q.admin_tags || []).join(', ') || '—'}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Expandable Solution Viewer */}
-                          {q.solution_text && (
-                            <div className="mt-4">
-                              <button
-                                type="button"
-                                onClick={() => handleToggleSolution(q.id || q.question_id || index)}
-                                className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
-                              >
-                                <ChevronDown 
-                                  className={`h-4 w-4 transition-transform duration-200 ${
-                                    expandedSolutionIds.has(q.id || q.question_id || index) ? 'rotate-180' : ''
-                                  }`} 
-                                />
-                                {expandedSolutionIds.has(q.id || q.question_id || index) ? 'Hide Solution' : 'View Solution'}
-                              </button>
-                              
-                              <div 
-                                className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                                  expandedSolutionIds.has(q.id || q.question_id || index) 
-                                    ? 'max-h-96 opacity-100 mt-3' 
-                                    : 'max-h-0 opacity-0'
+                        {/* Ultra-Compact Options */}
+                        <div className="space-y-2 mb-3">
+                          {optionKeys.map((optionKey) => {
+                            const optionText = options[optionKey]
+                            const isCorrect = q.correct_option === optionKey
+                            
+                            return (
+                              <div
+                                key={optionKey}
+                                className={`flex items-start space-x-2 p-2 rounded-lg border transition-all duration-200 ${
+                                  isCorrect 
+                                    ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200/50 shadow-sm' 
+                                    : 'bg-white/80 border-gray-200/50 hover:bg-gray-50/50'
                                 }`}
                               >
-                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                  <h5 className="font-medium text-blue-900 mb-2">Solution:</h5>
-                                  <div className="prose prose-sm max-w-none text-blue-800">
-                                    <SmartLatexRenderer text={q.solution_text} />
-                                  </div>
+                                <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-200 ${
+                                  isCorrect
+                                    ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 shadow-sm'
+                                    : 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700'
+                                }`}>
+                                  {getOptionLabel(String(optionKey))}
+                                  {isCorrect && (
+                                    <span className="ml-0.5 text-green-600 text-xs">✓</span>
+                                  )}
+                                </div>
+                                <div className="flex-1 prose prose-sm max-w-none text-gray-800">
+                                  {renderMathContent(String(optionText))}
                                 </div>
                               </div>
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
+                            )
+                          })}
+                        </div>
 
-                    {/* Per-Question Control Deck */}
-                    <div className="flex-shrink-0 w-20">
-                      <div className="flex flex-col space-y-3">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onRegenerate(index)}
-                          className="h-12 w-12 p-0 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-all duration-200"
-                          title="Regenerate Question"
-                        >
-                          <RotateCcw className="h-4 w-4" />
-                        </Button>
-                        
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleOverride(index)}
-                          className="h-12 w-12 p-0 hover:bg-green-50 hover:border-green-200 hover:text-green-600 transition-all duration-200"
-                          title="Manual Override"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            if (editingIndex === index) {
-                              cancelEdit()
-                            } else {
-                              beginEdit(index)
-                            }
-                            onEdit(index)
-                          }}
-                          className="h-12 w-12 p-0 hover:bg-purple-50 hover:border-purple-200 hover:text-purple-600 transition-all duration-200"
-                          title="Edit In-Place"
-                        >
-                          <Edit3 className="h-4 w-4" />
-                        </Button>
-                        
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDelete(index)}
-                          className="h-12 w-12 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300 transition-all duration-200"
-                          title="Delete Question"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                        {/* Ultra-Compact Admin Metadata */}
+                        <div className="bg-gradient-to-r from-gray-50/50 to-white/50 rounded-lg p-3 border border-gray-100/50 mb-3">
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                              <span className="font-medium text-gray-600">Source:</span>
+                              <p className="text-gray-800 truncate">{q.book_source || '—'}</p>
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-600">Original No:</span>
+                              <p className="text-gray-800 truncate">{q.question_number_in_book || '—'}</p>
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-600">Difficulty:</span>
+                              <p className="text-gray-800 truncate">{(q as unknown as { difficulty?: string }).difficulty || '—'}</p>
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-600">Tags:</span>
+                              <p className="text-gray-800 truncate">{(q.admin_tags || []).join(', ') || '—'}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Ultra-Compact Solution Box */}
+                        {q.solution_text && (
+                          <div className="mt-3">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleSolution(q.id || q.question_id || index)}
+                              className="flex items-center gap-2 text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors w-full justify-between p-2 bg-blue-50 rounded-lg border border-blue-200/50 hover:bg-blue-100"
+                            >
+                              <span>View Solution</span>
+                              <ChevronDown 
+                                className={`h-3 w-3 transition-transform duration-200 ${
+                                  expandedSolutionIds.has(q.id || q.question_id || index) ? 'rotate-180' : ''
+                                }`} 
+                              />
+                            </button>
+                            
+                            {expandedSolutionIds.has(q.id || q.question_id || index) && (
+                              <div className="mt-2 p-3 bg-gradient-to-r from-red-50/80 to-orange-50/80 rounded-lg border border-red-200/50 shadow-sm">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                                  <span className="text-xs font-semibold text-red-800">Solution</span>
+                                </div>
+                                <div className="prose prose-sm max-w-none text-gray-800">
+                                  {renderMathContent(q.solution_text)}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </>
+                    )}
                     </div>
-                  </div>
                 </CardContent>
               </Card>
             )
           })}
         </div>
 
-        {/* Summary */}
-        <div className="mt-8 p-6 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 rounded-xl border border-blue-200/50 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-bold text-blue-900 tracking-tight">Test Summary</h3>
-              <p className="text-sm text-blue-700 font-medium mt-1">
-                Total Questions: {questions.length} | 
-                Shuffle Questions: Available | 
-                Shuffle Options: {shuffleOptions ? 'Enabled' : 'Disabled'}
+        {/* Ultra-Compact Summary */}
+        <div className="mt-4 p-3 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 rounded-lg border border-blue-200/50 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex-1">
+              <h3 className="text-sm font-bold text-blue-900 tracking-tight">Test Summary</h3>
+              <p className="text-xs text-blue-700 font-medium mt-1">
+                <span className="block sm:inline">Total: {questions.length}</span>
+                <span className="hidden sm:inline"> | </span>
+                <span className="block sm:inline">Shuffle: Available</span>
+                <span className="hidden sm:inline"> | </span>
+                <span className="block sm:inline">Options: {shuffleOptions ? 'On' : 'Off'}</span>
               </p>
             </div>
-            <div className="px-4 py-2 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-lg border border-blue-200/50">
-              <span className="text-sm font-semibold text-blue-600">
-                Ready for final review
+            <div className="px-2 py-1 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-lg border border-blue-200/50 self-start sm:self-auto">
+              <span className="text-xs font-semibold text-blue-600">
+                Ready
               </span>
             </div>
           </div>
@@ -688,26 +690,43 @@ export function ReviewRefineInterface({
         title={overrideIndex === questions.length ? "Add Questions from Bank" : "Select Replacement Question"}
       />
 
-      {/* Choice modal */}
+      {/* Mobile-Optimized Choice Modal */}
       {chooseOpen && (
-        <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center">
-          <div className="bg-white rounded-md shadow-lg w-[90vw] max-w-md p-6">
-            <h3 className="text-lg font-semibold mb-4">Add Question</h3>
+        <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold mb-4">Add Question</h3>
             <div className="grid grid-cols-1 gap-3">
-              <Button onClick={() => { setChooseOpen(false); setCreateOpen(true) }}>✏️ Write a New Question</Button>
-              <Button variant="outline" onClick={() => { setChooseOpen(false); setModalOpen(true); setOverrideIndex(questions.length) }}>📚 Add from Question Bank</Button>
+              <Button 
+                onClick={() => { setChooseOpen(false); setCreateOpen(true) }}
+                className="w-full text-sm sm:text-base"
+              >
+                ✏️ Write a New Question
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => { setChooseOpen(false); setModalOpen(true); setOverrideIndex(questions.length) }}
+                className="w-full text-sm sm:text-base"
+              >
+                📚 Add from Question Bank
+              </Button>
             </div>
             <div className="mt-4 text-right">
-              <Button variant="outline" onClick={() => setChooseOpen(false)}>Cancel</Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setChooseOpen(false)}
+                className="text-sm sm:text-base"
+              >
+                Cancel
+              </Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Inline Create Question Modal (simple version) */}
+      {/* Mobile-Optimized Create Question Modal */}
       {createOpen && (
-        <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
-          <div className="bg-white w-[95vw] max-w-3xl rounded-md shadow-lg p-4">
+        <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-3xl rounded-lg shadow-lg p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
             <CreateQuestionForm
               onCancel={() => setCreateOpen(false)}
               onSave={(newQ) => {

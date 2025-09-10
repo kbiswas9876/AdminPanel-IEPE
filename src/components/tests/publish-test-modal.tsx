@@ -88,40 +88,40 @@ export function PublishTestModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="w-[95vw] max-w-md mx-4">
         <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
-            <Calendar className="h-5 w-5 text-blue-600" />
+          <DialogTitle className="flex items-center space-x-2 text-base sm:text-lg">
+            <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
             <span>Publish Test</span>
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-xs sm:text-sm">
             Set the active window for your test. Students will only be able to take the test during this time period.
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Result policy */}
           <div className="space-y-3">
-            <Label className="text-sm">Result Declaration Policy</Label>
+            <Label className="text-xs sm:text-sm font-semibold">Result Declaration Policy</Label>
             <label className="flex items-center space-x-3">
               <input type="radio" name="policy" value="instant" checked={publishData.resultPolicy==='instant'} onChange={() => setPublishData((p)=>({ ...p, resultPolicy: 'instant', resultReleaseAt: '' }))} className="w-4 h-4 text-blue-600" />
-              <span className="text-sm">Instantly on submission</span>
+              <span className="text-xs sm:text-sm">Instantly on submission</span>
             </label>
             <label className="flex items-center space-x-3">
               <input type="radio" name="policy" value="scheduled" checked={publishData.resultPolicy==='scheduled'} onChange={() => setPublishData((p)=>({ ...p, resultPolicy: 'scheduled' }))} className="w-4 h-4 text-blue-600" />
-              <span className="text-sm">At a fixed date/time</span>
+              <span className="text-xs sm:text-sm">At a fixed date/time</span>
             </label>
             {publishData.resultPolicy==='scheduled' && (
               <div className="ml-7 space-y-2">
-                <Label htmlFor="result-release">Result Release Date & Time *</Label>
-                <Input id="result-release" type="datetime-local" value={publishData.resultReleaseAt || ''} onChange={(e)=>setPublishData((p)=>({ ...p, resultReleaseAt: e.target.value }))} />
+                <Label htmlFor="result-release" className="text-xs sm:text-sm">Result Release Date & Time *</Label>
+                <Input id="result-release" type="datetime-local" value={publishData.resultReleaseAt || ''} onChange={(e)=>setPublishData((p)=>({ ...p, resultReleaseAt: e.target.value }))} className="text-xs sm:text-sm" />
               </div>
             )}
           </div>
           {/* Start Time */}
           <div className="space-y-2">
-            <Label htmlFor="start-time" className="flex items-center space-x-2">
-              <Clock className="h-4 w-4" />
+            <Label htmlFor="start-time" className="flex items-center space-x-2 text-xs sm:text-sm">
+              <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Test Start Date & Time *</span>
             </Label>
             <Input
@@ -129,10 +129,10 @@ export function PublishTestModal({
               type="datetime-local"
               value={publishData.startTime}
               onChange={(e) => updatePublishData('startTime', e.target.value)}
-              className={errors.startTime ? 'border-red-300' : ''}
+              className={`text-xs sm:text-sm ${errors.startTime ? 'border-red-300' : ''}`}
             />
             {errors.startTime && (
-              <p className="text-sm text-red-600 flex items-center space-x-1">
+              <p className="text-xs sm:text-sm text-red-600 flex items-center space-x-1">
                 <AlertCircle className="h-3 w-3" />
                 <span>{errors.startTime}</span>
               </p>
@@ -141,8 +141,8 @@ export function PublishTestModal({
 
           {/* End Time */}
           <div className="space-y-2">
-            <Label htmlFor="end-time" className="flex items-center space-x-2">
-              <Clock className="h-4 w-4" />
+            <Label htmlFor="end-time" className="flex items-center space-x-2 text-xs sm:text-sm">
+              <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Test End Date & Time *</span>
             </Label>
             <Input
@@ -150,21 +150,21 @@ export function PublishTestModal({
               type="datetime-local"
               value={publishData.endTime}
               onChange={(e) => updatePublishData('endTime', e.target.value)}
-              className={errors.endTime ? 'border-red-300' : ''}
+              className={`text-xs sm:text-sm ${errors.endTime ? 'border-red-300' : ''}`}
             />
             {errors.endTime && (
-              <p className="text-sm text-red-600 flex items-center space-x-1">
+              <p className="text-xs sm:text-sm text-red-600 flex items-center space-x-1">
                 <AlertCircle className="h-3 w-3" />
                 <span>{errors.endTime}</span>
               </p>
             )}
           </div>
 
-          {/* Info Box */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-start space-x-3">
-              <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
-              <div className="text-sm text-blue-800">
+          {/* Mobile-Optimized Info Box */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+            <div className="flex items-start space-x-2 sm:space-x-3">
+              <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="text-xs sm:text-sm text-blue-800">
                 <p className="font-medium mb-1">Important:</p>
                 <ul className="space-y-1 text-xs">
                   <li>• Students can only access the test during the specified time window</li>
@@ -176,18 +176,19 @@ export function PublishTestModal({
           </div>
         </div>
 
-        <DialogFooter className="flex space-x-3">
+        <DialogFooter className="flex flex-col sm:flex-row gap-3 sm:space-x-3">
           <Button
             variant="outline"
             onClick={handleClose}
             disabled={isProcessing}
+            className="w-full sm:w-auto text-sm"
           >
             Cancel
           </Button>
           <Button
             onClick={handleConfirm}
             disabled={isProcessing}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto text-sm"
           >
             {isProcessing ? 'Publishing...' : 'Confirm & Publish'}
           </Button>

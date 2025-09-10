@@ -42,20 +42,20 @@ export default async function StudentsPage() {
   return (
     <ProtectedRoute>
       <MainLayout>
-        <div className="space-y-8">
+        <div className="space-y-6 sm:space-y-8">
           {/* Header Section */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 tracking-tight">
                 Student Management
               </h1>
-              <p className="mt-3 text-lg text-gray-600 font-medium">
+              <p className="mt-2 sm:mt-3 text-sm sm:text-base lg:text-lg text-gray-600 font-medium">
                 Manage student registrations and control access to your platform.
               </p>
             </div>
             <div className="flex items-center space-x-3">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-green-100 to-emerald-100">
-                <Users className="h-6 w-6 text-green-600" />
+              <div className="p-2 sm:p-3 rounded-xl bg-gradient-to-br from-green-100 to-emerald-100">
+                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
               </div>
             </div>
           </div>

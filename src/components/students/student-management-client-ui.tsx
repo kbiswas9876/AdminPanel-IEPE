@@ -34,47 +34,51 @@ export function StudentManagementClientUI({ users }: StudentManagementClientUIPr
   return (
     <Tabs defaultValue="pending" className="w-full">
       <div className="border-b border-gray-100/50 bg-gradient-to-r from-gray-50/50 to-white/50">
-        <TabsList className="grid w-full grid-cols-4 bg-transparent h-auto p-0">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 bg-transparent h-auto p-0">
           <TabsTrigger 
             value="pending" 
-            className="flex items-center space-x-2 px-6 py-4 text-sm font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-red-500 transition-all duration-200 relative"
+            className="flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-red-500 transition-all duration-200 relative"
           >
-            <span>Pending Approval</span>
+            <span className="hidden sm:inline">Pending Approval</span>
+            <span className="sm:hidden">Pending</span>
             {pendingUsers.length > 0 && (
-              <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 font-bold animate-pulse">
+              <span className="bg-red-500 text-white text-xs rounded-full px-1 sm:px-2 py-1 font-bold animate-pulse">
                 {pendingUsers.length}
               </span>
             )}
           </TabsTrigger>
           <TabsTrigger 
             value="active"
-            className="flex items-center space-x-2 px-6 py-4 text-sm font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-green-500 transition-all duration-200"
+            className="flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-green-500 transition-all duration-200"
           >
-            <span>Active Students</span>
+            <span className="hidden sm:inline">Active Students</span>
+            <span className="sm:hidden">Active</span>
             {activeStudents.length > 0 && (
-              <span className="bg-green-500 text-white text-xs rounded-full px-2 py-1 font-bold">
+              <span className="bg-green-500 text-white text-xs rounded-full px-1 sm:px-2 py-1 font-bold">
                 {activeStudents.length}
               </span>
             )}
           </TabsTrigger>
           <TabsTrigger 
             value="admins"
-            className="flex items-center space-x-2 px-6 py-4 text-sm font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-blue-500 transition-all duration-200"
+            className="flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-blue-500 transition-all duration-200"
           >
-            <span>Administrators</span>
+            <span className="hidden sm:inline">Administrators</span>
+            <span className="sm:hidden">Admins</span>
             {admins.length > 0 && (
-              <span className="bg-blue-500 text-white text-xs rounded-full px-2 py-1 font-bold">
+              <span className="bg-blue-500 text-white text-xs rounded-full px-1 sm:px-2 py-1 font-bold">
                 {admins.length}
               </span>
             )}
           </TabsTrigger>
           <TabsTrigger 
             value="all"
-            className="flex items-center space-x-2 px-6 py-4 text-sm font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200"
+            className="flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200"
           >
-            <span>All Users</span>
+            <span className="hidden sm:inline">All Users</span>
+            <span className="sm:hidden">All</span>
             {users.length > 0 && (
-              <span className="bg-gray-500 text-white text-xs rounded-full px-2 py-1 font-bold">
+              <span className="bg-gray-500 text-white text-xs rounded-full px-1 sm:px-2 py-1 font-bold">
                 {users.length}
               </span>
             )}
@@ -82,12 +86,12 @@ export function StudentManagementClientUI({ users }: StudentManagementClientUIPr
         </TabsList>
       </div>
       
-      <TabsContent value="pending" className="space-y-6 m-0 p-6">
-        <div className="border-b border-gray-100/50 pb-6">
-          <h2 className="text-xl font-bold text-gray-900 tracking-tight">
+      <TabsContent value="pending" className="space-y-4 sm:space-y-6 m-0 p-4 sm:p-6">
+        <div className="border-b border-gray-100/50 pb-4 sm:pb-6">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">
             Pending Approval
           </h2>
-          <p className="text-sm text-gray-600 font-medium mt-1">
+          <p className="text-xs sm:text-sm text-gray-600 font-medium mt-1">
             Review and approve new student registrations.
           </p>
         </div>
@@ -97,12 +101,12 @@ export function StudentManagementClientUI({ users }: StudentManagementClientUIPr
         />
       </TabsContent>
       
-      <TabsContent value="active" className="space-y-6 m-0 p-6">
-        <div className="border-b border-gray-100/50 pb-6">
-          <h2 className="text-xl font-bold text-gray-900 tracking-tight">
+      <TabsContent value="active" className="space-y-4 sm:space-y-6 m-0 p-4 sm:p-6">
+        <div className="border-b border-gray-100/50 pb-4 sm:pb-6">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">
             Active Students
           </h2>
-          <p className="text-sm text-gray-600 font-medium mt-1">
+          <p className="text-xs sm:text-sm text-gray-600 font-medium mt-1">
             Currently active students with platform access.
           </p>
         </div>
@@ -112,12 +116,12 @@ export function StudentManagementClientUI({ users }: StudentManagementClientUIPr
         />
       </TabsContent>
       
-      <TabsContent value="admins" className="space-y-6 m-0 p-6">
-        <div className="border-b border-gray-100/50 pb-6">
-          <h2 className="text-xl font-bold text-gray-900 tracking-tight">
+      <TabsContent value="admins" className="space-y-4 sm:space-y-6 m-0 p-4 sm:p-6">
+        <div className="border-b border-gray-100/50 pb-4 sm:pb-6">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">
             Administrators
           </h2>
-          <p className="text-sm text-gray-600 font-medium mt-1">
+          <p className="text-xs sm:text-sm text-gray-600 font-medium mt-1">
             Users with administrative privileges.
           </p>
         </div>
@@ -127,12 +131,12 @@ export function StudentManagementClientUI({ users }: StudentManagementClientUIPr
         />
       </TabsContent>
       
-      <TabsContent value="all" className="space-y-6 m-0 p-6">
-        <div className="border-b border-gray-100/50 pb-6">
-          <h2 className="text-xl font-bold text-gray-900 tracking-tight">
+      <TabsContent value="all" className="space-y-4 sm:space-y-6 m-0 p-4 sm:p-6">
+        <div className="border-b border-gray-100/50 pb-4 sm:pb-6">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">
             All Users
           </h2>
-          <p className="text-sm text-gray-600 font-medium mt-1">
+          <p className="text-xs sm:text-sm text-gray-600 font-medium mt-1">
             Complete list of all registered users.
           </p>
         </div>

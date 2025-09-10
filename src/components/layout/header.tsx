@@ -2,13 +2,15 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/lib/auth'
+import { useMobile } from '@/lib/contexts/mobile-context'
 import { Button } from '@/components/ui/button'
-import { LogOut, User, Bell, AlertTriangle, UserPlus, BookOpen, TestTube, Loader2 } from 'lucide-react'
+import { LogOut, User, Bell, AlertTriangle, UserPlus, BookOpen, TestTube, Loader2, Menu, X } from 'lucide-react'
 import { getNotifications, markNotificationAsRead, type Notification } from '@/lib/actions/notifications'
 import { clearProfileCache } from '@/components/auth/protected-route'
 
 export function Header() {
   const { user, signOut } = useAuth()
+  const { isMobile, isSidebarOpen, toggleSidebar } = useMobile()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
   const [, setLoading] = useState(true)
@@ -117,17 +119,39 @@ export function Header() {
 
   return (
     <header className="bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200/60 sticky top-0 z-40">
-      <div className="flex h-16 items-center justify-between px-6">
+      <div className="flex h-16 items-center justify-between px-4 sm:px-6">
         <div className="flex items-center space-x-4">
+          {/* Mobile hamburger menu */}
+          {isMobile && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleSidebar}
+              className="h-10 w-10 p-0 hover:bg-gray-100/80 transition-all duration-200"
+              data-hamburger
+            >
+              {isSidebarOpen ? (
+                <X className="h-5 w-5 text-gray-700" />
+              ) : (
+                <Menu className="h-5 w-5 text-gray-700" />
+              )}
+            </Button>
+          )}
+          
           <div className="flex items-center space-x-3">
             <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 flex items-center justify-center shadow-lg">
               <User className="h-5 w-5 text-white" />
             </div>
-            <div>
+            <div className="hidden sm:block">
               <h2 className="text-lg font-bold text-gray-900 tracking-tight">
                 Welcome back, {user?.email?.split('@')[0]}
               </h2>
               <p className="text-xs text-gray-500 font-medium">Administrator</p>
+            </div>
+            <div className="block sm:hidden">
+              <h2 className="text-sm font-bold text-gray-900 tracking-tight">
+                {user?.email?.split('@')[0]}
+              </h2>
             </div>
           </div>
         </div>
@@ -151,7 +175,9 @@ export function Header() {
 
             {/* Notification Dropdown */}
             {isNotificationOpen && (
-              <div className="absolute right-0 top-12 w-80 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200/60 overflow-hidden z-50 animate-in slide-in-from-top-2 duration-200">
+              <div className={`absolute right-0 top-12 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200/60 overflow-hidden z-50 animate-in slide-in-from-top-2 duration-200 ${
+                isMobile ? 'w-72' : 'w-80'
+              }`}>
                 <div className="p-4 border-b border-gray-100/50 bg-gradient-to-r from-gray-50/50 to-white/50">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-bold text-gray-900">Notifications</h3>
