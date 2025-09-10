@@ -245,11 +245,11 @@ export function TestCreationWizard({
 
 
   return (
-    <div>
+    <div className="w-full">
       {/* Premium Mobile Header */}
-      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200/50 shadow-sm">
-        <div className="px-4 sm:px-6 py-3">
-          <div className="flex items-center justify-between">
+      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200/50 shadow-sm w-full">
+        <div className="w-full px-4 sm:px-6 py-3">
+          <div className="flex items-center justify-between w-full">
             {/* Left Section - Back Button & Title */}
             <div className="flex items-center space-x-3 min-w-0 flex-1">
               {currentStep > 1 && (
@@ -287,19 +287,18 @@ export function TestCreationWizard({
                 <Button 
                   onClick={handleNext} 
                   disabled={totalQuestions === 0 || isGenerating}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm px-4 py-2 h-8"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-xs px-3 py-2 h-8 min-w-[120px]"
                 >
                   {isGenerating ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      <span className="hidden sm:inline">Generating...</span>
-                      <span className="sm:hidden">Gen...</span>
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1.5"></div>
+                      <span className="text-xs font-medium">Generating...</span>
                     </>
                   ) : (
                     <>
-                      <span className="hidden sm:inline">Next: Review & Refine</span>
-                      <span className="sm:hidden">Next</span>
-                      <ArrowRight className="h-4 w-4 ml-1" />
+                      <span className="hidden sm:inline text-xs font-medium">Next: Review & Refine</span>
+                      <span className="sm:hidden text-xs font-medium">Next</span>
+                      <ArrowRight className="h-3 w-3 ml-1" />
                     </>
                   )}
                 </Button>
@@ -310,7 +309,7 @@ export function TestCreationWizard({
       </div>
 
       {/* Main Content - Perfectly Aligned with Header */}
-      <div className="px-4 sm:px-6 pb-4">
+      <div className="w-full px-4 sm:px-6 pb-4">
 
         {/* Error Message */}
         {error && (
@@ -321,9 +320,9 @@ export function TestCreationWizard({
 
         {/* Step 1: Test Blueprint - Premium Design */}
         {currentStep === 1 && (
-          <div className="space-y-4">
+          <div className="space-y-4 w-full max-w-full">
             {/* Ultra-Premium Blueprint Summary */}
-            <div className="bg-gradient-to-r from-white to-blue-50/30 rounded-xl border border-gray-200/50 shadow-lg p-5">
+            <div className="bg-gradient-to-r from-white to-blue-50/30 rounded-xl border border-gray-200/50 shadow-lg p-5 w-full">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <div className="p-3 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 shadow-md">
@@ -342,14 +341,14 @@ export function TestCreationWizard({
             </div>
 
             {/* Ultra-Premium Chapter Selection */}
-            <div className="space-y-4">
+            <div className="space-y-4 w-full">
               {chapters.map((chapter) => {
                 const chState = blueprint[chapter.name] || {}
                 const rules = chState.rules || []
                 const selectedCount = (chState.random || 0) + rules.reduce((sum, r) => sum + (r.quantity || 0), 0)
                 
                 return (
-                  <details key={chapter.name} className="group border border-gray-200/50 rounded-xl overflow-hidden bg-white hover:bg-white shadow-sm hover:shadow-lg transition-all duration-300">
+                  <details key={chapter.name} className="group border border-gray-200/50 rounded-xl overflow-hidden bg-white hover:bg-white shadow-sm hover:shadow-lg transition-all duration-300 w-full">
                     <summary className="cursor-pointer flex items-center justify-between p-5 hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50/30 transition-all duration-300">
                       <div className="flex items-center space-x-4 min-w-0 flex-1">
                         <div className="p-3 rounded-xl bg-gradient-to-br from-purple-100 to-indigo-100 shadow-md group-hover:from-blue-100 group-hover:to-indigo-100 group-hover:shadow-lg transition-all duration-300">
