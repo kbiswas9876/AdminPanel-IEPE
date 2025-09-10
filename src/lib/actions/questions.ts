@@ -1,6 +1,6 @@
 'use server'
 
-import { createAdminClient, type Question as DBQuestion, type QuestionsResponse } from '@/lib/supabase/admin'
+import { createAdminClient, type Question as DBQuestion } from '@/lib/supabase/admin'
 import type { Question } from '@/lib/types'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'

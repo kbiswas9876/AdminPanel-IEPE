@@ -6,9 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ArrowRight, FileText } from 'lucide-react'
-import Link from 'next/link'
 import type { TestQuestionSlot, ChapterInfo, BlueprintRule, ChapterBlueprint, TestBlueprint } from '@/lib/types'
 import type { Test } from '@/lib/supabase/admin'
 import { ReviewRefineInterface } from './review-refine-interface'
@@ -481,7 +479,6 @@ export function TestCreationWizard({
             // Placeholder for edit functionality
             console.log('Edit question at index:', index)
           }}
-          onPrevious={handlePrevious}
           onNext={() => setCurrentStep(3)}
         />
       )}

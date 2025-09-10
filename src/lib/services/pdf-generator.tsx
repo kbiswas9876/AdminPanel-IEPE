@@ -265,7 +265,7 @@ export const QuestionPaperPDF = ({ test, questions, settings }: { test: Test; qu
 }
 
 // Answer Key PDF Component
-export const AnswerKeyPDF = ({ test, questions, settings }: { test: Test; questions: Question[]; settings?: PDFSettings }) => {
+export const AnswerKeyPDF = ({ test, questions }: { test: Test; questions: Question[]; settings?: PDFSettings }) => {
   return (
     <Document>
       <Page size="A4" style={styles.page}>

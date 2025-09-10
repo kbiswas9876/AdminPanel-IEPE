@@ -17,7 +17,6 @@ interface ReviewRefineInterfaceProps {
   onQuestionsChange: (questions: TestQuestionSlot[]) => void
   onRegenerate: (index: number) => void
   onEdit: (index: number) => void
-  onPrevious: () => void
   onNext: () => void
 }
 
@@ -26,7 +25,6 @@ export function ReviewRefineInterface({
   onQuestionsChange,
   onRegenerate,
   onEdit,
-  onPrevious,
   onNext
 }: ReviewRefineInterfaceProps) {
   const [shuffleOptions, setShuffleOptions] = useState(false)
@@ -178,6 +176,7 @@ export function ReviewRefineInterface({
     const keys = Object.keys(editForm.options)
     if (keys.length <= 2) return // Keep at least 2 options
     
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { [key]: _, ...rest } = editForm.options
     setEditForm({
       ...editForm,
@@ -744,6 +743,7 @@ function CreateQuestionForm({ onCancel, onSave }: { onCancel: () => void; onSave
     const keys = Object.keys(options)
     if (keys.length <= 2) return // Keep at least 2 options
     
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { [key]: _, ...rest } = options
     setOptions(rest)
     
