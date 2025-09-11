@@ -26,21 +26,17 @@ export default async function EditTestPage({ params }: EditTestPageProps) {
   return (
     <ProtectedRoute>
       <MainLayout>
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Edit Mock Test
-            </h1>
-            <p className="mt-2 text-gray-600">
-              Modify your test blueprint, refine questions, and update rules.
-            </p>
+        <div className="min-h-screen bg-gray-50/30">
+          {/* Main Content */}
+          <div className="p-4 sm:p-6">
+                    <div className="max-w-none mx-auto w-full">
+              <TestCreationWizard 
+                initialData={testData}
+                isEditMode={true}
+                testId={testID}
+              />
+            </div>
           </div>
-          
-          <TestCreationWizard 
-            initialData={testData}
-            isEditMode={true}
-            testId={testID}
-          />
         </div>
       </MainLayout>
     </ProtectedRoute>

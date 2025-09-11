@@ -18,13 +18,13 @@ import type { Question } from '@/lib/types'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
+  Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { MobileResponsiveTable, MobileTableCard, MobileCardRow } from '@/components/shared/mobile-responsive-table'
 import { ArrowUpDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Edit, MoreHorizontal } from 'lucide-react'
 import Link from 'next/link'
 import { DeleteQuestionDialog } from './delete-question-dialog'
@@ -94,7 +94,6 @@ export function ContentTable() {
             checked={table.getIsAllPageRowsSelected()}
             onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
             aria-label="Select all"
-            className="h-3.5 w-3.5"
           />
         ),
         cell: ({ row }) => (
@@ -102,7 +101,6 @@ export function ContentTable() {
             checked={row.getIsSelected()}
             onCheckedChange={(value) => row.toggleSelected(!!value)}
             aria-label="Select row"
-            className="h-3.5 w-3.5"
           />
         ),
         enableSorting: false,
@@ -300,7 +298,7 @@ export function ContentTable() {
   return (
     <div className="space-y-4">
       {/* Search Input and Bulk Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <Input
           placeholder="Search questions by text or ID..."
           value={searchTerm}
@@ -310,13 +308,13 @@ export function ContentTable() {
         
         {/* Bulk Actions */}
         {selectedRows.length > 0 && (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+          <div className="flex items-center space-x-2">
             <span className="text-sm text-gray-600">
               {selectedRows.length} question{selectedRows.length !== 1 ? 's' : ''} selected
             </span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                <Button variant="outline" size="sm">
                   <MoreHorizontal className="h-4 w-4 mr-2" />
                   Bulk Actions
                 </Button>
@@ -331,14 +329,14 @@ export function ContentTable() {
         )}
       </div>
 
-      {/* Desktop Table */}
-      <div className="hidden lg:block rounded-md border">
-        <MobileResponsiveTable>
+      {/* Table */}
+      <div className="rounded-md border overflow-x-auto">
+        <Table className="min-w-full">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead key={header.id} className="whitespace-nowrap">
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
@@ -352,7 +350,7 @@ export function ContentTable() {
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="whitespace-nowrap">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -366,112 +364,17 @@ export function ContentTable() {
               </TableRow>
             )}
           </TableBody>
-        </MobileResponsiveTable>
-      </div>
-
-      {/* Mobile Card View */}
-      <div className="lg:hidden space-y-3">
-        {table.getRowModel().rows?.length ? (
-          table.getRowModel().rows.map((row) => {
-            const question = row.original
-            const isSelected = row.getIsSelected()
-            
-            return (
-              <MobileTableCard key={row.id} className={isSelected ? 'ring-2 ring-blue-500 bg-blue-50/30' : ''}>
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      checked={isSelected}
-                      onCheckedChange={(value) => row.toggleSelected(!!value)}
-                      aria-label="Select row"
-                      className="h-3.5 w-3.5"
-                    />
-                    <span className="font-mono text-sm font-medium text-gray-900">
-                      {question.question_id}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Link href={`/content/edit/${question.id}`}>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                    <DeleteQuestionDialog questionId={question.id!} questionText={question.question_text} />
-                  </div>
-                </div>
-                
-                <MobileCardRow 
-                  label="Book Source" 
-                  value={<span className="font-medium">{question.book_source}</span>} 
-                />
-                <MobileCardRow 
-                  label="Chapter" 
-                  value={<span className="font-medium">{question.chapter_name}</span>} 
-                />
-                <MobileCardRow 
-                  label="Question" 
-                  value={
-                    <p className="text-sm text-gray-700 line-clamp-3">
-                      {question.question_text.length > 150 
-                        ? question.question_text.substring(0, 150) + '...' 
-                        : question.question_text}
-                    </p>
-                  } 
-                />
-                <MobileCardRow 
-                  label="Tags" 
-                  value={
-                    question.admin_tags && question.admin_tags.length > 0 ? (
-                      <div className="flex flex-wrap gap-1">
-                        {question.admin_tags.slice(0, 2).map((tag, index) => (
-                          <span
-                            key={index}
-                            className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                        {question.admin_tags.length > 2 && (
-                          <span className="text-xs text-gray-500">
-                            +{question.admin_tags.length - 2} more
-                          </span>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="text-sm text-gray-400 italic">No tags</span>
-                    )
-                  } 
-                />
-                <MobileCardRow 
-                  label="Created" 
-                  value={
-                    <span className="text-sm text-gray-600">
-                      {new Date(question.created_at).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </span>
-                  } 
-                />
-              </MobileTableCard>
-            )
-          })
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-gray-500">No questions found.</p>
-          </div>
-        )}
+        </Table>
       </div>
 
       {/* Pagination */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
         <div className="text-sm text-gray-700 text-center sm:text-left">
           Showing {data.length > 0 ? (currentPage - 1) * pageSize + 1 : 0} to{' '}
           {Math.min(currentPage * pageSize, totalCount)} of {totalCount} questions
         </div>
         
-        <div className="flex items-center justify-center space-x-2">
+        <div className="flex items-center space-x-2">
           <Button
             variant="outline"
             size="sm"
@@ -489,7 +392,7 @@ export function ContentTable() {
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-sm text-gray-700 px-2">
+          <span className="text-sm text-gray-700">
             Page {currentPage} of {totalPages}
           </span>
           <Button
