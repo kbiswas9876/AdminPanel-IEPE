@@ -58,6 +58,7 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
   })
   const [loading, setLoading] = useState(false)
   const [cascading, setCascading] = useState(false)
+  const [filtersApplied, setFiltersApplied] = useState(false)
 
   // Load initial filter options
   useEffect(() => {
@@ -74,8 +75,8 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
 
   // Load cascading filter options when book or chapter selection changes
   const loadCascadingOptions = useCallback(async () => {
-    // Only run cascading if there are actual selections
-    if (selectedBooks.length === 0 && selectedChapters.length === 0) {
+    // Only run cascading if there are actual selections and filters haven't been applied yet
+    if ((selectedBooks.length === 0 && selectedChapters.length === 0) || filtersApplied) {
       return
     }
     
@@ -103,18 +104,18 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
     } finally {
       setCascading(false)
     }
-  }, [selectedBooks, selectedChapters])
+  }, [selectedBooks, selectedChapters, filtersApplied])
 
   useEffect(() => {
-    // Only set up the timer if there are actual selections
-    if (selectedBooks.length > 0 || selectedChapters.length > 0) {
+    // Only set up the timer if there are actual selections and filters haven't been applied
+    if ((selectedBooks.length > 0 || selectedChapters.length > 0) && !filtersApplied) {
       const timer = setTimeout(() => {
         loadCascadingOptions()
       }, 300) // Debounce cascading calls
 
       return () => clearTimeout(timer)
     }
-  }, [loadCascadingOptions, selectedBooks.length, selectedChapters.length])
+  }, [loadCascadingOptions, selectedBooks.length, selectedChapters.length, filtersApplied])
 
   const applyFilters = async () => {
     setLoading(true)
@@ -132,6 +133,7 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
       })
       
       onFiltersApplied(questions, total)
+      setFiltersApplied(true) // Mark filters as applied to stop cascading
     } catch (error) {
       console.error('Failed to apply filters:', error)
       onFiltersApplied([], 0)
@@ -146,6 +148,7 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
     setSelectedChapters([])
     setSelectedDifficulties([])
     setSelectedTags([])
+    setFiltersApplied(false) // Reset the applied state to allow cascading again
   }
 
   const toggleBookSelection = (book: string) => {
@@ -154,6 +157,7 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
         ? prev.filter(b => b !== book)
         : [...prev, book]
     )
+    setFiltersApplied(false) // Reset applied state when user changes selections
   }
 
   const toggleChapterSelection = (chapter: string) => {
@@ -162,6 +166,7 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
         ? prev.filter(c => c !== chapter)
         : [...prev, chapter]
     )
+    setFiltersApplied(false) // Reset applied state when user changes selections
   }
 
   const toggleDifficultySelection = (difficulty: string) => {
@@ -170,6 +175,7 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
         ? prev.filter(d => d !== difficulty)
         : [...prev, difficulty]
     )
+    setFiltersApplied(false) // Reset applied state when user changes selections
   }
 
   const toggleTagSelection = (tag: string) => {
@@ -178,22 +184,27 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
         ? prev.filter(t => t !== tag)
         : [...prev, tag]
     )
+    setFiltersApplied(false) // Reset applied state when user changes selections
   }
 
   const removeBook = (book: string) => {
     setSelectedBooks(prev => prev.filter(b => b !== book))
+    setFiltersApplied(false) // Reset applied state when user changes selections
   }
 
   const removeChapter = (chapter: string) => {
     setSelectedChapters(prev => prev.filter(c => c !== chapter))
+    setFiltersApplied(false) // Reset applied state when user changes selections
   }
 
   const removeDifficulty = (difficulty: string) => {
     setSelectedDifficulties(prev => prev.filter(d => d !== difficulty))
+    setFiltersApplied(false) // Reset applied state when user changes selections
   }
 
   const removeTag = (tag: string) => {
     setSelectedTags(prev => prev.filter(t => t !== tag))
+    setFiltersApplied(false) // Reset applied state when user changes selections
   }
 
   const hasActiveFilters = selectedBooks.length > 0 || selectedChapters.length > 0 || selectedDifficulties.length > 0 || selectedTags.length > 0
