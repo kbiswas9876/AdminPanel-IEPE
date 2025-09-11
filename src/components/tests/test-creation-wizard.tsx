@@ -246,71 +246,73 @@ export function TestCreationWizard({
 
   return (
     <div className="w-full">
-      {/* Premium Mobile Header */}
-      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200/50 shadow-sm w-full">
-        <div className="w-full px-3 sm:px-4 py-3 sm:py-5">
-          <div className="flex items-center justify-between w-full max-w-6xl mx-auto">
-            {/* Left Section - Back Button & Title */}
-            <div className="flex items-center space-x-3 min-w-0 flex-1">
-              {currentStep > 1 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handlePrevious}
-                  className="flex-shrink-0 h-9 w-9 p-0 bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 border-gray-300 hover:border-gray-400 shadow-sm hover:shadow-md transition-all duration-300 rounded-xl group"
-                  title="Go back"
-                >
-                  <ArrowLeft className="h-4 w-4 text-gray-600 group-hover:text-gray-800 group-hover:scale-110 transition-all duration-200" />
-                </Button>
-              )}
-              
+      {/* Premium Mobile Header (non-sticky to avoid triple-stack) - Hidden in edit mode step 3 */}
+      {!(isEditMode && currentStep === 3) && (
+        <div className="bg-white/95 backdrop-blur-sm border-b border-gray-200/50 shadow-sm w-full">
+          <div className="px-4 sm:px-6 py-3 sm:py-5 max-w-7xl mx-auto">
+            <div className="flex items-center justify-between w-full">
+              {/* Left Section - Back Button & Title */}
               <div className="flex items-center space-x-3 min-w-0 flex-1">
-                <div className="flex-shrink-0 p-2 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100 shadow-sm">
-                  <FileText className="h-4 w-4 text-purple-600" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h1 className="text-lg font-bold text-gray-900 tracking-tight">
-                    {isEditMode ? 'Edit Mock Test' : 'Create Mock Test'}
-                  </h1>
-                  <p className="text-xs text-gray-600 font-medium">
-                    {currentStep === 1 && 'Design your test blueprint'}
-                    {currentStep === 2 && 'Review and refine questions'}
-                    {currentStep === 3 && 'Set rules and publish'}
-                  </p>
+                {currentStep > 1 && currentStep !== 3 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePrevious}
+                    className="flex-shrink-0 h-9 w-9 p-0 bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 border-gray-300 hover:border-gray-400 shadow-sm hover:shadow-md transition-all duration-300 rounded-xl group"
+                    title="Go back"
+                  >
+                    <ArrowLeft className="h-4 w-4 text-gray-600 group-hover:text-gray-800 group-hover:scale-110 transition-all duration-200" />
+                  </Button>
+                )}
+                
+                <div className="flex items-center space-x-3 min-w-0 flex-1">
+                  <div className="flex-shrink-0 p-2 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100 shadow-sm">
+                    <FileText className="h-4 w-4 text-purple-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h1 className="text-lg font-bold text-gray-900 tracking-tight">
+                      {isEditMode ? 'Edit Mock Test' : 'Create Mock Test'}
+                    </h1>
+                    <p className="text-xs text-gray-600 font-medium">
+                      {currentStep === 1 && 'Design your test blueprint'}
+                      {currentStep === 2 && 'Review and refine questions'}
+                      {currentStep === 3 && 'Set rules and publish'}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            {/* Right Section - Primary Action */}
-            <div className="flex-shrink-0 ml-3">
-              {currentStep === 1 && (
-                <Button 
-                  onClick={handleNext} 
-                  disabled={totalQuestions === 0 || isGenerating}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-xs px-3 py-2 h-8 min-w-[120px]"
-                >
-                  {isGenerating ? (
-                    <>
-                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1.5"></div>
-                      <span className="text-xs font-medium">Generating...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="hidden sm:inline text-xs font-medium">Next: Review & Refine</span>
-                      <span className="sm:hidden text-xs font-medium">Next</span>
-                      <ArrowRight className="h-3 w-3 ml-1" />
-                    </>
-                  )}
-                </Button>
-              )}
+              
+              {/* Right Section - Primary Action */}
+              <div className="flex-shrink-0 ml-3">
+                {currentStep === 1 && (
+                  <Button 
+                    onClick={handleNext} 
+                    disabled={totalQuestions === 0 || isGenerating}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-xs px-3 py-2 h-8 min-w-[120px]"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1.5"></div>
+                        <span className="text-xs font-medium">Generating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="hidden sm:inline text-xs font-medium">Next: Review & Refine</span>
+                        <span className="sm:hidden text-xs font-medium">Next</span>
+                        <ArrowRight className="h-3 w-3 ml-1" />
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Main Content - Perfectly Aligned with Header */}
       <div className="w-full px-3 sm:px-4 pb-4">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-7xl mx-auto">
 
         {/* Error Message */}
         {error && (

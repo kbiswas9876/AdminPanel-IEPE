@@ -29,7 +29,7 @@ export default async function EditTestPage({ params }: EditTestPageProps) {
         <div className="min-h-screen bg-gray-50/30">
           {/* Main Content */}
           <div className="p-4 sm:p-6">
-            <div className="max-w-6xl mx-auto">
+            <div className="max-w-7xl mx-auto">
               <TestCreationWizard 
                 initialData={testData}
                 isEditMode={true}

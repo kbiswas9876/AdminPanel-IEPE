@@ -220,10 +220,10 @@ export function TestFinalizationStage({
 
   return (
     <div className="min-h-screen">
-      {/* Mobile-Optimized Header Section */}
-      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200/50 shadow-sm">
-        <div className="px-4 sm:px-6 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Local Stage Header (non-sticky) */}
+      <div className="bg-white/95 backdrop-blur-sm border-b border-gray-200/50 shadow-sm w-full">
+        <div className="px-4 sm:px-6 py-3 sm:py-5 max-w-7xl mx-auto">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full">
             <div className="flex items-center space-x-3">
               <div className="p-2 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100">
                 <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
@@ -237,7 +237,6 @@ export function TestFinalizationStage({
                 </p>
               </div>
             </div>
-            
             <div className="flex items-center space-x-3">
               <Button 
                 variant="outline" 
@@ -254,9 +253,9 @@ export function TestFinalizationStage({
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6">
         {/* Mobile-Optimized Test Summary */}
-        <div className="mb-6 sm:mb-8 p-4 sm:p-6 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 rounded-xl border border-blue-200/50 shadow-sm">
+        <div className="mb-4 sm:mb-6 p-4 sm:p-6 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 rounded-xl border border-blue-200/50 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex-1">
               <h3 className="text-base sm:text-lg font-bold text-blue-900 tracking-tight">Test Summary</h3>
@@ -264,8 +263,8 @@ export function TestFinalizationStage({
                 {questions.length} questions ready for finalization
               </p>
             </div>
-            <div className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-lg border border-blue-200/50 self-start sm:self-auto">
-              <span className="text-xs sm:text-sm font-semibold text-blue-600">
+            <div className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-lg border border-blue-200/50 self-start sm:self-auto cursor-default select-none" role="status" aria-live="polite">
+              <span className="text-xs sm:text-sm font-semibold text-blue-700">
                 {isEditMode ? 'Ready to update' : 'Ready to publish'}
               </span>
             </div>
@@ -350,7 +349,8 @@ export function TestFinalizationStage({
                   <Input
                     id="marks-correct"
                     type="number"
-                    step="0.25"
+                    step="0.01"
+                    inputMode="decimal"
                     min="0"
                     value={formData.marksPerCorrect}
                     onChange={(e) => updateFormData('marksPerCorrect', Number(e.target.value))}
@@ -361,16 +361,18 @@ export function TestFinalizationStage({
                   )}
                 </div>
                 <div className="space-y-3">
-                  <Label htmlFor="negative-marks" className="text-sm font-semibold text-gray-700">Negative Marks per Incorrect *</Label>
+                  <Label htmlFor="negative-marks" className="text-sm font-semibold text-gray-700">Penalty per Incorrect Answer *</Label>
                   <Input
                     id="negative-marks"
                     type="number"
-                    step="0.25"
+                    step="0.01"
+                    inputMode="decimal"
                     min="0"
                     value={formData.negativeMarksPerIncorrect}
                     onChange={(e) => updateFormData('negativeMarksPerIncorrect', Number(e.target.value))}
                     className={`transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.negativeMarksPerIncorrect ? 'border-red-300' : ''}`}
                   />
+                  <p className="text-xs text-gray-500">Enter a positive value; the system applies it as a deduction.</p>
                   {errors.negativeMarksPerIncorrect && (
                     <p className="text-sm text-red-600 font-medium">{errors.negativeMarksPerIncorrect}</p>
                   )}
