@@ -74,6 +74,11 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
 
   // Load cascading filter options when book or chapter selection changes
   const loadCascadingOptions = useCallback(async () => {
+    // Only run cascading if there are actual selections
+    if (selectedBooks.length === 0 && selectedChapters.length === 0) {
+      return
+    }
+    
     setCascading(true)
     try {
       const options = await getFilterOptions({
@@ -101,12 +106,15 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
   }, [selectedBooks, selectedChapters])
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      loadCascadingOptions()
-    }, 300) // Debounce cascading calls
+    // Only set up the timer if there are actual selections
+    if (selectedBooks.length > 0 || selectedChapters.length > 0) {
+      const timer = setTimeout(() => {
+        loadCascadingOptions()
+      }, 300) // Debounce cascading calls
 
-    return () => clearTimeout(timer)
-  }, [loadCascadingOptions])
+      return () => clearTimeout(timer)
+    }
+  }, [loadCascadingOptions, selectedBooks.length, selectedChapters.length])
 
   const applyFilters = async () => {
     setLoading(true)
