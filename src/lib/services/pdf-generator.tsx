@@ -1,7 +1,7 @@
 import React from 'react'
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
 import { Test, Question } from '@/lib/supabase/admin'
-import { renderMathContent } from '@/lib/utils/latex-pdf-renderer'
+// import { renderMathContent } from '@/lib/utils/latex-pdf-renderer'
 
 interface PDFSettings {
   theme: {
@@ -155,7 +155,8 @@ const styles = StyleSheet.create({
 
 // Smart LaTeX Renderer Component
 const SmartLatexRenderer = ({ text }: { text: string }) => {
-  const renderedText = renderMathContent(text)
+  // const renderedText = renderMathContent(text)
+  const renderedText = text // Fallback to plain text
   return <Text>{renderedText}</Text>
 }
 

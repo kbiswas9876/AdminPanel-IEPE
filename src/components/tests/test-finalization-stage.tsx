@@ -261,7 +261,7 @@ export function TestFinalizationStage({
       <div className="max-w-none mx-auto p-2 sm:p-4 lg:p-6 w-full">
         {/* Mobile-Optimized Test Summary Card */}
         <div className="mb-4 sm:mb-6 lg:mb-8 relative group">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-purple-400/20 to-indigo-400/20 rounded-2xl sm:rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-purple-400/20 to-indigo-400/20 rounded-2xl sm:rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500 pointer-events-none"></div>
           <div className="relative p-3 sm:p-6 lg:p-8 bg-white/70 backdrop-blur-xl rounded-xl sm:rounded-2xl lg:rounded-3xl border border-white/30 shadow-2xl shadow-blue-500/10 hover:shadow-3xl hover:shadow-blue-500/20 transition-all duration-500">
             <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex-1">
@@ -276,7 +276,7 @@ export function TestFinalizationStage({
                 </p>
               </div>
               <div className="relative self-start sm:self-auto mt-2 sm:mt-0">
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-green-500 rounded-lg sm:rounded-xl lg:rounded-2xl blur-sm opacity-60"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-green-500 rounded-lg sm:rounded-xl lg:rounded-2xl blur-sm opacity-60 pointer-events-none"></div>
                 <div className="relative px-2 sm:px-3 lg:px-4 xl:px-6 py-1.5 sm:py-2 lg:py-3 bg-gradient-to-r from-emerald-100 via-green-100 to-teal-100 rounded-lg sm:rounded-xl lg:rounded-2xl border border-emerald-200/50 cursor-default select-none shadow-lg" role="status" aria-live="polite">
                   <span className="text-xs sm:text-sm lg:text-base font-bold text-emerald-700">
                     {isEditMode ? 'Ready to update' : 'Ready to publish'}
@@ -289,12 +289,12 @@ export function TestFinalizationStage({
 
         {/* Mobile-Optimized Main Form Card */}
         <div className="relative group">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-400/10 via-indigo-400/10 to-blue-400/10 rounded-xl sm:rounded-2xl lg:rounded-3xl blur-2xl group-hover:blur-3xl transition-all duration-700"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-400/10 via-indigo-400/10 to-blue-400/10 rounded-xl sm:rounded-2xl lg:rounded-3xl blur-2xl group-hover:blur-3xl transition-all duration-700 pointer-events-none"></div>
           <Card className="relative border-0 bg-white/80 backdrop-blur-xl shadow-2xl shadow-purple-500/10 overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl">
             <CardHeader className="bg-gradient-to-r from-white/90 via-purple-50/50 to-indigo-50/50 border-b border-white/30 p-3 sm:p-4 lg:p-6 xl:p-8">
               <CardTitle className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 lg:space-x-4">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-lg sm:rounded-xl lg:rounded-2xl blur-sm opacity-60"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-lg sm:rounded-xl lg:rounded-2xl blur-sm opacity-60 pointer-events-none"></div>
                   <div className="relative p-1.5 sm:p-2 lg:p-3 rounded-lg sm:rounded-xl lg:rounded-2xl bg-gradient-to-br from-purple-100 via-indigo-100 to-blue-100 shadow-lg">
                     <Calendar className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 xl:h-6 xl:w-6 text-purple-600" />
                   </div>
@@ -310,7 +310,7 @@ export function TestFinalizationStage({
             <div className="space-y-3 sm:space-y-4 lg:space-y-6 xl:space-y-8">
               <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-md sm:rounded-lg lg:rounded-xl blur-sm opacity-60"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-md sm:rounded-lg lg:rounded-xl blur-sm opacity-60 pointer-events-none"></div>
                   <div className="relative p-1.5 sm:p-2 lg:p-3 rounded-md sm:rounded-lg lg:rounded-xl bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 shadow-lg">
                     <Save className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-blue-600" />
                   </div>
@@ -331,7 +331,7 @@ export function TestFinalizationStage({
                       placeholder="Enter test name..."
                       className={`relative bg-white/80 backdrop-blur-sm border-white/30 focus:border-blue-400 focus:ring-2 sm:focus:ring-4 focus:ring-blue-500/20 transition-all duration-300 rounded-md sm:rounded-lg lg:rounded-xl shadow-lg hover:shadow-xl text-xs sm:text-sm lg:text-base h-8 sm:h-9 lg:h-10 xl:h-11 ${errors.name ? 'border-red-300 ring-2 sm:ring-4 ring-red-500/20' : ''}`}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/5 to-blue-500/0 rounded-md sm:rounded-lg lg:rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/5 to-blue-500/0 rounded-md sm:rounded-lg lg:rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                   </div>
                   {errors.name && (
                     <p className="text-xs sm:text-sm text-red-600 font-medium flex items-center space-x-1">
@@ -351,7 +351,7 @@ export function TestFinalizationStage({
                       className="relative bg-white/80 backdrop-blur-sm border-white/30 focus:border-blue-400 focus:ring-2 sm:focus:ring-4 focus:ring-blue-500/20 transition-all duration-300 rounded-md sm:rounded-lg lg:rounded-xl shadow-lg hover:shadow-xl resize-none text-xs sm:text-sm lg:text-base"
                       rows={2}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/5 to-blue-500/0 rounded-md sm:rounded-lg lg:rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/5 to-blue-500/0 rounded-md sm:rounded-lg lg:rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                   </div>
                 </div>
               </div>
@@ -361,7 +361,7 @@ export function TestFinalizationStage({
             <div className="space-y-3 sm:space-y-4 lg:space-y-6 xl:space-y-8">
               <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-green-500 rounded-md sm:rounded-lg lg:rounded-xl blur-sm opacity-60"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-green-500 rounded-md sm:rounded-lg lg:rounded-xl blur-sm opacity-60 pointer-events-none"></div>
                   <div className="relative p-1.5 sm:p-2 lg:p-3 rounded-md sm:rounded-lg lg:rounded-xl bg-gradient-to-br from-emerald-100 via-green-100 to-teal-100 shadow-lg">
                     <Clock className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-emerald-600" />
                   </div>
@@ -383,7 +383,7 @@ export function TestFinalizationStage({
                       onChange={(e) => updateFormData('totalTimeMinutes', Number(e.target.value))}
                       className={`relative bg-white/80 backdrop-blur-sm border-white/30 focus:border-emerald-400 focus:ring-2 sm:focus:ring-4 focus:ring-emerald-500/20 transition-all duration-300 rounded-md sm:rounded-lg lg:rounded-xl shadow-lg hover:shadow-xl text-xs sm:text-sm lg:text-base h-8 sm:h-9 lg:h-10 xl:h-11 ${errors.totalTimeMinutes ? 'border-red-300 ring-2 sm:ring-4 ring-red-500/20' : ''}`}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-emerald-500/0 rounded-md sm:rounded-lg lg:rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-emerald-500/0 rounded-md sm:rounded-lg lg:rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                   </div>
                   {errors.totalTimeMinutes && (
                     <p className="text-xs sm:text-sm text-red-600 font-medium flex items-center space-x-1">
@@ -408,7 +408,7 @@ export function TestFinalizationStage({
                       onChange={(e) => updateFormData('marksPerCorrect', Number(e.target.value))}
                       className={`relative bg-white/80 backdrop-blur-sm border-white/30 focus:border-emerald-400 focus:ring-2 sm:focus:ring-4 focus:ring-emerald-500/20 transition-all duration-300 rounded-md sm:rounded-lg lg:rounded-xl shadow-lg hover:shadow-xl text-xs sm:text-sm lg:text-base h-8 sm:h-9 lg:h-10 xl:h-11 ${errors.marksPerCorrect ? 'border-red-300 ring-2 sm:ring-4 ring-red-500/20' : ''}`}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-emerald-500/0 rounded-md sm:rounded-lg lg:rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-emerald-500/0 rounded-md sm:rounded-lg lg:rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                   </div>
                   {errors.marksPerCorrect && (
                     <p className="text-xs sm:text-sm text-red-600 font-medium flex items-center space-x-1">
@@ -433,7 +433,7 @@ export function TestFinalizationStage({
                       onChange={(e) => updateFormData('negativeMarksPerIncorrect', Number(e.target.value))}
                       className={`relative bg-white/80 backdrop-blur-sm border-white/30 focus:border-emerald-400 focus:ring-2 sm:focus:ring-4 focus:ring-emerald-500/20 transition-all duration-300 rounded-md sm:rounded-lg lg:rounded-xl shadow-lg hover:shadow-xl text-xs sm:text-sm lg:text-base h-8 sm:h-9 lg:h-10 xl:h-11 ${errors.negativeMarksPerIncorrect ? 'border-red-300 ring-2 sm:ring-4 ring-red-500/20' : ''}`}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-emerald-500/0 rounded-md sm:rounded-lg lg:rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-emerald-500/0 rounded-md sm:rounded-lg lg:rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                   </div>
                   <p className="text-xs text-gray-500 flex items-center space-x-1">
                     <span className="w-1 h-1 bg-gray-400 rounded-full"></span>

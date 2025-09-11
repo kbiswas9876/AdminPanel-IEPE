@@ -10,8 +10,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Download, FileText, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { PDFService } from '@/lib/services/pdf-service'
-import { PDFLivePreview } from './pdf-live-preview'
+// import { PDFService } from '@/lib/services/pdf-service'
+// import { PDFLivePreview } from './pdf-live-preview'
 import type { Test, Question } from '@/lib/supabase/admin'
 
 interface InteractivePDFExporterProps {
@@ -157,20 +157,24 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
     setIsGenerating(true)
     
     try {
-      const result = await PDFService.generateQuestionPaperPDF(test, questions, settings)
+      // const result = await PDFService.generateQuestionPaperPDF(test, questions, settings)
       
-      if (result.success && result.blob && result.fileName) {
-        PDFService.downloadPDF(result.blob, result.fileName)
-        toast.success('PDF Generated Successfully!', {
-          description: 'Your document has been downloaded.',
-          duration: 3000,
-        })
-      } else {
-        toast.error('PDF Generation Failed', {
-          description: result.message || 'Please try again.',
-          duration: 4000,
-        })
-      }
+      // if (result.success && result.blob && result.fileName) {
+      //   PDFService.downloadPDF(result.blob, result.fileName)
+      //   toast.success('PDF Generated Successfully!', {
+      //     description: 'Your document has been downloaded.',
+      //     duration: 3000,
+      //   })
+      // } else {
+      //   toast.error('PDF Generation Failed', {
+      //     description: result.message || 'Please try again.',
+      //     duration: 4000,
+      //   })
+      // }
+      toast.info('PDF Generation temporarily disabled', {
+        description: 'This feature is being updated.',
+        duration: 3000,
+      })
     } catch (error) {
       console.error('PDF generation error:', error)
       toast.error('PDF Generation Failed', {
@@ -186,20 +190,24 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
     setIsGenerating(true)
     
     try {
-      const result = await PDFService.generateAnswerKeyPDF(test, questions, settings)
+      // const result = await PDFService.generateAnswerKeyPDF(test, questions, settings)
       
-      if (result.success && result.blob && result.fileName) {
-        PDFService.downloadPDF(result.blob, result.fileName)
-        toast.success('Answer Key Generated!', {
-          description: 'Your answer key has been downloaded.',
-          duration: 3000,
-        })
-      } else {
-        toast.error('Answer Key Generation Failed', {
-          description: result.message || 'Please try again.',
-          duration: 4000,
-        })
-      }
+      // if (result.success && result.blob && result.fileName) {
+      //   PDFService.downloadPDF(result.blob, result.fileName)
+      //   toast.success('Answer Key Generated!', {
+      //     description: 'Your answer key has been downloaded.',
+      //     duration: 3000,
+      //   })
+      // } else {
+      //   toast.error('Answer Key Generation Failed', {
+      //     description: result.message || 'Please try again.',
+      //     duration: 4000,
+      //   })
+      // }
+      toast.info('Answer Key Generation temporarily disabled', {
+        description: 'This feature is being updated.',
+        duration: 3000,
+      })
     } catch (error) {
       console.error('Answer key generation error:', error)
       toast.error('Answer Key Generation Failed', {
@@ -550,11 +558,18 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
 
           {/* Preview Area - Flexible Column occupying all remaining space */}
           <div className="flex-1 flex flex-col min-w-0 flex-grow">
-            <PDFLivePreview
+            {/* <PDFLivePreview
               test={test}
               questions={questions}
               settings={settings}
-            />
+            /> */}
+            <div className="flex-1 flex items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+              <div className="text-center">
+                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500 font-medium">PDF Preview</p>
+                <p className="text-gray-400 text-sm">Preview temporarily unavailable</p>
+              </div>
+            </div>
           </div>
         </div>
       </DialogContent>
