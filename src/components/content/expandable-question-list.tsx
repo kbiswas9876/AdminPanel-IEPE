@@ -260,7 +260,7 @@ export function ExpandableQuestionList({
             return (
               <div key={questionKey} className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400/5 via-purple-400/5 to-indigo-400/5 rounded-xl sm:rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-500 pointer-events-none"></div>
-                <Card className="relative border-l-4 border-l-blue-500 shadow-lg hover:shadow-2xl transition-all duration-300 bg-white/90 backdrop-blur-sm hover:bg-white/95 hover:scale-[1.02] active:scale-[0.98]">
+                <Card className="relative rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow duration-200">
                   <CardContent className="p-0">
                     {/* Premium Compact Row */}
                     <div className="p-4 sm:p-6">
@@ -268,7 +268,7 @@ export function ExpandableQuestionList({
                         <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
                           {/* Multi-select Checkbox */}
                           {multiSelect && (
-                            <div className="relative mt-1">
+                            <div className="relative mt-1 flex-shrink-0">
                               <Checkbox
                                 checked={isQuestionSelected(question)}
                                 onCheckedChange={() => toggleQuestionSelection(question)}
@@ -316,7 +316,7 @@ export function ExpandableQuestionList({
                       </div>
                       
                       {/* Premium Action Buttons and Expand/Collapse */}
-                      <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+                      <div className="relative z-10 flex items-center gap-2 ml-4 flex-shrink-0">
                         {/* Action Button based on actionType */}
                         {actionType === 'select' && (
                           <Button
@@ -333,14 +333,14 @@ export function ExpandableQuestionList({
                         <Button
                           variant="ghost"
                           size="sm"
+                          aria-expanded={isExpanded}
                           onClick={() => handleToggleQuestion(question.id!)}
-                          className="group relative overflow-hidden hover:bg-blue-50 hover:text-blue-600 transition-all duration-300 hover:scale-110 active:scale-95"
+                          className="relative z-10 p-2 min-w-[40px] min-h-[40px] rounded-md hover:bg-blue-50 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-colors duration-200"
                         >
-                          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/5 to-blue-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-                          <ChevronDown 
-                            className={`h-4 w-4 relative z-10 transition-all duration-300 ${
-                              isExpanded ? 'rotate-180 text-blue-600' : 'text-gray-500 group-hover:text-blue-600'
-                            }`} 
+                          <ChevronDown
+                            className={`h-5 w-5 transition-transform duration-200 ${
+                              isExpanded ? 'rotate-180 text-blue-600' : 'text-gray-500'
+                            }`}
                           />
                         </Button>
                       </div>
@@ -349,7 +349,7 @@ export function ExpandableQuestionList({
 
                   {/* Premium Expanded Detail Panel */}
                   {isExpanded && (
-                    <div className="border-t border-white/30 bg-gradient-to-r from-gray-50/50 via-blue-50/30 to-indigo-50/30">
+                    <div className="border-t border-gray-200 bg-gray-50">
                       <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                         {/* Premium Options Display */}
                         <div>
@@ -370,10 +370,10 @@ export function ExpandableQuestionList({
                               return (
                                 <div
                                   key={optionKey}
-                                  className={`group relative overflow-hidden flex items-start space-x-3 p-4 rounded-xl border transition-all duration-300 hover:scale-[1.02] ${
-                                    isCorrect 
-                                      ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 shadow-lg hover:shadow-xl' 
-                                      : 'bg-white/80 backdrop-blur-sm border-gray-200 shadow-sm hover:shadow-md'
+                                  className={`group relative overflow-hidden flex items-start space-x-3 p-4 rounded-xl border transition-shadow duration-200 ${
+                                    isCorrect
+                                      ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 shadow-md hover:shadow-lg'
+                                      : 'bg-white border-gray-200 shadow-sm hover:shadow-md'
                                   }`}
                                 >
                                   <div className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all duration-300 ${
