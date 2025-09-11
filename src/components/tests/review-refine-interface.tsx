@@ -532,69 +532,108 @@ export function ReviewRefineInterface({
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div>
-                              <div className="flex items-center gap-2 mb-3">
-                                <div className="p-2 rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 shadow-sm">
-                                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-                                </div>
-                                <Label className="text-sm font-bold text-gray-800">Correct Answer</Label>
+                          {/* Correct Answer Section - Ultra Premium */}
+                          <div className="mb-8 p-6 bg-gradient-to-br from-slate-50 via-white to-blue-50/30 rounded-3xl border border-slate-200/60 shadow-xl hover:shadow-2xl transition-all duration-500">
+                            <div className="flex items-center gap-4 mb-6">
+                              <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500 via-green-500 to-teal-500 shadow-lg">
+                                <CheckCircle2 className="h-5 w-5 text-white" />
                               </div>
-                              <Select
-                                value={editForm.correct_option}
-                                onValueChange={(v) => setEditForm({ ...editForm, correct_option: v })}
-                              >
-                                <SelectTrigger className="mt-1 h-11 rounded-xl border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 shadow-sm">
-                                  <SelectValue placeholder="Select correct option" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {Object.keys(editForm.options).sort().map((k) => (
-                                    <SelectItem key={k} value={k} className="font-semibold">{k.toUpperCase()}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                              <div>
+                                <Label className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                  Correct Answer
+                                  <div className="px-2 py-1 bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-700 text-xs font-semibold rounded-full border border-emerald-200">
+                                    REQUIRED
+                                  </div>
+                                </Label>
+                                <p className="text-sm text-slate-600 font-medium">Select the correct option for this question</p>
+                              </div>
                             </div>
+                            <Select
+                              value={editForm.correct_option}
+                              onValueChange={(v) => setEditForm({ ...editForm, correct_option: v })}
+                            >
+                              <SelectTrigger className="h-14 rounded-2xl border-2 border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/80 backdrop-blur-sm">
+                                <SelectValue placeholder="Choose the correct answer..." />
+                              </SelectTrigger>
+                              <SelectContent className="rounded-2xl border-2 border-slate-200 shadow-2xl bg-white/95 backdrop-blur-md">
+                                {Object.keys(editForm.options).sort().map((k) => (
+                                  <SelectItem key={k} value={k} className="font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl mx-2 my-1">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-8 h-8 bg-gradient-to-br from-emerald-100 to-green-100 text-emerald-700 rounded-xl flex items-center justify-center text-sm font-bold">
+                                        {k.toUpperCase()}
+                                      </div>
+                                      <span>Option {k.toUpperCase()}</span>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
 
-                            <div>
-                              <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center gap-2">
-                                  <div className="p-2 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 shadow-sm">
-                                    <Star className="h-4 w-4 text-amber-600" />
-                                  </div>
-                                  <Label className="text-sm font-bold text-gray-800">Solution</Label>
+                          {/* Solution Section - Ultra Premium */}
+                          <div className="p-8 bg-gradient-to-br from-indigo-50 via-purple-50/80 to-pink-50/60 rounded-3xl border border-indigo-200/60 shadow-2xl hover:shadow-3xl transition-all duration-700 backdrop-blur-sm">
+                            <div className="flex items-center justify-between mb-8">
+                              <div className="flex items-center gap-5">
+                                <div className="p-4 rounded-3xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 shadow-xl">
+                                  <Star className="h-6 w-6 text-white" />
                                 </div>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setShowPreview({ ...showPreview, solution: !showPreview.solution })}
-                                  className="flex items-center gap-2 text-sm h-8 px-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
-                                >
-                                  {showPreview.solution ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                                  {showPreview.solution ? 'Hide' : 'Show'} Preview
-                                </Button>
-                              </div>
-                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 <div>
-                                  <Textarea
-                                    value={editForm.solution_text}
-                                    onChange={(e) => setEditForm({ ...editForm, solution_text: e.target.value })}
-                                    className="mt-1 border-gray-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 rounded-xl"
-                                    rows={4}
-                                    placeholder="Enter solution explanation here..."
-                                  />
-                                </div>
-                                {showPreview.solution && (
-                                  <div className="border border-gray-200/60 rounded-2xl p-4 bg-gradient-to-br from-amber-50/50 to-orange-50/30 shadow-sm">
-                                    <div className="text-sm font-semibold text-amber-700 mb-3 flex items-center gap-2">
-                                      <Star className="h-4 w-4" />
-                                      Solution Preview
+                                  <Label className="text-xl font-bold text-slate-800 flex items-center gap-3">
+                                    Solution Explanation
+                                    <div className="px-3 py-1.5 bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 text-xs font-bold rounded-full border border-indigo-200 shadow-sm">
+                                      OPTIONAL
                                     </div>
-                                    <div className="prose prose-sm max-w-none">
-                                      <SmartLatexRenderer text={editForm.solution_text} />
+                                  </Label>
+                                  <p className="text-sm text-slate-600 font-medium mt-1">Provide detailed solution with LaTeX mathematical expressions</p>
+                                </div>
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setShowPreview({ ...showPreview, solution: !showPreview.solution })}
+                                className="flex items-center gap-3 text-sm h-12 px-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-indigo-200 hover:border-indigo-300 text-indigo-700 hover:text-indigo-800 bg-white/80 hover:bg-indigo-50/80 backdrop-blur-sm font-semibold"
+                              >
+                                {showPreview.solution ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                {showPreview.solution ? 'Hide Preview' : 'Show Preview'}
+                              </Button>
+                            </div>
+                            
+                            <div className="space-y-6">
+                              <div className="relative">
+                                <Textarea
+                                  value={editForm.solution_text}
+                                  onChange={(e) => setEditForm({ ...editForm, solution_text: e.target.value })}
+                                  className="w-full border-2 border-indigo-200 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 resize-none bg-white/90 backdrop-blur-sm text-slate-700 placeholder-slate-400"
+                                  rows={6}
+                                  placeholder="Enter your solution explanation here... 
+
+💡 Pro Tips:
+• Use LaTeX for math: $x^2 + y^2 = z^2$
+• Use \\frac{a}{b} for fractions
+• Use \\sqrt{x} for square roots
+• Use \\pi, \\alpha, \\beta for Greek letters"
+                                />
+                                <div className="absolute top-3 right-3 p-2 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl shadow-sm">
+                                  <Code className="h-4 w-4 text-indigo-600" />
+                                </div>
+                              </div>
+                              
+                              {showPreview.solution && editForm.solution_text && (
+                                <div className="w-full border-2 border-indigo-200/60 rounded-3xl p-8 bg-gradient-to-br from-white/95 to-indigo-50/40 shadow-2xl backdrop-blur-md">
+                                  <div className="flex items-center gap-3 mb-6">
+                                    <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 shadow-lg">
+                                      <Eye className="h-5 w-5 text-indigo-600" />
+                                    </div>
+                                    <span className="text-lg font-bold text-slate-800">Live Preview</span>
+                                    <div className="px-3 py-1 bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 text-xs font-bold rounded-full border border-green-200">
+                                      RENDERED
                                     </div>
                                   </div>
-                                )}
-                              </div>
+                                  <div className="prose prose-lg max-w-none text-slate-800 leading-relaxed">
+                                    <SmartLatexRenderer text={editForm.solution_text} />
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
 
