@@ -2,14 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Filter, X, RotateCcw, ArrowUpDown, ArrowUp, ArrowDown, Sparkles } from 'lucide-react'
+import { Filter, X, RotateCcw, ArrowUpDown, ArrowUp, ArrowDown, Sparkles, BookOpen, Target, Tag } from 'lucide-react'
 import { getFilterOptions, searchQuestions } from '@/lib/actions/tests'
 import type { Question } from '@/lib/types'
 
@@ -59,6 +58,7 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
   const [loading, setLoading] = useState(false)
   const [cascading, setCascading] = useState(false)
   const [filtersApplied, setFiltersApplied] = useState(false)
+  const [lastCascadingTrigger, setLastCascadingTrigger] = useState<string>('')
 
   // Load initial filter options
   useEffect(() => {
@@ -80,7 +80,17 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
       return
     }
     
+    // Create a trigger string to detect actual changes
+    const currentTrigger = `${selectedBooks.join(',')}-${selectedChapters.join(',')}`
+    
+    // Only run if the trigger has actually changed
+    if (currentTrigger === lastCascadingTrigger) {
+      return
+    }
+    
+    setLastCascadingTrigger(currentTrigger)
     setCascading(true)
+    
     try {
       const options = await getFilterOptions({
         bookSources: selectedBooks.length > 0 ? selectedBooks : undefined,
@@ -104,7 +114,7 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
     } finally {
       setCascading(false)
     }
-  }, [selectedBooks, selectedChapters, filtersApplied])
+  }, [selectedBooks, selectedChapters, filtersApplied, lastCascadingTrigger])
 
   useEffect(() => {
     // Only set up the timer if there are actual selections and filters haven't been applied
@@ -115,7 +125,7 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
 
       return () => clearTimeout(timer)
     }
-  }, [loadCascadingOptions, selectedBooks.length, selectedChapters.length, filtersApplied])
+  }, [selectedBooks.length, selectedChapters.length, filtersApplied, loadCascadingOptions])
 
   const applyFilters = async () => {
     setLoading(true)
@@ -149,6 +159,7 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
     setSelectedDifficulties([])
     setSelectedTags([])
     setFiltersApplied(false) // Reset the applied state to allow cascading again
+    setLastCascadingTrigger('') // Reset the cascading trigger
   }
 
   const toggleBookSelection = (book: string) => {
@@ -357,80 +368,141 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
           </DropdownMenu>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2 ml-auto">
-          {cascading && (
-            <div className="flex items-center gap-1 text-xs text-blue-600">
-              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
-              <span>Updating...</span>
-            </div>
-          )}
+        {/* Professional Action Buttons - Fixed Height */}
+        <div className="flex items-center gap-3 ml-auto min-h-[32px]">
+          {/* Status Indicator - Fixed Width to Prevent Layout Shift */}
+          <div className="flex items-center gap-1 text-xs min-w-[80px] justify-center">
+            {cascading ? (
+              <div className="flex items-center gap-1 text-blue-600">
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
+                <span>Updating...</span>
+              </div>
+            ) : loading ? (
+              <div className="flex items-center gap-1 text-purple-600">
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-purple-600"></div>
+                <span>Applying...</span>
+              </div>
+            ) : (
+              <div className="text-gray-400">Ready</div>
+            )}
+          </div>
           
           {hasActiveFilters && (
-            <Button variant="outline" size="sm" onClick={resetFilters} className="h-8 group relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-gray-500/0 via-gray-500/5 to-gray-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 pointer-events-none"></div>
-              <RotateCcw className="h-3 w-3 mr-1 relative z-10" />
-              <span className="relative z-10">Reset</span>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={resetFilters} 
+              className="h-8 px-4 group relative overflow-hidden bg-white/80 backdrop-blur-sm border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-gray-500/0 via-gray-500/5 to-gray-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500 pointer-events-none"></div>
+              <RotateCcw className="h-3 w-3 mr-1.5 relative z-10" />
+              <span className="relative z-10 text-sm font-medium">Reset</span>
             </Button>
           )}
           
           <Button 
             onClick={applyFilters} 
-            disabled={loading}
+            disabled={loading || cascading}
             size="sm"
-            className="group relative overflow-hidden h-8 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            className="group relative overflow-hidden h-8 px-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 pointer-events-none"></div>
-            <span className="relative z-10 font-semibold">{loading ? 'Applying...' : 'Apply'}</span>
+            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500 pointer-events-none"></div>
+            <span className="relative z-10 font-semibold text-sm">Apply Filters</span>
           </Button>
         </div>
         </div>
       </div>
 
-      {/* Active Filter Badges - Compact Row */}
+      {/* Professional Active Filter Badges */}
       {hasActiveFilters && (
-        <div className="flex flex-wrap gap-1">
-          {selectedBooks.map((book) => (
-            <Badge key={book} variant="secondary" className="text-xs flex items-center gap-1">
-              Book: {book}
-              <button onClick={() => removeBook(book)} className="hover:text-red-600">
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-          {selectedChapters.map((chapter) => (
-            <Badge key={chapter} variant="secondary" className="text-xs flex items-center gap-1">
-              Chapter: {chapter}
-              <button onClick={() => removeChapter(chapter)} className="hover:text-red-600">
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-          {selectedDifficulties.map((difficulty) => (
-            <Badge key={difficulty} variant="secondary" className="text-xs flex items-center gap-1">
-              Difficulty: {difficulty}
-              <button onClick={() => removeDifficulty(difficulty)} className="hover:text-red-600">
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-          {selectedTags.map((tag) => (
-            <Badge key={tag} variant="secondary" className="text-xs flex items-center gap-1">
-              Tag: {tag}
-              <button onClick={() => removeTag(tag)} className="hover:text-red-600">
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
+        <div className="border-t border-white/20 pt-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-green-500 rounded-lg blur-sm opacity-60 pointer-events-none"></div>
+              <div className="relative p-1.5 rounded-lg bg-gradient-to-br from-emerald-100 via-green-100 to-teal-100 shadow-lg">
+                <Filter className="h-3 w-3 text-emerald-600" />
+              </div>
+            </div>
+            <span className="text-sm font-semibold text-gray-700">Active Filters</span>
+            <span className="text-xs text-gray-500">({selectedBooks.length + selectedChapters.length + selectedDifficulties.length + selectedTags.length} selected)</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {selectedBooks.map((book) => (
+              <div key={book} className="group relative overflow-hidden bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg px-3 py-1.5 flex items-center gap-2 hover:shadow-md transition-all duration-200">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/5 to-blue-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                <BookOpen className="h-3 w-3 text-blue-600 relative z-10" />
+                <span className="text-xs font-medium text-blue-800 relative z-10">Book: {book}</span>
+                <button 
+                  onClick={() => removeBook(book)} 
+                  className="hover:bg-red-100 hover:text-red-600 rounded-full p-0.5 transition-colors duration-200 relative z-10"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+            {selectedChapters.map((chapter) => (
+              <div key={chapter} className="group relative overflow-hidden bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg px-3 py-1.5 flex items-center gap-2 hover:shadow-md transition-all duration-200">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-500/5 to-purple-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                <Target className="h-3 w-3 text-purple-600 relative z-10" />
+                <span className="text-xs font-medium text-purple-800 relative z-10">Chapter: {chapter}</span>
+                <button 
+                  onClick={() => removeChapter(chapter)} 
+                  className="hover:bg-red-100 hover:text-red-600 rounded-full p-0.5 transition-colors duration-200 relative z-10"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+            {selectedDifficulties.map((difficulty) => (
+              <div key={difficulty} className="group relative overflow-hidden bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-lg px-3 py-1.5 flex items-center gap-2 hover:shadow-md transition-all duration-200">
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-emerald-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                <Sparkles className="h-3 w-3 text-emerald-600 relative z-10" />
+                <span className="text-xs font-medium text-emerald-800 relative z-10">Difficulty: {difficulty}</span>
+                <button 
+                  onClick={() => removeDifficulty(difficulty)} 
+                  className="hover:bg-red-100 hover:text-red-600 rounded-full p-0.5 transition-colors duration-200 relative z-10"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+            {selectedTags.map((tag) => (
+              <div key={tag} className="group relative overflow-hidden bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg px-3 py-1.5 flex items-center gap-2 hover:shadow-md transition-all duration-200">
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-500/0 via-orange-500/5 to-orange-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                <Tag className="h-3 w-3 text-orange-600 relative z-10" />
+                <span className="text-xs font-medium text-orange-800 relative z-10">Tag: {tag}</span>
+                <button 
+                  onClick={() => removeTag(tag)} 
+                  className="hover:bg-red-100 hover:text-red-600 rounded-full p-0.5 transition-colors duration-200 relative z-10"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Smart Filtering Info */}
+      {/* Professional Smart Filtering Info */}
       {(selectedBooks.length > 0 || selectedChapters.length > 0) && (
-        <div className="bg-blue-50 border border-blue-200 rounded-md p-2">
-          <p className="text-xs text-blue-800">
-            <strong>Smart Filtering:</strong> Chapter and tag options are automatically updated based on your selections.
-          </p>
+        <div className="border-t border-white/20 pt-4">
+          <div className="relative group overflow-hidden bg-gradient-to-r from-blue-50/80 via-indigo-50/80 to-purple-50/80 backdrop-blur-sm border border-blue-200/50 rounded-xl p-4">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+            <div className="relative flex items-start gap-3">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg blur-sm opacity-60 pointer-events-none"></div>
+                <div className="relative p-2 rounded-lg bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 shadow-lg">
+                  <Sparkles className="h-4 w-4 text-blue-600" />
+                </div>
+              </div>
+              <div className="flex-1">
+                <h4 className="text-sm font-semibold text-gray-800 mb-1">Smart Filtering Active</h4>
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  Chapter and tag options are automatically updated based on your selections to provide relevant filtering choices.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
