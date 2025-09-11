@@ -249,7 +249,7 @@ export function TestCreationWizard({
       {/* Premium Glassmorphism Header - Hidden in edit mode step 3 */}
       {!(isEditMode && currentStep === 3) && (
         <div className="bg-white/80 backdrop-blur-xl border-b border-white/20 shadow-2xl shadow-blue-500/5 w-full relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-indigo-500/5"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-indigo-500/5 pointer-events-none"></div>
           <div className="relative px-4 sm:px-6 py-4 sm:py-6 max-w-none mx-auto w-full">
             <div className="flex items-center justify-between w-full">
               {/* Left Section - Back Button & Title */}
@@ -262,7 +262,7 @@ export function TestCreationWizard({
                     className="group relative overflow-hidden flex-shrink-0 h-10 w-10 p-0 bg-white/60 backdrop-blur-sm border-white/30 hover:bg-white/80 hover:border-purple-200 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl"
                     title="Go back"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-500/10 to-purple-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-500/10 to-purple-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 pointer-events-none"></div>
                     <ArrowLeft className="h-4 w-4 text-gray-600 group-hover:text-purple-600 group-hover:scale-110 transition-all duration-300 relative z-10" />
                   </Button>
                 )}
@@ -295,7 +295,7 @@ export function TestCreationWizard({
                     disabled={totalQuestions === 0 || isGenerating}
                     className="group relative overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm px-6 py-3 h-10 min-w-[140px] rounded-2xl hover:scale-105 disabled:hover:scale-100"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 pointer-events-none"></div>
                     {isGenerating ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2 relative z-10"></div>
@@ -332,12 +332,12 @@ export function TestCreationWizard({
           <div className="space-y-3 sm:space-y-4 lg:space-y-6 w-full max-w-full">
             {/* Mobile-Optimized Blueprint Summary */}
             <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-purple-400/20 to-indigo-400/20 rounded-xl sm:rounded-2xl lg:rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-purple-400/20 to-indigo-400/20 rounded-xl sm:rounded-2xl lg:rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500 pointer-events-none"></div>
               <div className="relative bg-white/70 backdrop-blur-xl rounded-xl sm:rounded-2xl lg:rounded-3xl border border-white/30 shadow-2xl shadow-blue-500/10 hover:shadow-3xl hover:shadow-blue-500/20 transition-all duration-500 p-3 sm:p-4 lg:p-6 xl:p-8 w-full">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
                   <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
                     <div className="relative">
-                      <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg sm:rounded-xl lg:rounded-2xl blur-sm opacity-60"></div>
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg sm:rounded-xl lg:rounded-2xl blur-sm opacity-60 pointer-events-none"></div>
                       <div className="relative p-2 sm:p-3 lg:p-4 rounded-lg sm:rounded-xl lg:rounded-2xl bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 shadow-lg">
                         <Target className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-blue-600" />
                       </div>
@@ -348,7 +348,7 @@ export function TestCreationWizard({
                     </div>
                   </div>
                   <div className="relative self-start sm:self-auto mt-2 sm:mt-0">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-lg sm:rounded-xl lg:rounded-2xl blur-sm opacity-60"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-lg sm:rounded-xl lg:rounded-2xl blur-sm opacity-60 pointer-events-none"></div>
                     <div className="relative px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-lg sm:rounded-xl lg:rounded-2xl border border-blue-200/50 shadow-lg">
                       <span className="text-xs sm:text-sm font-medium text-gray-700">Total: </span>
                       <span className="text-sm sm:text-base lg:text-lg xl:text-xl font-bold text-blue-600">{totalQuestions}</span>
@@ -367,7 +367,7 @@ export function TestCreationWizard({
                 
                 return (
                   <details key={chapter.name} className="group relative overflow-hidden bg-white/70 backdrop-blur-xl rounded-xl sm:rounded-2xl lg:rounded-3xl border border-white/30 shadow-2xl shadow-purple-500/10 hover:shadow-3xl hover:shadow-purple-500/20 transition-all duration-500 w-full">
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-400/5 via-indigo-400/5 to-blue-400/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-400/5 via-indigo-400/5 to-blue-400/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
                     <summary className="relative cursor-pointer flex items-center justify-between p-3 sm:p-4 lg:p-6 xl:p-8 hover:bg-gradient-to-r hover:from-white/50 hover:to-blue-50/30 transition-all duration-300 touch-manipulation">
                       <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 min-w-0 flex-1">
                         <div className="relative">
@@ -383,7 +383,7 @@ export function TestCreationWizard({
                       </div>
                       <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 ml-2 sm:ml-3 lg:ml-4">
                         <div className="relative">
-                          <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-lg sm:rounded-xl lg:rounded-2xl blur-sm opacity-60"></div>
+                          <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-lg sm:rounded-xl lg:rounded-2xl blur-sm opacity-60 pointer-events-none"></div>
                           <div className="relative px-3 sm:px-4 lg:px-6 py-1.5 sm:py-2 lg:py-3 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-lg sm:rounded-xl lg:rounded-2xl border border-blue-200/50 shadow-lg">
                             <span className="text-xs sm:text-sm lg:text-base font-bold text-blue-600">
                               {selectedCount}
