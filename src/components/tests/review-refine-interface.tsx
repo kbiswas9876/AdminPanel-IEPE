@@ -226,10 +226,10 @@ export function ReviewRefineInterface({
 
 
   return (
-    <div className="min-h-screen bg-gray-50/30">
+    <div className="w-full">
       {/* Ultra-Premium Mobile Header */}
       <div className="sticky top-0 z-40 bg-white/98 backdrop-blur-md border-b border-gray-200/60 shadow-lg">
-        <div className="px-3 sm:px-4 py-3 sm:py-5">
+        <div className="px-3 sm:px-4 py-3 sm:py-5 max-w-6xl mx-auto">
           {/* Main Header Row */}
           <div className="flex items-center justify-between mb-3 sm:mb-4">
             {/* Left Section - Title & Status */}
@@ -336,6 +336,7 @@ export function ReviewRefineInterface({
 
       {/* Main Content - Full Width */}
       <div className="p-3 sm:p-4">
+        <div className="max-w-6xl mx-auto">
         {/* Ultra-Premium Questions List */}
         <div className="space-y-4 sm:space-y-6">
           {questions.map((item, index) => {
@@ -743,6 +744,7 @@ export function ReviewRefineInterface({
               </Card>
             )
           })}
+        </div>
         </div>
 
         {/* Ultra-Premium Summary */}

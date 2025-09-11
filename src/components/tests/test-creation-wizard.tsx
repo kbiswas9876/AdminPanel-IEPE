@@ -248,8 +248,8 @@ export function TestCreationWizard({
     <div className="w-full">
       {/* Premium Mobile Header */}
       <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200/50 shadow-sm w-full">
-        <div className="w-full px-4 sm:px-6 py-3">
-          <div className="flex items-center justify-between w-full">
+        <div className="w-full px-3 sm:px-4 py-3 sm:py-5">
+          <div className="flex items-center justify-between w-full max-w-6xl mx-auto">
             {/* Left Section - Back Button & Title */}
             <div className="flex items-center space-x-3 min-w-0 flex-1">
               {currentStep > 1 && (
@@ -257,10 +257,10 @@ export function TestCreationWizard({
                   variant="outline"
                   size="sm"
                   onClick={handlePrevious}
-                  className="flex-shrink-0 h-8 w-8 p-0 hover:bg-gray-50 transition-colors duration-200"
+                  className="flex-shrink-0 h-9 w-9 p-0 bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 border-gray-300 hover:border-gray-400 shadow-sm hover:shadow-md transition-all duration-300 rounded-xl group"
                   title="Go back"
                 >
-                  <ArrowLeft className="h-4 w-4" />
+                  <ArrowLeft className="h-4 w-4 text-gray-600 group-hover:text-gray-800 group-hover:scale-110 transition-all duration-200" />
                 </Button>
               )}
               
@@ -309,7 +309,8 @@ export function TestCreationWizard({
       </div>
 
       {/* Main Content - Perfectly Aligned with Header */}
-      <div className="w-full px-4 sm:px-6 pb-4">
+      <div className="w-full px-3 sm:px-4 pb-4">
+        <div className="max-w-6xl mx-auto">
 
         {/* Error Message */}
         {error && (
@@ -560,6 +561,7 @@ export function TestCreationWizard({
         />
       )}
 
+        </div>
       </div>
     </div>
   )
