@@ -370,6 +370,7 @@ export async function searchQuestions(args: {
   chapters?: string[]
   tags?: string[]
   difficulty?: 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard'
+  sort_by?: string
   page?: number
   pageSize?: number
 }): Promise<{ questions: UIQuestion[]; total: number }> {
@@ -397,6 +398,41 @@ export async function searchQuestions(args: {
     }
     if (args.tags && args.tags.length > 0) query = query.contains('admin_tags', args.tags as string[])
     if (args.difficulty) query = query.eq('difficulty', args.difficulty)
+
+    // Add sorting
+    if (args.sort_by) {
+      const [field, direction] = args.sort_by.split('_')
+      const sortDirection = direction === 'desc' ? false : true
+      
+      switch (field) {
+        case 'id':
+          query = query.order('question_id', { ascending: sortDirection })
+          break
+        case 'question':
+        case 'questiontext':
+          query = query.order('question_text', { ascending: sortDirection })
+          break
+        case 'book':
+        case 'booksource':
+          query = query.order('book_source', { ascending: sortDirection })
+          break
+        case 'chapter':
+          query = query.order('chapter_name', { ascending: sortDirection })
+          break
+        case 'difficulty':
+          if (sortDirection) {
+            query = query.order('difficulty', { ascending: true })
+          } else {
+            query = query.order('difficulty', { ascending: false })
+          }
+          break
+        default:
+          query = query.order('question_id', { ascending: true })
+      }
+    } else {
+      // Default sorting by ID
+      query = query.order('question_id', { ascending: true })
+    }
 
     const from = (page - 1) * pageSize
     const to = from + pageSize - 1

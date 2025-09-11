@@ -9,7 +9,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Filter, X, RotateCcw } from 'lucide-react'
+import { Filter, X, RotateCcw, ArrowUpDown, ArrowUp, ArrowDown, Sparkles } from 'lucide-react'
 import { getFilterOptions, searchQuestions } from '@/lib/actions/tests'
 import type { Question } from '@/lib/types'
 
@@ -19,6 +19,25 @@ interface FilterOptions {
   tags: string[]
   difficulties: string[]
 }
+
+type SortOption = {
+  value: string
+  label: string
+  icon: React.ReactNode
+}
+
+const SORT_OPTIONS: SortOption[] = [
+  { value: 'id_asc', label: 'ID (Ascending)', icon: <ArrowUp className="h-3 w-3" /> },
+  { value: 'id_desc', label: 'ID (Descending)', icon: <ArrowDown className="h-3 w-3" /> },
+  { value: 'question_text_asc', label: 'Question Text (A-Z)', icon: <ArrowUp className="h-3 w-3" /> },
+  { value: 'question_text_desc', label: 'Question Text (Z-A)', icon: <ArrowDown className="h-3 w-3" /> },
+  { value: 'book_source_asc', label: 'Book Source (A-Z)', icon: <ArrowUp className="h-3 w-3" /> },
+  { value: 'book_source_desc', label: 'Book Source (Z-A)', icon: <ArrowDown className="h-3 w-3" /> },
+  { value: 'chapter_asc', label: 'Chapter (A-Z)', icon: <ArrowUp className="h-3 w-3" /> },
+  { value: 'chapter_desc', label: 'Chapter (Z-A)', icon: <ArrowDown className="h-3 w-3" /> },
+  { value: 'difficulty_asc', label: 'Difficulty (Easy to Hard)', icon: <ArrowUp className="h-3 w-3" /> },
+  { value: 'difficulty_desc', label: 'Difficulty (Hard to Easy)', icon: <ArrowDown className="h-3 w-3" /> },
+]
 
 interface CompactFilterBarProps {
   onFiltersApplied: (questions: Question[], total: number) => void
@@ -30,6 +49,7 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
   const [selectedChapters, setSelectedChapters] = useState<string[]>([])
   const [selectedDifficulties, setSelectedDifficulties] = useState<string[]>([])
   const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [sortBy, setSortBy] = useState<string>('id_asc')
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
     bookSources: [],
     chapters: [],
@@ -98,6 +118,7 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
         chapters: selectedChapters.length > 0 ? selectedChapters : undefined,
         difficulty: selectedDifficulties.length === 1 ? selectedDifficulties[0] as 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard' : undefined,
         tags: selectedTags.length > 0 ? selectedTags : undefined,
+        sort_by: sortBy,
         page: 1,
         pageSize: 1000 // Get all results for now, pagination can be added later
       })
@@ -170,9 +191,27 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
   const hasActiveFilters = selectedBooks.length > 0 || selectedChapters.length > 0 || selectedDifficulties.length > 0 || selectedTags.length > 0
 
   return (
-    <div className="bg-white border rounded-lg p-4 space-y-3">
-      {/* Compact Filter Controls - Single Row */}
-      <div className="flex flex-wrap items-center gap-3">
+    <div className="relative group">
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-indigo-400/10 rounded-xl sm:rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-500 pointer-events-none"></div>
+      <div className="relative bg-white/90 backdrop-blur-xl border border-white/30 rounded-xl sm:rounded-2xl shadow-2xl shadow-blue-500/10 hover:shadow-3xl hover:shadow-blue-500/20 transition-all duration-500 p-4 sm:p-6 space-y-4">
+        {/* Premium Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg sm:rounded-xl blur-sm opacity-60 pointer-events-none"></div>
+              <div className="relative p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 shadow-lg">
+                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-sm sm:text-base font-bold text-gray-900">Smart Filtering & Sorting</h3>
+              <p className="text-xs text-gray-600">Refine your question search with precision</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Compact Filter Controls - Single Row */}
+        <div className="flex flex-wrap items-center gap-3">
         {/* Book Source Filter */}
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-gray-700 whitespace-nowrap">Book:</span>
@@ -269,6 +308,36 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
           </DropdownMenu>
         </div>
 
+        {/* Sort Options */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-gray-700 whitespace-nowrap">Sort by:</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 min-w-[140px] justify-between">
+                <div className="flex items-center gap-2">
+                  <ArrowUpDown className="h-3 w-3" />
+                  <span className="truncate">
+                    {SORT_OPTIONS.find(option => option.value === sortBy)?.label || 'ID (Ascending)'}
+                  </span>
+                </div>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56">
+              {SORT_OPTIONS.map((option) => (
+                <DropdownMenuCheckboxItem
+                  key={option.value}
+                  checked={sortBy === option.value}
+                  onCheckedChange={() => setSortBy(option.value)}
+                  className="flex items-center gap-2"
+                >
+                  {option.icon}
+                  {option.label}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
         {/* Action Buttons */}
         <div className="flex items-center gap-2 ml-auto">
           {cascading && (
@@ -279,9 +348,10 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
           )}
           
           {hasActiveFilters && (
-            <Button variant="outline" size="sm" onClick={resetFilters} className="h-8">
-              <RotateCcw className="h-3 w-3 mr-1" />
-              Reset
+            <Button variant="outline" size="sm" onClick={resetFilters} className="h-8 group relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-gray-500/0 via-gray-500/5 to-gray-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 pointer-events-none"></div>
+              <RotateCcw className="h-3 w-3 mr-1 relative z-10" />
+              <span className="relative z-10">Reset</span>
             </Button>
           )}
           
@@ -289,10 +359,12 @@ export function CompactFilterBar({ onFiltersApplied, onLoadingChange }: CompactF
             onClick={applyFilters} 
             disabled={loading}
             size="sm"
-            className="h-8 bg-blue-600 hover:bg-blue-700"
+            className="group relative overflow-hidden h-8 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
-            {loading ? 'Applying...' : 'Apply'}
+            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 pointer-events-none"></div>
+            <span className="relative z-10 font-semibold">{loading ? 'Applying...' : 'Apply'}</span>
           </Button>
+        </div>
         </div>
       </div>
 
