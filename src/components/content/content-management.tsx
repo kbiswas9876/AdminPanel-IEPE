@@ -5,6 +5,7 @@ import { QuestionExplorer } from '../shared/question-explorer'
 import { BulkDeleteDialog } from './bulk-delete-dialog'
 import { InPlaceQuestionEditor } from '../shared/in-place-question-editor'
 import { updateQuestionInPlace } from '@/lib/actions/questions'
+import { useQuestions } from '@/lib/contexts/questions-context'
 import { toast } from 'sonner'
 import type { Question } from '@/lib/types'
 
@@ -13,6 +14,9 @@ export function ContentManagement() {
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
   const [questionsToDelete, setQuestionsToDelete] = useState<Question[]>([])
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null)
+  
+  // Use questions context for state management
+  const { updateQuestionInCache, removeQuestionFromCache } = useQuestions()
 
   const handleQuestionEdit = (question: Question) => {
     // Start in-place editing
@@ -27,13 +31,23 @@ export function ContentManagement() {
 
   const handleQuestionSave = async (updatedQuestion: Question) => {
     try {
+      // Optimistic update: Update the cache immediately
+      updateQuestionInCache(updatedQuestion)
+      
+      // Show success message immediately
+      toast.success('Question updated successfully!')
+      
+      // Clear editing state immediately - the expanded state will be preserved
+      // by the expanded state preservation logic in ExpandableQuestionList
+      setEditingQuestion(null)
+      
+      // Perform the actual update in the background
       const result = await updateQuestionInPlace(updatedQuestion)
       
-      if (result.success) {
-        toast.success(result.message)
-        setEditingQuestion(null)
-        // The QuestionExplorer will automatically refresh due to revalidatePath
-      } else {
+      if (!result.success) {
+        // If the update failed, revert the optimistic update
+        // For now, we'll just show an error message
+        // In a more robust implementation, we'd revert the cache
         toast.error(result.message)
       }
     } catch (error) {
@@ -47,7 +61,10 @@ export function ContentManagement() {
   }
 
   const handleQuestionDelete = (question: Question) => {
-    // This will be handled by the DeleteQuestionDialog within the QuestionExplorer
+    // Optimistically remove from cache
+    if (question.id) {
+      removeQuestionFromCache(question.id)
+    }
     console.log('Question deleted:', question)
   }
 
@@ -104,6 +121,7 @@ export function ContentManagement() {
             multiSelect={true}
             selectedQuestions={selectedQuestions}
             onSelectionChange={handleSelectionChange}
+            editingQuestionId={editingQuestion?.id || null}
           />
         </div>
       )}

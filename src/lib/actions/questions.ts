@@ -415,8 +415,8 @@ export async function updateQuestionInPlace(question: Question): Promise<{
       }
     }
     
-    // Revalidate the content page to refresh the UI
-    revalidatePath('/content')
+    // Note: We don't call revalidatePath here to avoid page refresh
+    // The UI will be updated optimistically via the questions context
     
     return {
       success: true,

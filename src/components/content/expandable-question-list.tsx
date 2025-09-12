@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { getQuestions } from '@/lib/actions/questions'
 import type { Question } from '@/lib/types'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,7 @@ import { ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Ed
 import { DeleteQuestionDialog } from './delete-question-dialog'
 import { SmartLatexRenderer } from '../tests/smart-latex-renderer'
 import { Checkbox } from '@/components/ui/checkbox'
+import { SkeletonLoader } from '@/components/ui/skeleton-loader'
 
 export type QuestionActionType = 'edit' | 'select' | 'select-multiple'
 
@@ -33,6 +34,9 @@ interface ExpandableQuestionListProps {
   
   // Staged mode (for import review)
   isStagedMode?: boolean
+  
+  // Editing state
+  editingQuestionId?: number | null
 }
 
 export function ExpandableQuestionList({ 
@@ -48,7 +52,8 @@ export function ExpandableQuestionList({
   onSelectionChange,
   onMultiSelect,
   onBulkDelete,
-  isStagedMode = false
+  isStagedMode = false,
+  editingQuestionId = null
 }: ExpandableQuestionListProps) {
   const [data, setData] = useState<Question[]>([])
   const [totalCount, setTotalCount] = useState(0)
@@ -56,6 +61,43 @@ export function ExpandableQuestionList({
   const [pageSize] = useState(20)
   const [expandedQuestionIds, setExpandedQuestionIds] = useState<Set<number>>(new Set())
   const [isUsingFilters, setIsUsingFilters] = useState(false)
+  const expandedQuestionIdsRef = useRef<Set<number>>(new Set())
+  
+  // Keep ref in sync with state
+  useEffect(() => {
+    expandedQuestionIdsRef.current = expandedQuestionIds
+  }, [expandedQuestionIds])
+  
+  // Ensure the question being edited remains expanded
+  useEffect(() => {
+    if (editingQuestionId && !expandedQuestionIds.has(editingQuestionId)) {
+      setExpandedQuestionIds(prev => new Set([...prev, editingQuestionId]))
+    }
+  }, [editingQuestionId])
+  
+  // Keep track of recently edited questions to preserve their expanded state
+  const [recentlyEditedIds, setRecentlyEditedIds] = useState<Set<number>>(new Set())
+  
+  // When editingQuestionId changes from a value to null, preserve that question's expanded state
+  useEffect(() => {
+    if (editingQuestionId) {
+      // Add to recently edited set
+      setRecentlyEditedIds(prev => new Set([...prev, editingQuestionId]))
+      // Ensure it's expanded
+      setExpandedQuestionIds(prev => new Set([...prev, editingQuestionId]))
+    }
+  }, [editingQuestionId])
+  
+  // Clean up recently edited IDs after 5 seconds to prevent them from staying expanded forever
+  useEffect(() => {
+    if (recentlyEditedIds.size > 0) {
+      const timer = setTimeout(() => {
+        setRecentlyEditedIds(new Set())
+      }, 5000)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [recentlyEditedIds])
 
   // Multi-select functionality
   const toggleQuestionSelection = (question: Question) => {
@@ -121,6 +163,33 @@ export function ExpandableQuestionList({
       setIsUsingFilters(true)
     }
   }, [filteredData, filteredTotal])
+  
+  // Preserve expanded state when data changes
+  useEffect(() => {
+    if (data.length > 0) {
+      const preservedExpandedIds = new Set<number>()
+      
+      // Preserve existing expanded questions
+      expandedQuestionIdsRef.current.forEach(id => {
+        if (data.some(q => q.id === id)) {
+          preservedExpandedIds.add(id)
+        }
+      })
+      
+      // Also preserve recently edited questions
+      recentlyEditedIds.forEach(id => {
+        if (data.some(q => q.id === id)) {
+          preservedExpandedIds.add(id)
+        }
+      })
+      
+      // Only update if there are changes to avoid unnecessary re-renders
+      if (preservedExpandedIds.size !== expandedQuestionIdsRef.current.size || 
+          !Array.from(preservedExpandedIds).every(id => expandedQuestionIdsRef.current.has(id))) {
+        setExpandedQuestionIds(preservedExpandedIds)
+      }
+    }
+  }, [data, recentlyEditedIds])
 
   // Fetch default data when not using filters and not in staged mode
   useEffect(() => {
@@ -163,8 +232,18 @@ export function ExpandableQuestionList({
 
   if (loading && data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      <div className="flex flex-col h-full">
+        {/* Results Summary - Fixed Height */}
+        <div className="flex-shrink-0 flex items-center justify-between mb-4">
+          <div className="text-sm text-gray-600">
+            Loading questions...
+          </div>
+        </div>
+        
+        {/* Skeleton Loader */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <SkeletonLoader count={8} />
+        </div>
       </div>
     )
   }

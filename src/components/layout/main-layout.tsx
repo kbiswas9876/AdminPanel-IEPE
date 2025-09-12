@@ -3,6 +3,7 @@
 import { Sidebar } from './sidebar'
 import { Header } from './header'
 import { MobileProvider, useMobile } from '@/lib/contexts/mobile-context'
+import { QuestionsProvider } from '@/lib/contexts/questions-context'
 
 interface MainLayoutProps {
   children: React.ReactNode
@@ -47,7 +48,9 @@ function MainLayoutContent({ children }: MainLayoutProps) {
 export function MainLayout({ children }: MainLayoutProps) {
   return (
     <MobileProvider>
-      <MainLayoutContent>{children}</MainLayoutContent>
+      <QuestionsProvider>
+        <MainLayoutContent>{children}</MainLayoutContent>
+      </QuestionsProvider>
     </MobileProvider>
   )
 }
