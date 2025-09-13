@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { QuestionExplorer } from '../shared/question-explorer'
+import { QuestionExplorer } from '../questions/QuestionExplorer'
 import { InPlaceQuestionEditor } from '../shared/in-place-question-editor'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -252,19 +252,7 @@ export function ImportReviewInterface() {
             />
           </div>
         ) : (
-          <QuestionExplorer
-            actionType="edit"
-            onQuestionEdit={handleQuestionEdit}
-            onQuestionDelete={handleQuestionDelete}
-            onQuestionBulkDelete={handleBulkDelete}
-            onQuestionAction={handleQuestionAction}
-            title=""
-            showHeader={false}
-            multiSelect={true}
-            selectedQuestions={selectedQuestions}
-            onSelectionChange={handleSelectionChange}
-            stagedQuestions={stagedQuestions}
-          />
+          <QuestionExplorer />
         )}
       </div>
 

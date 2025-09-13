@@ -1,6 +1,6 @@
 import { MainLayout } from '@/components/layout/main-layout'
 import { ProtectedRoute } from '@/components/auth/protected-route'
-import { ContentManagement } from '@/components/content/content-management'
+import { ContentManagement } from '@/components/content/ContentManagement'
 import { BulkImport } from '@/components/content/bulk-import'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'

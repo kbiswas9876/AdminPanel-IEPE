@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { QuestionExplorer } from '../shared/question-explorer'
+import { QuestionExplorer } from '../questions/QuestionExplorer'
 import type { Question } from '@/lib/types'
 
 interface UnifiedQuestionBankModalProps {
@@ -62,18 +62,7 @@ export function UnifiedQuestionBankModal({
         </DialogHeader>
         
         <div className="flex-1 overflow-hidden">
-          <QuestionExplorer
-            actionType={multiSelect ? 'select-multiple' : 'select'}
-            onQuestionSelect={handleQuestionSelect}
-            onQuestionSelectMultiple={handleQuestionSelectMultiple}
-            title=""
-            showHeader={false}
-            className="h-full"
-            multiSelect={multiSelect}
-            selectedQuestions={selectedQuestions}
-            onSelectionChange={handleSelectionChange}
-            initialFilters={initialChapter ? { chapters: [initialChapter] } : undefined}
-          />
+          <QuestionExplorer />
         </div>
       </DialogContent>
     </Dialog>
