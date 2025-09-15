@@ -132,7 +132,7 @@ export const useFilterStore = create<FilterState & FilterActions>()(
         const bookSources = urlParams.get('book_sources')
         if (bookSources) {
           state.book_sources = bookSources.split(',').map(s => 
-            decodeURIComponent(s.replace(/\+/g, ' '))
+            decodeURIComponent(s).replace(/\+/g, ' ')
           ).filter(Boolean)
         }
         
@@ -140,7 +140,7 @@ export const useFilterStore = create<FilterState & FilterActions>()(
         const chapters = urlParams.get('chapters')
         if (chapters) {
           state.chapters = chapters.split(',').map(s => 
-            decodeURIComponent(s.replace(/\+/g, ' '))
+            decodeURIComponent(s).replace(/\+/g, ' ')
           ).filter(Boolean)
         }
         
@@ -148,7 +148,7 @@ export const useFilterStore = create<FilterState & FilterActions>()(
         const tags = urlParams.get('tags')
         if (tags) {
           state.tags = tags.split(',').map(s => 
-            decodeURIComponent(s.replace(/\+/g, ' '))
+            decodeURIComponent(s).replace(/\+/g, ' ')
           ).filter(Boolean)
         }
         

@@ -10,16 +10,11 @@ export function ContentManagement() {
   useFilterSync()
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Content Management</h1>
-        <p className="text-muted-foreground">
-          Browse and manage questions with advanced filtering options.
-        </p>
-      </div>
-
+    <div className="h-full flex flex-col space-y-4">
       <FilterBar />
-      <QuestionExplorer />
+      <div className="flex-1 min-h-0">
+        <QuestionExplorer />
+      </div>
     </div>
   )
 }

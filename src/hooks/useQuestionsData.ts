@@ -20,8 +20,6 @@ export function useQuestionsData() {
 
   // Create stable query key for React Query caching
   const queryKey = useMemo(() => {
-    if (!isHydrated) return ['questions', 'loading']
-    
     return [
       'questions',
       {
@@ -32,7 +30,8 @@ export function useQuestionsData() {
         difficulty: difficulty === 'all' ? undefined : (difficulty as 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard') || undefined,
         sort_by: sort_by || 'id_asc',
         page: page || 1,
-        pageSize: pageSize || 25
+        pageSize: pageSize || 25,
+        isHydrated
       }
     ]
   }, [search, book_sources, chapters, tags, difficulty, sort_by, page, pageSize, isHydrated])

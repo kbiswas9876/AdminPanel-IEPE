@@ -386,9 +386,14 @@ export async function searchQuestions(args: {
       query = query.or(`question_id.ilike.%${args.search}%,question_text.ilike.%${args.search}%`)
     }
     if (args.book_sources && args.book_sources.length > 0) {
-      query = query.in('book_source', args.book_sources)
+      // Normalize book sources for better matching
+      const normalizedSources = args.book_sources.map(source => 
+        source.trim().replace(/\s+/g, ' ')
+      )
+      query = query.in('book_source', normalizedSources)
     } else if (args.book_source) {
-      query = query.eq('book_source', args.book_source)
+      const normalizedSource = args.book_source.trim().replace(/\s+/g, ' ')
+      query = query.eq('book_source', normalizedSource)
     }
 
     if (args.chapters && args.chapters.length > 0) {
