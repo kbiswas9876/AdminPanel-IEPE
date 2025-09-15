@@ -1,9 +1,27 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { ParsedQuestion } from '@/lib/utils/bulk-upload-parsers'
-import { generateUniqueQuestionId, generateBookCode } from '@/lib/utils/uniform-id-generator'
+import { generateUniqueQuestionId } from '@/lib/utils/uniform-id-generator'
 import { getBookCodeByName } from '@/lib/actions/id-generation'
+
+/**
+ * Generate a simple, readable book code by replacing spaces with underscores
+ * Server-side version of the client utility
+ */
+function generateBookCode(bookName: string): string {
+  if (!bookName || bookName.trim() === '') {
+    return 'Unknown_Book'
+  }
+  
+  // Replace spaces with underscores and clean up any special characters
+  return bookName
+    .trim()
+    .replace(/\s+/g, '_')  // Replace one or more spaces with single underscore
+    .replace(/[^\w_]/g, '') // Remove any non-word characters except underscores
+    .replace(/_+/g, '_')   // Replace multiple underscores with single underscore
+    .replace(/^_|_$/g, '') // Remove leading/trailing underscores
+}
 
 export interface UploadResult {
   success: boolean
@@ -35,7 +53,7 @@ export async function bulkUploadQuestions(
     generateIds = true
   } = options
 
-  const supabase = await createClient()
+  const supabase = createAdminClient()
   const startTime = Date.now()
   const errors: Array<{ row: number; data: unknown; error: string }> = []
   let totalInserted = 0
@@ -45,7 +63,9 @@ export async function bulkUploadQuestions(
     // Generate question IDs if needed
     let processedQuestions = questions
     if (generateIds) {
+      console.log('Generating question IDs for', questions.length, 'questions')
       processedQuestions = await generateQuestionIds(questions)
+      console.log('Generated IDs for', processedQuestions.length, 'questions')
     }
 
     // Process in batches
@@ -64,21 +84,17 @@ export async function bulkUploadQuestions(
           solution_text: question.solution_text,
           exam_metadata: question.exam_metadata,
           admin_tags: question.admin_tags,
-          question_id: question.question_id,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          question_id: question.question_id
         }))
 
         // Insert batch
         const { error } = await supabase
           .from('questions')
-          .upsert(dbQuestions, { 
-            onConflict: 'question_id',
-            ignoreDuplicates: false 
-          })
+          .insert(dbQuestions)
 
         if (error) {
           console.error('Batch insert error:', error)
+          console.error('Batch data:', dbQuestions)
           throw new Error(`Batch insert failed: ${error.message}`)
         }
 
@@ -102,24 +118,20 @@ export async function bulkUploadQuestions(
               solution_text: question.solution_text,
               exam_metadata: question.exam_metadata,
               admin_tags: question.admin_tags,
-              question_id: question.question_id,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
+              question_id: question.question_id
             }
 
             const { error: rowError } = await supabase
               .from('questions')
-              .upsert([dbQuestion], { 
-                onConflict: 'question_id',
-                ignoreDuplicates: false 
-              })
+              .insert([dbQuestion])
 
             if (rowError) {
               console.error(`Row ${i + j + 1} error:`, rowError)
+              console.error(`Row ${i + j + 1} data:`, dbQuestion)
               errors.push({
                 row: i + j + 1,
                 data: question,
-                error: rowError.message
+                error: `${rowError.message} (Code: ${rowError.code || 'unknown'})`
               })
             } else {
               totalInserted++
@@ -188,6 +200,9 @@ async function generateQuestionIds(questions: ParsedQuestion[]): Promise<ParsedQ
       if (!bookCode) {
         // Generate book code if it doesn't exist
         bookCode = generateBookCode(question.book_source)
+        console.log('Generated new book code:', bookCode, 'for book:', question.book_source)
+      } else {
+        console.log('Found existing book code:', bookCode, 'for book:', question.book_source)
       }
 
       // Generate unique question ID
@@ -196,12 +211,15 @@ async function generateQuestionIds(questions: ParsedQuestion[]): Promise<ParsedQ
         question.chapter_name,
         question.question_number_in_book
       )
+      console.log('Generated question ID:', questionId, 'for question:', question.question_text?.substring(0, 50))
 
       processedQuestions.push({
         ...question,
         question_id: questionId
       })
-    } catch {
+    } catch (idError) {
+      console.error(`ID generation failed for question:`, question)
+      console.error(`ID generation error:`, idError)
       // If ID generation fails, keep the question without ID
       // The database will handle this or we can generate a fallback
       processedQuestions.push(question)

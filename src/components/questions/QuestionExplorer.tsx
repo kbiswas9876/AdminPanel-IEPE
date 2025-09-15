@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useQuestionsData } from '@/hooks/useQuestionsData'
 import { useFilterStore } from '@/stores/filterStore'
 import { QuestionCard } from './QuestionCard'
@@ -16,12 +17,17 @@ import {
   ChevronsRight,
   Trash2,
   CheckSquare,
-  Square
+  Square,
+  FileQuestion,
+  X,
+  Plus,
+  Upload
 } from 'lucide-react'
 import { deleteMultipleQuestions } from '@/lib/actions/questions'
 import { toast } from 'sonner'
 
 export function QuestionExplorer() {
+  const router = useRouter()
   const { 
     questions, 
     total, 
@@ -230,23 +236,78 @@ export function QuestionExplorer() {
       </div>
 
       {/* Questions Grid */}
-      <div className="grid gap-4">
-        {questions.map((question) => {
-          if (!question.id) return null
-          return (
-            <QuestionCard 
-              key={question.id} 
-              question={question} 
-              isSelected={selectedQuestions.has(question.id)}
-              onSelect={() => question.id && handleSelectQuestion(question.id)}
-              onQuestionUpdate={() => {
-                // Trigger a refetch to get the latest data
-                refetch()
+      {questions.length > 0 ? (
+        <div className="grid gap-4">
+          {questions.map((question) => {
+            if (!question.id) return null
+            return (
+              <QuestionCard 
+                key={question.id} 
+                question={question} 
+                isSelected={selectedQuestions.has(question.id)}
+                onSelect={() => question.id && handleSelectQuestion(question.id)}
+                onQuestionUpdate={() => {
+                  // Trigger a refetch to get the latest data
+                  refetch()
+                }}
+              />
+            )
+          })}
+        </div>
+      ) : (
+        /* No Questions Found State */
+        <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+            <FileQuestion className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-semibold text-foreground mb-2">
+            No Questions Found
+          </h3>
+          <p className="text-muted-foreground mb-6 max-w-md">
+            {isLoading ? (
+              "Loading questions..."
+            ) : hasActiveFilters ? (
+              "No questions match your current filters. Try adjusting your search criteria or clearing the filters."
+            ) : (
+              "You haven't added any questions yet. Start by adding your first question or importing questions in bulk."
+            )}
+          </p>
+          <div className="flex gap-3">
+            {hasActiveFilters && (
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  // Clear all filters by reloading the page
+                  window.location.reload()
+                }}
+                className="flex items-center gap-2"
+              >
+                <X className="h-4 w-4" />
+                Clear Filters
+              </Button>
+            )}
+            <Button 
+              onClick={() => {
+                router.push('/content/new')
               }}
-            />
-          )
-        })}
-      </div>
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add New Question
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => {
+                router.push('/content/bulk-upload-new')
+              }}
+              className="flex items-center gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              Bulk Import
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (

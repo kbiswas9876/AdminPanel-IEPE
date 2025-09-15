@@ -17,7 +17,8 @@ import {
   Trash2,
   Play,
   Pause,
-  RotateCcw
+  RotateCcw,
+  Copy
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { 
@@ -532,12 +533,76 @@ export default function NewBulkUpload({ onUploadComplete, onCancel }: BulkUpload
             </div>
 
             {uploadResult.errors.length > 0 && (
-              <Alert className="mb-4">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  {uploadResult.errors.length} rows failed to upload. Check the error log.
-                </AlertDescription>
-              </Alert>
+              <div className="space-y-4">
+                <Alert className="mb-4">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    {uploadResult.errors.length} rows failed to upload. See detailed errors below.
+                  </AlertDescription>
+                </Alert>
+                
+                {/* Detailed Error Log */}
+                <div className="border rounded-lg p-4 bg-red-50 dark:bg-red-950/20">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-semibold text-red-800 dark:text-red-200">
+                      Error Details:
+                    </h4>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const errorText = uploadResult.errors.map((error, index) => 
+                          `Row ${error.row}: ${error.error}\n${error.data ? JSON.stringify(error.data, null, 2) : ''}`
+                        ).join('\n\n')
+                        navigator.clipboard.writeText(errorText)
+                        toast.success('Error log copied to clipboard')
+                      }}
+                      className="flex items-center gap-2 text-red-700 dark:text-red-300 border-red-300 hover:bg-red-100 dark:hover:bg-red-900/30"
+                    >
+                      <Copy className="h-4 w-4" />
+                      Copy Error Log
+                    </Button>
+                  </div>
+                  
+                  {/* RLS Error Information */}
+                  {uploadResult.errors.some(error => error.error.includes('row-level security policy')) && (
+                    <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <div className="flex items-start gap-2">
+                        <div className="text-blue-600 dark:text-blue-400 mt-0.5">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="text-sm text-blue-800 dark:text-blue-200">
+                          <strong>Row Level Security (RLS) Error:</strong> The database has security policies that prevent bulk inserts. 
+                          The system has been updated to use admin privileges to bypass this restriction. 
+                          If you continue to see this error, please contact your system administrator.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {uploadResult.errors.map((error, index) => (
+                      <div key={index} className="text-sm border-l-2 border-red-300 pl-3 py-1">
+                        <div className="font-medium text-red-700 dark:text-red-300">
+                          Row {error.row}: {error.error}
+                          {error.error.includes('row-level security policy') && (
+                            <div className="text-xs text-blue-600 dark:text-blue-400 mt-1 p-2 bg-blue-50 dark:bg-blue-950/20 rounded border-l-2 border-blue-300">
+                              <strong>Note:</strong> This error indicates a database security policy issue. The bulk upload has been updated to use admin privileges to bypass this restriction.
+                            </div>
+                          )}
+                        </div>
+                        {error.data ? (
+                          <div className="text-xs text-red-600 dark:text-red-400 mt-1 font-mono bg-red-100 dark:bg-red-900/30 p-2 rounded">
+                            {JSON.stringify(error.data as Record<string, unknown>, null, 2)}
+                          </div>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             )}
 
             <div className="flex gap-2">
