@@ -16,7 +16,7 @@ export function ImportReviewInterface() {
   const searchParams = useSearchParams()
   const [stagedQuestions, setStagedQuestions] = useState<Question[]>([])
   const [isFinalizing, setIsFinalizing] = useState(false)
-  const [selectedQuestions, setSelectedQuestions] = useState<Set<string | number>>(new Set())
+  const [selectedQuestions] = useState<Set<string | number>>(new Set())
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null)
 
   // Load staged questions from URL params or localStorage
@@ -50,16 +50,7 @@ export function ImportReviewInterface() {
     }
   }, [searchParams, router])
 
-  const handleQuestionEdit = (question: Question) => {
-    // Start in-place editing for staged question
-    setEditingQuestion(question)
-  }
 
-  const handleQuestionAction = (question: Question, action: string) => {
-    if (action === 'edit') {
-      handleQuestionEdit(question)
-    }
-  }
 
   const handleQuestionSave = (updatedQuestion: Question) => {
     // Update the question in the staged questions array
@@ -74,23 +65,6 @@ export function ImportReviewInterface() {
     setEditingQuestion(null)
   }
 
-  const handleQuestionDelete = (question: Question) => {
-    // Remove question from staged list
-    setStagedQuestions(prev => prev.filter(q => q.id !== question.id))
-    toast.success('Question removed from import batch')
-  }
-
-  const handleBulkDelete = (questions: Question[]) => {
-    // Remove multiple questions from staged list
-    const questionIds = questions.map(q => q.id)
-    setStagedQuestions(prev => prev.filter(q => !questionIds.includes(q.id)))
-    setSelectedQuestions(new Set())
-    toast.success(`${questions.length} questions removed from import batch`)
-  }
-
-  const handleSelectionChange = (selected: Set<string | number>) => {
-    setSelectedQuestions(selected)
-  }
 
   const handleFinalizeImport = async () => {
     if (stagedQuestions.length === 0) {

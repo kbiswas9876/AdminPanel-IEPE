@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { useQuestionsData } from '@/hooks/useQuestionsData'
 import { useFilterStore } from '@/stores/filterStore'
 import { QuestionCard } from './QuestionCard'
@@ -13,8 +13,13 @@ import {
   ChevronLeft, 
   ChevronRight,
   ChevronsLeft,
-  ChevronsRight
+  ChevronsRight,
+  Trash2,
+  CheckSquare,
+  Square
 } from 'lucide-react'
+import { deleteMultipleQuestions } from '@/lib/actions/questions'
+import { toast } from 'sonner'
 
 export function QuestionExplorer() {
   const { 
@@ -32,6 +37,57 @@ export function QuestionExplorer() {
   } = useQuestionsData()
 
   const { setPage } = useFilterStore()
+  
+  // Selection state
+  const [selectedQuestions, setSelectedQuestions] = useState<Set<number>>(new Set())
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  // Selection helpers
+  const isAllSelected = questions.length > 0 && selectedQuestions.size === questions.length
+  const isPartiallySelected = selectedQuestions.size > 0 && selectedQuestions.size < questions.length
+
+  const handleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedQuestions(new Set())
+    } else {
+      setSelectedQuestions(new Set(questions.map(q => q.id).filter(id => id !== undefined)))
+    }
+  }
+
+  const handleSelectQuestion = (questionId: number) => {
+    const newSelected = new Set(selectedQuestions)
+    if (newSelected.has(questionId)) {
+      newSelected.delete(questionId)
+    } else {
+      newSelected.add(questionId)
+    }
+    setSelectedQuestions(newSelected)
+  }
+
+  const handleDeleteSelected = async () => {
+    if (selectedQuestions.size === 0) {
+      toast.error('No questions selected for deletion')
+      return
+    }
+
+    setIsDeleting(true)
+    try {
+      const result = await deleteMultipleQuestions(Array.from(selectedQuestions))
+      
+      if (result.success) {
+        toast.success(result.message)
+        setSelectedQuestions(new Set())
+        refetch() // Refresh the questions list
+      } else {
+        toast.error(result.message)
+      }
+    } catch (error) {
+      console.error('Error deleting questions:', error)
+      toast.error('Failed to delete questions')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   if (isLoading) {
     return <SkeletonLoader />
@@ -108,14 +164,55 @@ export function QuestionExplorer() {
     <div className="space-y-4">
       {/* Results Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <h2 className="text-lg font-semibold">
-            Questions ({total.toLocaleString()})
-          </h2>
-          {isFetching && (
-            <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold">
+              Questions ({total.toLocaleString()})
+            </h2>
+            {isFetching && (
+              <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
+            )}
+          </div>
+          
+          {/* Selection Controls */}
+          {questions.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSelectAll}
+                className="flex items-center gap-2"
+              >
+                {isAllSelected ? (
+                  <CheckSquare className="h-4 w-4" />
+                ) : isPartiallySelected ? (
+                  <CheckSquare className="h-4 w-4 opacity-50" />
+                ) : (
+                  <Square className="h-4 w-4" />
+                )}
+                <span className="text-sm">
+                  {isAllSelected ? 'Deselect All' : 'Select All'}
+                </span>
+              </Button>
+              
+              {selectedQuestions.size > 0 && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDeleteSelected}
+                  disabled={isDeleting}
+                  className="flex items-center gap-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span className="text-sm">
+                    {isDeleting ? 'Deleting...' : `Delete (${selectedQuestions.size})`}
+                  </span>
+                </Button>
+              )}
+            </div>
           )}
         </div>
+        
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">
             Showing {startItem.toLocaleString()}-{endItem.toLocaleString()} of {total.toLocaleString()}
@@ -134,9 +231,21 @@ export function QuestionExplorer() {
 
       {/* Questions Grid */}
       <div className="grid gap-4">
-        {questions.map((question) => (
-          <QuestionCard key={question.id} question={question} />
-        ))}
+        {questions.map((question) => {
+          if (!question.id) return null
+          return (
+            <QuestionCard 
+              key={question.id} 
+              question={question} 
+              isSelected={selectedQuestions.has(question.id)}
+              onSelect={() => question.id && handleSelectQuestion(question.id)}
+              onQuestionUpdate={() => {
+                // Trigger a refetch to get the latest data
+                refetch()
+              }}
+            />
+          )
+        })}
       </div>
 
       {/* Pagination */}

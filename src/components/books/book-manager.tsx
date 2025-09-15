@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { getBookSources, createBookSource, deleteBookSource } from '@/lib/actions/book-sources'
+import { generateUniqueBookCode, generateBookCode } from '@/lib/utils/uniform-id-generator'
 import type { BookSource } from '@/lib/supabase/admin'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -26,6 +27,7 @@ export function BookManager() {
     name: '',
     code: ''
   })
+  const [previewBookCode, setPreviewBookCode] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Fetch books on component mount
@@ -49,11 +51,21 @@ export function BookManager() {
     fetchBooks()
   }, [])
 
+  // Generate preview book code when name changes
+  useEffect(() => {
+    if (formData.name.trim()) {
+      const previewCode = generateBookCode(formData.name.trim())
+      setPreviewBookCode(previewCode)
+    } else {
+      setPreviewBookCode('')
+    }
+  }, [formData.name])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.name.trim() || !formData.code.trim()) {
-      toast.error('Name and code are required')
+    if (!formData.name.trim()) {
+      toast.error('Book name is required')
       return
     }
 
@@ -61,9 +73,11 @@ export function BookManager() {
     setError(null)
 
     try {
+      // Auto-generate book code
+      const bookCode = await generateUniqueBookCode(formData.name.trim())
       const result = await createBookSource(
         formData.name.trim(),
-        formData.code.trim().toUpperCase()
+        bookCode
       )
       
       if (result.success) {
@@ -148,17 +162,18 @@ export function BookManager() {
               />
             </div>
             <div className="space-y-3">
-              <Label htmlFor="code" className="text-sm font-semibold text-gray-700">Book Code *</Label>
+              <Label htmlFor="code" className="text-sm font-semibold text-gray-700">Book Code</Label>
               <Input
                 id="code"
-                value={formData.code}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                placeholder="e.g., PIN6800"
-                required
-                className="transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                value={previewBookCode || "Enter book name to see preview"}
+                readOnly
+                className="bg-muted cursor-not-allowed text-muted-foreground font-mono"
               />
               <p className="text-sm text-gray-500 font-medium">
-                Short, unique code for this book
+                {previewBookCode 
+                  ? "Preview of auto-generated book code" 
+                  : "Book code will be automatically generated based on the book name"
+                }
               </p>
             </div>
           </div>

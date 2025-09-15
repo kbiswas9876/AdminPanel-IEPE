@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { 
   ChevronDown, 
   ChevronUp, 
@@ -12,20 +13,27 @@ import {
   Calendar,
   Hash,
   CheckCircle,
-  XCircle
+  XCircle,
+  Edit
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { UIQuestion } from '@/lib/types'
 import { LatexRenderer } from '@/lib/utils/latex-renderer'
+import { QuestionEditForm } from './QuestionEditForm'
 
 type Question = UIQuestion
 
 interface QuestionCardProps {
   question: Question
+  isSelected?: boolean
+  onSelect?: () => void
+  onQuestionUpdate?: (updatedQuestion: Question) => void
 }
 
-export function QuestionCard({ question }: QuestionCardProps) {
+export function QuestionCard({ question, isSelected = false, onSelect, onQuestionUpdate }: QuestionCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [currentQuestion, setCurrentQuestion] = useState(question)
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
@@ -52,60 +60,108 @@ export function QuestionCard({ question }: QuestionCardProps) {
     })
   }
 
+  const handleEdit = () => {
+    setIsEditing(true)
+    setIsExpanded(true) // Auto-expand when editing
+  }
+
+  const handleSave = (updatedQuestion: Question) => {
+    setCurrentQuestion(updatedQuestion)
+    setIsEditing(false)
+    if (onQuestionUpdate) {
+      onQuestionUpdate(updatedQuestion)
+    }
+  }
+
+  const handleCancel = () => {
+    setIsEditing(false)
+    setCurrentQuestion(question) // Reset to original
+  }
+
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
-              <Hash className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">#{question.id}</span>
-              {question.difficulty && (
-                <Badge 
-                  variant="outline" 
-                  className={cn("text-xs", getDifficultyColor(question.difficulty))}
-                >
-                  {question.difficulty}
-                </Badge>
-              )}
-            </div>
-            <h3 className="font-medium text-sm leading-relaxed line-clamp-2">
-              <LatexRenderer text={question.question_text} />
-            </h3>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="shrink-0"
-          >
-            {isExpanded ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            {/* Selection Checkbox */}
+            {onSelect && (
+              <div className="pt-1">
+                <Checkbox
+                  checked={isSelected}
+                  onCheckedChange={onSelect}
+                  className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                />
+              </div>
             )}
-          </Button>
+            
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-2">
+                <Hash className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">#{question.id}</span>
+                {currentQuestion.difficulty && (
+                  <Badge 
+                    variant="outline" 
+                    className={cn("text-xs", getDifficultyColor(currentQuestion.difficulty))}
+                  >
+                    {currentQuestion.difficulty}
+                  </Badge>
+                )}
+              </div>
+              <h3 className="font-medium text-sm leading-relaxed line-clamp-2">
+                <LatexRenderer text={currentQuestion.question_text} />
+              </h3>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleEdit}
+              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsExpanded(!isExpanded)}
+            >
+              {isExpanded ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
         </div>
       </CardHeader>
 
       {isExpanded && (
         <CardContent className="pt-0 space-y-4">
-          {/* Options */}
-          <div className="space-y-2">
+          {isEditing ? (
+            <QuestionEditForm
+              question={currentQuestion}
+              onSave={handleSave}
+              onCancel={handleCancel}
+            />
+          ) : (
+            <>
+              {/* Options */}
+              <div className="space-y-2">
             <h4 className="text-sm font-medium">Options:</h4>
             <div className="grid gap-2">
-              {question.options && Object.entries(question.options).map(([key, option], index) => (
+              {currentQuestion.options && Object.entries(currentQuestion.options).map(([key, option], index) => (
                 <div
                   key={key}
                   className={cn(
                     "p-3 rounded-lg text-sm border flex items-start gap-3",
-                    key === question.correct_option
+                    key === currentQuestion.correct_option
                       ? "bg-green-50 border-green-200 text-green-800"
                       : "bg-muted/50 border-border"
                   )}
                 >
                   <div className="flex-shrink-0 mt-0.5">
-                    {key === question.correct_option ? (
+                    {key === currentQuestion.correct_option ? (
                       <CheckCircle className="h-4 w-4 text-green-600" />
                     ) : (
                       <XCircle className="h-4 w-4 text-muted-foreground" />
@@ -117,7 +173,7 @@ export function QuestionCard({ question }: QuestionCardProps) {
                     </span>
                     <LatexRenderer text={option} />
                   </div>
-                  {key === question.correct_option && (
+                  {key === currentQuestion.correct_option && (
                     <Badge variant="secondary" className="text-xs">
                       Correct
                     </Badge>
@@ -128,11 +184,11 @@ export function QuestionCard({ question }: QuestionCardProps) {
           </div>
 
           {/* Explanation */}
-          {question.solution_text && (
+          {currentQuestion.solution_text && (
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Solution:</h4>
               <div className="text-sm text-muted-foreground leading-relaxed p-3 bg-muted/30 rounded-lg">
-                <LatexRenderer text={question.solution_text} />
+                <LatexRenderer text={currentQuestion.solution_text} />
               </div>
             </div>
           )}
@@ -141,27 +197,29 @@ export function QuestionCard({ question }: QuestionCardProps) {
           <div className="flex flex-wrap gap-4 text-xs text-muted-foreground pt-2 border-t">
             <div className="flex items-center gap-1">
               <BookOpen className="h-3 w-3" />
-              <span>{question.book_source}</span>
+              <span>{currentQuestion.book_source}</span>
             </div>
             <div className="flex items-center gap-1">
               <Tag className="h-3 w-3" />
-              <span>{question.chapter_name}</span>
+              <span>{currentQuestion.chapter_name}</span>
             </div>
             <div className="flex items-center gap-1">
               <Calendar className="h-3 w-3" />
-              <span>{formatDate(question.created_at)}</span>
+              <span>{formatDate(currentQuestion.created_at)}</span>
             </div>
           </div>
 
           {/* Tags */}
-          {question.admin_tags && question.admin_tags.length > 0 && (
+          {currentQuestion.admin_tags && currentQuestion.admin_tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
-              {question.admin_tags.map((tag, index) => (
+              {currentQuestion.admin_tags.map((tag, index) => (
                 <Badge key={index} variant="outline" className="text-xs">
                   {tag}
                 </Badge>
               ))}
             </div>
+          )}
+            </>
           )}
         </CardContent>
       )}

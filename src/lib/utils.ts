@@ -8,7 +8,6 @@ export function cn(...inputs: ClassValue[]) {
 // Generate CSV template for bulk import
 export function generateCSVTemplate(): string {
   const headers = [
-    'question_id',
     'book_source',
     'chapter_name',
     'question_number_in_book',
@@ -21,7 +20,6 @@ export function generateCSVTemplate(): string {
   ]
   
   const sampleRow = [
-    'PIN6800_PER_1',
     'Pinnacle 6800 6th Ed',
     'Percentage',
     '1',

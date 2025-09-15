@@ -1,13 +1,12 @@
 import { MainLayout } from '@/components/layout/main-layout'
 import { ProtectedRoute } from '@/components/auth/protected-route'
-import { QuestionForm } from '@/components/content/question-form'
-import { createQuestion } from '@/lib/actions/questions'
+import { NewQuestionForm } from '@/components/content/NewQuestionForm'
 
 export default function NewQuestionPage() {
   return (
     <ProtectedRoute>
       <MainLayout>
-        <QuestionForm onSubmit={createQuestion} />
+        <NewQuestionForm />
       </MainLayout>
     </ProtectedRoute>
   )

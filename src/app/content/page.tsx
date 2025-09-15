@@ -2,11 +2,12 @@ import { MainLayout } from '@/components/layout/main-layout'
 import { ProtectedRoute } from '@/components/auth/protected-route'
 import { ContentManagement } from '@/components/content/ContentManagement'
 import { BulkImport } from '@/components/content/bulk-import'
+import NewBulkUpload from '@/components/content/new-bulk-upload'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent } from '@/components/ui/card'
 import Link from 'next/link'
-import { Plus, BookOpen, Upload, Target, Database } from 'lucide-react'
+import { Plus, BookOpen, Upload, Target, Database, Zap } from 'lucide-react'
 
 export default function ContentPage() {
   return (
@@ -57,7 +58,7 @@ export default function ContentPage() {
                 <CardContent className="p-0">
                   <Tabs defaultValue="manage" className="w-full">
                     <div className="border-b border-white/30 bg-gradient-to-r from-white/90 via-purple-50/50 to-indigo-50/50">
-                      <TabsList className="grid w-full grid-cols-2 bg-transparent h-auto p-0">
+                      <TabsList className="grid w-full grid-cols-3 bg-transparent h-auto p-0">
                         <TabsTrigger 
                           value="manage" 
                           className="group relative flex items-center justify-center space-x-2 px-4 sm:px-6 py-4 sm:py-5 text-xs sm:text-sm font-semibold data-[state=active]:bg-white/80 data-[state=active]:shadow-lg data-[state=active]:border-b-2 data-[state=active]:border-blue-500 transition-all duration-300 hover:bg-white/50"
@@ -73,8 +74,17 @@ export default function ContentPage() {
                         >
                           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-500/5 to-purple-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                           <Upload className="h-3 w-3 sm:h-4 sm:w-4 relative z-10" />
-                          <span className="hidden sm:inline relative z-10">Bulk Import</span>
-                          <span className="sm:hidden relative z-10">Import</span>
+                          <span className="hidden sm:inline relative z-10">CSV Import</span>
+                          <span className="sm:hidden relative z-10">CSV</span>
+                        </TabsTrigger>
+                        <TabsTrigger 
+                          value="new-import"
+                          className="group relative flex items-center justify-center space-x-2 px-4 sm:px-6 py-4 sm:py-5 text-xs sm:text-sm font-semibold data-[state=active]:bg-white/80 data-[state=active]:shadow-lg data-[state=active]:border-b-2 data-[state=active]:border-blue-500 transition-all duration-300 hover:bg-white/50"
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-emerald-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                          <Zap className="h-3 w-3 sm:h-4 sm:w-4 relative z-10" />
+                          <span className="hidden sm:inline relative z-10">Advanced Import</span>
+                          <span className="sm:hidden relative z-10">Advanced</span>
                         </TabsTrigger>
                       </TabsList>
                     </div>
@@ -116,15 +126,37 @@ export default function ContentPage() {
                           </div>
                           <div>
                             <h2 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">
-                              Bulk Import Questions
+                              CSV Bulk Import (Legacy)
                             </h2>
                             <p className="text-xs sm:text-sm text-gray-600 font-medium mt-1">
-                              Import hundreds of questions at once using a CSV file with advanced validation.
+                              Import questions using CSV format with basic validation.
                             </p>
                           </div>
                         </div>
                       </div>
                       <BulkImport />
+                    </TabsContent>
+
+                    <TabsContent value="new-import" className="space-y-4 sm:space-y-6 m-0 p-4 sm:p-6">
+                      <div className="border-b border-white/30 pb-4 sm:pb-6">
+                        <div className="flex items-center space-x-3">
+                          <div className="relative">
+                            <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg sm:rounded-xl blur-sm opacity-60 pointer-events-none"></div>
+                            <div className="relative p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br from-amber-100 via-orange-100 to-yellow-100 shadow-lg">
+                              <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
+                            </div>
+                          </div>
+                          <div>
+                            <h2 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">
+                              Advanced Bulk Import (Recommended)
+                            </h2>
+                            <p className="text-xs sm:text-sm text-gray-600 font-medium mt-1">
+                              Upload questions in JSONL, Parquet, or CSV format with advanced validation, progress tracking, and LaTeX-safe processing.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <NewBulkUpload />
                     </TabsContent>
                   </Tabs>
                 </CardContent>
