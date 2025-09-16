@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -30,7 +30,17 @@ import {
   X, 
   Save, 
   XCircle,
-  Tag
+  Tag,
+  BookOpen,
+  Hash,
+  Target,
+  FileQuestion,
+  Database,
+  Eye,
+  EyeOff,
+  CheckCircle,
+  Plus,
+  Minus
 } from 'lucide-react'
 import type { UIQuestion } from '@/lib/types'
 import { getFilterOptions } from '@/lib/actions/tests'
@@ -41,6 +51,7 @@ import { createChapter } from '@/lib/actions/chapters'
 import { generateUniqueQuestionId, generateUniqueBookCode } from '@/lib/utils/uniform-id-generator'
 import { getBookCodeByName, getAllBookSourcesWithCodes } from '@/lib/actions/id-generation'
 import { toast } from 'sonner'
+import { LatexRenderer } from '@/lib/utils/latex-renderer'
 
 interface QuestionEditFormProps {
   question: UIQuestion
@@ -89,6 +100,10 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
   const [newChapterName, setNewChapterName] = useState('')
   const [isCreatingBook, setIsCreatingBook] = useState(false)
   const [isCreatingChapter, setIsCreatingChapter] = useState(false)
+  
+  // New state for premium UI features
+  const [showLatexPreview, setShowLatexPreview] = useState(true)
+  const [isSolutionExpanded, setIsSolutionExpanded] = useState(false)
 
   // Load filter options
   useEffect(() => {
@@ -113,6 +128,96 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
     }
     loadOptions()
   }, [])
+
+  // Handle Save function
+  const handleSave = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      // Validate required fields
+      if (!formData.question_text || !formData.book_source || !formData.chapter_name) {
+        toast.error('Please fill in all required fields')
+        return
+      }
+
+      if (!formData.option_a || !formData.option_b || !formData.option_c || !formData.option_d) {
+        toast.error('Please fill in all options')
+        return
+      }
+
+      if (!formData.correct_option) {
+        toast.error('Please select the correct option')
+        return
+      }
+
+      // Prepare updated question data
+      const updatedQuestion: UIQuestion = {
+        ...question,
+        question_id: formData.question_id,
+        book_source: formData.book_source,
+        chapter_name: formData.chapter_name,
+        question_number_in_book: formData.question_number_in_book ? parseInt(formData.question_number_in_book.toString()) : null,
+        question_text: formData.question_text,
+        options: {
+          a: formData.option_a,
+          b: formData.option_b,
+          c: formData.option_c,
+          d: formData.option_d
+        },
+        correct_option: formData.correct_option,
+        solution_text: formData.solution_text,
+        exam_metadata: formData.exam_metadata,
+        admin_tags: formData.admin_tags,
+        difficulty: formData.difficulty as 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard' | null
+      }
+
+      // Update in database
+      const result = await updateQuestionInPlace(updatedQuestion)
+      
+      if (result.success) {
+        toast.success('Question updated successfully!')
+        onSave(updatedQuestion)
+      } else {
+        toast.error(result.message)
+      }
+    } catch (error) {
+      console.error('Error updating question:', error)
+      toast.error('Failed to update question')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [formData, question, onSave])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 's') {
+        e.preventDefault()
+        handleSave()
+      } else if (e.key === 'Escape') {
+        onCancel()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [handleSave, onCancel])
+
+  // LaTeX Preview Component
+  const LatexPreview = useCallback(({ content, className = "" }: { content: string; className?: string }) => {
+    if (!content || !showLatexPreview) return null
+    
+    return (
+      <div className={`mt-2 p-3 bg-slate-50 rounded-lg border border-slate-200 ${className}`}>
+        <div className="flex items-center gap-2 mb-2">
+          <Eye className="h-3 w-3 text-slate-500" />
+          <span className="text-xs font-medium text-slate-600 uppercase tracking-wide">Preview</span>
+        </div>
+        <div className="text-sm">
+          <LatexRenderer text={content} />
+        </div>
+      </div>
+    )
+  }, [showLatexPreview])
 
   // Auto-generate question ID when relevant fields change
   useEffect(() => {
@@ -335,401 +440,545 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
     }
   }
 
-  const handleSave = async () => {
-    setIsLoading(true)
-    try {
-      // Validate required fields
-      if (!formData.question_text || !formData.book_source || !formData.chapter_name) {
-        toast.error('Please fill in all required fields')
-        return
-      }
-
-      if (!formData.option_a || !formData.option_b || !formData.option_c || !formData.option_d) {
-        toast.error('Please fill in all options')
-        return
-      }
-
-      if (!formData.correct_option) {
-        toast.error('Please select the correct option')
-        return
-      }
-
-      // Prepare updated question data
-      const updatedQuestion: UIQuestion = {
-        ...question,
-        question_id: formData.question_id,
-        book_source: formData.book_source,
-        chapter_name: formData.chapter_name,
-        question_number_in_book: formData.question_number_in_book ? parseInt(formData.question_number_in_book.toString()) : null,
-        question_text: formData.question_text,
-        options: {
-          a: formData.option_a,
-          b: formData.option_b,
-          c: formData.option_c,
-          d: formData.option_d
-        },
-        correct_option: formData.correct_option,
-        solution_text: formData.solution_text,
-        exam_metadata: formData.exam_metadata,
-        admin_tags: formData.admin_tags,
-        difficulty: formData.difficulty as 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard' | null
-      }
-
-      // Update in database
-      const result = await updateQuestionInPlace(updatedQuestion)
-      
-      if (result.success) {
-        toast.success('Question updated successfully!')
-        onSave(updatedQuestion)
-      } else {
-        toast.error(result.message)
-      }
-    } catch (error) {
-      console.error('Error updating question:', error)
-      toast.error('Failed to update question')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   return (
-    <div className="space-y-4 p-4 border rounded-lg bg-card">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Edit Question</h3>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onCancel}
-            disabled={isLoading}
-          >
-            <XCircle className="h-4 w-4 mr-2" />
-            Cancel
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleSave}
-            disabled={isLoading}
-          >
-            <Save className="h-4 w-4 mr-2" />
-            {isLoading ? 'Saving...' : 'Save'}
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Question ID */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Question ID</label>
-              <Input
-                value={formData.question_id}
-                readOnly
-                className="bg-muted cursor-not-allowed font-mono"
-                placeholder="Select book, chapter, and question number to see preview"
-              />
-              <p className="text-xs text-muted-foreground">
-                {formData.question_id 
-                  ? (formData.book_source && formData.chapter_name && formData.question_number_in_book 
-                      ? "Final auto-generated question ID" 
-                      : "Preview of question ID")
-                  : "Question ID will be auto-generated based on your selections"
-                }
-              </p>
+    <div className="min-h-screen bg-slate-50/30 p-6">
+      <div className="max-w-5xl mx-auto">
+        {/* Premium Header */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 overflow-hidden mb-6">
+          <div className="px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-slate-50/50 to-blue-50/30">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25 border border-blue-400/20">
+                  <FileQuestion className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Edit Question</h2>
+                  <p className="text-sm text-gray-600 font-medium">Premium question editor with live LaTeX preview</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowLatexPreview(!showLatexPreview)}
+                  className="gap-2"
+                >
+                  {showLatexPreview ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showLatexPreview ? 'Hide Preview' : 'Show Preview'}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onCancel}
+                  disabled={isLoading}
+                  className="gap-2"
+                >
+                  <XCircle className="h-4 w-4" />
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={isLoading}
+                  className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg"
+                >
+                  <Save className="h-4 w-4" />
+                  {isLoading ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
             </div>
+          </div>
 
-        {/* Book Source */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Book Source *</label>
-          <Select value={formData.book_source} onValueChange={(value) => {
-            if (value === 'add_new_book') {
-              setShowNewBookInput(true)
-            } else {
-              handleInputChange('book_source', value)
-            }
-          }}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select book source" />
-            </SelectTrigger>
-            <SelectContent>
-              {filterOptions.bookSources.map((book) => (
-                <SelectItem key={book} value={book}>
-                  {book}
-                </SelectItem>
-              ))}
-              <SelectItem value="add_new_book" className="text-blue-600 font-medium">
-                + Add New Book
-              </SelectItem>
-            </SelectContent>
-          </Select>
-          {showNewBookInput && (
-            <div className="flex gap-2">
-              <Input
-                value={newBookName}
-                onChange={(e) => setNewBookName(e.target.value)}
-                placeholder="Enter new book name"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    handleCreateNewBook()
-                  } else if (e.key === 'Escape') {
-                    setShowNewBookInput(false)
-                    setNewBookName('')
-                  }
-                }}
-              />
-              <Button
-                size="sm"
-                onClick={handleCreateNewBook}
-                disabled={isCreatingBook || !newBookName.trim()}
-              >
-                {isCreatingBook ? 'Creating...' : 'Add'}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setShowNewBookInput(false)
-                  setNewBookName('')
-                }}
-              >
-                Cancel
-              </Button>
+          {/* Section 1: Metadata - Two Column Layout */}
+          <div className="px-8 py-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-3 h-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full shadow-sm"></div>
+              <h3 className="text-lg font-bold text-gray-800 uppercase tracking-wider">Metadata</h3>
             </div>
-          )}
-        </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Left Column */}
+              <div className="space-y-6">
+                {/* Question ID */}
+                <div className="space-y-3">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                    <Hash className="h-4 w-4" />
+                    Question ID
+                  </label>
+                  <Input
+                    value={formData.question_id}
+                    readOnly
+                    className="bg-slate-50 cursor-not-allowed font-mono text-sm border-slate-200"
+                    placeholder="Auto-generated based on selections"
+                  />
+                  <p className="text-xs text-slate-500">
+                    {formData.question_id 
+                      ? (formData.book_source && formData.chapter_name && formData.question_number_in_book 
+                          ? "Final auto-generated question ID" 
+                          : "Preview of question ID")
+                      : "Question ID will be auto-generated based on your selections"
+                    }
+                  </p>
+                </div>
 
-        {/* Chapter */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Chapter *</label>
-          <Select value={formData.chapter_name} onValueChange={(value) => {
-            if (value === 'add_new_chapter') {
-              setShowNewChapterInput(true)
-            } else {
-              handleInputChange('chapter_name', value)
-            }
-          }}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select chapter" />
-            </SelectTrigger>
-            <SelectContent>
-              {filterOptions.chapters.map((chapter) => (
-                <SelectItem key={chapter} value={chapter}>
-                  {chapter}
-                </SelectItem>
-              ))}
-              <SelectItem value="add_new_chapter" className="text-blue-600 font-medium">
-                + Add New Chapter
-              </SelectItem>
-            </SelectContent>
-          </Select>
-          {showNewChapterInput && (
-            <div className="flex gap-2">
-              <Input
-                value={newChapterName}
-                onChange={(e) => setNewChapterName(e.target.value)}
-                placeholder="Enter new chapter name"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    handleCreateNewChapter()
-                  } else if (e.key === 'Escape') {
-                    setShowNewChapterInput(false)
-                    setNewChapterName('')
-                  }
-                }}
-              />
-              <Button
-                size="sm"
-                onClick={handleCreateNewChapter}
-                disabled={isCreatingChapter || !newChapterName.trim() || !formData.book_source}
-              >
-                {isCreatingChapter ? 'Creating...' : 'Add'}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setShowNewChapterInput(false)
-                  setNewChapterName('')
-                }}
-              >
-                Cancel
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {/* Question Number in Book */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Question Number in Book</label>
-          <Input
-            type="number"
-            value={formData.question_number_in_book}
-            onChange={(e) => handleInputChange('question_number_in_book', e.target.value)}
-            placeholder="Optional"
-          />
-        </div>
-
-        {/* Difficulty */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Difficulty</label>
-          <Select value={formData.difficulty} onValueChange={(value) => handleInputChange('difficulty', value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select difficulty" />
-            </SelectTrigger>
-            <SelectContent>
-              {filterOptions.difficulties.map((difficulty) => (
-                <SelectItem key={difficulty} value={difficulty}>
-                  {difficulty}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Correct Option */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Correct Option *</label>
-          <Select value={formData.correct_option} onValueChange={(value) => handleInputChange('correct_option', value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select correct option" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="a">A</SelectItem>
-              <SelectItem value="b">B</SelectItem>
-              <SelectItem value="c">C</SelectItem>
-              <SelectItem value="d">D</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Question Text */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Question Text *</label>
-        <Textarea
-          value={formData.question_text}
-          onChange={(e) => handleInputChange('question_text', e.target.value)}
-          placeholder="Enter the question text (supports LaTeX with $...$ or $$...$$)"
-          rows={3}
-        />
-      </div>
-
-      {/* Options */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Options *</label>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label className="text-sm">Option A</label>
-            <Textarea
-              value={formData.option_a}
-              onChange={(e) => handleInputChange('option_a', e.target.value)}
-              placeholder="Option A (supports LaTeX)"
-              rows={2}
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm">Option B</label>
-            <Textarea
-              value={formData.option_b}
-              onChange={(e) => handleInputChange('option_b', e.target.value)}
-              placeholder="Option B (supports LaTeX)"
-              rows={2}
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm">Option C</label>
-            <Textarea
-              value={formData.option_c}
-              onChange={(e) => handleInputChange('option_c', e.target.value)}
-              placeholder="Option C (supports LaTeX)"
-              rows={2}
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm">Option D</label>
-            <Textarea
-              value={formData.option_d}
-              onChange={(e) => handleInputChange('option_d', e.target.value)}
-              placeholder="Option D (supports LaTeX)"
-              rows={2}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Solution */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Solution</label>
-        <Textarea
-          value={formData.solution_text}
-          onChange={(e) => handleInputChange('solution_text', e.target.value)}
-          placeholder="Enter the solution/explanation (supports LaTeX)"
-          rows={3}
-        />
-      </div>
-
-      {/* Exam Metadata */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Exam Metadata</label>
-        <Input
-          value={formData.exam_metadata}
-          onChange={(e) => handleInputChange('exam_metadata', e.target.value)}
-          placeholder="Additional exam information"
-        />
-      </div>
-
-      {/* Tags */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Tags</label>
-        <div className="flex flex-wrap gap-2 mb-2">
-          {formData.admin_tags.map((tag) => (
-            <Badge key={tag} variant="secondary" className="gap-1 pr-1">
-              {tag}
-              <button
-                className="ml-1 p-0.5 rounded-sm hover:bg-destructive/20 transition-colors"
-                onClick={() => handleTagRemove(tag)}
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
-        <Popover open={isTagPopoverOpen} onOpenChange={setIsTagPopoverOpen}>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="w-full justify-start">
-              <Tag className="h-4 w-4 mr-2" />
-              Add Tag
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80 p-0">
-            <Command>
-              <CommandInput
-                placeholder="Search or add tags..."
-                value={tagInput}
-                onValueChange={setTagInput}
-                onKeyDown={handleTagInputKeyPress}
-              />
-              <CommandList>
-                <CommandEmpty>No tags found.</CommandEmpty>
-                <CommandGroup>
-                  {filterOptions.tags
-                    .filter(tag => !formData.admin_tags.includes(tag))
-                    .map((tag) => (
-                      <CommandItem
-                        key={tag}
-                        value={tag}
-                        onSelect={() => handleTagAdd(tag)}
+                {/* Book Source */}
+                <div className="space-y-3">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                    <BookOpen className="h-4 w-4" />
+                    Book Source *
+                  </label>
+                  <Select value={formData.book_source} onValueChange={(value) => {
+                    if (value === 'add_new_book') {
+                      setShowNewBookInput(true)
+                    } else {
+                      handleInputChange('book_source', value)
+                    }
+                  }}>
+                    <SelectTrigger className="border-slate-200">
+                      <SelectValue placeholder="Select book source" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filterOptions.bookSources.map((book) => (
+                        <SelectItem key={book} value={book}>
+                          {book}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="add_new_book" className="text-blue-600 font-medium">
+                        + Add New Book
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {showNewBookInput && (
+                    <div className="flex gap-2">
+                      <Input
+                        value={newBookName}
+                        onChange={(e) => setNewBookName(e.target.value)}
+                        placeholder="Enter new book name"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            handleCreateNewBook()
+                          } else if (e.key === 'Escape') {
+                            setShowNewBookInput(false)
+                            setNewBookName('')
+                          }
+                        }}
+                      />
+                      <Button
+                        size="sm"
+                        onClick={handleCreateNewBook}
+                        disabled={isCreatingBook || !newBookName.trim()}
                       >
-                        <Check className="mr-2 h-4 w-4" />
+                        {isCreatingBook ? 'Creating...' : 'Add'}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setShowNewBookInput(false)
+                          setNewBookName('')
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Chapter */}
+                <div className="space-y-3">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                    <BookOpen className="h-4 w-4" />
+                    Chapter *
+                  </label>
+                  <Select value={formData.chapter_name} onValueChange={(value) => {
+                    if (value === 'add_new_chapter') {
+                      setShowNewChapterInput(true)
+                    } else {
+                      handleInputChange('chapter_name', value)
+                    }
+                  }}>
+                    <SelectTrigger className="border-slate-200">
+                      <SelectValue placeholder="Select chapter" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filterOptions.chapters.map((chapter) => (
+                        <SelectItem key={chapter} value={chapter}>
+                          {chapter}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="add_new_chapter" className="text-blue-600 font-medium">
+                        + Add New Chapter
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {showNewChapterInput && (
+                    <div className="flex gap-2">
+                      <Input
+                        value={newChapterName}
+                        onChange={(e) => setNewChapterName(e.target.value)}
+                        placeholder="Enter new chapter name"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            handleCreateNewChapter()
+                          } else if (e.key === 'Escape') {
+                            setShowNewChapterInput(false)
+                            setNewChapterName('')
+                          }
+                        }}
+                      />
+                      <Button
+                        size="sm"
+                        onClick={handleCreateNewChapter}
+                        disabled={isCreatingChapter || !newChapterName.trim() || !formData.book_source}
+                      >
+                        {isCreatingChapter ? 'Creating...' : 'Add'}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setShowNewChapterInput(false)
+                          setNewChapterName('')
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Question Number */}
+                <div className="space-y-3">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                    <Hash className="h-4 w-4" />
+                    Question Number
+                  </label>
+                  <Input
+                    type="number"
+                    value={formData.question_number_in_book}
+                    onChange={(e) => handleInputChange('question_number_in_book', e.target.value)}
+                    placeholder="Optional"
+                    className="border-slate-200"
+                  />
+                </div>
+              </div>
+
+              {/* Right Column */}
+              <div className="space-y-6">
+                {/* Difficulty */}
+                <div className="space-y-3">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                    <Target className="h-4 w-4" />
+                    Difficulty
+                  </label>
+                  <Select value={formData.difficulty} onValueChange={(value) => handleInputChange('difficulty', value)}>
+                    <SelectTrigger className="border-slate-200">
+                      <SelectValue placeholder="Select difficulty" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filterOptions.difficulties.map((difficulty) => (
+                        <SelectItem key={difficulty} value={difficulty}>
+                          {difficulty}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Correct Option */}
+                <div className="space-y-3">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                    <CheckCircle className="h-4 w-4" />
+                    Correct Option *
+                  </label>
+                  <Select value={formData.correct_option} onValueChange={(value) => handleInputChange('correct_option', value)}>
+                    <SelectTrigger className="border-slate-200">
+                      <SelectValue placeholder="Select correct option" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="a">A</SelectItem>
+                      <SelectItem value="b">B</SelectItem>
+                      <SelectItem value="c">C</SelectItem>
+                      <SelectItem value="d">D</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Exam Metadata */}
+                <div className="space-y-3">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                    <Database className="h-4 w-4" />
+                    Exam Metadata
+                  </label>
+                  <Input
+                    value={formData.exam_metadata}
+                    onChange={(e) => handleInputChange('exam_metadata', e.target.value)}
+                    placeholder="e.g., CAT 2022 Slot 1"
+                    className="border-slate-200"
+                  />
+                </div>
+
+                {/* Tags */}
+                <div className="space-y-3">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                    <Tag className="h-4 w-4" />
+                    Tags
+                  </label>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {formData.admin_tags.map((tag) => (
+                      <Badge key={tag} variant="secondary" className="gap-1 pr-1 bg-blue-50 text-blue-700 border-blue-200">
                         {tag}
-                      </CommandItem>
+                        <button
+                          className="ml-1 p-0.5 rounded-sm hover:bg-red-100 transition-colors"
+                          onClick={() => handleTagRemove(tag)}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
                     ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
+                  </div>
+                  <Popover open={isTagPopoverOpen} onOpenChange={setIsTagPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="w-full justify-start border-slate-200">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Tag
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-0">
+                      <Command>
+                        <CommandInput
+                          placeholder="Search or add tags..."
+                          value={tagInput}
+                          onValueChange={setTagInput}
+                          onKeyDown={handleTagInputKeyPress}
+                        />
+                        <CommandList>
+                          <CommandEmpty>No tags found.</CommandEmpty>
+                          <CommandGroup>
+                            {filterOptions.tags
+                              .filter(tag => !formData.admin_tags.includes(tag))
+                              .map((tag) => (
+                                <CommandItem
+                                  key={tag}
+                                  value={tag}
+                                  onSelect={() => handleTagAdd(tag)}
+                                >
+                                  <Check className="mr-2 h-4 w-4" />
+                                  {tag}
+                                </CommandItem>
+                              ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 2: Question Text */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 overflow-hidden mb-6">
+          <div className="px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-slate-50/50 to-green-50/30">
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 bg-gradient-to-br from-green-500 to-green-600 rounded-full shadow-sm"></div>
+              <h3 className="text-lg font-bold text-gray-800 uppercase tracking-wider">Question Text</h3>
+            </div>
+          </div>
+          <div className="px-8 py-6">
+            <div className="space-y-4">
+              <Textarea
+                value={formData.question_text}
+                onChange={(e) => handleInputChange('question_text', e.target.value)}
+                placeholder="Enter the question text (supports LaTeX with $...$ or $$...$$)"
+                rows={4}
+                className="text-base font-mono border-slate-200 resize-none"
+              />
+              <LatexPreview content={formData.question_text} />
+            </div>
+          </div>
+        </div>
+
+        {/* Section 3: Options - 2x2 Grid */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 overflow-hidden mb-6">
+          <div className="px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-slate-50/50 to-purple-50/30">
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full shadow-sm"></div>
+              <h3 className="text-lg font-bold text-gray-800 uppercase tracking-wider">Options</h3>
+            </div>
+          </div>
+          <div className="px-8 py-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Option A */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                    formData.correct_option === 'a' 
+                      ? 'bg-green-500 text-white shadow-lg' 
+                      : 'bg-slate-100 text-slate-600'
+                  }`}>
+                    A
+                  </div>
+                  <label className="text-sm font-semibold text-gray-700">Option A</label>
+                  {formData.correct_option === 'a' && <CheckCircle className="h-4 w-4 text-green-500" />}
+                </div>
+                <Textarea
+                  value={formData.option_a}
+                  onChange={(e) => handleInputChange('option_a', e.target.value)}
+                  placeholder="Option A (supports LaTeX)"
+                  rows={3}
+                  className={`text-sm font-mono border-slate-200 resize-none ${
+                    formData.correct_option === 'a' ? 'border-green-300 bg-green-50/30' : ''
+                  }`}
+                />
+                <LatexPreview content={formData.option_a} />
+              </div>
+
+              {/* Option B */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                    formData.correct_option === 'b' 
+                      ? 'bg-green-500 text-white shadow-lg' 
+                      : 'bg-slate-100 text-slate-600'
+                  }`}>
+                    B
+                  </div>
+                  <label className="text-sm font-semibold text-gray-700">Option B</label>
+                  {formData.correct_option === 'b' && <CheckCircle className="h-4 w-4 text-green-500" />}
+                </div>
+                <Textarea
+                  value={formData.option_b}
+                  onChange={(e) => handleInputChange('option_b', e.target.value)}
+                  placeholder="Option B (supports LaTeX)"
+                  rows={3}
+                  className={`text-sm font-mono border-slate-200 resize-none ${
+                    formData.correct_option === 'b' ? 'border-green-300 bg-green-50/30' : ''
+                  }`}
+                />
+                <LatexPreview content={formData.option_b} />
+              </div>
+
+              {/* Option C */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                    formData.correct_option === 'c' 
+                      ? 'bg-green-500 text-white shadow-lg' 
+                      : 'bg-slate-100 text-slate-600'
+                  }`}>
+                    C
+                  </div>
+                  <label className="text-sm font-semibold text-gray-700">Option C</label>
+                  {formData.correct_option === 'c' && <CheckCircle className="h-4 w-4 text-green-500" />}
+                </div>
+                <Textarea
+                  value={formData.option_c}
+                  onChange={(e) => handleInputChange('option_c', e.target.value)}
+                  placeholder="Option C (supports LaTeX)"
+                  rows={3}
+                  className={`text-sm font-mono border-slate-200 resize-none ${
+                    formData.correct_option === 'c' ? 'border-green-300 bg-green-50/30' : ''
+                  }`}
+                />
+                <LatexPreview content={formData.option_c} />
+              </div>
+
+              {/* Option D */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                    formData.correct_option === 'd' 
+                      ? 'bg-green-500 text-white shadow-lg' 
+                      : 'bg-slate-100 text-slate-600'
+                  }`}>
+                    D
+                  </div>
+                  <label className="text-sm font-semibold text-gray-700">Option D</label>
+                  {formData.correct_option === 'd' && <CheckCircle className="h-4 w-4 text-green-500" />}
+                </div>
+                <Textarea
+                  value={formData.option_d}
+                  onChange={(e) => handleInputChange('option_d', e.target.value)}
+                  placeholder="Option D (supports LaTeX)"
+                  rows={3}
+                  className={`text-sm font-mono border-slate-200 resize-none ${
+                    formData.correct_option === 'd' ? 'border-green-300 bg-green-50/30' : ''
+                  }`}
+                />
+                <LatexPreview content={formData.option_d} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 4: Solution - Collapsible */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 overflow-hidden mb-6">
+          <div className="px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-slate-50/50 to-orange-50/30">
+            <button
+              onClick={() => setIsSolutionExpanded(!isSolutionExpanded)}
+              className="flex items-center justify-between w-full group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full shadow-sm"></div>
+                <h3 className="text-lg font-bold text-gray-800 uppercase tracking-wider">Solution</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500">Click to {isSolutionExpanded ? 'collapse' : 'expand'}</span>
+                {isSolutionExpanded ? <Minus className="h-4 w-4 text-gray-500" /> : <Plus className="h-4 w-4 text-gray-500" />}
+              </div>
+            </button>
+          </div>
+          {isSolutionExpanded && (
+            <div className="px-8 py-6 animate-in fade-in-0 duration-200">
+              <div className="space-y-4">
+                <Textarea
+                  value={formData.solution_text}
+                  onChange={(e) => handleInputChange('solution_text', e.target.value)}
+                  placeholder="Enter the solution/explanation (supports LaTeX)"
+                  rows={4}
+                  className="text-base font-mono border-slate-200 resize-none"
+                />
+                <LatexPreview content={formData.solution_text} />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Sticky Action Footer */}
+        <div className="sticky bottom-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 rounded-t-2xl shadow-lg">
+          <div className="px-8 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4 text-sm text-gray-500">
+                <span>💡 <strong>Keyboard Shortcuts:</strong> Ctrl+S to save, Esc to cancel</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onCancel}
+                  disabled={isLoading}
+                  className="gap-2"
+                >
+                  <XCircle className="h-4 w-4" />
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={isLoading}
+                  className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg"
+                >
+                  <Save className="h-4 w-4" />
+                  {isLoading ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )

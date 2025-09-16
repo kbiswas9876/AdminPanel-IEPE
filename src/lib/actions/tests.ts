@@ -398,7 +398,7 @@ export async function searchQuestions(args: {
   chapter_name?: string
   chapters?: string[]
   tags?: string[]
-  difficulty?: 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard'
+  difficulty?: 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard' | 'all'
   exams?: string[]
   sort_by?: string
   page?: number
