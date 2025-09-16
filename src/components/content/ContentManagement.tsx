@@ -10,8 +10,10 @@ export function ContentManagement() {
   useFilterSync()
 
   return (
-    <div className="h-full flex flex-col space-y-4">
-      <FilterBar />
+    <div className="h-full flex flex-col">
+      <div className="flex-shrink-0">
+        <FilterBar />
+      </div>
       <div className="flex-1 min-h-0">
         <QuestionExplorer />
       </div>

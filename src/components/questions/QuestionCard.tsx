@@ -107,7 +107,7 @@ export function QuestionCard({ question, isSelected = false, onSelect, onQuestio
                   </Badge>
                 )}
               </div>
-              <h3 className="font-medium text-sm leading-relaxed line-clamp-2">
+              <h3 className="font-medium text-sm leading-relaxed line-clamp-2 whitespace-pre-wrap">
                 <LatexRenderer text={currentQuestion.question_text} />
               </h3>
             </div>
@@ -167,7 +167,7 @@ export function QuestionCard({ question, isSelected = false, onSelect, onQuestio
                       <XCircle className="h-4 w-4 text-muted-foreground" />
                     )}
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 whitespace-pre-wrap">
                     <span className="font-medium mr-2">
                       {String.fromCharCode(65 + index)}.
                     </span>
@@ -187,7 +187,7 @@ export function QuestionCard({ question, isSelected = false, onSelect, onQuestio
           {currentQuestion.solution_text && (
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Solution:</h4>
-              <div className="text-sm text-muted-foreground leading-relaxed p-3 bg-muted/30 rounded-lg">
+              <div className="text-sm text-muted-foreground leading-relaxed p-3 bg-muted/30 rounded-lg whitespace-pre-wrap">
                 <LatexRenderer text={currentQuestion.solution_text} />
               </div>
             </div>

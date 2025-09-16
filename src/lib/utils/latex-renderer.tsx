@@ -53,7 +53,7 @@ export function LatexRenderer({ text, className }: LatexRendererProps) {
   const parts = splitIntoParts(text)
   
   return (
-    <span className={className}>
+    <div className={className} style={{ whiteSpace: 'pre-wrap' }}>
       {parts.map((part, index) => {
         if (part.type === 'block') {
           return <BlockMath key={index} math={part.content} />
@@ -63,7 +63,7 @@ export function LatexRenderer({ text, className }: LatexRendererProps) {
           return <span key={index}>{part.content}</span>
         }
       })}
-    </span>
+    </div>
   )
 }
 

@@ -4,10 +4,11 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuestionsData } from '@/hooks/useQuestionsData'
 import { useFilterStore } from '@/stores/filterStore'
-import { QuestionCard } from './QuestionCard'
+import { CompactQuestionTable } from './CompactQuestionTable'
 import { SkeletonLoader } from './SkeletonLoader'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { 
   RefreshCw, 
   AlertCircle, 
@@ -21,7 +22,8 @@ import {
   FileQuestion,
   X,
   Plus,
-  Upload
+  Upload,
+  Settings
 } from 'lucide-react'
 import { deleteMultipleQuestions } from '@/lib/actions/questions'
 import { toast } from 'sonner'
@@ -42,7 +44,7 @@ export function QuestionExplorer() {
     pageSize
   } = useQuestionsData()
 
-  const { setPage } = useFilterStore()
+  const { setPage, setPageSize } = useFilterStore()
   
   // Selection state
   const [selectedQuestions, setSelectedQuestions] = useState<Set<number>>(new Set())
@@ -149,17 +151,34 @@ export function QuestionExplorer() {
     }
   }
 
-  const renderPaginationButton = (page: number, icon?: React.ReactNode, label?: string) => {
+  const handlePageSizeChange = (newPageSize: string) => {
+    setPageSize(parseInt(newPageSize, 10))
+  }
+
+  const pageSizeOptions = [
+    { value: '5', label: '5 per page' },
+    { value: '10', label: '10 per page' },
+    { value: '20', label: '20 per page' },
+    { value: '30', label: '30 per page' },
+    { value: '50', label: '50 per page' }
+  ]
+
+  const renderPaginationButton = (page: number, icon?: React.ReactNode, label?: string, key?: string) => {
     const isActive = page === currentPage
     const isDisabled = page < 1 || page > totalPages
 
     return (
       <Button
+        key={key || `btn-${page}`}
         variant={isActive ? "default" : "outline"}
         size="sm"
         onClick={() => goToPage(page)}
         disabled={isDisabled}
-        className="min-w-[40px]"
+        className={`h-8 w-8 p-0 transition-all duration-200 ${
+          isActive 
+            ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md' 
+            : 'border-blue-200 hover:border-blue-300 hover:bg-blue-50 text-blue-700 hover:text-blue-800'
+        } ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-sm'}`}
       >
         {icon || label || page}
       </Button>
@@ -167,38 +186,34 @@ export function QuestionExplorer() {
   }
 
   return (
-    <div className="h-full flex flex-col space-y-4">
-      {/* Results Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold">
-              Questions ({total.toLocaleString()})
-            </h2>
-            {isFetching && (
-              <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
-            )}
-          </div>
+    <div className="h-full flex flex-col">
+      {/* Ultra-Compact Results Header */}
+      <div className="flex-shrink-0 flex items-center justify-between py-2 px-3 border-b bg-gray-50/50">
+        <div className="flex items-center gap-3">
+          <h2 className="text-sm font-semibold">
+            Questions ({total.toLocaleString()})
+          </h2>
+          {isFetching && (
+            <RefreshCw className="h-3 w-3 animate-spin text-muted-foreground" />
+          )}
           
           {/* Selection Controls */}
           {questions.length > 0 && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleSelectAll}
-                className="flex items-center gap-2"
+                className="h-7 px-2 text-xs"
               >
                 {isAllSelected ? (
-                  <CheckSquare className="h-4 w-4" />
+                  <CheckSquare className="h-3 w-3 mr-1" />
                 ) : isPartiallySelected ? (
-                  <CheckSquare className="h-4 w-4 opacity-50" />
+                  <CheckSquare className="h-3 w-3 mr-1 opacity-50" />
                 ) : (
-                  <Square className="h-4 w-4" />
+                  <Square className="h-3 w-3 mr-1" />
                 )}
-                <span className="text-sm">
-                  {isAllSelected ? 'Deselect All' : 'Select All'}
-                </span>
+                {isAllSelected ? 'Deselect All' : 'Select All'}
               </Button>
               
               {selectedQuestions.size > 0 && (
@@ -207,12 +222,10 @@ export function QuestionExplorer() {
                   size="sm"
                   onClick={handleDeleteSelected}
                   disabled={isDeleting}
-                  className="flex items-center gap-2"
+                  className="h-7 px-2 text-xs"
                 >
-                  <Trash2 className="h-4 w-4" />
-                  <span className="text-sm">
-                    {isDeleting ? 'Deleting...' : `Delete (${selectedQuestions.size})`}
-                  </span>
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  {isDeleting ? 'Deleting...' : `Delete (${selectedQuestions.size})`}
                 </Button>
               )}
             </div>
@@ -220,41 +233,36 @@ export function QuestionExplorer() {
         </div>
         
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            Showing {startItem.toLocaleString()}-{endItem.toLocaleString()} of {total.toLocaleString()}
+          <span className="text-xs text-muted-foreground">
+            {startItem.toLocaleString()}-{endItem.toLocaleString()} of {total.toLocaleString()}
           </span>
           <Button 
             onClick={() => refetch()} 
             variant="ghost" 
             size="sm"
             disabled={isFetching}
+            className="h-7 w-7 p-0"
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
-            Refresh
+            <RefreshCw className={`h-3 w-3 ${isFetching ? 'animate-spin' : ''}`} />
           </Button>
         </div>
       </div>
 
-      {/* Questions Grid */}
+      {/* Questions Table */}
       {questions.length > 0 ? (
         <div className="flex-1 overflow-y-auto">
-          <div className="grid gap-4">
-          {questions.map((question) => {
-            if (!question.id) return null
-            return (
-              <QuestionCard 
-                key={question.id} 
-                question={question} 
-                isSelected={selectedQuestions.has(question.id)}
-                onSelect={() => question.id && handleSelectQuestion(question.id)}
-                onQuestionUpdate={() => {
-                  // Trigger a refetch to get the latest data
-                  refetch()
-                }}
-              />
-            )
-          })}
-          </div>
+          <CompactQuestionTable
+            questions={questions}
+            selectedQuestions={selectedQuestions}
+            onSelectQuestion={handleSelectQuestion}
+            onSelectAll={handleSelectAll}
+            onQuestionUpdate={(_updatedQuestion) => {
+              // Handle question update if needed
+              refetch()
+            }}
+            isAllSelected={isAllSelected}
+            isPartiallySelected={isPartiallySelected}
+          />
         </div>
       ) : (
         /* No Questions Found State */
@@ -311,21 +319,51 @@ export function QuestionExplorer() {
         </div>
       )}
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex-shrink-0 flex items-center justify-between pt-4 border-t">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
+      {/* Premium Pagination */}
+      <div className="flex-shrink-0 flex items-center justify-between py-3 px-4 border-t bg-gradient-to-r from-gray-50 to-blue-50/30">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border border-gray-200 shadow-sm">
+            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+            <span className="text-xs font-medium text-gray-700">
               Page {currentPage} of {totalPages}
             </span>
           </div>
           
-          <div className="flex items-center gap-1">
+          {/* Premium Questions per page selector */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200/50">
+              <Settings className="h-3.5 w-3.5 text-blue-600" />
+              <span className="text-xs font-medium text-blue-700">Per Page</span>
+            </div>
+            <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
+              <SelectTrigger className="h-8 w-28 text-xs font-medium bg-white border-blue-200 hover:border-blue-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all duration-200 shadow-sm hover:shadow-md">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-lg animate-in fade-in-0 zoom-in-95 duration-200">
+                {pageSizeOptions.map(option => (
+                  <SelectItem 
+                    key={option.value} 
+                    value={option.value}
+                    className="text-xs font-medium hover:bg-blue-50 focus:bg-blue-50 transition-colors duration-150"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                      {option.label}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
+        {totalPages > 1 && (
+          <div className="flex items-center gap-1 bg-white rounded-lg border border-gray-200 shadow-sm p-1">
             {/* First page */}
-            {renderPaginationButton(1, <ChevronsLeft className="h-4 w-4" />)}
+            {renderPaginationButton(1, <ChevronsLeft className="h-3 w-3" />, undefined, "first-page")}
             
             {/* Previous page */}
-            {renderPaginationButton(currentPage - 1, <ChevronLeft className="h-4 w-4" />)}
+            {renderPaginationButton(currentPage - 1, <ChevronLeft className="h-3 w-3" />, undefined, "prev-page")}
             
             {/* Page numbers */}
             {(() => {
@@ -350,7 +388,7 @@ export function QuestionExplorer() {
               
               // Add page numbers
               for (let i = startPage; i <= endPage; i++) {
-                pages.push(renderPaginationButton(i))
+                pages.push(renderPaginationButton(i, undefined, undefined, `page-${i}`))
               }
               
               // Add ellipsis if needed
@@ -366,13 +404,13 @@ export function QuestionExplorer() {
             })()}
             
             {/* Next page */}
-            {renderPaginationButton(currentPage + 1, <ChevronRight className="h-4 w-4" />)}
+            {renderPaginationButton(currentPage + 1, <ChevronRight className="h-3 w-3" />, undefined, "next-page")}
             
             {/* Last page */}
-            {renderPaginationButton(totalPages, <ChevronsRight className="h-4 w-4" />)}
+            {renderPaginationButton(totalPages, <ChevronsRight className="h-3 w-3" />, undefined, "last-page")}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

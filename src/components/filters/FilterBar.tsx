@@ -126,7 +126,7 @@ export function FilterBar() {
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="w-full justify-between min-w-[200px]"
+            className="w-full justify-between h-9 min-w-[120px]"
           >
             <div className="flex items-center gap-2">
               <Icon className="h-4 w-4" />
@@ -200,24 +200,102 @@ export function FilterBar() {
   }
 
   return (
-    <div className="space-y-4 p-4 border rounded-lg bg-card">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="p-2 border-b bg-gray-50/50">
+      {/* Ultra-Compact Single Row Layout */}
+      <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
-          <Filter className="h-5 w-5" />
-          <h3 className="font-semibold">Filters</h3>
+          <Filter className="h-4 w-4" />
+          <span className="text-sm font-medium">Filters</span>
           {activeFiltersCount > 0 && (
-            <Badge variant="secondary" className="ml-2">
-              {activeFiltersCount} active
+            <Badge variant="secondary" className="text-xs">
+              {activeFiltersCount}
             </Badge>
           )}
         </div>
-        <div className="flex items-center gap-2">
+
+        {/* Search */}
+        <div className="flex-1 max-w-xs">
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-8 h-8 text-sm"
+            />
+          </div>
+        </div>
+
+        {/* Books */}
+        <div className="w-32">
+          <MultiSelect
+            options={filterOptions.books}
+            selected={book_sources}
+            onSelectionChange={setBookSources}
+            placeholder="Books"
+            icon={Filter}
+          />
+        </div>
+
+        {/* Chapters */}
+        <div className="w-32">
+          <MultiSelect
+            options={filterOptions.chapters}
+            selected={chapters}
+            onSelectionChange={setChapters}
+            placeholder="Chapters"
+            icon={Filter}
+          />
+        </div>
+
+        {/* Tags */}
+        <div className="w-32">
+          <MultiSelect
+            options={filterOptions.tags}
+            selected={tags}
+            onSelectionChange={setTags}
+            placeholder="Tags"
+            icon={Filter}
+          />
+        </div>
+
+        {/* Difficulty & Sort */}
+        <div className="flex gap-2">
+          <Select value={difficulty} onValueChange={setDifficulty}>
+            <SelectTrigger className="h-8 w-24">
+              <SelectValue placeholder="Diff" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              {filterOptions.difficulties.map((diff) => (
+                <SelectItem key={diff} value={diff}>
+                  {diff}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <Select value={sort_by} onValueChange={setSortBy}>
+            <SelectTrigger className="h-8 w-24">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="id_asc">ID ↑</SelectItem>
+              <SelectItem value="id_desc">ID ↓</SelectItem>
+              <SelectItem value="created_at_asc">Oldest</SelectItem>
+              <SelectItem value="created_at_desc">Newest</SelectItem>
+              <SelectItem value="difficulty_asc">Easy→Hard</SelectItem>
+              <SelectItem value="difficulty_desc">Hard→Easy</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-1">
           <Popover open={showPresets} onOpenChange={setShowPresets}>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <Bookmark className="h-4 w-4 mr-2" />
-                Presets
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <Bookmark className="h-3 w-3" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-64">
@@ -265,98 +343,12 @@ export function FilterBar() {
               variant="ghost"
               size="sm"
               onClick={clearAllFilters}
-              className="text-muted-foreground hover:text-foreground"
+              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
             >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Clear All
+              <RotateCcw className="h-3 w-3" />
             </Button>
           )}
         </div>
-      </div>
-
-      {/* Search */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Search</label>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search questions..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-      </div>
-
-      {/* Filter Row 1 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Books</label>
-          <MultiSelect
-            options={filterOptions.books}
-            selected={book_sources}
-            onSelectionChange={setBookSources}
-            placeholder="Select books"
-            icon={Filter}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Chapters</label>
-          <MultiSelect
-            options={filterOptions.chapters}
-            selected={chapters}
-            onSelectionChange={setChapters}
-            placeholder="Select chapters"
-            icon={Filter}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Tags</label>
-          <MultiSelect
-            options={filterOptions.tags}
-            selected={tags}
-            onSelectionChange={setTags}
-            placeholder="Select tags"
-            icon={Filter}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Difficulty</label>
-          <Select value={difficulty} onValueChange={setDifficulty}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select difficulty" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Difficulties</SelectItem>
-              {filterOptions.difficulties.map((difficulty) => (
-                <SelectItem key={difficulty} value={difficulty}>
-                  {difficulty}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Sort */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Sort By</label>
-        <Select value={sort_by} onValueChange={setSortBy}>
-          <SelectTrigger className="w-full md:w-[200px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="id_asc">ID (Ascending)</SelectItem>
-            <SelectItem value="id_desc">ID (Descending)</SelectItem>
-            <SelectItem value="created_at_asc">Created (Oldest)</SelectItem>
-            <SelectItem value="created_at_desc">Created (Newest)</SelectItem>
-            <SelectItem value="difficulty_asc">Difficulty (Easy to Hard)</SelectItem>
-            <SelectItem value="difficulty_desc">Difficulty (Hard to Easy)</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       {/* Active Filters Display */}
