@@ -207,6 +207,12 @@ export function QuestionCard({ question, isSelected = false, onSelect, onQuestio
               <Calendar className="h-3 w-3" />
               <span>{formatDate(currentQuestion.created_at)}</span>
             </div>
+            {currentQuestion.exam_metadata && (
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>
+                <span className="text-indigo-600 font-medium">{currentQuestion.exam_metadata}</span>
+              </div>
+            )}
           </div>
 
           {/* Tags */}

@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Textarea } from '@/components/ui/textarea'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
   Upload, 
   FileText, 
@@ -18,7 +20,12 @@ import {
   Play,
   Pause,
   RotateCcw,
-  Copy
+  Copy,
+  Clipboard,
+  Terminal,
+  ScrollText,
+  FileCode,
+  AlertCircle
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { 
@@ -45,6 +52,14 @@ export default function NewBulkUpload({ onUploadComplete, onCancel }: BulkUpload
   const [, setIsCancelled] = useState(false)
   const [showReview, setShowReview] = useState(false)
   const [editableQuestions, setEditableQuestions] = useState<ParsedQuestion[]>([])
+  
+  // Paste functionality state
+  const [pastedData, setPastedData] = useState('')
+  const [isProcessingPaste, setIsProcessingPaste] = useState(false)
+  const [pasteResult, setPasteResult] = useState<ParseResult | null>(null)
+  
+  // Log viewing state
+  const [showLogs, setShowLogs] = useState(false)
   
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -140,6 +155,102 @@ export default function NewBulkUpload({ onUploadComplete, onCancel }: BulkUpload
     setIsCancelled(false)
     setShowReview(false)
     setEditableQuestions([])
+    setPastedData('')
+    setPasteResult(null)
+    setShowLogs(false)
+  }
+
+  const handlePasteProcess = async () => {
+    if (!pastedData.trim()) {
+      toast.error('Please paste some data first')
+      return
+    }
+
+    setIsProcessingPaste(true)
+    setPasteResult(null)
+
+    try {
+      // Create a temporary file from pasted data with .jsonl extension
+      const blob = new Blob([pastedData], { type: 'application/json' })
+      const tempFile = new File([blob], 'pasted-data.jsonl', { type: 'application/json' })
+      
+      console.log('Processing pasted data:', {
+        fileName: tempFile.name,
+        fileSize: tempFile.size,
+        dataPreview: pastedData.substring(0, 100)
+      })
+      
+      const result = await parseBulkUploadFile(tempFile)
+      setPasteResult(result)
+      
+      if (result.questions.length > 0) {
+        setPreviewQuestions(result.questions.slice(0, 20))
+        setEditableQuestions(result.questions)
+        setShowReview(true)
+      }
+
+      if (result.errors.length > 0) {
+        console.error('Parse errors:', result.errors)
+        toast.warning(`${result.errors.length} rows had errors. Check the preview.`)
+      } else {
+        toast.success(`Successfully parsed ${result.validRows} questions from pasted data`)
+      }
+    } catch (error) {
+      console.error('Paste processing error:', error)
+      toast.error(`Failed to parse pasted data: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setIsProcessingPaste(false)
+    }
+  }
+
+  const copyLogsToClipboard = (type: 'parse' | 'upload') => {
+    let logText = ''
+    
+    if (type === 'parse') {
+      const result = pasteResult || parseResult
+      if (result) {
+        logText = `Parse Log - ${new Date().toLocaleString()}\n`
+        logText += `Total Rows: ${result.totalRows}\n`
+        logText += `Valid Questions: ${result.validRows}\n`
+        logText += `Errors: ${result.errors.length}\n`
+        logText += `Success Rate: ${((result.validRows / result.totalRows) * 100).toFixed(1)}%\n\n`
+        
+        if (result.errors.length > 0) {
+          logText += 'Error Details:\n'
+          result.errors.forEach((error, index) => {
+            logText += `${index + 1}. Row ${error.row}: ${error.error}\n`
+            if (error.data) {
+              logText += `   Data: ${JSON.stringify(error.data, null, 2)}\n`
+            }
+            logText += '\n'
+          })
+        }
+      }
+    } else if (type === 'upload' && uploadResult) {
+      logText = `Upload Log - ${new Date().toLocaleString()}\n`
+      logText += `Total Processed: ${uploadResult.totalProcessed}\n`
+      logText += `Successfully Inserted: ${uploadResult.totalInserted}\n`
+      logText += `Errors: ${uploadResult.totalErrors}\n`
+      logText += `Duration: ${(uploadResult.duration / 1000).toFixed(1)}s\n\n`
+      
+      if (uploadResult.errors.length > 0) {
+        logText += 'Upload Error Details:\n'
+        uploadResult.errors.forEach((error, index) => {
+          logText += `${index + 1}. Row ${error.row}: ${error.error}\n`
+          if (error.data) {
+            logText += `   Data: ${JSON.stringify(error.data, null, 2)}\n`
+          }
+          logText += '\n'
+        })
+      }
+    }
+    
+    if (logText) {
+      navigator.clipboard.writeText(logText)
+      toast.success(`${type === 'parse' ? 'Parse' : 'Upload'} logs copied to clipboard`)
+    } else {
+      toast.error('No logs available to copy')
+    }
   }
 
   const handleEditQuestion = (question: ParsedQuestion, index: number) => {
@@ -340,30 +451,140 @@ export default function NewBulkUpload({ onUploadComplete, onCancel }: BulkUpload
         </div>
       </div>
 
-      {/* File Upload Area */}
+      {/* Upload Options - Tabs */}
       {!file && (
         <Card>
-          <CardContent className="p-8">
-            <div
-              {...getRootProps()}
-              className={`
-                border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
-                ${isDragActive ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'}
-                ${isUploading ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary hover:bg-primary/5'}
-              `}
-            >
-              <input {...getInputProps()} />
-              <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-semibold mb-2">
-                {isDragActive ? 'Drop your file here' : 'Drag & drop your file here'}
-              </h3>
-              <p className="text-muted-foreground mb-4">
-                or click to browse files
-              </p>
-              <div className="flex flex-wrap justify-center gap-2">
-                <Badge variant="secondary">JSONL</Badge>
-                <Badge variant="secondary">CSV</Badge>
-                <Badge variant="secondary">Parquet</Badge>
+          <CardContent className="p-6">
+            <Tabs defaultValue="file" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="file" className="flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  File Upload
+                </TabsTrigger>
+                <TabsTrigger value="paste" className="flex items-center gap-2">
+                  <Clipboard className="h-4 w-4" />
+                  Paste Data
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="file" className="mt-6">
+                <div
+                  {...getRootProps()}
+                  className={`
+                    border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
+                    ${isDragActive ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'}
+                    ${isUploading ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary hover:bg-primary/5'}
+                  `}
+                >
+                  <input {...getInputProps()} />
+                  <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-lg font-semibold mb-2">
+                    {isDragActive ? 'Drop your file here' : 'Drag & drop your file here'}
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    or click to browse files
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <Badge variant="secondary">JSONL</Badge>
+                    <Badge variant="secondary">CSV</Badge>
+                    <Badge variant="secondary">Parquet</Badge>
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="paste" className="mt-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Paste your data here (JSONL, CSV, or JSON format)
+                    </label>
+                    <Textarea
+                      value={pastedData}
+                      onChange={(e) => setPastedData(e.target.value)}
+                      placeholder="Paste your question data here...&#10;&#10;Example JSONL:&#10;{&quot;book_source&quot;: &quot;Pinnacle 6800&quot;, &quot;question_text&quot;: &quot;What is 20% of 100?&quot;, ...}&#10;{&quot;book_source&quot;: &quot;Pinnacle 6800&quot;, &quot;question_text&quot;: &quot;A man buys a pen...&quot;, ...}"
+                      className="min-h-[200px] font-mono text-sm"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handlePasteProcess}
+                      disabled={!pastedData.trim() || isProcessingPaste}
+                      className="flex items-center gap-2"
+                    >
+                      {isProcessingPaste ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      ) : (
+                        <FileCode className="h-4 w-4" />
+                      )}
+                      {isProcessingPaste ? 'Processing...' : 'Process Data'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setPastedData('')}
+                      disabled={isProcessingPaste}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Paste Data Info */}
+      {pastedData && !file && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Clipboard className="h-8 w-8 text-blue-500" />
+                <div>
+                  <CardTitle className="text-lg">Pasted Data</CardTitle>
+                  <CardDescription>
+                    {pastedData.length} characters • {pastedData.split('\n').length} lines
+                  </CardDescription>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePasteProcess}
+                  disabled={isProcessingPaste}
+                  className="flex items-center gap-2"
+                >
+                  {isProcessingPaste ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : (
+                    <FileCode className="h-4 w-4" />
+                  )}
+                  {isProcessingPaste ? 'Processing...' : 'Process Data'}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPastedData('')}
+                  disabled={isProcessingPaste}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Data Preview (first 500 characters):
+                </label>
+                <div className="bg-gray-50 dark:bg-gray-900 p-3 rounded-lg border max-h-32 overflow-y-auto">
+                  <pre className="text-xs font-mono text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                    {pastedData.substring(0, 500)}
+                    {pastedData.length > 500 && '...'}
+                  </pre>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -398,49 +619,112 @@ export default function NewBulkUpload({ onUploadComplete, onCancel }: BulkUpload
       )}
 
       {/* Parse Results */}
-      {parseResult && (
+      {(parseResult || pasteResult) && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Eye className="h-5 w-5" />
-              Parse Results
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Eye className="h-5 w-5" />
+                Parse Results
+                {pasteResult && (
+                  <Badge variant="secondary" className="ml-2">
+                    From Paste
+                  </Badge>
+                )}
+              </CardTitle>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowLogs(!showLogs)}
+                  className="flex items-center gap-2"
+                >
+                  <Terminal className="h-4 w-4" />
+                  {showLogs ? 'Hide' : 'View'} Logs
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => copyLogsToClipboard('parse')}
+                  className="flex items-center gap-2"
+                >
+                  <Copy className="h-4 w-4" />
+                  Copy Logs
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600">
-                  {parseResult.totalRows}
+                  {(parseResult || pasteResult)?.totalRows}
                 </div>
                 <div className="text-sm text-muted-foreground">Total Rows</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">
-                  {parseResult.validRows}
+                  {(parseResult || pasteResult)?.validRows}
                 </div>
                 <div className="text-sm text-muted-foreground">Valid Questions</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-red-600">
-                  {parseResult.errors.length}
+                  {(parseResult || pasteResult)?.errors.length}
                 </div>
                 <div className="text-sm text-muted-foreground">Errors</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-purple-600">
-                  {((parseResult.validRows / parseResult.totalRows) * 100).toFixed(1)}%
+                  {(((parseResult || pasteResult)?.validRows || 0) / ((parseResult || pasteResult)?.totalRows || 1) * 100).toFixed(1)}%
                 </div>
                 <div className="text-sm text-muted-foreground">Success Rate</div>
               </div>
             </div>
 
-            {parseResult.errors.length > 0 && (
+            {((parseResult || pasteResult)?.errors?.length || 0) > 0 && (
               <Alert className="mb-4">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
-                  {parseResult.errors.length} rows had errors. Check the preview below.
+                  {((parseResult || pasteResult)?.errors?.length || 0)} rows had errors. Check the preview below.
                 </AlertDescription>
               </Alert>
+            )}
+
+            {/* Log Viewer */}
+            {showLogs && (
+              <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                    <ScrollText className="h-4 w-4" />
+                    Parse Log Details
+                  </h4>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => copyLogsToClipboard('parse')}
+                    className="flex items-center gap-2"
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copy
+                  </Button>
+                </div>
+                
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {((parseResult || pasteResult)?.errors || []).map((error, index) => (
+                    <div key={index} className="text-sm border-l-2 border-red-300 pl-3 py-1">
+                      <div className="font-medium text-red-700 dark:text-red-300">
+                        Row {error.row}: {error.error}
+                      </div>
+                      {error.data ? (
+                        <div className="text-xs text-red-600 dark:text-red-400 mt-1 font-mono bg-red-100 dark:bg-red-900/30 p-2 rounded">
+                          {JSON.stringify(error.data, null, 2)}
+                        </div>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
 
             {/* Action Buttons */}
@@ -495,14 +779,36 @@ export default function NewBulkUpload({ onUploadComplete, onCancel }: BulkUpload
       {uploadResult && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {uploadResult.success ? (
-                <CheckCircle className="h-5 w-5 text-green-600" />
-              ) : (
-                <XCircle className="h-5 w-5 text-red-600" />
-              )}
-              Upload Result
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                {uploadResult.success ? (
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                ) : (
+                  <XCircle className="h-5 w-5 text-red-600" />
+                )}
+                Upload Result
+              </CardTitle>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowLogs(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Terminal className="h-4 w-4" />
+                  View Upload Logs
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => copyLogsToClipboard('upload')}
+                  className="flex items-center gap-2"
+                >
+                  <Copy className="h-4 w-4" />
+                  Copy Logs
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -544,19 +850,14 @@ export default function NewBulkUpload({ onUploadComplete, onCancel }: BulkUpload
                 {/* Detailed Error Log */}
                 <div className="border rounded-lg p-4 bg-red-50 dark:bg-red-950/20">
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-semibold text-red-800 dark:text-red-200">
-                      Error Details:
+                    <h4 className="font-semibold text-red-800 dark:text-red-200 flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4" />
+                      Upload Error Details:
                     </h4>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => {
-                        const errorText = uploadResult.errors.map((error, index) => 
-                          `Row ${error.row}: ${error.error}\n${error.data ? JSON.stringify(error.data, null, 2) : ''}`
-                        ).join('\n\n')
-                        navigator.clipboard.writeText(errorText)
-                        toast.success('Error log copied to clipboard')
-                      }}
+                      onClick={() => copyLogsToClipboard('upload')}
                       className="flex items-center gap-2 text-red-700 dark:text-red-300 border-red-300 hover:bg-red-100 dark:hover:bg-red-900/30"
                     >
                       <Copy className="h-4 w-4" />
@@ -584,17 +885,19 @@ export default function NewBulkUpload({ onUploadComplete, onCancel }: BulkUpload
                   
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {uploadResult.errors.map((error, index) => (
-                      <div key={index} className="text-sm border-l-2 border-red-300 pl-3 py-1">
-                        <div className="font-medium text-red-700 dark:text-red-300">
+                      <div key={index} className="text-sm border-l-4 border-red-500 pl-3 py-2 bg-red-100 dark:bg-red-900/20 rounded-r">
+                        <div className="font-bold text-red-800 dark:text-red-200 flex items-center gap-2">
+                          <AlertCircle className="h-4 w-4" />
                           Row {error.row}: {error.error}
-                          {error.error.includes('row-level security policy') && (
-                            <div className="text-xs text-blue-600 dark:text-blue-400 mt-1 p-2 bg-blue-50 dark:bg-blue-950/20 rounded border-l-2 border-blue-300">
-                              <strong>Note:</strong> This error indicates a database security policy issue. The bulk upload has been updated to use admin privileges to bypass this restriction.
-                            </div>
-                          )}
                         </div>
+                        {error.error.includes('row-level security policy') && (
+                          <div className="text-xs text-blue-700 dark:text-blue-300 mt-2 p-2 bg-blue-100 dark:bg-blue-950/30 rounded border-l-2 border-blue-400">
+                            <strong>Note:</strong> This error indicates a database security policy issue. The bulk upload has been updated to use admin privileges to bypass this restriction.
+                          </div>
+                        )}
                         {error.data ? (
-                          <div className="text-xs text-red-600 dark:text-red-400 mt-1 font-mono bg-red-100 dark:bg-red-900/30 p-2 rounded">
+                          <div className="text-xs text-red-700 dark:text-red-300 mt-2 font-mono bg-red-200 dark:bg-red-800/30 p-3 rounded border border-red-300 dark:border-red-700">
+                            <div className="font-semibold mb-1">Error Data:</div>
                             {JSON.stringify(error.data as Record<string, unknown>, null, 2)}
                           </div>
                         ) : null}
