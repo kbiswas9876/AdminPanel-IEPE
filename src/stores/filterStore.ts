@@ -12,6 +12,7 @@ export interface FilterState {
   chapters: string[]
   tags: string[]
   difficulty: string
+  exams: string[]
   
   // Sorting and pagination
   sort_by: string
@@ -30,6 +31,7 @@ interface FilterActions {
   setChapters: (chapters: string[]) => void
   setTags: (tags: string[]) => void
   setDifficulty: (difficulty: string) => void
+  setExams: (exams: string[]) => void
   
   // Sorting and pagination
   setSortBy: (sortBy: string) => void
@@ -58,6 +60,7 @@ const initialState: FilterState = {
   chapters: [],
   tags: [],
   difficulty: 'all',
+  exams: [],
   sort_by: 'id_asc',
   page: 1,
   pageSize: 25,
@@ -93,6 +96,11 @@ export const useFilterStore = create<FilterState & FilterActions>()(
       
       setDifficulty: (difficulty: string) => set((state) => {
         state.difficulty = difficulty
+        state.page = 1
+      }),
+      
+      setExams: (exams: string[]) => set((state) => {
+        state.exams = exams
         state.page = 1
       }),
       
@@ -156,6 +164,14 @@ export const useFilterStore = create<FilterState & FilterActions>()(
         const difficulty = urlParams.get('difficulty')
         if (difficulty) state.difficulty = difficulty
         
+        // Parse exams
+        const exams = urlParams.get('exams')
+        if (exams) {
+          state.exams = exams.split(',').map(s => 
+            decodeURIComponent(s).replace(/\+/g, ' ')
+          ).filter(Boolean)
+        }
+        
         // Parse sort by
         const sortBy = urlParams.get('sort_by')
         if (sortBy) state.sort_by = sortBy
@@ -189,6 +205,7 @@ export const useFilterStore = create<FilterState & FilterActions>()(
           chapters: state.chapters,
           tags: state.tags,
           difficulty: state.difficulty,
+          exams: state.exams,
           sort_by: state.sort_by,
           pageSize: state.pageSize
         }
@@ -225,6 +242,7 @@ export const useFilterStore = create<FilterState & FilterActions>()(
         chapters: state.chapters,
         tags: state.tags,
         difficulty: state.difficulty,
+        exams: state.exams,
         sort_by: state.sort_by,
         pageSize: state.pageSize
       })

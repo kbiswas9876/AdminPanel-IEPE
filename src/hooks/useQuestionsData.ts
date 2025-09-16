@@ -12,6 +12,7 @@ export function useQuestionsData() {
     chapters,
     tags,
     difficulty,
+    exams,
     sort_by,
     page,
     pageSize,
@@ -28,13 +29,14 @@ export function useQuestionsData() {
         chapters: chapters || [],
         tags: tags || [],
         difficulty: difficulty === 'all' ? undefined : (difficulty as 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard') || undefined,
+        exams: exams || [],
         sort_by: sort_by || 'id_asc',
         page: page || 1,
         pageSize: pageSize || 25,
         isHydrated
       }
     ]
-  }, [search, book_sources, chapters, tags, difficulty, sort_by, page, pageSize, isHydrated])
+  }, [search, book_sources, chapters, tags, difficulty, exams, sort_by, page, pageSize, isHydrated])
 
   const query = useQuery({
     queryKey,
@@ -43,13 +45,14 @@ export function useQuestionsData() {
         return { questions: [], total: 0 }
       }
 
-      // Sequential filtering: Book → Chapter → Difficulty → Tags → Search
+      // Sequential filtering: Book → Chapter → Difficulty → Tags → Exams → Search
       const result = await searchQuestions({
         search: search || '',
         book_sources: book_sources || [],
         chapters: chapters || [],
         tags: tags || [],
         difficulty: difficulty === 'all' ? undefined : (difficulty as 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard') || undefined,
+        exams: exams || [],
         sort_by: sort_by || 'id_asc',
         page: page || 1,
         pageSize: pageSize || 25
@@ -72,10 +75,11 @@ export function useQuestionsData() {
       book_sources.length > 0 ||
       chapters.length > 0 ||
       tags.length > 0 ||
+      exams.length > 0 ||
       (difficulty && difficulty !== 'all') ||
       sort_by !== 'id_asc'
     )
-  }, [search, book_sources, chapters, tags, difficulty, sort_by])
+  }, [search, book_sources, chapters, tags, exams, difficulty, sort_by])
 
   const totalPages = useMemo(() => {
     if (!query.data?.total || !pageSize) return 0

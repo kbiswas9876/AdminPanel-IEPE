@@ -156,11 +156,12 @@ export function QuestionExplorer() {
   }
 
   const pageSizeOptions = [
-    { value: '5', label: '5 per page' },
-    { value: '10', label: '10 per page' },
-    { value: '20', label: '20 per page' },
-    { value: '30', label: '30 per page' },
-    { value: '50', label: '50 per page' }
+    { value: '5', label: '5' },
+    { value: '10', label: '10' },
+    { value: '20', label: '20' },
+    { value: '30', label: '30' },
+    { value: '50', label: '50' },
+    { value: '100', label: '100' }
   ]
 
   const renderPaginationButton = (page: number, icon?: React.ReactNode, label?: string, key?: string) => {
@@ -329,27 +330,21 @@ export function QuestionExplorer() {
             </span>
           </div>
           
-          {/* Premium Questions per page selector */}
+          {/* Clean Per Page Selector */}
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 px-2 py-1 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200/50">
-              <Settings className="h-3.5 w-3.5 text-blue-600" />
-              <span className="text-xs font-medium text-blue-700">Per Page</span>
-            </div>
+            <span className="text-xs font-medium text-gray-600">Per Page:</span>
             <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
-              <SelectTrigger className="h-8 w-28 text-xs font-medium bg-white border-blue-200 hover:border-blue-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all duration-200 shadow-sm hover:shadow-md">
+              <SelectTrigger className="h-8 w-16 text-xs font-medium bg-white border-gray-200 hover:border-gray-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all duration-200">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-lg animate-in fade-in-0 zoom-in-95 duration-200">
+              <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-lg">
                 {pageSizeOptions.map(option => (
                   <SelectItem 
                     key={option.value} 
                     value={option.value}
-                    className="text-xs font-medium hover:bg-blue-50 focus:bg-blue-50 transition-colors duration-150"
+                    className="text-xs font-medium hover:bg-gray-50 focus:bg-gray-50 transition-colors duration-150"
                   >
-                    <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
-                      {option.label}
-                    </div>
+                    {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>

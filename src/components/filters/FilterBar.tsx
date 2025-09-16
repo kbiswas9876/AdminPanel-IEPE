@@ -43,6 +43,7 @@ interface FilterOptions {
   chapters: string[]
   tags: string[]
   difficulties: string[]
+  exams: string[]
 }
 
 export function FilterBar() {
@@ -52,12 +53,14 @@ export function FilterBar() {
     chapters,
     tags,
     difficulty,
+    exams,
     sort_by,
     setSearch,
     setBookSources,
     setChapters,
     setTags,
     setDifficulty,
+    setExams,
     setSortBy,
     clearAllFilters,
     savePreset,
@@ -70,7 +73,8 @@ export function FilterBar() {
     books: [],
     chapters: [],
     tags: [],
-    difficulties: ['Easy', 'Easy-Moderate', 'Moderate', 'Moderate-Hard', 'Hard']
+    difficulties: ['Easy', 'Easy-Moderate', 'Moderate', 'Moderate-Hard', 'Hard'],
+    exams: []
   })
   const [isLoading, setIsLoading] = useState(true)
   const [showPresets, setShowPresets] = useState(false)
@@ -84,7 +88,8 @@ export function FilterBar() {
           books: options.bookSources || [],
           chapters: options.chapters || [],
           tags: options.tags || [],
-          difficulties: ['Easy', 'Easy-Moderate', 'Moderate', 'Moderate-Hard', 'Hard']
+          difficulties: options.difficulties || ['Easy', 'Easy-Moderate', 'Moderate', 'Moderate-Hard', 'Hard'],
+          exams: options.exams || []
         })
       } catch (error) {
         console.error('Failed to load filter options:', error)
@@ -259,14 +264,14 @@ export function FilterBar() {
           />
         </div>
 
-        {/* Difficulty & Sort */}
-        <div className="flex gap-2">
+        {/* Difficulty Filter */}
+        <div className="w-32">
           <Select value={difficulty} onValueChange={setDifficulty}>
-            <SelectTrigger className="h-8 w-24">
-              <SelectValue placeholder="Diff" />
+            <SelectTrigger className="h-8">
+              <SelectValue placeholder="Difficulty" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="all">All Difficulties</SelectItem>
               {filterOptions.difficulties.map((diff) => (
                 <SelectItem key={diff} value={diff}>
                   {diff}
@@ -274,7 +279,21 @@ export function FilterBar() {
               ))}
             </SelectContent>
           </Select>
-          
+        </div>
+
+        {/* Exam Filter */}
+        <div className="w-32">
+          <MultiSelect
+            options={filterOptions.exams}
+            selected={exams}
+            onSelectionChange={setExams}
+            placeholder="Exam"
+            icon={Filter}
+          />
+        </div>
+
+        {/* Sort */}
+        <div className="flex gap-2">
           <Select value={sort_by} onValueChange={setSortBy}>
             <SelectTrigger className="h-8 w-24">
               <SelectValue />
