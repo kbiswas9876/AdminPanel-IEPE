@@ -4,7 +4,15 @@ import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/lib/auth'
 import { useMobile } from '@/lib/contexts/mobile-context'
 import { Button } from '@/components/ui/button'
-import { LogOut, User, Bell, AlertTriangle, UserPlus, BookOpen, TestTube, Loader2, Menu, X } from 'lucide-react'
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { LogOut, User, Bell, AlertTriangle, UserPlus, BookOpen, TestTube, Loader2, Menu, X, Settings, ChevronDown } from 'lucide-react'
 import { getNotifications, markNotificationAsRead, type Notification } from '@/lib/actions/notifications'
 import { clearProfileCache } from '@/components/auth/protected-route'
 
@@ -138,21 +146,67 @@ export function Header() {
             </Button>
           )}
           
+          {/* Premium Profile Section */}
           <div className="flex items-center space-x-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 flex items-center justify-center shadow-lg">
-              <User className="h-5 w-5 text-white" />
-            </div>
-            <div className="hidden sm:block">
-              <h2 className="text-lg font-bold text-gray-900 tracking-tight">
-                Welcome back, {user?.email?.split('@')[0]}
-              </h2>
-              <p className="text-xs text-gray-500 font-medium">Administrator</p>
-            </div>
-            <div className="block sm:hidden">
-              <h2 className="text-sm font-bold text-gray-900 tracking-tight">
-                {user?.email?.split('@')[0]}
-              </h2>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="flex items-center space-x-3 p-2 hover:bg-gray-100/80 transition-all duration-200 hover:scale-105 rounded-xl"
+                >
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 flex items-center justify-center shadow-lg ring-2 ring-white/20">
+                    <User className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="hidden sm:block text-left">
+                    <h2 className="text-sm font-semibold text-gray-900 tracking-tight">
+                      {user?.email?.split('@')[0]}
+                    </h2>
+                    <p className="text-xs text-gray-500 font-medium">Administrator</p>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-gray-500 hidden sm:block" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                align="start" 
+                className="w-56 bg-white/95 backdrop-blur-md border border-gray-200/60 shadow-xl rounded-xl"
+              >
+                <DropdownMenuLabel className="px-3 py-2">
+                  <div className="flex items-center space-x-2">
+                    <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 flex items-center justify-center">
+                      <User className="h-4 w-4 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">{user?.email?.split('@')[0]}</p>
+                      <p className="text-xs text-gray-500">{user?.email}</p>
+                    </div>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-gray-200/60" />
+                <DropdownMenuItem className="px-3 py-2 hover:bg-gray-50/80 transition-colors">
+                  <User className="h-4 w-4 mr-2 text-gray-600" />
+                  <span className="text-sm">Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="px-3 py-2 hover:bg-gray-50/80 transition-colors">
+                  <Settings className="h-4 w-4 mr-2 text-gray-600" />
+                  <span className="text-sm">Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-gray-200/60" />
+                <DropdownMenuItem 
+                  onClick={handleSignOut}
+                  disabled={isLoggingOut}
+                  className="px-3 py-2 hover:bg-red-50/80 hover:text-red-700 transition-colors disabled:opacity-50"
+                >
+                  {isLoggingOut ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin text-red-600" />
+                  ) : (
+                    <LogOut className="h-4 w-4 mr-2 text-red-600" />
+                  )}
+                  <span className="text-sm font-medium">
+                    {isLoggingOut ? 'Logging out...' : 'Logout'}
+                  </span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
         
@@ -261,28 +315,6 @@ export function Header() {
             )}
           </div>
           
-          {/* Enhanced Logout Button */}
-          <Button
-            onClick={handleSignOut}
-            disabled={isLoggingOut}
-            variant="outline"
-            size="sm"
-            className="flex items-center space-x-2 hover:bg-red-50 hover:border-red-200 hover:text-red-700 transition-all duration-300 hover:scale-105 border-gray-200/60 disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95 relative overflow-hidden group"
-          >
-            {isLoggingOut ? (
-              <>
-                <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-red-600/10 animate-pulse"></div>
-                <Loader2 className="h-4 w-4 animate-spin relative z-10" />
-                <span className="font-medium relative z-10">Logging out...</span>
-              </>
-            ) : (
-              <>
-                <div className="absolute inset-0 bg-gradient-to-r from-red-500/0 via-red-500/10 to-red-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                <LogOut className="h-4 w-4 relative z-10" />
-                <span className="font-medium relative z-10">Logout</span>
-              </>
-            )}
-          </Button>
         </div>
       </div>
     </header>

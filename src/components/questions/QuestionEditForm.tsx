@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { 
   Select, 
@@ -51,7 +50,9 @@ import { createChapter } from '@/lib/actions/chapters'
 import { generateUniqueQuestionId, generateUniqueBookCode } from '@/lib/utils/uniform-id-generator'
 import { getBookCodeByName, getAllBookSourcesWithCodes } from '@/lib/actions/id-generation'
 import { toast } from 'sonner'
-import { LatexRenderer } from '@/lib/utils/latex-renderer'
+import { LivePreviewEditor } from '@/components/editors/LivePreviewEditor'
+import { CompactLivePreviewEditor } from '@/components/editors/CompactLivePreviewEditor'
+import { defaultImageUpload } from '@/components/editors/ImageUploadHandler'
 
 interface QuestionEditFormProps {
   question: UIQuestion
@@ -202,22 +203,6 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [handleSave, onCancel])
 
-  // LaTeX Preview Component
-  const LatexPreview = useCallback(({ content, className = "" }: { content: string; className?: string }) => {
-    if (!content || !showLatexPreview) return null
-    
-    return (
-      <div className={`mt-2 p-3 bg-slate-50 rounded-lg border border-slate-200 ${className}`}>
-        <div className="flex items-center gap-2 mb-2">
-          <Eye className="h-3 w-3 text-slate-500" />
-          <span className="text-xs font-medium text-slate-600 uppercase tracking-wide">Preview</span>
-        </div>
-        <div className="text-sm">
-          <LatexRenderer text={content} />
-        </div>
-      </div>
-    )
-  }, [showLatexPreview])
 
   // Auto-generate question ID when relevant fields change
   useEffect(() => {
@@ -789,16 +774,14 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
             </div>
           </div>
           <div className="px-8 py-6">
-            <div className="space-y-4">
-              <Textarea
-                value={formData.question_text}
-                onChange={(e) => handleInputChange('question_text', e.target.value)}
-                placeholder="Enter the question text (supports LaTeX with $...$ or $$...$$)"
-                rows={4}
-                className="text-base font-mono border-slate-200 resize-none"
-              />
-              <LatexPreview content={formData.question_text} />
-            </div>
+            <LivePreviewEditor
+              value={formData.question_text}
+              onChange={(value) => handleInputChange('question_text', value)}
+              placeholder="Enter the question text (supports Markdown + LaTeX math)"
+              rows={4}
+              showToolbar={true}
+              onImageUpload={defaultImageUpload}
+            />
           </div>
         </div>
 
@@ -825,16 +808,13 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
                   <label className="text-sm font-semibold text-gray-700">Option A</label>
                   {formData.correct_option === 'a' && <CheckCircle className="h-4 w-4 text-green-500" />}
                 </div>
-                <Textarea
+                <CompactLivePreviewEditor
                   value={formData.option_a}
-                  onChange={(e) => handleInputChange('option_a', e.target.value)}
-                  placeholder="Option A (supports LaTeX)"
+                  onChange={(value) => handleInputChange('option_a', value)}
+                  placeholder="Option A (supports Markdown + LaTeX)"
                   rows={3}
-                  className={`text-sm font-mono border-slate-200 resize-none ${
-                    formData.correct_option === 'a' ? 'border-green-300 bg-green-50/30' : ''
-                  }`}
+                  onImageUpload={defaultImageUpload}
                 />
-                <LatexPreview content={formData.option_a} />
               </div>
 
               {/* Option B */}
@@ -850,16 +830,13 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
                   <label className="text-sm font-semibold text-gray-700">Option B</label>
                   {formData.correct_option === 'b' && <CheckCircle className="h-4 w-4 text-green-500" />}
                 </div>
-                <Textarea
+                <CompactLivePreviewEditor
                   value={formData.option_b}
-                  onChange={(e) => handleInputChange('option_b', e.target.value)}
-                  placeholder="Option B (supports LaTeX)"
+                  onChange={(value) => handleInputChange('option_b', value)}
+                  placeholder="Option B (supports Markdown + LaTeX)"
                   rows={3}
-                  className={`text-sm font-mono border-slate-200 resize-none ${
-                    formData.correct_option === 'b' ? 'border-green-300 bg-green-50/30' : ''
-                  }`}
+                  onImageUpload={defaultImageUpload}
                 />
-                <LatexPreview content={formData.option_b} />
               </div>
 
               {/* Option C */}
@@ -875,16 +852,13 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
                   <label className="text-sm font-semibold text-gray-700">Option C</label>
                   {formData.correct_option === 'c' && <CheckCircle className="h-4 w-4 text-green-500" />}
                 </div>
-                <Textarea
+                <CompactLivePreviewEditor
                   value={formData.option_c}
-                  onChange={(e) => handleInputChange('option_c', e.target.value)}
-                  placeholder="Option C (supports LaTeX)"
+                  onChange={(value) => handleInputChange('option_c', value)}
+                  placeholder="Option C (supports Markdown + LaTeX)"
                   rows={3}
-                  className={`text-sm font-mono border-slate-200 resize-none ${
-                    formData.correct_option === 'c' ? 'border-green-300 bg-green-50/30' : ''
-                  }`}
+                  onImageUpload={defaultImageUpload}
                 />
-                <LatexPreview content={formData.option_c} />
               </div>
 
               {/* Option D */}
@@ -900,16 +874,13 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
                   <label className="text-sm font-semibold text-gray-700">Option D</label>
                   {formData.correct_option === 'd' && <CheckCircle className="h-4 w-4 text-green-500" />}
                 </div>
-                <Textarea
+                <CompactLivePreviewEditor
                   value={formData.option_d}
-                  onChange={(e) => handleInputChange('option_d', e.target.value)}
-                  placeholder="Option D (supports LaTeX)"
+                  onChange={(value) => handleInputChange('option_d', value)}
+                  placeholder="Option D (supports Markdown + LaTeX)"
                   rows={3}
-                  className={`text-sm font-mono border-slate-200 resize-none ${
-                    formData.correct_option === 'd' ? 'border-green-300 bg-green-50/30' : ''
-                  }`}
+                  onImageUpload={defaultImageUpload}
                 />
-                <LatexPreview content={formData.option_d} />
               </div>
             </div>
           </div>
@@ -934,16 +905,14 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
           </div>
           {isSolutionExpanded && (
             <div className="px-8 py-6 animate-in fade-in-0 duration-200">
-              <div className="space-y-4">
-                <Textarea
-                  value={formData.solution_text}
-                  onChange={(e) => handleInputChange('solution_text', e.target.value)}
-                  placeholder="Enter the solution/explanation (supports LaTeX)"
-                  rows={4}
-                  className="text-base font-mono border-slate-200 resize-none"
-                />
-                <LatexPreview content={formData.solution_text} />
-              </div>
+              <LivePreviewEditor
+                value={formData.solution_text}
+                onChange={(value) => handleInputChange('solution_text', value)}
+                placeholder="Enter the solution/explanation (supports Markdown + LaTeX math)"
+                rows={4}
+                showToolbar={true}
+                onImageUpload={defaultImageUpload}
+              />
             </div>
           )}
         </div>
