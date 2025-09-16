@@ -14,7 +14,12 @@ import {
   Hash,
   CheckCircle,
   XCircle,
-  Edit
+  Edit,
+  HelpCircle,
+  ListChecks,
+  Lightbulb,
+  Database,
+  Info
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { UIQuestion } from '@/lib/types'
@@ -79,8 +84,8 @@ export function QuestionCard({ question, isSelected = false, onSelect, onQuestio
   }
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardHeader className="pb-3">
+    <Card className="relative overflow-hidden bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-[1.01] rounded-2xl">
+      <CardHeader className="pb-4 px-6 pt-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3 flex-1 min-w-0">
             {/* Selection Checkbox */}
@@ -107,7 +112,7 @@ export function QuestionCard({ question, isSelected = false, onSelect, onQuestio
                   </Badge>
                 )}
               </div>
-              <h3 className="font-medium text-sm leading-relaxed line-clamp-2 whitespace-pre-wrap">
+              <h3 className="text-lg font-semibold text-slate-900 leading-relaxed line-clamp-2 whitespace-pre-wrap">
                 <LatexRenderer text={currentQuestion.question_text} />
               </h3>
             </div>
@@ -137,7 +142,7 @@ export function QuestionCard({ question, isSelected = false, onSelect, onQuestio
       </CardHeader>
 
       {isExpanded && (
-        <CardContent className="pt-0 space-y-4">
+        <CardContent className="pt-0 px-6 pb-6 space-y-6 transition-all duration-300 ease-in-out">
           {isEditing ? (
             <QuestionEditForm
               question={currentQuestion}
@@ -147,17 +152,20 @@ export function QuestionCard({ question, isSelected = false, onSelect, onQuestio
           ) : (
             <>
               {/* Options */}
-              <div className="space-y-2">
-            <h4 className="text-sm font-medium">Options:</h4>
-            <div className="grid gap-2">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-200/60">
+                  <ListChecks className="h-4 w-4 text-slate-500" />
+                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Options</h4>
+                </div>
+                <div className="grid gap-3">
               {currentQuestion.options && Object.entries(currentQuestion.options).map(([key, option], index) => (
                 <div
                   key={key}
                   className={cn(
-                    "p-3 rounded-lg text-sm border flex items-start gap-3",
+                    "p-4 rounded-xl text-base border flex items-start gap-3 transition-all duration-200",
                     key === currentQuestion.correct_option
-                      ? "bg-green-50 border-green-200 text-green-800"
-                      : "bg-muted/50 border-border"
+                      ? "bg-green-50 border-green-300 text-green-700 shadow-sm"
+                      : "bg-slate-50/80 border-slate-200 text-slate-700 hover:bg-slate-100/80"
                   )}
                 >
                   <div className="flex-shrink-0 mt-0.5">
@@ -185,44 +193,63 @@ export function QuestionCard({ question, isSelected = false, onSelect, onQuestio
 
           {/* Explanation */}
           {currentQuestion.solution_text && (
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium">Solution:</h4>
-              <div className="text-sm text-muted-foreground leading-relaxed p-3 bg-muted/30 rounded-lg whitespace-pre-wrap">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 pb-2 border-b border-slate-200/60">
+                <Lightbulb className="h-4 w-4 text-slate-500" />
+                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Solution</h4>
+              </div>
+              <div className="text-base text-slate-700 leading-relaxed p-4 bg-slate-50 rounded-xl whitespace-pre-wrap font-mono border border-slate-200/60">
                 <LatexRenderer text={currentQuestion.solution_text} />
               </div>
             </div>
           )}
 
           {/* Metadata */}
-          <div className="flex flex-wrap gap-4 text-xs text-muted-foreground pt-2 border-t">
-            <div className="flex items-center gap-1">
-              <BookOpen className="h-3 w-3" />
-              <span>{currentQuestion.book_source}</span>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 pb-2 border-b border-slate-200/60">
+              <Database className="h-4 w-4 text-slate-500" />
+              <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Metadata</h4>
             </div>
-            <div className="flex items-center gap-1">
-              <Tag className="h-3 w-3" />
-              <span>{currentQuestion.chapter_name}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
-              <span>{formatDate(currentQuestion.created_at)}</span>
-            </div>
-            {currentQuestion.exam_metadata && (
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>
-                <span className="text-indigo-600 font-medium">{currentQuestion.exam_metadata}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-amber-50/80 rounded-xl border border-amber-200/60">
+              <div className="flex items-center gap-2 text-sm text-slate-700">
+                <BookOpen className="h-4 w-4 text-slate-500" />
+                <span className="font-medium">Book:</span>
+                <span>{currentQuestion.book_source}</span>
               </div>
-            )}
+              <div className="flex items-center gap-2 text-sm text-slate-700">
+                <Tag className="h-4 w-4 text-slate-500" />
+                <span className="font-medium">Chapter:</span>
+                <span>{currentQuestion.chapter_name}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-slate-700">
+                <Calendar className="h-4 w-4 text-slate-500" />
+                <span className="font-medium">Date:</span>
+                <span>{formatDate(currentQuestion.created_at)}</span>
+              </div>
+              {currentQuestion.exam_metadata && (
+                <div className="flex items-center gap-2 text-sm text-slate-700">
+                  <Info className="h-4 w-4 text-slate-500" />
+                  <span className="font-medium">Exam:</span>
+                  <span className="text-indigo-600 font-medium">{currentQuestion.exam_metadata}</span>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Tags */}
           {currentQuestion.admin_tags && currentQuestion.admin_tags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {currentQuestion.admin_tags.map((tag, index) => (
-                <Badge key={index} variant="outline" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 pb-2 border-b border-slate-200/60">
+                <Tag className="h-4 w-4 text-slate-500" />
+                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Tags</h4>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {currentQuestion.admin_tags.map((tag, index) => (
+                  <Badge key={index} variant="outline" className="text-xs bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200 transition-colors">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
             </div>
           )}
             </>
