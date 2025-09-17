@@ -9,7 +9,7 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react'
-import { LatexRenderer } from '@/lib/utils/latex-renderer'
+import { MarkdownLatexRenderer } from '@/lib/utils/markdown-latex-renderer'
 import { cn } from '@/lib/utils'
 
 interface CompactLivePreviewEditorProps {
@@ -18,46 +18,9 @@ interface CompactLivePreviewEditorProps {
   placeholder?: string
   className?: string
   rows?: number
-  onImageUpload?: (file: File) => Promise<string>
+  onImageUpload?: (file: File, questionId?: number, fieldType?: string) => Promise<string>
 }
 
-// Enhanced markdown parser for compact view
-const parseMarkdownToHTML = (text: string): string => {
-  if (!text) return ''
-  
-  let html = text
-    // Headers
-    .replace(/^### (.*$)/gim, '<h3 class="text-sm font-semibold mb-1 mt-2 text-gray-800">$1</h3>')
-    .replace(/^## (.*$)/gim, '<h2 class="text-base font-semibold mb-2 mt-3 text-gray-800">$1</h2>')
-    .replace(/^# (.*$)/gim, '<h1 class="text-lg font-bold mb-2 mt-3 text-gray-800">$1</h1>')
-    
-    // Code blocks
-    .replace(/```([\s\S]*?)```/g, '<pre class="bg-gray-100 p-2 rounded text-xs overflow-x-auto my-2 border border-gray-200"><code class="text-xs font-mono text-gray-800">$1</code></pre>')
-    
-    // Bold and italic
-    .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-gray-900">$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em class="italic text-gray-800">$1</em>')
-    
-    // Inline code
-    .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono text-gray-800 border border-gray-200">$1</code>')
-    
-    // Links
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-600 hover:text-blue-800 hover:underline text-sm" target="_blank" rel="noopener noreferrer">$1</a>')
-    
-    // Lists
-    .replace(/^[\s]*[-*+] (.*$)/gim, '<li class="ml-3 mb-0.5 text-gray-700 text-sm">$1</li>')
-    .replace(/^[\s]*\d+\. (.*$)/gim, '<li class="ml-3 mb-0.5 text-gray-700 text-sm">$1</li>')
-    
-    // Line breaks
-    .replace(/\n\n/g, '</p><p class="mb-1 text-gray-700 text-sm leading-relaxed">')
-    .replace(/\n/g, '<br>')
-  
-  if (!html.startsWith('<')) {
-    html = `<p class="mb-1 text-gray-700 text-sm leading-relaxed">${html}</p>`
-  }
-  
-  return html
-}
 
 export function CompactLivePreviewEditor({
   value,
@@ -123,11 +86,9 @@ export function CompactLivePreviewEditor({
       )
     }
     
-    const htmlContent = parseMarkdownToHTML(value)
-    
     return (
       <div className="p-3 text-gray-700 text-sm leading-relaxed">
-        <LatexRenderer text={htmlContent} />
+        <MarkdownLatexRenderer text={value} />
       </div>
     )
   }
@@ -206,3 +167,4 @@ export function CompactLivePreviewEditor({
     </div>
   )
 }
+

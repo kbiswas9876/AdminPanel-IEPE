@@ -21,7 +21,7 @@ import {
   Quote,
   Minus
 } from 'lucide-react'
-import { LatexRenderer } from '@/lib/utils/latex-renderer'
+import { MarkdownLatexRenderer } from '@/lib/utils/markdown-latex-renderer'
 import { cn } from '@/lib/utils'
 
 interface LivePreviewEditorProps {
@@ -33,57 +33,9 @@ interface LivePreviewEditorProps {
   showToolbar?: boolean
   compact?: boolean
   autoFocus?: boolean
-  onImageUpload?: (file: File) => Promise<string>
+  onImageUpload?: (file: File, questionId?: number, fieldType?: string) => Promise<string>
 }
 
-// Enhanced markdown parser with proper rendering
-const parseMarkdownToHTML = (text: string): string => {
-  if (!text) return ''
-  
-  let html = text
-    // Headers (must be processed first)
-    .replace(/^### (.*$)/gim, '<h3 class="text-lg font-semibold mb-2 mt-4 text-gray-800">$1</h3>')
-    .replace(/^## (.*$)/gim, '<h2 class="text-xl font-semibold mb-3 mt-5 text-gray-800">$1</h2>')
-    .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mb-4 mt-6 text-gray-800">$1</h1>')
-    
-    // Code blocks (must be processed before inline code)
-    .replace(/```([\s\S]*?)```/g, '<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto my-3 border border-gray-200"><code class="text-sm font-mono text-gray-800">$1</code></pre>')
-    
-    // Bold and italic (process bold first to avoid conflicts)
-    .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-gray-900">$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em class="italic text-gray-800">$1</em>')
-    
-    // Inline code
-    .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-gray-800 border border-gray-200">$1</code>')
-    
-    // Links
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-600 hover:text-blue-800 hover:underline font-medium" target="_blank" rel="noopener noreferrer">$1</a>')
-    
-    // Lists (unordered)
-    .replace(/^[\s]*[-*+] (.*$)/gim, '<li class="ml-4 mb-1 text-gray-700">$1</li>')
-    
-    // Lists (ordered)
-    .replace(/^[\s]*\d+\. (.*$)/gim, '<li class="ml-4 mb-1 text-gray-700">$1</li>')
-    
-    // Blockquotes
-    .replace(/^> (.*$)/gim, '<blockquote class="border-l-4 border-blue-300 pl-4 py-2 my-2 bg-blue-50 text-gray-700 italic">$1</blockquote>')
-    
-    // Horizontal rules
-    .replace(/^---$/gim, '<hr class="my-4 border-gray-300">')
-    
-    // Line breaks (convert double newlines to paragraphs)
-    .replace(/\n\n/g, '</p><p class="mb-3 text-gray-700 leading-relaxed">')
-    
-    // Single line breaks
-    .replace(/\n/g, '<br>')
-  
-  // Wrap in paragraph if not already wrapped
-  if (!html.startsWith('<')) {
-    html = `<p class="mb-3 text-gray-700 leading-relaxed">${html}</p>`
-  }
-  
-  return html
-}
 
 export function LivePreviewEditor({
   value,
@@ -145,13 +97,41 @@ export function LivePreviewEditor({
   const handleHorizontalRule = () => insertText('\n---\n', '', '')
 
   const handleImageUpload = useCallback(async (file: File) => {
-    if (!onImageUpload) return
+    if (!onImageUpload) {
+      console.error('onImageUpload function not provided')
+      return
+    }
+    
+    console.log('Starting image upload:', {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+      lastModified: file.lastModified
+    })
+    
+    // Additional validation before upload
+    if (!file || !file.name || file.size === 0) {
+      console.error('Invalid file object:', file)
+      alert('Invalid file: File appears to be corrupted or empty. Please try selecting the image again.')
+      return
+    }
     
     try {
       const url = await onImageUpload(file)
-      insertText('![', `](${url})`, 'image description')
+      console.log('Image upload successful, URL:', url)
+      
+      // Handle base64 and Supabase URLs differently
+      if (url.startsWith('data:')) {
+        // For base64, insert a clean placeholder
+        insertText('![Image](', ')', 'base64-placeholder')
+      } else {
+        // For Supabase URLs, insert clean markdown
+        insertText('![', `](${url})`, 'image description')
+      }
     } catch (error) {
       console.error('Image upload failed:', error)
+      // Show user-friendly error message
+      alert(`Image upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }, [onImageUpload, insertText])
 
@@ -176,11 +156,58 @@ export function LivePreviewEditor({
     e.preventDefault()
     setIsDragOver(false)
     
+    console.log('Drag and drop event:', {
+      dataTransfer: e.dataTransfer,
+      files: e.dataTransfer.files,
+      items: e.dataTransfer.items,
+      types: e.dataTransfer.types
+    })
+    
     const files = Array.from(e.dataTransfer.files)
-    const imageFile = files.find(file => file.type.startsWith('image/'))
+    console.log('Files from dataTransfer:', files.map(f => ({
+      name: f.name,
+      size: f.size,
+      type: f.type,
+      lastModified: f.lastModified
+    })))
+    
+    // Try to get files from both dataTransfer.files and dataTransfer.items
+    let imageFile = files.find(file => file.type.startsWith('image/'))
+    
+    // If no image file found in files, try items
+    if (!imageFile && e.dataTransfer.items) {
+      const items = Array.from(e.dataTransfer.items)
+      console.log('Items from dataTransfer:', items.map(item => ({
+        kind: item.kind,
+        type: item.type
+      })))
+      
+      for (const item of items) {
+        if (item.kind === 'file' && item.type.startsWith('image/')) {
+          const file = item.getAsFile()
+          if (file) {
+            console.log('Found image file from items:', {
+              name: file.name,
+              size: file.size,
+              type: file.type
+            })
+            imageFile = file
+            break
+          }
+        }
+      }
+    }
     
     if (imageFile) {
+      console.log('Processing image file:', {
+        name: imageFile.name,
+        size: imageFile.size,
+        type: imageFile.type,
+        lastModified: imageFile.lastModified
+      })
       handleImageUpload(imageFile)
+    } else {
+      console.log('No valid image file found in drop event')
     }
   }
 
@@ -231,8 +258,6 @@ export function LivePreviewEditor({
       )
     }
     
-    const htmlContent = parseMarkdownToHTML(value)
-    
     return (
       <div 
         ref={previewRef}
@@ -242,7 +267,7 @@ export function LivePreviewEditor({
           fontFamily: 'system-ui, -apple-system, sans-serif'
         }}
       >
-        <LatexRenderer text={htmlContent} />
+        <MarkdownLatexRenderer text={value} />
       </div>
     )
   }
@@ -468,3 +493,4 @@ export function LivePreviewEditor({
     </div>
   )
 }
+

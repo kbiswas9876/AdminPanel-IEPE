@@ -126,3 +126,4 @@ export function CompleteFAB({ onClick, disabled, loading }: { onClick: () => voi
     </FloatingActionButton>
   )
 }
+

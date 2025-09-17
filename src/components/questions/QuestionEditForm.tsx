@@ -106,6 +106,14 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
   const [showLatexPreview, setShowLatexPreview] = useState(true)
   const [isSolutionExpanded, setIsSolutionExpanded] = useState(false)
 
+  // Wrapper function to handle the new image upload signature
+  const handleImageUpload = (fieldType: 'question' | 'option_a' | 'option_b' | 'option_c' | 'option_d' | 'solution') => {
+    return async (file: File) => {
+      const questionId = parseInt(String(question.id || '0'))
+      return await defaultImageUpload(file, questionId, fieldType)
+    }
+  }
+
   // Load filter options
   useEffect(() => {
     const loadOptions = async () => {
@@ -780,7 +788,7 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
               placeholder="Enter the question text (supports Markdown + LaTeX math)"
               rows={4}
               showToolbar={true}
-              onImageUpload={defaultImageUpload}
+              onImageUpload={handleImageUpload('question')}
             />
           </div>
         </div>
@@ -813,7 +821,7 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
                   onChange={(value) => handleInputChange('option_a', value)}
                   placeholder="Option A (supports Markdown + LaTeX)"
                   rows={3}
-                  onImageUpload={defaultImageUpload}
+                  onImageUpload={handleImageUpload('option_a')}
                 />
               </div>
 
@@ -835,7 +843,7 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
                   onChange={(value) => handleInputChange('option_b', value)}
                   placeholder="Option B (supports Markdown + LaTeX)"
                   rows={3}
-                  onImageUpload={defaultImageUpload}
+                  onImageUpload={handleImageUpload('option_b')}
                 />
               </div>
 
@@ -857,7 +865,7 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
                   onChange={(value) => handleInputChange('option_c', value)}
                   placeholder="Option C (supports Markdown + LaTeX)"
                   rows={3}
-                  onImageUpload={defaultImageUpload}
+                  onImageUpload={handleImageUpload('option_c')}
                 />
               </div>
 
@@ -879,7 +887,7 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
                   onChange={(value) => handleInputChange('option_d', value)}
                   placeholder="Option D (supports Markdown + LaTeX)"
                   rows={3}
-                  onImageUpload={defaultImageUpload}
+                  onImageUpload={handleImageUpload('option_d')}
                 />
               </div>
             </div>
@@ -911,7 +919,7 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
                 placeholder="Enter the solution/explanation (supports Markdown + LaTeX math)"
                 rows={4}
                 showToolbar={true}
-                onImageUpload={defaultImageUpload}
+                onImageUpload={handleImageUpload('solution')}
               />
             </div>
           )}

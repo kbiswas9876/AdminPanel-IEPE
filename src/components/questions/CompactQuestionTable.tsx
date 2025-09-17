@@ -175,7 +175,7 @@ export function CompactQuestionTable({
                       title={question.question_text}
                       onClick={() => toggleExpansion(question.id!)}
                     >
-                      <MarkdownLatexRenderer text={question.question_text} />
+                      <MarkdownLatexRenderer text={question.question_text} showImageControls={false} />
                     </div>
                   </div>
                 </div>
@@ -302,7 +302,7 @@ export function CompactQuestionTable({
                           </div>
                           <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
                             <div className="text-lg font-medium text-gray-900 leading-relaxed">
-                              <MarkdownLatexRenderer text={question.question_text} />
+                              <MarkdownLatexRenderer text={question.question_text} showImageControls={false} />
                             </div>
                           </div>
                         </div>
@@ -333,7 +333,7 @@ export function CompactQuestionTable({
                                       {String.fromCharCode(65 + index)}
                                     </div>
                                     <div className="flex-1 text-base text-gray-700 leading-relaxed">
-                                      <MarkdownLatexRenderer text={value} />
+                                      <MarkdownLatexRenderer text={value} showImageControls={false} />
                                     </div>
                                     {question.correct_option === key && (
                                       <div className="flex-shrink-0 mt-1">
@@ -372,7 +372,7 @@ export function CompactQuestionTable({
                             {!collapsedSections.has(`solution-${question.id}`) && (
                               <div className="bg-gray-50 rounded-lg p-6 border border-gray-200 animate-in fade-in-0 duration-200">
                                 <div className="text-base text-gray-700 leading-relaxed font-mono">
-                                  <MarkdownLatexRenderer text={question.solution_text} />
+                                  <MarkdownLatexRenderer text={question.solution_text} showImageControls={false} />
                                 </div>
                               </div>
                             )}
