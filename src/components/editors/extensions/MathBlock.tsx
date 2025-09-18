@@ -98,6 +98,19 @@ export const MathBlock = Node.create<MathBlockOptions>({
           const start = range.from
           const end = range.to
 
+          // Check if we're already inside a math node
+          const $pos = state.doc.resolve(start)
+          const node = $pos.parent
+          if (node.type.name === 'mathBlock') {
+            return // Don't create nested math nodes
+          }
+
+          // Check if we're in an input field (editing mode)
+          const activeElement = document.activeElement
+          if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+            return // Don't trigger input rules while editing
+          }
+
           tr.delete(start, end)
           tr.insert(start, state.schema.nodes.mathBlock.create({
             math: math.trim()
@@ -138,6 +151,12 @@ function MathBlockComponent(props: ReactNodeViewProps) {
         updateAttributes({ math: editValue })
       }
     }
+    // Prevent input rules from triggering while editing
+    e.stopPropagation()
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setEditValue(e.target.value)
   }
 
   if (isEditing) {
@@ -146,7 +165,7 @@ function MathBlockComponent(props: ReactNodeViewProps) {
         <div className="block-math-edit my-4 p-4 bg-gray-50 rounded-lg border border-blue-300">
           <textarea
             value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
+            onChange={handleChange}
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
             className="w-full min-h-[100px] p-2 border border-blue-500 rounded"

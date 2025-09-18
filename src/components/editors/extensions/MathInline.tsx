@@ -98,6 +98,19 @@ export const MathInline = Node.create<MathInlineOptions>({
           const start = range.from
           const end = range.to
 
+          // Check if we're already inside a math node
+          const $pos = state.doc.resolve(start)
+          const node = $pos.parent
+          if (node.type.name === 'mathInline') {
+            return // Don't create nested math nodes
+          }
+
+          // Check if we're in an input field (editing mode)
+          const activeElement = document.activeElement
+          if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+            return // Don't trigger input rules while editing
+          }
+
           tr.delete(start, end)
           tr.insert(start, state.schema.nodes.mathInline.create({
             math: math.trim()
@@ -130,6 +143,10 @@ function MathInlineComponent(props: ReactNodeViewProps) {
     }
   }
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditValue(e.target.value)
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === 'Escape') {
       e.preventDefault()
@@ -138,6 +155,8 @@ function MathInlineComponent(props: ReactNodeViewProps) {
         updateAttributes({ math: editValue })
       }
     }
+    // Prevent input rules from triggering while editing
+    e.stopPropagation()
   }
 
   if (isEditing) {
@@ -146,7 +165,7 @@ function MathInlineComponent(props: ReactNodeViewProps) {
         <input
           type="text"
           value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
+          onChange={handleChange}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           className="inline-math-edit"
