@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+import { ClientOnlyEditor } from '@/components/editors/ClientOnlyEditor'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
@@ -251,12 +251,12 @@ export function InPlaceQuestionEditor({
             <Label htmlFor="question_text" className="text-sm font-medium text-gray-700">
               Question Text *
             </Label>
-            <Textarea
-              id="question_text"
-              value={formData.question_text}
-              onChange={(e) => handleInputChange('question_text', e.target.value)}
+            <ClientOnlyEditor
+              value={formData.question_text || ''}
+              onChange={(value) => handleInputChange('question_text', value)}
               placeholder="Enter the question text with LaTeX formatting..."
-              className="min-h-[120px] transition-all duration-200 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              compact={true}
+              showToolbar={false}
             />
             <LivePreview content={formData.question_text} type="question" />
           </div>
@@ -383,12 +383,12 @@ export function InPlaceQuestionEditor({
                   {showPreview.solution ? 'Hide Preview' : 'Show Preview'}
                 </Button>
               </div>
-              <Textarea
-                id="solution_text"
+              <ClientOnlyEditor
                 value={formData.solution_text || ''}
-                onChange={(e) => handleInputChange('solution_text', e.target.value)}
+                onChange={(value) => handleInputChange('solution_text', value)}
                 placeholder="Enter the solution with LaTeX formatting..."
-                className="min-h-[100px] transition-all duration-200 focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+                compact={true}
+                showToolbar={false}
               />
               <LivePreview content={formData.solution_text || ''} type="solution" />
             </div>
@@ -455,12 +455,12 @@ export function InPlaceQuestionEditor({
               <Label htmlFor="exam_metadata" className="text-sm font-medium text-gray-700">
                 Exam Metadata
               </Label>
-              <Textarea
-                id="exam_metadata"
+              <ClientOnlyEditor
                 value={formData.exam_metadata || ''}
-                onChange={(e) => handleInputChange('exam_metadata', e.target.value)}
+                onChange={(value) => handleInputChange('exam_metadata', value)}
                 placeholder="Additional exam-related information..."
-                className="min-h-[60px] transition-all duration-200 focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+                compact={true}
+                showToolbar={false}
               />
             </div>
           </div>
