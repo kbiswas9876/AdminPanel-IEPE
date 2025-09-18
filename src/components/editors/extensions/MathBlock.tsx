@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { Node, mergeAttributes } from '@tiptap/core'
 import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react'
 import { BlockMath } from 'react-katex'
@@ -29,15 +30,15 @@ export const MathBlock = Node.create<MathBlockOptions>({
     }
   },
 
-  group: 'block math',
+  group: 'block',
 
-  content: '',
+  content: 'text*',
 
   marks: '',
 
   inline: false,
 
-  atom: true,
+  atom: false,
 
   addAttributes() {
     return {
@@ -108,13 +109,72 @@ export const MathBlock = Node.create<MathBlockOptions>({
 })
 
 function MathBlockComponent(props: ReactNodeViewProps) {
-  const { node } = props
+  const { node, updateAttributes, selected } = props
   const math = node.attrs.math as string
   const sanitizedMath = sanitizeLatexForRendering(math) || math
+  const [isEditing, setIsEditing] = React.useState(false)
+  const [editValue, setEditValue] = React.useState(math)
+
+  React.useEffect(() => {
+    setEditValue(math)
+  }, [math])
+
+  const handleDoubleClick = () => {
+    setIsEditing(true)
+  }
+
+  const handleBlur = () => {
+    setIsEditing(false)
+    if (editValue !== math) {
+      updateAttributes({ math: editValue })
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === 'Escape') {
+      e.preventDefault()
+      setIsEditing(false)
+      if (editValue !== math) {
+        updateAttributes({ math: editValue })
+      }
+    }
+  }
+
+  if (isEditing) {
+    return (
+      <NodeViewWrapper>
+        <div className="block-math-edit my-4 p-4 bg-gray-50 rounded-lg border border-blue-300">
+          <textarea
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            className="w-full min-h-[100px] p-2 border border-blue-500 rounded"
+            style={{
+              fontFamily: 'monospace',
+              fontSize: '14px',
+              backgroundColor: '#f8fafc',
+              resize: 'vertical'
+            }}
+            autoFocus
+            placeholder="Enter LaTeX math expression..."
+          />
+        </div>
+      </NodeViewWrapper>
+    )
+  }
 
   return (
     <NodeViewWrapper>
-      <div className="block-math my-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+      <div 
+        className="block-math my-4 p-4 bg-gray-50 rounded-lg border border-gray-200"
+        style={{
+          cursor: 'pointer',
+          border: selected ? '2px solid #3b82f6' : '1px solid #e5e7eb'
+        }}
+        onDoubleClick={handleDoubleClick}
+        title="Double-click to edit LaTeX"
+      >
         <BlockMath math={sanitizedMath} errorColor="#cc0000" />
       </div>
     </NodeViewWrapper>

@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { Node, mergeAttributes } from '@tiptap/core'
 import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react'
 import { InlineMath } from 'react-katex'
@@ -31,7 +32,7 @@ export const MathInline = Node.create<MathInlineOptions>({
 
   group: 'inline',
 
-  content: '',
+  content: 'text*',
 
   marks: '',
 
@@ -108,13 +109,78 @@ export const MathInline = Node.create<MathInlineOptions>({
 })
 
 function MathInlineComponent(props: ReactNodeViewProps) {
-  const { node } = props
+  const { node, updateAttributes, selected } = props
   const math = node.attrs.math as string
   const sanitizedMath = sanitizeLatexForRendering(math) || math
+  const [isEditing, setIsEditing] = React.useState(false)
+  const [editValue, setEditValue] = React.useState(math)
+
+  React.useEffect(() => {
+    setEditValue(math)
+  }, [math])
+
+  const handleDoubleClick = () => {
+    setIsEditing(true)
+  }
+
+  const handleBlur = () => {
+    setIsEditing(false)
+    if (editValue !== math) {
+      updateAttributes({ math: editValue })
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === 'Escape') {
+      e.preventDefault()
+      setIsEditing(false)
+      if (editValue !== math) {
+        updateAttributes({ math: editValue })
+      }
+    }
+  }
+
+  if (isEditing) {
+    return (
+      <NodeViewWrapper as="span" className="inline-math-wrapper">
+        <input
+          type="text"
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          className="inline-math-edit"
+          style={{
+            display: 'inline',
+            border: '1px solid #3b82f6',
+            borderRadius: '4px',
+            padding: '2px 4px',
+            fontSize: 'inherit',
+            fontFamily: 'monospace',
+            backgroundColor: '#f8fafc',
+            minWidth: '100px'
+          }}
+          autoFocus
+        />
+      </NodeViewWrapper>
+    )
+  }
 
   return (
     <NodeViewWrapper as="span" className="inline-math-wrapper">
-      <span className="inline-math" style={{ display: 'inline', verticalAlign: 'baseline' }}>
+      <span 
+        className="inline-math" 
+        style={{ 
+          display: 'inline', 
+          verticalAlign: 'baseline',
+          cursor: 'pointer',
+          border: selected ? '1px solid #3b82f6' : '1px solid transparent',
+          borderRadius: '4px',
+          padding: '1px 2px'
+        }}
+        onDoubleClick={handleDoubleClick}
+        title="Double-click to edit LaTeX"
+      >
         <InlineMath math={sanitizedMath} errorColor="#cc0000" />
       </span>
     </NodeViewWrapper>
