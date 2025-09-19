@@ -1,86 +1,98 @@
 'use client'
 
-import React, { useState } from 'react'
-import { PremiumMarkdownEditor } from '@/components/editors/PremiumMarkdownEditor'
+import { useState } from 'react'
+import { ClientOnlyAdvancedTipTapEditor } from '@/components/editors/ClientOnlyAdvancedTipTapEditor'
+import { EnhancedHTMLRenderer } from '@/components/editors/EnhancedHTMLRenderer'
 
 export default function TestEditorPage() {
   const [content, setContent] = useState(`
-# Test Question
-
-This is a **test question** with *italic text* and some math:
-
-Inline math: $E = mc^2$
-
-Block math:
-$$\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}$$
-
-## Options
-
-- **A)** Option A with $x^2$ math
-- **B)** Option B with $\\alpha + \\beta$ math  
-- **C)** Option C with $\\frac{a}{b}$ math
-- **D)** Option D with $\\sum_{i=1}^{n} x_i$ math
-
-## Solution
-
-The correct answer is **A** because:
-
-$$\\frac{d}{dx}(x^2) = 2x$$
-
-And when $x = 1$:
-$$2(1) = 2$$
+    <h1>Test Editor</h1>
+    <p>This is a test of the advanced editor.</p>
+    <p>Math test: $\\alpha + \\beta = \\gamma$</p>
+    <p>Display math:</p>
+    $$\\sum_{i=0}^n i^2 = \\frac{n(n+1)(2n+1)}{6}$$
+    
+    <h2>Table Test</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Header 1</th>
+          <th>Header 2</th>
+          <th>Header 3</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Cell 1</td>
+          <td>Cell 2</td>
+          <td>Cell 3</td>
+        </tr>
+        <tr>
+          <td>Cell 4</td>
+          <td>Cell 5</td>
+          <td>Cell 6</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <h2>Color Test</h2>
+    <p>Try selecting text and using the color picker button in the toolbar!</p>
+    <p style="color: red;">This text is red</p>
+    <p style="color: blue;">This text is blue</p>
+    <p style="color: green;">This text is green</p>
+    
+    <h2>Cursor and Table Test</h2>
+    <p>Click in the editor below to test cursor visibility. Try creating a table using the toolbar.</p>
+    <p>Instructions:</p>
+    <ol>
+      <li>Click in the editor area - cursor should be visible</li>
+      <li>Use the Table button in toolbar to insert a table</li>
+      <li>Table borders should be clearly visible</li>
+      <li>Try typing in table cells</li>
+    </ol>
+    
+    <h2>Font Test</h2>
+    <p>Test different fonts using the Font dropdown in the toolbar:</p>
+    <p style="font-family: 'Times New Roman', serif;">This is Times New Roman</p>
+    <p style="font-family: 'Georgia', serif;">This is Georgia</p>
+    <p style="font-family: 'Cambria', serif;">This is Cambria</p>
+    <p style="font-family: 'TeX Gyre Termes', serif;">This is TeX Gyre Termes</p>
+    <p style="font-family: 'Bookerly', serif;">This is Bookerly</p>
+    <p style="font-family: 'Roboto', sans-serif;">This is Roboto</p>
+    <p style="font-family: 'Inter', sans-serif;">This is Inter</p>
+    <p style="font-family: 'Fira Code', monospace;">This is Fira Code (monospace)</p>
   `)
 
-  const handleSave = (markdown: string, prosemirrorJson: object) => {
-    console.log('Saving content:', { markdown, prosemirrorJson })
-  }
-
-  const handleImageUpload = async (file: File): Promise<string> => {
-    // Simulate image upload
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(`https://via.placeholder.com/400x300?text=${file.name}`)
-      }, 1000)
-    })
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">
-          Advanced WYSIWYG Markdown Editor Test
-        </h1>
-        
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Question Editor</h2>
-          <PremiumMarkdownEditor
-            value={content}
-            onChange={setContent}
-            placeholder="Start typing your question..."
-            showToolbar={true}
-            onImageUpload={handleImageUpload}
-            onSave={handleSave}
-            className="min-h-[400px]"
-          />
-        </div>
+    <div className="container mx-auto p-8">
+      <h1 className="text-3xl font-bold mb-6">Editor Test</h1>
+      
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-2">Editor:</h2>
+        <ClientOnlyAdvancedTipTapEditor
+          value={content}
+          onChange={setContent}
+          placeholder="Type content here..."
+          className="min-h-[300px]"
+          showToolbar={true}
+        />
+      </div>
 
-        <div className="mt-8 bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Compact Editor (for options)</h2>
-          <PremiumMarkdownEditor
-            value="Option A: $x^2 + y^2 = z^2$"
-            onChange={(value) => console.log('Option A changed:', value)}
-            placeholder="Enter option text..."
-            compact={true}
-            showToolbar={false}
-            className="min-h-[100px]"
-          />
-        </div>
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-2">Test Editor (for cursor and table testing):</h2>
+        <ClientOnlyAdvancedTipTapEditor
+          value="<p>Click here to test cursor visibility. Use the Table button to create a table.</p>"
+          onChange={() => {}}
+          placeholder="Test cursor and table functionality..."
+          className="min-h-[200px]"
+          showToolbar={true}
+        />
+      </div>
 
-        <div className="mt-8 bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Current Content (HTML)</h2>
-          <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
-            {content}
-          </pre>
+      <div>
+        <h2 className="text-xl font-semibold mb-2">Rendered Output:</h2>
+        <div className="border p-4 rounded-md bg-gray-50">
+          <EnhancedHTMLRenderer content={content} />
         </div>
       </div>
     </div>

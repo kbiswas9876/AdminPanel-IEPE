@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ClientOnlyEditor } from '@/components/editors/ClientOnlyEditor'
+import { ClientOnlyAdvancedTipTapEditor } from '@/components/editors/ClientOnlyAdvancedTipTapEditor'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
@@ -251,7 +251,7 @@ export function InPlaceQuestionEditor({
             <Label htmlFor="question_text" className="text-sm font-medium text-gray-700">
               Question Text *
             </Label>
-            <ClientOnlyEditor
+                <ClientOnlyAdvancedTipTapEditor
               value={formData.question_text || ''}
               onChange={(value) => handleInputChange('question_text', value)}
               placeholder="Enter the question text with LaTeX formatting..."
@@ -383,7 +383,7 @@ export function InPlaceQuestionEditor({
                   {showPreview.solution ? 'Hide Preview' : 'Show Preview'}
                 </Button>
               </div>
-              <ClientOnlyEditor
+                <ClientOnlyAdvancedTipTapEditor
                 value={formData.solution_text || ''}
                 onChange={(value) => handleInputChange('solution_text', value)}
                 placeholder="Enter the solution with LaTeX formatting..."
@@ -455,7 +455,7 @@ export function InPlaceQuestionEditor({
               <Label htmlFor="exam_metadata" className="text-sm font-medium text-gray-700">
                 Exam Metadata
               </Label>
-              <ClientOnlyEditor
+                <ClientOnlyAdvancedTipTapEditor
                 value={formData.exam_metadata || ''}
                 onChange={(value) => handleInputChange('exam_metadata', value)}
                 placeholder="Additional exam-related information..."

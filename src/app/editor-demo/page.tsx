@@ -1,12 +1,11 @@
 'use client'
 
 import React, { useState } from 'react'
-import { PremiumMarkdownEditor } from '@/components/editors/PremiumMarkdownEditor'
+import { ClientOnlyUnifiedEditor } from '@/components/editors/ClientOnlyUnifiedEditor'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-import { Label } from '@/components/ui/label'
 import { 
   Download, 
   Upload, 
@@ -15,116 +14,111 @@ import {
   Code, 
   Table,
   List,
-  Type
+  Type,
+  FunctionSquare,
+  Image as ImageIcon
 } from 'lucide-react'
 
 export default function EditorDemoPage() {
   const [content, setContent] = useState(`
-# Advanced WYSIWYG Markdown Editor
-
-This is a **premium** markdown editor with *real-time* rendering and LaTeX support.
-
-## Features
-
-- **WYSIWYG Editing**: Type markdown and see it rendered instantly
-- **LaTeX Math Support**: Inline math $E = mc^2$ and block math:
-
-$$\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}$$
-
-- **Code Blocks**: 
-\`\`\`javascript
-function hello() {
+    <h1>Unified Editor Demo</h1>
+    <p>This is a <strong>premium</strong> editor with <em>real-time</em> rendering and LaTeX support.</p>
+    
+    <h2>Features</h2>
+    <ul>
+      <li><strong>WYSIWYG Editing</strong>: Type and see it rendered instantly</li>
+      <li><strong>LaTeX Math Support</strong>: Inline math $E = mc^2$ and block math:</li>
+    </ul>
+    
+    <p>Block math:</p>
+    <span data-formula="\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}" data-display="true"></span>
+    
+    <h3>Code Blocks</h3>
+    <pre><code>function hello() {
   console.log("Hello, World!");
-}
-\`\`\`
-
-- **Tables**:
-| Feature | Status | Priority |
-|---------|--------|----------|
-| Math | ✅ | High |
-| Tables | ✅ | High |
-| Code | ✅ | Medium |
-
-- **Lists**:
-  - Bullet point 1
-  - Bullet point 2
-    - Nested item
-    - Another nested item
-
-1. Numbered item 1
-2. Numbered item 2
-3. Numbered item 3
-
-- [ ] Task item 1
-- [x] Completed task
-- [ ] Task item 3
-
-## Math Examples
-
-Inline math: $\\alpha + \\beta = \\gamma$
-
-Block math:
-$$\\frac{\\partial f}{\\partial x} = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}$$
-
-## Code Examples
-
-\`\`\`python
-def fibonacci(n):
-    if n <= 1:
-        return n
-    return fibonacci(n-1) + fibonacci(n-2)
-\`\`\`
-
-\`\`\`html
-<div class="container">
-  <h1>Hello World</h1>
-  <p>This is a paragraph.</p>
-</div>
-\`\`\`
-
-## Links and Images
-
-[Visit our website](https://example.com)
-
-> This is a blockquote with some important information.
-
----
-
-**End of demo content**
+}</code></pre>
+    
+    <h3>Tables</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Status</th>
+          <th>Priority</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Math</td>
+          <td>✅</td>
+          <td>High</td>
+        </tr>
+        <tr>
+          <td>Images</td>
+          <td>✅</td>
+          <td>High</td>
+        </tr>
+        <tr>
+          <td>Tables</td>
+          <td>✅</td>
+          <td>Medium</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <h3>Lists</h3>
+    <ul>
+      <li>Bullet point 1</li>
+      <li>Bullet point 2
+        <ul>
+          <li>Nested item</li>
+          <li>Another nested item</li>
+        </ul>
+      </li>
+    </ul>
+    
+    <ol>
+      <li>Numbered item 1</li>
+      <li>Numbered item 2</li>
+      <li>Numbered item 3</li>
+    </ol>
+    
+    <h3>Math Examples</h3>
+    <p>Inline math: <span data-formula="\\alpha + \\beta = \\gamma"></span></p>
+    
+    <p>Block math:</p>
+    <span data-formula="\\frac{\\partial f}{\\partial x} = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}" data-display="true"></span>
+    
+    <h3>Links and Images</h3>
+    <p><a href="https://example.com">Visit our website</a></p>
+    
+    <blockquote>
+      <p>This is a blockquote with some important information.</p>
+    </blockquote>
+    
+    <hr>
+    
+    <p><strong>End of demo content</strong></p>
   `)
 
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
   const [compact, setCompact] = useState(false)
   const [showToolbar, setShowToolbar] = useState(true)
 
-  const handleSave = (markdown: string, prosemirrorJson: object) => {
-    console.log('Saving content:', { markdown, prosemirrorJson })
-    // Here you would typically save to your database
-  }
-
-  const handleImageUpload = async (file: File): Promise<string> => {
-    // Simulate image upload
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(`https://via.placeholder.com/400x300?text=${file.name}`)
-      }, 1000)
-    })
-  }
-
-  const exportMarkdown = () => {
-    const blob = new Blob([content], { type: 'text/markdown' })
+  const exportHTML = () => {
+    const blob = new Blob([content], { type: 'text/html' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'content.md'
+    a.download = 'content.html'
     a.click()
     URL.revokeObjectURL(url)
   }
 
-  const importMarkdown = () => {
+  const importHTML = () => {
     const input = document.createElement('input')
     input.type = 'file'
-    input.accept = '.md,.markdown'
+    input.accept = '.html,.htm'
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0]
       if (file) {
@@ -143,10 +137,10 @@ def fibonacci(n):
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Advanced WYSIWYG Markdown Editor
+            Unified Editor Demo
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Premium markdown editor with LaTeX support, real-time rendering, and Obsidian-like experience
+            ProseMirror-based editor with LaTeX support, image uploads, and real-time rendering
           </p>
         </div>
 
@@ -163,7 +157,7 @@ def fibonacci(n):
               <CardContent className="space-y-4">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="theme">Dark Theme</Label>
+                    <label htmlFor="theme">Dark Theme</label>
                     <input
                       type="checkbox"
                       id="theme"
@@ -174,7 +168,7 @@ def fibonacci(n):
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="compact">Compact Mode</Label>
+                    <label htmlFor="compact">Compact Mode</label>
                     <input
                       type="checkbox"
                       id="compact"
@@ -185,7 +179,7 @@ def fibonacci(n):
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="toolbar">Show Toolbar</Label>
+                    <label htmlFor="toolbar">Show Toolbar</label>
                     <input
                       type="checkbox"
                       id="toolbar"
@@ -199,14 +193,14 @@ def fibonacci(n):
                 <div className="w-full h-px bg-gray-200 my-4"></div>
 
                 <div className="space-y-2">
-                  <Button onClick={exportMarkdown} className="w-full" variant="outline">
+                  <Button onClick={exportHTML} className="w-full" variant="outline">
                     <Download className="h-4 w-4 mr-2" />
-                    Export Markdown
+                    Export HTML
                   </Button>
                   
-                  <Button onClick={importMarkdown} className="w-full" variant="outline">
+                  <Button onClick={importHTML} className="w-full" variant="outline">
                     <Upload className="h-4 w-4 mr-2" />
-                    Import Markdown
+                    Import HTML
                   </Button>
                 </div>
               </CardContent>
@@ -219,27 +213,32 @@ def fibonacci(n):
               <CardContent>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Type className="h-4 w-4 text-green-600" />
+                    <FunctionSquare className="h-4 w-4 text-green-600" />
                     <span className="text-sm">LaTeX Math</span>
                     <Badge variant="secondary">✅</Badge>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Table className="h-4 w-4 text-blue-600" />
+                    <ImageIcon className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm">Image Upload</span>
+                    <Badge variant="secondary">✅</Badge>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Table className="h-4 w-4 text-purple-600" />
                     <span className="text-sm">Tables</span>
                     <Badge variant="secondary">✅</Badge>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Code className="h-4 w-4 text-purple-600" />
+                    <Code className="h-4 w-4 text-orange-600" />
                     <span className="text-sm">Code Blocks</span>
                     <Badge variant="secondary">✅</Badge>
                   </div>
                   <div className="flex items-center gap-2">
-                    <List className="h-4 w-4 text-orange-600" />
+                    <List className="h-4 w-4 text-red-600" />
                     <span className="text-sm">Lists</span>
                     <Badge variant="secondary">✅</Badge>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Type className="h-4 w-4 text-red-600" />
+                    <Type className="h-4 w-4 text-indigo-600" />
                     <span className="text-sm">Typography</span>
                     <Badge variant="secondary">✅</Badge>
                   </div>
@@ -258,15 +257,12 @@ def fibonacci(n):
               </TabsList>
               
               <TabsContent value="editor" className="mt-4">
-                <PremiumMarkdownEditor
+                <ClientOnlyUnifiedEditor
                   value={content}
                   onChange={setContent}
                   placeholder="Start typing your content..."
-                  theme={theme}
                   compact={compact}
                   showToolbar={showToolbar}
-                  onImageUpload={handleImageUpload}
-                  onSave={handleSave}
                   className="min-h-[600px]"
                 />
               </TabsContent>

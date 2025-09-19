@@ -4,7 +4,7 @@ import React from 'react'
 import { Node, mergeAttributes } from '@tiptap/core'
 import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react'
 import { InlineMath } from 'react-katex'
-import { sanitizeLatexForRendering } from '@/lib/utils/latex-sanitization'
+// import { sanitizeLatexForRendering } from '@/lib/utils/latex-sanitization'
 import type { ReactNodeViewProps } from '@tiptap/react'
 
 export interface MathInlineOptions {
@@ -124,7 +124,8 @@ export const MathInline = Node.create<MathInlineOptions>({
 function MathInlineComponent(props: ReactNodeViewProps) {
   const { node, updateAttributes, selected } = props
   const math = node.attrs.math as string
-  const sanitizedMath = sanitizeLatexForRendering(math) || math
+  // Remove sanitization from live editor - let KaTeX handle the math directly
+  const sanitizedMath = math
   const [isEditing, setIsEditing] = React.useState(false)
   const [editValue, setEditValue] = React.useState(math)
 

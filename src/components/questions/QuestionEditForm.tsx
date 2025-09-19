@@ -50,8 +50,7 @@ import { createChapter } from '@/lib/actions/chapters'
 import { generateUniqueQuestionId, generateUniqueBookCode } from '@/lib/utils/uniform-id-generator'
 import { getBookCodeByName, getAllBookSourcesWithCodes } from '@/lib/actions/id-generation'
 import { toast } from 'sonner'
-import { ClientOnlyEditor } from '@/components/editors/ClientOnlyEditor'
-import { defaultImageUpload } from '@/components/editors/ImageUploadHandler'
+import { ClientOnlyAdvancedTipTapEditor } from '@/components/editors/ClientOnlyAdvancedTipTapEditor'
 
 interface QuestionEditFormProps {
   question: UIQuestion
@@ -773,16 +772,11 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
             </div>
           </div>
           <div className="px-8 py-6">
-            <ClientOnlyEditor
+            <ClientOnlyAdvancedTipTapEditor
               value={formData.question_text}
               onChange={(value) => handleInputChange('question_text', value)}
-              placeholder="Enter the question text (supports Markdown + LaTeX math)"
+              placeholder="Enter the question text (supports LaTeX math and images)"
               showToolbar={true}
-              onImageUpload={defaultImageUpload}
-              onSave={(markdown, prosemirrorJson) => {
-                // Auto-save functionality
-                console.log('Auto-saving question text:', { markdown, prosemirrorJson })
-              }}
             />
           </div>
         </div>
@@ -810,13 +804,12 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
                   <label className="text-sm font-semibold text-gray-700">Option A</label>
                   {formData.correct_option === 'a' && <CheckCircle className="h-4 w-4 text-green-500" />}
                 </div>
-                <ClientOnlyEditor
+                <ClientOnlyAdvancedTipTapEditor
                   value={formData.option_a}
                   onChange={(value) => handleInputChange('option_a', value)}
-                  placeholder="Option A (supports Markdown + LaTeX)"
+                  placeholder="Option A (supports LaTeX and images)"
                   compact={true}
                   showToolbar={false}
-                  onImageUpload={defaultImageUpload}
                 />
               </div>
 
@@ -833,13 +826,12 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
                   <label className="text-sm font-semibold text-gray-700">Option B</label>
                   {formData.correct_option === 'b' && <CheckCircle className="h-4 w-4 text-green-500" />}
                 </div>
-                <ClientOnlyEditor
+                <ClientOnlyAdvancedTipTapEditor
                   value={formData.option_b}
                   onChange={(value) => handleInputChange('option_b', value)}
-                  placeholder="Option B (supports Markdown + LaTeX)"
+                  placeholder="Option B (supports LaTeX and images)"
                   compact={true}
                   showToolbar={false}
-                  onImageUpload={defaultImageUpload}
                 />
               </div>
 
@@ -856,13 +848,12 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
                   <label className="text-sm font-semibold text-gray-700">Option C</label>
                   {formData.correct_option === 'c' && <CheckCircle className="h-4 w-4 text-green-500" />}
                 </div>
-                <ClientOnlyEditor
+                <ClientOnlyAdvancedTipTapEditor
                   value={formData.option_c}
                   onChange={(value) => handleInputChange('option_c', value)}
-                  placeholder="Option C (supports Markdown + LaTeX)"
+                  placeholder="Option C (supports LaTeX and images)"
                   compact={true}
                   showToolbar={false}
-                  onImageUpload={defaultImageUpload}
                 />
               </div>
 
@@ -879,13 +870,12 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
                   <label className="text-sm font-semibold text-gray-700">Option D</label>
                   {formData.correct_option === 'd' && <CheckCircle className="h-4 w-4 text-green-500" />}
                 </div>
-                <ClientOnlyEditor
+                <ClientOnlyAdvancedTipTapEditor
                   value={formData.option_d}
                   onChange={(value) => handleInputChange('option_d', value)}
-                  placeholder="Option D (supports Markdown + LaTeX)"
+                  placeholder="Option D (supports LaTeX and images)"
                   compact={true}
                   showToolbar={false}
-                  onImageUpload={defaultImageUpload}
                 />
               </div>
             </div>
@@ -911,16 +901,11 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
           </div>
           {isSolutionExpanded && (
             <div className="px-8 py-6 animate-in fade-in-0 duration-200">
-              <ClientOnlyEditor
+              <ClientOnlyAdvancedTipTapEditor
                 value={formData.solution_text}
                 onChange={(value) => handleInputChange('solution_text', value)}
-                placeholder="Enter the solution/explanation (supports Markdown + LaTeX math)"
+                placeholder="Enter the solution/explanation (supports LaTeX math and images)"
                 showToolbar={true}
-                onImageUpload={defaultImageUpload}
-                onSave={(markdown, prosemirrorJson) => {
-                  // Auto-save functionality
-                  console.log('Auto-saving solution text:', { markdown, prosemirrorJson })
-                }}
               />
             </div>
           )}

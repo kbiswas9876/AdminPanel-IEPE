@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Edit, Sparkles, Target, BookOpen, Hash, Tag } from 'lucide-react'
 import { DeleteQuestionDialog } from './delete-question-dialog'
-import { SmartLatexRenderer } from '../tests/smart-latex-renderer'
+import { EnhancedHTMLRenderer } from '../editors/EnhancedHTMLRenderer'
 import { Checkbox } from '@/components/ui/checkbox'
 import { SkeletonLoader } from '@/components/ui/skeleton-loader'
 
@@ -360,7 +360,7 @@ export function ExpandableQuestionList({
                             {/* Question Text with Premium Styling */}
                             <div className="prose prose-lg max-w-none mb-3 sm:mb-4">
                               <div className="text-sm sm:text-base text-gray-800 leading-relaxed">
-                                <SmartLatexRenderer text={question.question_text} />
+                                <EnhancedHTMLRenderer content={question.question_text} />
                               </div>
                             </div>
                             
@@ -467,7 +467,7 @@ export function ExpandableQuestionList({
                                   </div>
                                   <div className="flex-1 prose prose-sm max-w-none">
                                     <div className="text-sm text-gray-700 leading-relaxed">
-                                      <SmartLatexRenderer text={String(optionText || '')} />
+                                      <EnhancedHTMLRenderer content={String(optionText || '')} />
                                     </div>
                                   </div>
                                 </div>
@@ -482,7 +482,7 @@ export function ExpandableQuestionList({
                             <h4 className="font-semibold text-gray-900 mb-3">Solution:</h4>
                             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                               <div className="prose prose-sm max-w-none text-blue-800">
-                                <SmartLatexRenderer text={question.solution_text} />
+                                <EnhancedHTMLRenderer content={question.solution_text} />
                               </div>
                             </div>
                           </div>
@@ -644,3 +644,5 @@ export function ExpandableQuestionList({
     </div>
   )
 }
+
+

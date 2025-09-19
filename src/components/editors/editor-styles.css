@@ -1,0 +1,558 @@
+/* Editor Styles for Line Breaks and LaTeX */
+
+.html-renderer {
+  line-height: 1.6;
+}
+
+.html-renderer br {
+  display: block;
+  margin: 0.5em 0;
+  content: "";
+}
+
+.html-renderer .latex-line-break {
+  display: block;
+  margin: 0.5em 0;
+  content: "";
+}
+
+/* Math rendering styles */
+.html-renderer .math-error {
+  color: #cc0000;
+  background-color: #ffe6e6;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+/* Ensure proper spacing for math expressions */
+.html-renderer .katex {
+  font-size: 1.1em;
+}
+
+.html-renderer .katex-display {
+  margin: 1em 0;
+  text-align: center;
+}
+
+/* Editor content styles */
+.ProseMirror {
+  line-height: 1.6;
+}
+
+/* Blockquote styling for visual distinction */
+.ProseMirror blockquote {
+  border-left: 3px solid #cccccc;
+  margin-left: 1rem;
+  padding-left: 1rem;
+  color: #666666;
+  font-style: italic;
+  background-color: #f8f9fa;
+  padding: 0.5rem 1rem;
+  margin: 1rem 0;
+}
+
+/* Fix cursor visibility - make cursor always visible */
+.ProseMirror {
+  caret-color: #000000 !important;
+}
+
+.ProseMirror:focus {
+  caret-color: #000000 !important;
+}
+
+.ProseMirror * {
+  caret-color: #000000 !important;
+}
+
+/* Ensure cursor is visible in all states */
+.ProseMirror-focused {
+  caret-color: #000000 !important;
+}
+
+.ProseMirror-focused * {
+  caret-color: #000000 !important;
+}
+
+/* Rendered output styles */
+.enhanced-html-renderer table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+.enhanced-html-renderer table td,
+.enhanced-html-renderer table th {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.enhanced-html-renderer table th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+}
+
+.enhanced-html-renderer table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.ProseMirror br {
+  display: block;
+  margin: 0.5em 0;
+  content: "";
+}
+
+/* Handle LaTeX line breaks in editor */
+.ProseMirror .latex-line-break {
+  display: block;
+  margin: 0.5em 0;
+  content: "";
+}
+
+/* LaTeX line breaks with custom spacing */
+.html-renderer .latex-line-break {
+  display: block;
+  margin: 0.5em 0;
+  content: "";
+}
+
+/* Support for custom LaTeX spacing */
+.html-renderer .latex-line-break[style*="margin"] {
+  /* Custom spacing is applied via inline styles */
+}
+
+/* Math input styles */
+.math-input {
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  width: 100%;
+}
+
+.math-display {
+  display: inline-block;
+  margin: 0 2px;
+  padding: 2px 4px;
+  background-color: #f5f5f5;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.math-display:hover {
+  background-color: #e5e5e5;
+}
+
+.math-node-editing {
+  border: 2px solid #007bff;
+  border-radius: 4px;
+  padding: 8px;
+  background-color: #f8f9fa;
+}
+
+/* Image styles */
+.editor-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Loading state for images */
+.image-loading {
+  background-color: #f0f0f0;
+  border: 1px dashed #ccc;
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  border-radius: 4px;
+}
+
+/* Table styles - Enhanced visibility */
+.ProseMirror table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 1em 0;
+  overflow: hidden;
+  border: 2px solid #333 !important;
+  background-color: #fff;
+}
+
+.ProseMirror table td,
+.ProseMirror table th {
+  min-width: 1em;
+  border: 1px solid #333 !important;
+  padding: 8px 12px;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+  background-color: #fff;
+}
+
+.ProseMirror table th {
+  font-weight: bold;
+  text-align: left;
+  background-color: #f8f9fa !important;
+  border: 1px solid #333 !important;
+}
+
+.ProseMirror table .selectedCell:after {
+  z-index: 2;
+  position: absolute;
+  content: "";
+  left: 0; right: 0; top: 0; bottom: 0;
+  background: rgba(200, 200, 255, 0.4);
+  pointer-events: none;
+}
+
+.ProseMirror table .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background-color: #adf;
+  pointer-events: none;
+}
+
+.ProseMirror table p {
+  margin: 0;
+}
+
+/* Cursor and interaction styles */
+.ProseMirror {
+  cursor: text !important;
+  caret-color: #000 !important;
+  color: #000 !important;
+}
+
+.ProseMirror:focus {
+  outline: none;
+}
+
+.ProseMirror * {
+  cursor: text !important;
+}
+
+.ProseMirror table td,
+.ProseMirror table th {
+  cursor: text !important;
+}
+
+.ProseMirror img {
+  cursor: default !important;
+}
+
+/* Force cursor visibility */
+.ProseMirror p,
+.ProseMirror div,
+.ProseMirror span {
+  cursor: text !important;
+}
+
+/* Editor content area */
+.ProseMirror-focused {
+  cursor: text !important;
+}
+
+.ProseMirror-focused * {
+  cursor: text !important;
+}
+
+/* Ensure editor content is visible */
+.ProseMirror {
+  min-height: 200px;
+  background-color: #fff;
+  color: #000;
+}
+
+.ProseMirror p {
+  margin: 0.5em 0;
+  color: #000;
+}
+
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3,
+.ProseMirror h4,
+.ProseMirror h5,
+.ProseMirror h6 {
+  color: #000;
+  margin: 0.5em 0;
+}
+
+/* Make sure table content is visible */
+.ProseMirror table td,
+.ProseMirror table th {
+  color: #000 !important;
+  background-color: #fff !important;
+}
+
+.ProseMirror table th {
+  background-color: #f8f9fa !important;
+  color: #000 !important;
+}
+
+.ProseMirror p {
+  margin: 0;
+}
+
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3,
+.ProseMirror h4,
+.ProseMirror h5,
+.ProseMirror h6 {
+  margin: 0.5em 0;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.ProseMirror blockquote {
+  margin: 0.5em 0;
+  padding-left: 1em;
+  border-left: 3px solid #ddd;
+}
+
+.ProseMirror code {
+  background-color: #f5f5f5;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+}
+
+.ProseMirror pre {
+  background-color: #f5f5f5;
+  padding: 1em;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.ProseMirror pre code {
+  background: none;
+  padding: 0;
+}
+
+/* Toolbar styles */
+.editor-toolbar {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.editor-toolbar button {
+  cursor: pointer;
+}
+
+.editor-toolbar button:hover {
+  background-color: #e9ecef;
+}
+
+.editor-toolbar button.is-active {
+  background-color: #007bff;
+  color: white;
+}
+
+.editor-toolbar button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Editor container styles */
+.editor-container {
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  background-color: #fff;
+}
+
+.editor-container:focus-within {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Ensure editor content area is properly styled */
+.editor-container .ProseMirror {
+  background-color: #fff !important;
+  color: #000 !important;
+  min-height: 200px;
+  padding: 1rem;
+  caret-color: #000 !important;
+}
+
+.editor-container .ProseMirror:focus {
+  outline: none;
+  background-color: #fff !important;
+  caret-color: #000 !important;
+}
+
+/* Force dark cursor */
+.ProseMirror * {
+  caret-color: #000 !important;
+}
+
+/* Ensure cursor is visible in all states */
+.ProseMirror:focus,
+.ProseMirror:focus-within,
+.ProseMirror[contenteditable="true"] {
+  caret-color: #000 !important;
+  color: #000 !important;
+}
+
+/* Ensure proper cursor behavior */
+.ProseMirror-focused {
+  cursor: text;
+  caret-color: #000 !important;
+}
+
+.ProseMirror-focused * {
+  cursor: text;
+  caret-color: #000 !important;
+}
+
+.ProseMirror-focused img {
+  cursor: default;
+}
+
+.ProseMirror-focused table {
+  cursor: text;
+}
+
+.ProseMirror-focused table td,
+.ProseMirror-focused table th {
+  cursor: text;
+  caret-color: #000 !important;
+}
+
+/* Force black cursor in all editor states */
+.ProseMirror,
+.ProseMirror *,
+.ProseMirror p,
+.ProseMirror div,
+.ProseMirror span,
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3,
+.ProseMirror h4,
+.ProseMirror h5,
+.ProseMirror h6 {
+  caret-color: #000 !important;
+  color: #000 !important;
+}
+
+/* Additional cursor visibility rules */
+.ProseMirror[contenteditable="true"] {
+  caret-color: #000 !important;
+}
+
+.ProseMirror[contenteditable="true"] * {
+  caret-color: #000 !important;
+}
+
+/* Ensure cursor is visible when editor is active */
+.editor-container:focus-within .ProseMirror {
+  caret-color: #000 !important;
+}
+
+.editor-container:focus-within .ProseMirror * {
+  caret-color: #000 !important;
+}
+
+/* Color picker styles */
+.color-picker-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.color-picker {
+  background: white;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  max-width: 300px;
+}
+
+.color-button {
+  width: 35px;
+  height: 35px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.color-button:hover {
+  transform: scale(1.1);
+  border-color: #007bff;
+}
+
+.color-picker button {
+  grid-column: 1 / -1;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #f5f5f5;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.color-picker button:hover {
+  background: #e9ecef;
+}
+
+/* Font family styles */
+.ProseMirror [style*="font-family"] {
+  font-family: inherit !important;
+}
+
+/* Ensure font changes are applied */
+.ProseMirror p[style*="font-family"],
+.ProseMirror div[style*="font-family"],
+.ProseMirror span[style*="font-family"] {
+  font-family: inherit !important;
+}
+
+/* Font dropdown styles */
+.font-dropdown {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.font-dropdown-item {
+  font-family: inherit;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+
+.font-dropdown-item:hover {
+  background-color: #f5f5f5;
+}
+
+/* Ensure proper font rendering */
+.ProseMirror {
+  font-family: inherit;
+}
+
+.ProseMirror * {
+  font-family: inherit;
+}

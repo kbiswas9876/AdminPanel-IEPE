@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
+// import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { 
   Select, 
@@ -44,6 +44,7 @@ import { getBookCodeByName, getAllBookSourcesWithCodes } from '@/lib/actions/id-
 import { createQuestion } from '@/lib/actions/questions'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+import { ClientOnlyAdvancedTipTapEditor } from '@/components/editors/ClientOnlyAdvancedTipTapEditor'
 
 interface FilterOptions {
   bookSources: string[]
@@ -617,11 +618,11 @@ export function NewQuestionForm() {
           {/* Question Text */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Question Text *</label>
-            <Textarea
+            <ClientOnlyAdvancedTipTapEditor
               value={formData.question_text}
-              onChange={(e) => handleInputChange('question_text', e.target.value)}
-              placeholder="Enter the question text (supports LaTeX with $...$ or $$...$$)"
-              rows={3}
+              onChange={(value: string) => handleInputChange('question_text', value)}
+              placeholder="Enter the question text (supports LaTeX math and images)"
+              showToolbar={true}
             />
           </div>
 
@@ -631,38 +632,42 @@ export function NewQuestionForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm">Option A</label>
-                <Textarea
+                <ClientOnlyAdvancedTipTapEditor
                   value={formData.option_a}
-                  onChange={(e) => handleInputChange('option_a', e.target.value)}
-                  placeholder="Option A (supports LaTeX)"
-                  rows={2}
+                  onChange={(value: string) => handleInputChange('option_a', value)}
+                  placeholder="Option A (supports LaTeX and images)"
+                  compact={true}
+                  showToolbar={false}
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-sm">Option B</label>
-                <Textarea
+                <ClientOnlyAdvancedTipTapEditor
                   value={formData.option_b}
-                  onChange={(e) => handleInputChange('option_b', e.target.value)}
-                  placeholder="Option B (supports LaTeX)"
-                  rows={2}
+                  onChange={(value: string) => handleInputChange('option_b', value)}
+                  placeholder="Option B (supports LaTeX and images)"
+                  compact={true}
+                  showToolbar={false}
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-sm">Option C</label>
-                <Textarea
+                <ClientOnlyAdvancedTipTapEditor
                   value={formData.option_c}
-                  onChange={(e) => handleInputChange('option_c', e.target.value)}
-                  placeholder="Option C (supports LaTeX)"
-                  rows={2}
+                  onChange={(value: string) => handleInputChange('option_c', value)}
+                  placeholder="Option C (supports LaTeX and images)"
+                  compact={true}
+                  showToolbar={false}
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-sm">Option D</label>
-                <Textarea
+                <ClientOnlyAdvancedTipTapEditor
                   value={formData.option_d}
-                  onChange={(e) => handleInputChange('option_d', e.target.value)}
-                  placeholder="Option D (supports LaTeX)"
-                  rows={2}
+                  onChange={(value: string) => handleInputChange('option_d', value)}
+                  placeholder="Option D (supports LaTeX and images)"
+                  compact={true}
+                  showToolbar={false}
                 />
               </div>
             </div>
@@ -671,11 +676,11 @@ export function NewQuestionForm() {
           {/* Solution */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Solution</label>
-            <Textarea
+            <ClientOnlyAdvancedTipTapEditor
               value={formData.solution_text}
-              onChange={(e) => handleInputChange('solution_text', e.target.value)}
-              placeholder="Enter the solution/explanation (supports LaTeX)"
-              rows={3}
+              onChange={(value: string) => handleInputChange('solution_text', value)}
+              placeholder="Enter the solution/explanation (supports LaTeX math and images)"
+              showToolbar={true}
             />
           </div>
 
