@@ -15,7 +15,6 @@ import {
   CheckCircle,
   XCircle,
   Edit,
-  HelpCircle,
   ListChecks,
   Lightbulb,
   Database,
@@ -113,7 +112,7 @@ export function QuestionCard({ question, isSelected = false, onSelect, onQuestio
                 )}
               </div>
               <h3 className="text-lg font-semibold text-slate-900 leading-relaxed line-clamp-2 whitespace-pre-wrap">
-                <LatexRenderer text={currentQuestion.question_text} />
+                <UniversalContentRenderer text={currentQuestion.question_text} />
               </h3>
             </div>
           </div>
@@ -179,7 +178,7 @@ export function QuestionCard({ question, isSelected = false, onSelect, onQuestio
                     <span className="font-medium mr-2">
                       {String.fromCharCode(65 + index)}.
                     </span>
-                    <LatexRenderer text={option} />
+                    <UniversalContentRenderer text={option} />
                   </div>
                   {key === currentQuestion.correct_option && (
                     <Badge variant="secondary" className="text-xs">

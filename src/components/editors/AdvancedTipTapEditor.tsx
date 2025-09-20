@@ -10,17 +10,15 @@ import { TableHeader } from '@tiptap/extension-table-header'
 import { Image } from '@tiptap/extension-image'
 import { Link } from '@tiptap/extension-link'
 import { TextAlign } from '@tiptap/extension-text-align'
-import { Underline } from '@tiptap/extension-underline'
 import { Color } from '@tiptap/extension-color'
 import { TextStyle } from '@tiptap/extension-text-style'
 import { FontFamily } from '@tiptap/extension-font-family'
 import { FontSize } from '@tiptap/extension-font-size'
 import { Placeholder } from '@tiptap/extension-placeholder'
-import { HardBreak } from '@tiptap/extension-hard-break'
 import { LatexLineBreakInputExtension } from './extensions/LatexLineBreakInputExtension'
 import { cn } from '@/lib/utils'
 import { AdvancedToolbar } from './AdvancedToolbar'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 export interface AdvancedTipTapEditorProps {
   value: string
@@ -69,7 +67,7 @@ export function AdvancedTipTapEditor({
     if (!content) return content
     
     // Process inline math $...$ to handle line breaks properly
-    let processedContent = content.replace(/\$([^$]+)\$/g, (match, formula) => {
+    const processedContent = content.replace(/\$([^$]+)\$/g, (match, formula) => {
       // The formula already has proper LaTeX syntax with \\ for line breaks
       // We need to ensure KaTeX processes them correctly
       return `$${formula}$`
@@ -128,9 +126,7 @@ export function AdvancedTipTapEditor({
     content: processContent(value),
     onCreate: ({ editor }) => {
       // Set content with whitespace preservation
-      editor.commands.setContent(processContent(value), false, {
-        preserveWhitespace: 'full',
-      })
+      editor.commands.setContent(processContent(value))
     },
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML())

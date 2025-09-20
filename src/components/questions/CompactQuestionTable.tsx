@@ -13,15 +13,8 @@ import {
   Tag,
   Calendar,
   Hash,
-  Eye,
-  EyeOff,
-  HelpCircle,
-  ListChecks,
-  Lightbulb,
-  Database,
   Info,
   CheckCircle,
-  XCircle
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { UIQuestion } from '@/lib/types'

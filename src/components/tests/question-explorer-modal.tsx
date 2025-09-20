@@ -354,7 +354,7 @@ export function QuestionExplorerModal({ open, onClose, onSelect, onSelectMultipl
                     </div>
                   </div>
                   <div className="px-3 pb-3">
-                    <div className="text-gray-700 line-clamp-1">{!expanded && <SmartLatexRenderer text={q.question_text} />}</div>
+                    <div className="text-gray-700 line-clamp-1">{!expanded && <UniversalContentRenderer text={q.question_text} />}</div>
                     {expanded && (
                       <div className="mt-3">
                         <Card className="border-l-4 border-l-blue-500">
