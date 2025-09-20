@@ -112,7 +112,6 @@ export function AdvancedTipTapEditor({
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
-      Underline,
       Color,
       TextStyle,
       FontFamily.configure({
@@ -124,7 +123,6 @@ export function AdvancedTipTapEditor({
       Placeholder.configure({
         placeholder,
       }),
-      HardBreak,
       LatexLineBreakInputExtension,
     ],
     content: processContent(value),

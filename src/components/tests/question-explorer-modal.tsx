@@ -10,7 +10,7 @@ import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMe
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Search, ChevronLeft, ChevronRight, Check } from 'lucide-react'
-import { SmartLatexRenderer } from './smart-latex-renderer'
+import { UniversalContentRenderer } from '@/components/editors/UniversalContentRenderer'
 import { getFilterOptions, searchQuestions } from '@/lib/actions/tests'
 import type { Question } from '@/lib/types'
 
@@ -361,7 +361,7 @@ export function QuestionExplorerModal({ open, onClose, onSelect, onSelectMultipl
                           <CardContent className="p-4">
                             <div className="mb-4">
                               <h4 className="font-semibold text-gray-900 mb-2">Question:</h4>
-                              <div className="prose max-w-none"><SmartLatexRenderer text={q.question_text} /></div>
+                              <div className="prose max-w-none"><UniversalContentRenderer text={q.question_text} /></div>
                             </div>
                             <div className="mb-4">
                               <h5 className="font-medium text-gray-900 mb-2">Options:</h5>
@@ -372,7 +372,7 @@ export function QuestionExplorerModal({ open, onClose, onSelect, onSelectMultipl
                                   return (
                                     <div key={opt} className={`flex items-start space-x-3 p-2 rounded ${isCorrect ? 'bg-green-50 border border-green-200' : 'bg-gray-50'}`}>
                                       <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-sm font-semibold ${isCorrect ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>{String(opt).toUpperCase()}{isCorrect && <Check className="h-3 w-3 ml-1" />}</div>
-                                      <div className="flex-1 prose prose-sm max-w-none"><SmartLatexRenderer text={String(text || '')} /></div>
+                                      <div className="flex-1 prose prose-sm max-w-none"><UniversalContentRenderer text={String(text || '')} /></div>
                                     </div>
                                   )
                                 })}
@@ -389,7 +389,7 @@ export function QuestionExplorerModal({ open, onClose, onSelect, onSelectMultipl
                             {q.solution_text && (
                               <div className="mb-2">
                                 <h5 className="font-medium text-gray-900 mb-2">Solution:</h5>
-                                <div className="prose max-w-none"><SmartLatexRenderer text={q.solution_text} /></div>
+                                <div className="prose max-w-none"><UniversalContentRenderer text={q.solution_text} /></div>
                               </div>
                             )}
                           </CardContent>

@@ -23,7 +23,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { UIQuestion } from '@/lib/types'
-import { LatexRenderer } from '@/lib/utils/latex-renderer'
+import { UniversalContentRenderer } from '@/components/editors/UniversalContentRenderer'
 import { QuestionEditForm } from './QuestionEditForm'
 
 type Question = UIQuestion
@@ -198,8 +198,8 @@ export function QuestionCard({ question, isSelected = false, onSelect, onQuestio
                 <Lightbulb className="h-4 w-4 text-slate-500" />
                 <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Solution</h4>
               </div>
-              <div className="text-base text-slate-700 leading-relaxed p-4 bg-slate-50 rounded-xl whitespace-pre-wrap font-mono border border-slate-200/60">
-                <LatexRenderer text={currentQuestion.solution_text} />
+              <div className="text-base text-slate-700 leading-relaxed p-4 bg-slate-50 rounded-xl font-mono border border-slate-200/60">
+                <UniversalContentRenderer text={currentQuestion.solution_text} />
               </div>
             </div>
           )}

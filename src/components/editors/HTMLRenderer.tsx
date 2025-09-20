@@ -11,11 +11,14 @@ interface HTMLRendererProps {
 export function HTMLRenderer({ content, className }: HTMLRendererProps) {
   // Process content to handle line breaks and LaTeX
   const processContent = (htmlContent: string) => {
-    console.log('HTMLRenderer processing:', htmlContent)
+    console.log('=== HTMLRenderer Data Flow Debug ===')
+    console.log('Raw input from Supabase:', htmlContent)
     console.log('Content type:', typeof htmlContent)
     console.log('Content length:', htmlContent.length)
     console.log('Contains \\\\:', htmlContent.includes('\\\\'))
     console.log('Contains \\:', htmlContent.includes('\\'))
+    console.log('Contains whitespace:', htmlContent.includes(' '))
+    console.log('Contains newlines:', htmlContent.includes('\n'))
     // Handle LaTeX math expressions
     let processedContent = htmlContent
     
@@ -97,7 +100,15 @@ export function HTMLRenderer({ content, className }: HTMLRendererProps) {
     // Handle regular line breaks
     processedContent = processedContent.replace(/\n/g, '<br>')
     
-    console.log('HTMLRenderer processed result:', processedContent)
+    console.log('=== HTMLRenderer Final Output ===')
+    console.log('Final processed content:', processedContent)
+    console.log('Final content length:', processedContent.length)
+    console.log('Final contains \\\\:', processedContent.includes('\\\\'))
+    console.log('Final contains \\:', processedContent.includes('\\'))
+    console.log('Final contains <br>:', processedContent.includes('<br>'))
+    console.log('Final contains latex-line-break:', processedContent.includes('latex-line-break'))
+    console.log('=== End HTMLRenderer Debug ===')
+    
     return processedContent
   }
 

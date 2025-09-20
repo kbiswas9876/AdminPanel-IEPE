@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { X, Plus, Save, XCircle, Eye, EyeOff } from 'lucide-react'
 import { BookSourceCombobox } from './book-source-combobox'
 import { ChapterNameCombobox } from './chapter-name-combobox'
-import { SmartLatexRenderer } from '../tests/smart-latex-renderer'
+import { UniversalContentRenderer } from '../editors/UniversalContentRenderer'
 import type { Question } from '@/lib/types'
 
 interface InPlaceQuestionEditorProps {
@@ -157,7 +157,7 @@ export function InPlaceQuestionEditor({
           </Button>
         </div>
         <div className="text-sm">
-          <SmartLatexRenderer text={content} />
+          <UniversalContentRenderer text={content} />
         </div>
       </div>
     )
@@ -322,7 +322,7 @@ export function InPlaceQuestionEditor({
                   <div className="ml-13 p-3 bg-purple-50 border border-purple-200 rounded-lg">
                     <div className="text-xs font-medium text-purple-700 mb-1">Preview:</div>
                     <div className="text-sm">
-                      <SmartLatexRenderer text={options[key]} />
+                      <UniversalContentRenderer text={options[key]} />
                     </div>
                   </div>
                 )}

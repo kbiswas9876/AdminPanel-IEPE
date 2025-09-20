@@ -55,6 +55,15 @@ export function EnhancedHTMLRenderer({ content, className }: EnhancedHTMLRendere
 
     // Process content to handle LaTeX line breaks and math
     const processContent = (htmlContent: string) => {
+      console.log('=== EnhancedHTMLRenderer Data Flow Debug ===')
+      console.log('Raw input from Supabase:', htmlContent)
+      console.log('Content type:', typeof htmlContent)
+      console.log('Content length:', htmlContent.length)
+      console.log('Contains \\\\:', htmlContent.includes('\\\\'))
+      console.log('Contains \\:', htmlContent.includes('\\'))
+      console.log('Contains whitespace:', htmlContent.includes(' '))
+      console.log('Contains newlines:', htmlContent.includes('\n'))
+      
       let processedContent = htmlContent
       
       // First, process math environments to preserve LaTeX line breaks within them
@@ -94,6 +103,15 @@ export function EnhancedHTMLRenderer({ content, className }: EnhancedHTMLRendere
       
       // Handle simple LaTeX line breaks outside of math environments
       processedContent = processedContent.replace(/\\\\/g, '<br class="latex-line-break">')
+      
+      console.log('=== EnhancedHTMLRenderer Final Output ===')
+      console.log('Final processed content:', processedContent)
+      console.log('Final content length:', processedContent.length)
+      console.log('Final contains \\\\:', processedContent.includes('\\\\'))
+      console.log('Final contains \\:', processedContent.includes('\\'))
+      console.log('Final contains <br>:', processedContent.includes('<br>'))
+      console.log('Final contains latex-line-break:', processedContent.includes('latex-line-break'))
+      console.log('=== End EnhancedHTMLRenderer Debug ===')
       
       return processedContent
     }
