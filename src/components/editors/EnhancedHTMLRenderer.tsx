@@ -57,7 +57,25 @@ export function EnhancedHTMLRenderer({ content, className }: EnhancedHTMLRendere
     const processContent = (htmlContent: string) => {
       let processedContent = htmlContent
       
-      // Handle LaTeX line breaks with custom vertical spacing
+      // First, process math environments to preserve LaTeX line breaks within them
+      // Process display math $$...$$ first (to avoid conflicts with inline math)
+      processedContent = processedContent.replace(/\$\$([^$]+)\$\$/g, (match, formula) => {
+        // Preserve LaTeX syntax exactly as stored in database
+        // The formula already has proper LaTeX syntax with \\ for line breaks
+        // Let KaTeX handle the line breaks properly
+        return `<div data-math data-formula="${formula}" data-display="true" class="math-display"></div>`
+      })
+      
+      // Process inline math $...$
+      processedContent = processedContent.replace(/\$([^$]+)\$/g, (match, formula) => {
+        // Preserve LaTeX syntax exactly as stored in database
+        // The formula already has proper LaTeX syntax with \\ for line breaks
+        // Let KaTeX handle the line breaks properly
+        return `<span data-math data-formula="${formula}" data-display="false"></span>`
+      })
+      
+      // Handle LaTeX line breaks outside of math environments
+      // Only process \\ that are not within math environments
       processedContent = processedContent.replace(/\\\\\[([^\]]+)\]/g, (match, spacing) => {
         const spacingValue = spacing.trim()
         let cssSpacing = '0.5em'
@@ -74,19 +92,8 @@ export function EnhancedHTMLRenderer({ content, className }: EnhancedHTMLRendere
         return `<br class="latex-line-break" style="margin: ${cssSpacing} 0;">`
       })
       
-      // Handle simple LaTeX line breaks - only in math contexts
-      // Process \\ only within math environments (after $...$ or $$...$$ processing)
-      // This ensures we don't interfere with regular text line breaks
-      
-      // Process inline math $...$
-      processedContent = processedContent.replace(/\$([^$]+)\$/g, (match, formula) => {
-        return `<span data-math data-formula="${formula}" data-display="false"></span>`
-      })
-      
-      // Process display math $$...$$
-      processedContent = processedContent.replace(/\$\$([^$]+)\$\$/g, (match, formula) => {
-        return `<div data-math data-formula="${formula}" data-display="true" class="math-display"></div>`
-      })
+      // Handle simple LaTeX line breaks outside of math environments
+      processedContent = processedContent.replace(/\\\\/g, '<br class="latex-line-break">')
       
       return processedContent
     }

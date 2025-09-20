@@ -13,3 +13,4 @@ const AdvancedTipTapEditor = dynamic(() => import('./AdvancedTipTapEditor').then
 export function ClientOnlyAdvancedTipTapEditor(props: AdvancedTipTapEditorProps) {
   return <AdvancedTipTapEditor {...props} />
 }
+

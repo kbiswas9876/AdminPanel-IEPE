@@ -19,12 +19,14 @@ export function HTMLRenderer({ content, className }: HTMLRendererProps) {
     // Handle LaTeX math expressions
     let processedContent = htmlContent
     
-    // Process inline math $...$
-    processedContent = processedContent.replace(/\$([^$]+)\$/g, (match, formula) => {
+    // Process display math $$...$$ first (to avoid conflicts with inline math)
+    processedContent = processedContent.replace(/\$\$([^$]+)\$\$/g, (match, formula) => {
       try {
         if (typeof window !== 'undefined' && window.katex) {
-          return window.katex.renderToString(formula, {
-            displayMode: false,
+          // Preserve line breaks within math for KaTeX to process
+          const processedFormula = formula
+          return window.katex.renderToString(processedFormula, {
+            displayMode: true,
             throwOnError: false,
             errorColor: '#cc0000',
           })
@@ -36,12 +38,14 @@ export function HTMLRenderer({ content, className }: HTMLRendererProps) {
       }
     })
     
-    // Process display math $$...$$
-    processedContent = processedContent.replace(/\$\$([^$]+)\$\$/g, (match, formula) => {
+    // Process inline math $...$
+    processedContent = processedContent.replace(/\$([^$]+)\$/g, (match, formula) => {
       try {
         if (typeof window !== 'undefined' && window.katex) {
-          return window.katex.renderToString(formula, {
-            displayMode: true,
+          // Preserve line breaks within math for KaTeX to process
+          const processedFormula = formula
+          return window.katex.renderToString(processedFormula, {
+            displayMode: false,
             throwOnError: false,
             errorColor: '#cc0000',
           })
@@ -55,6 +59,7 @@ export function HTMLRenderer({ content, className }: HTMLRendererProps) {
     
     // Handle LaTeX line breaks with custom vertical spacing
     // Match patterns like \\[4pt], \\[6pt], \\[8pt], etc.
+    // But only outside of math environments
     processedContent = processedContent.replace(/\\\\\[([^\]]+)\]/g, (match, spacing) => {
       // Convert LaTeX spacing to CSS
       const spacingValue = spacing.trim()
@@ -82,7 +87,7 @@ export function HTMLRenderer({ content, className }: HTMLRendererProps) {
     })
     
     // Handle simple LaTeX line breaks \\ - clean line break without showing backslashes
-    // First try to match literal \\ in the content
+    // But only outside of math environments (math environments are processed first)
     processedContent = processedContent.replace(/\\\\/g, '<br class="latex-line-break">')
     
     // Also handle HTML-encoded backslashes

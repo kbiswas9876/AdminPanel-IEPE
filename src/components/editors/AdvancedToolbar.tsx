@@ -300,15 +300,10 @@ export function AdvancedToolbar({
         },
       ],
     },
-    // Math & Special
+    // Text Color
     {
-      title: 'Math & Special',
+      title: 'Text Color',
       items: [
-        {
-          icon: FunctionSquare,
-          onClick: () => insertMath('x^2 + y^2 = z^2'),
-          title: 'Insert Math',
-        },
         {
           icon: Palette,
           onClick: () => {
@@ -365,24 +360,7 @@ export function AdvancedToolbar({
         },
       ],
     },
-    // Font Selection
-    {
-      title: 'Font Selection',
-      items: [
-        {
-          icon: Type,
-          onClick: () => {}, // This will be handled by the dropdown
-          title: 'Font Family',
-        },
-        // Highlight temporarily disabled - extension needs proper configuration
-        // {
-        //   icon: Highlighter,
-        //   onClick: () => editor.chain().focus().toggleHighlight().run(),
-        //   active: editor.isActive('highlight'),
-        //   title: 'Highlight',
-        // },
-      ],
-    },
+    // Font Selection section removed - using dropdowns instead
     // Tables
     {
       title: 'Tables',
@@ -439,10 +417,9 @@ export function AdvancedToolbar({
   if (compact) {
     // Simplified toolbar for compact mode
     const compactItems = [
-      { icon: Bold, onClick: () => editor.chain().focus().toggleBold().run(), active: editor.isActive('bold') },
-      { icon: Italic, onClick: () => editor.chain().focus().toggleItalic().run(), active: editor.isActive('italic') },
-      { icon: List, onClick: () => editor.chain().focus().toggleBulletList().run(), active: editor.isActive('bulletList') },
-      { icon: FunctionSquare, onClick: () => insertMath('x^2'), title: 'Math' },
+      { icon: Bold, onClick: () => editor.chain().focus().toggleBold().run(), active: editor.isActive('bold'), title: 'Bold' },
+      { icon: Italic, onClick: () => editor.chain().focus().toggleItalic().run(), active: editor.isActive('italic'), title: 'Italic' },
+      { icon: List, onClick: () => editor.chain().focus().toggleBulletList().run(), active: editor.isActive('bulletList'), title: 'Bullet List' },
     ]
 
     return (

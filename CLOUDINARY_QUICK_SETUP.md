@@ -39,3 +39,5 @@ The editor already works with local file uploads. You can:
 ✅ **No errors** - Cloudinary widget is disabled
 
 The application is ready to use! The Cloudinary setup is optional.
+
+

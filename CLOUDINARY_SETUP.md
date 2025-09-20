@@ -46,3 +46,4 @@ For production deployment:
 1. Generate a new API secret in Cloudinary
 2. Store it securely in environment variables
 3. Never commit secrets to version control
+

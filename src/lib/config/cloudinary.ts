@@ -21,3 +21,4 @@ export const clientCloudinaryConfig = {
   cloudName: cloudinaryConfig.cloudName,
   uploadPreset: cloudinaryConfig.uploadPreset,
 }
+

@@ -146,3 +146,4 @@ export function MathSymbolPalette({ onInsert }: MathSymbolPaletteProps) {
     </div>
   )
 }
+

@@ -126,3 +126,5 @@ export default function ToolbarRefinementsTestPage() {
     </div>
   )
 }
+
+

@@ -291,8 +291,8 @@ async function fetchCandidateQuestions(
   // Exclude already picked ids (extra guard)
   const filtered = (data as unknown as UIQuestion[]).filter((q) => !excludeIds.includes(q.id as number))
 
-  // Sanitize questions for rendering (convert \\ to \)
-  const sanitizedQuestions = filtered.map(q => sanitizeQuestionForRendering(q) as UIQuestion)
+  // Data is already properly sanitized during bulk upload, no need to sanitize again
+  const sanitizedQuestions = filtered
 
   return sanitizedQuestions
 }
@@ -488,8 +488,8 @@ export async function searchQuestions(args: {
       return { questions: [], total: 0 }
     }
 
-    // Sanitize questions for rendering (convert \\ to \)
-    const sanitizedQuestions = (data as unknown as UIQuestion[]).map(q => sanitizeQuestionForRendering(q) as UIQuestion)
+    // Data is already properly sanitized during bulk upload, no need to sanitize again
+    const sanitizedQuestions = data as unknown as UIQuestion[]
     
     return { questions: sanitizedQuestions, total: count || 0 }
   } catch (error) {
@@ -1467,8 +1467,8 @@ async function fetchTestAndQuestionsOrdered(testId: number): Promise<{ test: Tes
         if (q.id != null) byId.set(q.id as number, q)
       }
       const rawQuestions = ids.map((id) => byId.get(id)).filter(Boolean) as UIQuestion[]
-      // Sanitize questions for rendering (convert \\ to \)
-      questions = rawQuestions.map(q => sanitizeQuestionForRendering(q) as UIQuestion)
+      // Data is already properly sanitized during bulk upload, no need to sanitize again
+      questions = rawQuestions
     }
     return { test: test as Test, questions }
   } catch {
@@ -1505,8 +1505,8 @@ async function fetchTestAndQuestionsApplied(testId: number): Promise<{ test: Tes
     return patched
   })
   
-  // Sanitize questions for rendering (convert \\ to \)
-  const questions: UIQuestion[] = rawQuestions.map(q => sanitizeQuestionForRendering(q) as UIQuestion)
+  // Data is already properly sanitized during bulk upload, no need to sanitize again
+  const questions: UIQuestion[] = rawQuestions
   return { test: test as Test, questions }
 }
 

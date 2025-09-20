@@ -20,7 +20,7 @@ import { HardBreak } from '@tiptap/extension-hard-break'
 import { LatexLineBreakInputExtension } from './extensions/LatexLineBreakInputExtension'
 import { cn } from '@/lib/utils'
 import { AdvancedToolbar } from './AdvancedToolbar'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export interface AdvancedTipTapEditorProps {
   value: string
@@ -63,8 +63,26 @@ export function AdvancedTipTapEditor({
     }
   }
 
+
+  // Process content to handle LaTeX line breaks before passing to editor
+  const processContent = (content: string) => {
+    if (!content) return content
+    
+    // Process inline math $...$ to handle line breaks properly
+    let processedContent = content.replace(/\$([^$]+)\$/g, (match, formula) => {
+      // The formula already has proper LaTeX syntax with \\ for line breaks
+      // We need to ensure KaTeX processes them correctly
+      return `$${formula}$`
+    })
+    
+    return processedContent
+  }
+
   const editor = useEditor({
     immediatelyRender: false, // Fix SSR hydration mismatch
+    parseOptions: {
+      preserveWhitespace: 'full',
+    },
     extensions: [
       StarterKit.configure({
         codeBlock: false, // We'll use CodeBlockLowlight instead
@@ -109,7 +127,13 @@ export function AdvancedTipTapEditor({
       HardBreak,
       LatexLineBreakInputExtension,
     ],
-    content: value,
+    content: processContent(value),
+    onCreate: ({ editor }) => {
+      // Set content with whitespace preservation
+      editor.commands.setContent(processContent(value), false, {
+        preserveWhitespace: 'full',
+      })
+    },
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML())
     },
