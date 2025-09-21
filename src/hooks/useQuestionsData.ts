@@ -66,7 +66,7 @@ export function useQuestionsData() {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     retry: 2,
-    keepPreviousData: true // Prevents UI flicker while loading next page
+        placeholderData: (previousData) => previousData // Prevents UI flicker while loading next page
   })
 
   // Calculate derived state

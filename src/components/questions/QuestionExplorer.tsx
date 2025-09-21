@@ -64,7 +64,7 @@ export function QuestionExplorer() {
     if (isAllSelected) {
       setSelectedQuestions(new Set())
     } else {
-      setSelectedQuestions(new Set(questions.map(q => q.id).filter(id => id !== undefined)))
+      setSelectedQuestions(new Set(questions.map((q: any) => q.id).filter((id: any) => id !== undefined)))
     }
   }
 
