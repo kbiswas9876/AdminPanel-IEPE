@@ -126,7 +126,7 @@ export function Header() {
   }, [])
 
   return (
-    <header className="bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200/60 sticky top-0 z-40">
+    <header className="bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200/60 sticky top-0 z-40 smooth-animation">
       <div className="flex h-16 items-center justify-between px-4 sm:px-6">
         <div className="flex items-center space-x-4">
           {/* Mobile hamburger menu */}
@@ -135,7 +135,7 @@ export function Header() {
               variant="ghost"
               size="sm"
               onClick={toggleSidebar}
-              className="h-10 w-10 p-0 hover:bg-gray-100/80 transition-all duration-200"
+              className="h-10 w-10 p-0 hover:bg-gray-100/80 smooth-animation btn-premium touch-target"
               data-hamburger
             >
               {isSidebarOpen ? (
@@ -217,7 +217,7 @@ export function Header() {
               variant="ghost"
               size="sm"
               onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-              className="relative h-10 w-10 rounded-xl hover:bg-gray-100/80 transition-all duration-200 hover:scale-105"
+              className="relative h-10 w-10 rounded-xl hover:bg-gray-100/80 smooth-animation btn-premium touch-target"
             >
               <Bell className="h-5 w-5 text-gray-700" />
               {unreadCount > 0 && (

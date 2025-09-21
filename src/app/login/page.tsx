@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, use } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,10 +13,11 @@ import { Eye, EyeOff, Shield, Lock, Mail, AlertCircle, Loader2, CheckCircle, X }
 export default function LoginPage({
   searchParams,
 }: {
-  searchParams: { error?: string; message?: string }
+  searchParams: Promise<{ error?: string; message?: string }>
 }) {
-  const error = searchParams.error
-  const message = searchParams.message
+  const resolvedSearchParams = use(searchParams)
+  const error = resolvedSearchParams.error
+  const message = resolvedSearchParams.message
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)

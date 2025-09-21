@@ -36,63 +36,81 @@ export function ErrorReportsNavItem() {
   }, [])
 
   return (
-    <Link
-      href="/reports"
-      className={cn(
-        'group relative flex items-center transition-all duration-200 ease-out transform-gpu',
-        'hover:scale-[1.01] active:scale-[0.99]',
-        isMobile 
-          ? 'rounded-xl px-3 py-2.5 text-sm' 
-          : 'rounded-xl px-4 py-3 text-sm',
-        isActive
-          ? 'bg-gradient-to-r from-red-600 to-orange-600 text-white shadow-lg shadow-red-500/25'
-          : 'text-slate-300 hover:bg-slate-700/50 hover:text-white hover:shadow-md'
-      )}
-    >
-      {/* Ultra-Premium Active Indicator */}
-      {isActive && (
+    <div className="relative group">
+      <Link
+        href="/reports"
+        className={cn(
+          'group relative flex items-center transition-all duration-200 ease-out',
+          isMobile 
+            ? 'rounded-lg px-ios-md py-ios-md text-body touch-target' 
+            : 'rounded-lg px-4 py-4 text-sm',
+          isActive
+            ? isMobile 
+              ? 'bg-red-500 text-white shadow-sm' 
+              : 'bg-red-600 text-white shadow-lg'
+            : isMobile
+              ? 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+              : 'text-slate-300 hover:bg-slate-700/40 hover:text-white'
+        )}
+      >
+        {/* Clean Icon Container */}
         <div className={cn(
-          "absolute left-0 top-1/2 -translate-y-1/2 rounded-r-full bg-white/90 shadow-sm",
-          isMobile ? "h-6 w-1" : "h-8 w-1"
-        )} />
-      )}
-      
-      {/* Compact Mobile Icon */}
-      <AlertTriangle className={cn(
-        'transition-all duration-200',
-        isMobile ? 'mr-2 h-4 w-4' : 'mr-3 h-5 w-5',
-        isActive 
-          ? 'text-white' 
-          : 'text-slate-400 group-hover:text-white group-hover:scale-105'
-      )} />
-      
-      {/* Ultra-Premium Text */}
-      <span className={cn(
-        'font-medium tracking-wide flex-1 truncate',
-        isMobile ? 'text-sm' : 'text-sm',
-        isActive ? 'font-semibold' : 'font-medium'
-      )}>
-        {isMobile ? 'Reports' : 'Error Reports'}
-      </span>
-      
-      {/* Premium Notification Badge */}
-      {!loading && newReportsCount > 0 && (
-        <div className="relative">
-          <span className={cn(
-            'inline-flex items-center rounded-full bg-red-500 font-bold text-white shadow-md animate-pulse',
-            isMobile ? 'px-1.5 py-0.5 text-xs' : 'px-2.5 py-0.5 text-xs'
-          )}>
-            {newReportsCount}
-          </span>
-          {/* Subtle glow effect */}
-          <div className="absolute inset-0 rounded-full bg-red-500/50 blur-sm animate-ping" />
+          'flex items-center justify-center rounded-md transition-all duration-200 ease-out',
+          isMobile 
+            ? 'w-8 h-8 mr-3' 
+            : 'w-9 h-9 mr-4',
+          isActive 
+            ? isMobile 
+              ? 'bg-white/20 shadow-sm' 
+              : 'bg-white/20 shadow-sm'
+            : isMobile
+              ? 'bg-slate-100 group-hover:bg-slate-200'
+              : 'bg-slate-700/50 group-hover:bg-slate-600/60'
+        )}>
+          <AlertTriangle className={cn(
+            'transition-all duration-200 ease-out',
+            'h-4 w-4',
+            isActive 
+              ? 'text-white' 
+              : isMobile
+                ? 'text-slate-600 group-hover:text-slate-800'
+                : 'text-slate-400 group-hover:text-white'
+          )} />
         </div>
-      )}
-      
-      {/* Subtle Active Glow */}
-      {isActive && (
-        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-red-600/20 to-orange-600/20 blur-sm -z-10" />
-      )}
-    </Link>
+        
+        {/* Clean Text Content */}
+        <div className="flex-1 min-w-0 transition-all duration-200 ease-out opacity-100 translate-x-0">
+          <div className={cn(
+            'font-medium tracking-wide truncate transition-all duration-200',
+            isMobile ? 'text-body' : 'text-base',
+            isActive ? 'font-semibold' : 'font-medium'
+          )}>
+            {isMobile ? 'Reports' : 'Error Reports'}
+          </div>
+          {!isMobile && (
+            <div className={cn(
+              'text-xs transition-colors duration-200 truncate',
+              isActive 
+                ? 'text-red-100' 
+                : 'text-slate-500 group-hover:text-slate-300'
+            )}>
+              System monitoring
+            </div>
+          )}
+        </div>
+        
+        {/* Clean Notification Badge */}
+        {!loading && newReportsCount > 0 && (
+          <div className="relative">
+            <span className={cn(
+              'inline-flex items-center rounded-full bg-red-500 font-bold text-white shadow-sm',
+              isMobile ? 'px-1.5 py-0.5 text-xs' : 'px-2.5 py-0.5 text-xs'
+            )}>
+              {newReportsCount}
+            </span>
+          </div>
+        )}
+      </Link>
+    </div>
   )
 }

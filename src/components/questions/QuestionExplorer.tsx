@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import { useQuestionsData } from '@/hooks/useQuestionsData'
 import { useFilterStore } from '@/stores/filterStore'
 import { CompactQuestionTable } from './CompactQuestionTable'
@@ -30,6 +31,7 @@ import { toast } from 'sonner'
 
 export function QuestionExplorer() {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const { 
     questions, 
     total, 
@@ -49,6 +51,10 @@ export function QuestionExplorer() {
   // Selection state
   const [selectedQuestions, setSelectedQuestions] = useState<Set<number>>(new Set())
   const [isDeleting, setIsDeleting] = useState(false)
+  
+  // State for preserving context after edit
+  const [expandedQuestionId, setExpandedQuestionId] = useState<number | null>(null)
+  const [shouldPreserveContext, setShouldPreserveContext] = useState(false)
 
   // Selection helpers
   const isAllSelected = questions.length > 0 && selectedQuestions.size === questions.length
@@ -187,7 +193,7 @@ export function QuestionExplorer() {
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col overflow-visible">
       {/* Ultra-Compact Results Header */}
       <div className="flex-shrink-0 flex items-center justify-between py-2 px-3 border-b bg-gray-50/50">
         <div className="flex items-center gap-3">
@@ -257,12 +263,24 @@ export function QuestionExplorer() {
             selectedQuestions={selectedQuestions}
             onSelectQuestion={handleSelectQuestion}
             onSelectAll={handleSelectAll}
-            onQuestionUpdate={(_updatedQuestion) => {
-              // Handle question update if needed
-              refetch()
+            onQuestionUpdate={(updatedQuestion) => {
+              // CRITICAL FIX: Context-aware state invalidation
+              setExpandedQuestionId(updatedQuestion.id || null)
+              setShouldPreserveContext(true)
+              
+              // Invalidate the specific query for the current page
+              // This forces a re-fetch of the correct, sorted data for the page the user is on
+              queryClient.invalidateQueries({
+                queryKey: ['questions'],
+                exact: false
+              }).then(() => {
+                setShouldPreserveContext(false)
+              })
             }}
             isAllSelected={isAllSelected}
             isPartiallySelected={isPartiallySelected}
+            expandedQuestionId={expandedQuestionId}
+            shouldPreserveContext={shouldPreserveContext}
           />
         </div>
       ) : (
@@ -321,7 +339,7 @@ export function QuestionExplorer() {
       )}
 
       {/* Premium Pagination */}
-      <div className="flex-shrink-0 flex items-center justify-between py-3 px-4 border-t bg-gradient-to-r from-gray-50 to-blue-50/30">
+      <div className="flex-shrink-0 flex items-center justify-between py-3 px-4 border-t bg-gradient-to-r from-gray-50 to-blue-50/30 overflow-visible">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border border-gray-200 shadow-sm">
             <div className="w-2 h-2 rounded-full bg-blue-500"></div>
@@ -352,7 +370,7 @@ export function QuestionExplorer() {
           </div>
         </div>
         
-        {totalPages > 1 && (
+        {questions.length > 0 && (
           <div className="flex items-center gap-1 bg-white rounded-lg border border-gray-200 shadow-sm p-1">
             {/* First page */}
             {renderPaginationButton(1, <ChevronsLeft className="h-3 w-3" />, undefined, "first-page")}

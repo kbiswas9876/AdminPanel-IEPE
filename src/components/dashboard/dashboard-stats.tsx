@@ -43,32 +43,32 @@ function StatCard({
 }) {
   return (
     <Link href={href} className="block group">
-      <Card className={`relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-[1.03] cursor-pointer border-0 rounded-2xl ${
+      <Card className={`relative overflow-hidden smooth-animation hover-lift cursor-pointer border-0 rounded-ios-xl ${
         isUrgent 
-          ? 'bg-gradient-to-br from-orange-50/90 via-red-50/80 to-pink-50/90 shadow-orange-200/60 backdrop-blur-sm' 
-          : 'bg-white/90 backdrop-blur-sm shadow-gray-200/60 hover:shadow-indigo-200/40'
+          ? 'bg-gradient-to-br from-orange-50 to-red-50 shadow-ios-md border border-orange-200/60' 
+          : 'bg-white shadow-ios-sm border border-slate-200/60 hover:shadow-ios-md'
       }`}>
         {/* Subtle background pattern */}
         <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 relative z-10 p-6">
-          <CardTitle className="text-sm font-bold text-slate-700 tracking-wide uppercase">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 relative z-10 p-ios-lg">
+          <CardTitle className="text-label text-slate-600">
             {title}
           </CardTitle>
-          <div className={`p-3 rounded-xl transition-all duration-300 shadow-lg ${
+          <div className={`p-3 rounded-ios-md transition-all duration-300 shadow-ios-sm ${
             isUrgent 
-              ? 'bg-gradient-to-br from-orange-100 to-red-100 text-orange-600 group-hover:scale-110 group-hover:shadow-orange-200/50' 
-              : 'bg-gradient-to-br from-indigo-100 to-blue-100 text-indigo-600 group-hover:scale-110 group-hover:shadow-indigo-200/50'
+              ? 'bg-gradient-to-br from-orange-100 to-red-100 text-orange-600 group-hover:scale-110' 
+              : 'bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600 group-hover:scale-110'
           }`}>
-            <Icon className="h-6 w-6" />
+            <Icon className="h-5 w-5" />
           </div>
         </CardHeader>
-        <CardContent className="relative z-10 p-6 pt-0">
-          <div className="text-4xl lg:text-5xl font-black text-slate-900 mb-3 tracking-tight">
+        <CardContent className="relative z-10 p-ios-lg pt-0">
+          <div className="text-hero text-slate-900 mb-2">
             {value.toLocaleString()}
           </div>
           {description && (
-            <p className="text-sm text-slate-600 font-semibold">
+            <p className="text-caption text-slate-500">
               {description}
             </p>
           )}
@@ -136,18 +136,18 @@ function ActivityItem({ activity }: { activity: RecentActivity }) {
   }
 
   return (
-    <div className="flex items-start space-x-4 p-5 hover:bg-slate-50/80 transition-all duration-300 group border-l-4 border-transparent hover:border-indigo-200">
-      <div className={`flex-shrink-0 mt-1 p-3 rounded-xl shadow-sm ${getActivityIconBg(activity.type)} group-hover:scale-110 transition-transform duration-300`}>
+    <div className="flex items-start space-x-4 p-ios-lg hover:bg-slate-50/80 transition-all duration-300 group border-l-4 border-transparent hover:border-blue-200">
+      <div className={`flex-shrink-0 mt-1 p-3 rounded-ios-md shadow-ios-sm ${getActivityIconBg(activity.type)} group-hover:scale-110 transition-transform duration-300`}>
         {getActivityIcon(activity.type)}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-base font-bold text-slate-900 group-hover:text-slate-700 transition-colors">
+        <p className="text-body font-semibold text-slate-900 group-hover:text-slate-700 transition-colors">
           {activity.title}
         </p>
-        <p className="text-sm text-slate-600 mt-1 leading-relaxed">
+        <p className="text-caption text-slate-600 mt-1 leading-relaxed">
           {activity.description}
         </p>
-        <p className="text-xs text-slate-500 mt-3 font-semibold">
+        <p className="text-caption text-slate-500 mt-3 font-medium">
           {formatTimestamp(activity.timestamp)}
         </p>
       </div>
@@ -193,18 +193,18 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
   )
 }
 
-// Premium Recent Activity Component
+// iOS-Inspired Recent Activity Component
 export function RecentActivity({ activities }: RecentActivityProps) {
   return (
-    <Card className="border-0 bg-white/90 backdrop-blur-sm shadow-xl shadow-gray-200/50 overflow-hidden rounded-2xl">
-      <CardHeader className="border-b border-slate-200/60 bg-gradient-to-r from-slate-50/80 to-white/80 p-6">
+    <Card className="border-0 bg-white shadow-ios-md border border-slate-200/60 overflow-hidden rounded-ios-xl">
+      <CardHeader className="border-b border-slate-200/60 bg-gradient-to-r from-slate-50/50 to-white/80 p-ios-lg">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xl font-black text-slate-900 tracking-tight">
+          <CardTitle className="text-heading text-slate-900">
             Recent Activity
           </CardTitle>
-          <Button variant="ghost" size="sm" asChild className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 transition-all duration-300 hover:scale-105 rounded-xl">
-            <Link href="/reports" className="flex items-center space-x-2 font-semibold">
-              <span>View All</span>
+          <Button variant="ghost" size="sm" asChild className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-all duration-300 hover:scale-105 rounded-ios-md">
+            <Link href="/reports" className="flex items-center space-x-2">
+              <span className="text-body font-medium">View All</span>
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
@@ -212,12 +212,12 @@ export function RecentActivity({ activities }: RecentActivityProps) {
       </CardHeader>
       <CardContent className="p-0 max-h-96 overflow-y-auto">
         {activities.length === 0 ? (
-          <div className="p-12 text-center">
+          <div className="p-ios-2xl text-center">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-slate-100 mb-6">
               <Clock className="h-10 w-10 text-slate-400" />
             </div>
-            <p className="text-slate-600 font-semibold text-lg">No recent activity</p>
-            <p className="text-sm text-slate-400 mt-2">Activity will appear here as it happens</p>
+            <p className="text-subheading text-slate-600">No recent activity</p>
+            <p className="text-caption text-slate-400 mt-2">Activity will appear here as it happens</p>
           </div>
         ) : (
           <div className="divide-y divide-slate-200/60">

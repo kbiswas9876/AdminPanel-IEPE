@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
@@ -29,6 +29,8 @@ interface CompactQuestionTableProps {
   onQuestionUpdate: (updatedQuestion: UIQuestion) => void
   isAllSelected: boolean
   isPartiallySelected: boolean
+  expandedQuestionId?: number | null
+  shouldPreserveContext?: boolean
 }
 
 export function CompactQuestionTable({
@@ -38,11 +40,20 @@ export function CompactQuestionTable({
   onSelectAll,
   onQuestionUpdate,
   isAllSelected,
-  isPartiallySelected
+  isPartiallySelected,
+  expandedQuestionId,
+  shouldPreserveContext
 }: CompactQuestionTableProps) {
   const [expandedQuestions, setExpandedQuestions] = useState<Set<number>>(new Set())
   const [editingQuestion, setEditingQuestion] = useState<number | null>(null)
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set())
+
+  // Auto-expand edited question when context should be preserved
+  useEffect(() => {
+    if (shouldPreserveContext && expandedQuestionId) {
+      setExpandedQuestions(prev => new Set([...prev, expandedQuestionId]))
+    }
+  }, [shouldPreserveContext, expandedQuestionId])
 
   const toggleExpansion = (questionId: number) => {
     setExpandedQuestions(prev => {

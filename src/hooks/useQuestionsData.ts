@@ -45,7 +45,7 @@ export function useQuestionsData() {
         return { questions: [], total: 0 }
       }
 
-      // Sequential filtering: Book → Chapter → Difficulty → Tags → Exams → Search
+      // CRITICAL FIX: Use the actual page value, not a ref
       const result = await searchQuestions({
         search: search || '',
         book_sources: book_sources || [],
@@ -65,7 +65,8 @@ export function useQuestionsData() {
     gcTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
     refetchOnMount: false,
-    retry: 2
+    retry: 2,
+    keepPreviousData: true // Prevents UI flicker while loading next page
   })
 
   // Calculate derived state
