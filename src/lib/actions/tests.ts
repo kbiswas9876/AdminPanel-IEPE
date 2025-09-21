@@ -451,7 +451,7 @@ export async function searchQuestions(args: {
       
       switch (field) {
         case 'id':
-          query = query.order('question_id', { ascending: sortDirection })
+          query = query.order('id', { ascending: sortDirection })
           break
         case 'question':
         case 'questiontext':
@@ -465,18 +465,18 @@ export async function searchQuestions(args: {
           query = query.order('chapter_name', { ascending: sortDirection })
           break
         case 'difficulty':
-          if (sortDirection) {
-            query = query.order('difficulty', { ascending: true })
-          } else {
-            query = query.order('difficulty', { ascending: false })
-          }
+          query = query.order('difficulty', { ascending: sortDirection })
+          break
+        case 'created':
+        case 'createdat':
+          query = query.order('created_at', { ascending: sortDirection })
           break
         default:
-          query = query.order('question_id', { ascending: true })
+          query = query.order('id', { ascending: true })
       }
     } else {
       // Default sorting by ID
-      query = query.order('question_id', { ascending: true })
+      query = query.order('id', { ascending: true })
     }
 
     const from = (page - 1) * pageSize
