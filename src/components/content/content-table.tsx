@@ -15,6 +15,7 @@ import {
 } from '@tanstack/react-table'
 import { getQuestions } from '@/lib/actions/questions'
 import type { Question } from '@/lib/types'
+import { UniversalContentRenderer } from '@/components/editors/UniversalContentRenderer'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
@@ -171,10 +172,11 @@ export function ContentTable() {
         header: 'Question Text',
         cell: ({ row }) => {
           const text = row.getValue('question_text') as string
-          const truncated = text.length > 100 ? text.substring(0, 100) + '...' : text
           return (
-            <div className="max-w-md">
-              <p className="text-sm text-gray-700">{truncated}</p>
+            <div className="max-w-lg">
+              <div className="text-sm text-gray-700 whitespace-pre-wrap">
+                <UniversalContentRenderer text={text} />
+              </div>
             </div>
           )
         },
