@@ -10,9 +10,11 @@ import {
 import { Button } from '@/components/ui/button'
 import { QuestionExplorer } from '../questions/QuestionExplorer'
 import { useQuestionsData } from '@/hooks/useQuestionsData'
+import { useFilterStore } from '@/stores/filterStore'
 import { searchQuestions } from '@/lib/actions/tests'
 import type { Question } from '@/lib/types'
-import { Check, X } from 'lucide-react'
+import { Check, X, Filter } from 'lucide-react'
+import { FilterBar } from '@/components/filters/FilterBar'
 
 interface UnifiedQuestionBankModalProps {
   open: boolean
@@ -34,42 +36,17 @@ export function UnifiedQuestionBankModal({
   title = "Master Question Bank"
 }: UnifiedQuestionBankModalProps) {
   const [selectedQuestions, setSelectedQuestions] = useState<Set<number>>(new Set())
-  const [questions, setQuestions] = useState<Question[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [showFilters, setShowFilters] = useState(false)
+  
+  // Use the filter store and questions data hook
+  const { questions, isLoading, error } = useQuestionsData()
 
-  // Fetch questions when modal opens
+  // Reset selection when modal opens
   useEffect(() => {
     if (open) {
       setSelectedQuestions(new Set())
-      fetchQuestions()
     }
   }, [open])
-
-  const fetchQuestions = async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const result = await searchQuestions({
-        search: '',
-        book_sources: [],
-        chapters: initialChapter ? [initialChapter] : [],
-        tags: [],
-        difficulty: undefined,
-        exams: [],
-        sort_by: 'id_asc',
-        page: 1,
-        pageSize: 50 // Load more questions for selection
-      })
-      setQuestions(result.questions)
-    } catch (err) {
-      console.error('Error fetching questions:', err)
-      setError('Failed to load questions. Please try again.')
-      setQuestions([])
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleSelectQuestion = (questionId: number) => {
     const newSelected = new Set(selectedQuestions)
@@ -107,60 +84,88 @@ export function UnifiedQuestionBankModal({
 
   return (
     <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[96vw] sm:max-w-[96vw] lg:max-w-[96vw] h-[90vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">
-            {title}
-            {multiSelect && (
-              <span className="text-sm font-normal text-gray-600 ml-2">
-                ({selectedQuestions.size} selected)
-              </span>
-            )}
-          </DialogTitle>
+      <DialogContent 
+        className="w-[96vw] sm:max-w-[96vw] lg:max-w-[96vw] h-[90vh] flex flex-col"
+        showCloseButton={false}
+      >
+        <DialogHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-2xl font-bold">
+              {title}
+              {multiSelect && (
+                <span className="text-sm font-normal text-gray-600 ml-2">
+                  ({selectedQuestions.size} selected)
+                </span>
+              )}
+            </DialogTitle>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200"
+              >
+                <Filter className="h-4 w-4" />
+                {showFilters ? 'Hide Filters' : 'Show Filters'}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="h-10 w-10 rounded-2xl hover:bg-gray-100 transition-all duration-200 flex items-center justify-center group"
+              >
+                <X className="h-5 w-5 text-gray-500 group-hover:text-gray-700 transition-colors duration-200" />
+              </Button>
+            </div>
+          </div>
         </DialogHeader>
         
-        <div className="flex-1 overflow-hidden">
-          {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">Loading questions...</p>
-              </div>
+        <div className="flex-1 overflow-hidden flex flex-col">
+          {/* Filter Bar */}
+          {showFilters && (
+            <div className="flex-shrink-0 border-b border-gray-200 bg-white">
+              <FilterBar />
             </div>
-          ) : error ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="text-center">
-                <div className="text-red-500 mb-4">
-                  <X className="h-8 w-8 mx-auto" />
-                </div>
-                <p className="text-red-600 mb-4">{error}</p>
-                <Button onClick={fetchQuestions} variant="outline">
-                  Try Again
-                </Button>
-              </div>
-            </div>
-          ) : questions.length === 0 ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="text-center">
-                <div className="text-gray-400 mb-4">
-                  <Check className="h-8 w-8 mx-auto" />
-                </div>
-                <p className="text-gray-600">No questions found</p>
-              </div>
-            </div>
-          ) : (
-            <QuestionExplorer
-              selectedQuestions={selectedQuestions}
-              onSelectQuestion={handleSelectQuestion}
-              onSelectAll={handleSelectAll}
-              isAllSelected={isAllSelected}
-              isPartiallySelected={isPartiallySelected}
-              showSelectionControls={true}
-              questions={questions}
-              loading={false}
-              error={null}
-            />
           )}
+
+          {/* Questions Content */}
+          <div className="flex-1 overflow-hidden">
+            {isLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading questions...</p>
+                </div>
+              </div>
+            ) : error ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <div className="text-red-500 mb-4">
+                    <X className="h-8 w-8 mx-auto" />
+                  </div>
+                  <p className="text-red-600 mb-4">Failed to load questions</p>
+                </div>
+              </div>
+            ) : questions.length === 0 ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <div className="text-gray-400 mb-4">
+                    <Check className="h-8 w-8 mx-auto" />
+                  </div>
+                  <p className="text-gray-600">No questions found</p>
+                </div>
+              </div>
+            ) : (
+              <QuestionExplorer
+                selectedQuestions={selectedQuestions}
+                onSelectQuestion={handleSelectQuestion}
+                onSelectAll={handleSelectAll}
+                isAllSelected={isAllSelected}
+                isPartiallySelected={isPartiallySelected}
+                showSelectionControls={true}
+              />
+            )}
+          </div>
         </div>
 
         {/* Action Buttons */}
