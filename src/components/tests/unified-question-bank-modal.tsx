@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { QuestionExplorer } from '../questions/QuestionExplorer'
 import { useQuestionsData } from '@/hooks/useQuestionsData'
+import { searchQuestions } from '@/lib/actions/tests'
 import type { Question } from '@/lib/types'
 import { Check, X } from 'lucide-react'
 
@@ -33,14 +34,42 @@ export function UnifiedQuestionBankModal({
   title = "Master Question Bank"
 }: UnifiedQuestionBankModalProps) {
   const [selectedQuestions, setSelectedQuestions] = useState<Set<number>>(new Set())
-  const { questions } = useQuestionsData()
+  const [questions, setQuestions] = useState<Question[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  // Reset selection when modal opens/closes
+  // Fetch questions when modal opens
   useEffect(() => {
     if (open) {
       setSelectedQuestions(new Set())
+      fetchQuestions()
     }
   }, [open])
+
+  const fetchQuestions = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await searchQuestions({
+        search: '',
+        book_sources: [],
+        chapters: initialChapter ? [initialChapter] : [],
+        tags: [],
+        difficulty: undefined,
+        exams: [],
+        sort_by: 'id_asc',
+        page: 1,
+        pageSize: 50 // Load more questions for selection
+      })
+      setQuestions(result.questions)
+    } catch (err) {
+      console.error('Error fetching questions:', err)
+      setError('Failed to load questions. Please try again.')
+      setQuestions([])
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleSelectQuestion = (questionId: number) => {
     const newSelected = new Set(selectedQuestions)
@@ -91,14 +120,47 @@ export function UnifiedQuestionBankModal({
         </DialogHeader>
         
         <div className="flex-1 overflow-hidden">
-          <QuestionExplorer 
-            selectedQuestions={selectedQuestions}
-            onSelectQuestion={handleSelectQuestion}
-            onSelectAll={handleSelectAll}
-            isAllSelected={isAllSelected}
-            isPartiallySelected={isPartiallySelected}
-            showSelectionControls={true}
-          />
+          {loading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading questions...</p>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <div className="text-red-500 mb-4">
+                  <X className="h-8 w-8 mx-auto" />
+                </div>
+                <p className="text-red-600 mb-4">{error}</p>
+                <Button onClick={fetchQuestions} variant="outline">
+                  Try Again
+                </Button>
+              </div>
+            </div>
+          ) : questions.length === 0 ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <div className="text-gray-400 mb-4">
+                  <Check className="h-8 w-8 mx-auto" />
+                </div>
+                <p className="text-gray-600">No questions found</p>
+              </div>
+            </div>
+          ) : (
+            <QuestionExplorer
+              selectedQuestions={selectedQuestions}
+              onSelectQuestion={handleSelectQuestion}
+              onSelectAll={handleSelectAll}
+              isAllSelected={isAllSelected}
+              isPartiallySelected={isPartiallySelected}
+              showSelectionControls={true}
+              questions={questions}
+              loading={false}
+              error={null}
+            />
+          )}
         </div>
 
         {/* Action Buttons */}

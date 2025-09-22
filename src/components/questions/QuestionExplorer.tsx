@@ -36,6 +36,9 @@ interface QuestionExplorerProps {
   isAllSelected?: boolean
   isPartiallySelected?: boolean
   showSelectionControls?: boolean
+  questions?: any[]
+  loading?: boolean
+  error?: string | null
 }
 
 export function QuestionExplorer({
@@ -44,23 +47,31 @@ export function QuestionExplorer({
   onSelectAll: externalOnSelectAll,
   isAllSelected: externalIsAllSelected,
   isPartiallySelected: externalIsPartiallySelected,
-  showSelectionControls = false
+  showSelectionControls = false,
+  questions: externalQuestions,
+  loading: externalLoading,
+  error: externalError
 }: QuestionExplorerProps = {}) {
   const router = useRouter()
   const queryClient = useQueryClient()
-  const { 
-    questions, 
-    total, 
-    isLoading, 
-    isError, 
-    error, 
-    refetch, 
+  const {
+    questions: hookQuestions,
+    total,
+    isLoading,
+    isError,
+    error,
+    refetch,
     isFetching,
     hasActiveFilters,
     totalPages,
     currentPage,
     pageSize
   } = useQuestionsData()
+
+  // Use external data if provided, otherwise use hook data
+  const questions = externalQuestions || hookQuestions
+  const loading = externalLoading !== undefined ? externalLoading : isLoading
+  const errorState = externalError || error
 
   const { setPage, setPageSize } = useFilterStore()
   
@@ -137,17 +148,17 @@ export function QuestionExplorer({
     }
   }
 
-  if (isLoading) {
+  if (loading) {
     return <SkeletonLoader />
   }
 
-  if (isError) {
+  if (isError || errorState) {
     return (
       <div className="space-y-4">
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Failed to load questions. {error?.message || 'Unknown error occurred.'}
+            Failed to load questions. {errorState || (error as any)?.message || 'Unknown error occurred.'}
           </AlertDescription>
         </Alert>
         <Button onClick={() => refetch()} variant="outline" className="w-full">
