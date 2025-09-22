@@ -29,7 +29,23 @@ import {
 import { deleteMultipleQuestions } from '@/lib/actions/questions'
 import { toast } from 'sonner'
 
-export function QuestionExplorer() {
+interface QuestionExplorerProps {
+  selectedQuestions?: Set<number>
+  onSelectQuestion?: (questionId: number) => void
+  onSelectAll?: () => void
+  isAllSelected?: boolean
+  isPartiallySelected?: boolean
+  showSelectionControls?: boolean
+}
+
+export function QuestionExplorer({
+  selectedQuestions: externalSelectedQuestions,
+  onSelectQuestion: externalOnSelectQuestion,
+  onSelectAll: externalOnSelectAll,
+  isAllSelected: externalIsAllSelected,
+  isPartiallySelected: externalIsPartiallySelected,
+  showSelectionControls = false
+}: QuestionExplorerProps = {}) {
   const router = useRouter()
   const queryClient = useQueryClient()
   const { 
@@ -48,34 +64,52 @@ export function QuestionExplorer() {
 
   const { setPage, setPageSize } = useFilterStore()
   
-  // Selection state
-  const [selectedQuestions, setSelectedQuestions] = useState<Set<number>>(new Set())
+  // Selection state - use external if provided, otherwise internal
+  const [internalSelectedQuestions, setInternalSelectedQuestions] = useState<Set<number>>(new Set())
   const [isDeleting, setIsDeleting] = useState(false)
+  
+  const selectedQuestions = externalSelectedQuestions || internalSelectedQuestions
+  const setSelectedQuestions = externalOnSelectQuestion ? 
+    (newSet: Set<number>) => {
+      // If external handler provided, call it for each question
+      if (externalOnSelectQuestion) {
+        newSet.forEach(id => externalOnSelectQuestion(id))
+      }
+    } : 
+    setInternalSelectedQuestions
   
   // State for preserving context after edit
   const [expandedQuestionId, setExpandedQuestionId] = useState<number | null>(null)
   const [shouldPreserveContext, setShouldPreserveContext] = useState(false)
 
   // Selection helpers
-  const isAllSelected = questions.length > 0 && selectedQuestions.size === questions.length
-  const isPartiallySelected = selectedQuestions.size > 0 && selectedQuestions.size < questions.length
+  const isAllSelected = externalIsAllSelected !== undefined ? externalIsAllSelected : (questions.length > 0 && selectedQuestions.size === questions.length)
+  const isPartiallySelected = externalIsPartiallySelected !== undefined ? externalIsPartiallySelected : (selectedQuestions.size > 0 && selectedQuestions.size < questions.length)
 
   const handleSelectAll = () => {
-    if (isAllSelected) {
-      setSelectedQuestions(new Set())
+    if (externalOnSelectAll) {
+      externalOnSelectAll()
     } else {
-      setSelectedQuestions(new Set(questions.map((q: any) => q.id).filter((id: any) => id !== undefined)))
+      if (isAllSelected) {
+        setInternalSelectedQuestions(new Set())
+      } else {
+        setInternalSelectedQuestions(new Set(questions.map((q: any) => q.id).filter((id: any) => id !== undefined)))
+      }
     }
   }
 
   const handleSelectQuestion = (questionId: number) => {
-    const newSelected = new Set(selectedQuestions)
-    if (newSelected.has(questionId)) {
-      newSelected.delete(questionId)
+    if (externalOnSelectQuestion) {
+      externalOnSelectQuestion(questionId)
     } else {
-      newSelected.add(questionId)
+      const newSelected = new Set(selectedQuestions)
+      if (newSelected.has(questionId)) {
+        newSelected.delete(questionId)
+      } else {
+        newSelected.add(questionId)
+      }
+      setInternalSelectedQuestions(newSelected)
     }
-    setSelectedQuestions(newSelected)
   }
 
   const handleDeleteSelected = async () => {
@@ -205,7 +239,7 @@ export function QuestionExplorer() {
           )}
           
           {/* Selection Controls */}
-          {questions.length > 0 && (
+          {questions.length > 0 && showSelectionControls && (
             <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
@@ -223,7 +257,7 @@ export function QuestionExplorer() {
                 {isAllSelected ? 'Deselect All' : 'Select All'}
               </Button>
               
-              {selectedQuestions.size > 0 && (
+              {selectedQuestions.size > 0 && !showSelectionControls && (
                 <Button
                   variant="destructive"
                   size="sm"

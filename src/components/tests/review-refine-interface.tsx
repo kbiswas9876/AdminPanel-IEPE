@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ArrowRight, Pencil, Edit3, Trash2, ChevronDown, Plus, Eye, EyeOff, Settings, Sparkles, Layers, RefreshCw, FileText, CheckCircle2, BarChart3, Award, Star, Shield, Zap as Lightning, Wand2, Palette, Code, Eye as Preview, Save, X, BookOpen, AlertCircle } from 'lucide-react'
 import { UniversalContentRenderer } from '../editors/UniversalContentRenderer'
+import { ClientOnlyAdvancedTipTapEditor } from '@/components/editors/ClientOnlyAdvancedTipTapEditor'
+import { LivePreviewRenderer } from '@/components/editors/LivePreviewRenderer'
 import type { Question, TestQuestionSlot } from '@/lib/types'
 import { UnifiedQuestionBankModal } from './unified-question-bank-modal'
 
@@ -462,12 +464,11 @@ export default function ReviewRefineInterface({
                               </div>
                             </div>
                             <div className="p-6">
-                              <Textarea
+                              <ClientOnlyAdvancedTipTapEditor
                                 value={editForm.question_text}
-                                onChange={(e) => setEditForm({ ...editForm, question_text: e.target.value })}
-                                className="w-full border-slate-200 focus:border-green-300 focus:ring-2 focus:ring-green-500/20 rounded-xl transition-colors resize-none"
-                                rows={4}
+                                onChange={(value: string) => setEditForm({ ...editForm, question_text: value })}
                                 placeholder="Enter your question text here (supports LaTeX math and images)..."
+                                showToolbar={true}
                               />
                               
                               {/* Live Preview for Question Text */}
@@ -478,7 +479,7 @@ export default function ReviewRefineInterface({
                                     <span className="text-sm font-medium text-slate-700">Live preview</span>
                                   </div>
                                   <div className="prose prose-sm max-w-none">
-                                    <UniversalContentRenderer text={editForm.question_text} />
+                                    <LivePreviewRenderer content={editForm.question_text} />
                                   </div>
                                 </div>
                               )}
@@ -608,12 +609,11 @@ export default function ReviewRefineInterface({
                               </div>
                             </div>
                             <div className="p-6">
-                              <Textarea
+                              <ClientOnlyAdvancedTipTapEditor
                                 value={editForm.solution_text}
-                                onChange={(e) => setEditForm({ ...editForm, solution_text: e.target.value })}
-                                className="w-full border-slate-200 focus:border-orange-300 focus:ring-2 focus:ring-orange-100 rounded-xl transition-colors resize-none"
-                                rows={6}
+                                onChange={(value: string) => setEditForm({ ...editForm, solution_text: value })}
                                 placeholder="Enter your solution explanation here (supports LaTeX math and images)..."
+                                showToolbar={true}
                               />
                               
                               {/* Live Preview for Solution */}
@@ -624,7 +624,7 @@ export default function ReviewRefineInterface({
                                     <span className="text-sm font-medium text-slate-700">Live preview</span>
                                   </div>
                                   <div className="prose prose-sm max-w-none">
-                                    <UniversalContentRenderer text={editForm.solution_text} />
+                                    <LivePreviewRenderer content={editForm.solution_text} />
                                   </div>
                                 </div>
                               )}
@@ -945,6 +945,7 @@ function CreateQuestionForm({ onCancel, onSave }: { onCancel: () => void; onSave
     options: true,
     solution: true
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const addOption = () => {
     const keys = Object.keys(options).sort()
@@ -981,388 +982,402 @@ function CreateQuestionForm({ onCancel, onSave }: { onCancel: () => void; onSave
     return Object.keys(errs).length === 0
   }
 
-  const save = () => {
+  const save = async () => {
     if (!validate()) return
-    const now = new Date().toISOString()
-    const q: Question = {
-      id: undefined,
-      created_at: now,
-      question_id: `TEMP-${Date.now()}`,
-      book_source: 'Manual', // Default for manually created questions
-      chapter_name: chapter.trim() || 'General', // Use provided chapter or default
-      question_number_in_book: null,
-      question_text: questionText,
-      options,
-      correct_option: correct,
-      solution_text: solution,
-      exam_metadata: null,
-      admin_tags: tags ? tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
-      difficulty: difficulty as 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard'
+    
+    setIsSubmitting(true)
+    try {
+      const now = new Date().toISOString()
+      const q: Question = {
+        id: undefined,
+        created_at: now,
+        question_id: `TEMP-${Date.now()}`,
+        book_source: 'Manual', // Default for manually created questions
+        chapter_name: chapter.trim() || 'General', // Use provided chapter or default
+        question_number_in_book: null,
+        question_text: questionText,
+        options,
+        correct_option: correct,
+        solution_text: solution,
+        exam_metadata: null,
+        admin_tags: tags ? tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
+        difficulty: difficulty as 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard'
+      }
+      onSave(q)
+    } finally {
+      setIsSubmitting(false)
     }
-    onSave(q)
   }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Ultra-Premium Header */}
-      <div className="flex-shrink-0 p-4 sm:p-6 pb-3 sm:pb-4 border-b border-gray-200/60">
+    <div className="flex flex-col h-full bg-gradient-to-br from-slate-50/50 via-white to-blue-50/30">
+      {/* iOS-Inspired Header */}
+      <div className="flex-shrink-0 px-6 py-5 border-b border-gray-200/60 bg-white/80 backdrop-blur-xl">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-gradient-to-br from-purple-100 to-indigo-100 shadow-lg">
-              <Wand2 className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
-      </div>
-      <div>
-              <h3 className="text-base sm:text-lg font-bold text-gray-900">Create New Question</h3>
-              <p className="text-xs sm:text-sm text-gray-600">Design a custom question with LaTeX support</p>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 via-indigo-500 to-blue-600 flex items-center justify-center shadow-lg">
+              <Wand2 className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Create New Question</h2>
+              <p className="text-sm text-gray-600 font-medium">Design a custom question with LaTeX support</p>
             </div>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={onCancel}
-            className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-gray-100 rounded-lg"
+            className="h-10 w-10 rounded-xl hover:bg-gray-100 transition-colors"
           >
-            <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <X className="h-5 w-5" />
           </Button>
         </div>
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          {/* Left Column - Form Inputs */}
-          <div className="space-y-4 sm:space-y-6">
-            {/* Question Text Section */}
-            <div className="space-y-2 sm:space-y-3">
-        <div className="flex items-center justify-between">
-                <Label className="text-xs sm:text-sm font-semibold text-gray-800 flex items-center gap-1.5 sm:gap-2">
-                  <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600" />
-                  Question Text *
-                </Label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowPreview(prev => ({ ...prev, question: !prev.question }))}
-                  className="h-6 sm:h-7 px-1.5 sm:px-2 text-xs text-gray-600 hover:text-gray-800"
-                >
-                  {showPreview.question ? <EyeOff className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-0.5 sm:mr-1" /> : <Eye className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-0.5 sm:mr-1" />}
-                  <span className="hidden sm:inline">{showPreview.question ? 'Hide Preview' : 'Show Preview'}</span>
-                  <span className="sm:hidden">{showPreview.question ? 'Hide' : 'Show'}</span>
-                </Button>
-        </div>
-              <Textarea 
-                rows={3} 
-                value={questionText} 
-                onChange={(e) => setQuestionText(e.target.value)}
-                className="resize-none border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg sm:rounded-xl text-sm"
-                placeholder="Enter your question text. Use $...$ for inline math and $$...$$ for block math..."
-              />
-              {errors.questionText && <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                <AlertCircle className="h-3 w-3" />
-                {errors.questionText}
-              </p>}
-              
-              {/* Question Preview - Mobile Only */}
-              {showPreview.question && questionText && (
-                <div className="sm:hidden p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200/60 shadow-sm">
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <FileText className="h-3.5 w-3.5 text-blue-600" />
-                    <span className="text-xs font-semibold text-blue-800">Question Preview</span>
-                  </div>
-                  <div className="prose prose-xs max-w-none text-gray-800">
-                    <UniversalContentRenderer text={questionText} />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Options Section */}
-            <div className="space-y-2 sm:space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs sm:text-sm font-semibold text-gray-800 flex items-center gap-1.5 sm:gap-2">
-                  <Award className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600" />
-                  Answer Options *
-                </Label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowPreview(prev => ({ ...prev, options: !prev.options }))}
-                  className="h-6 sm:h-7 px-1.5 sm:px-2 text-xs text-gray-600 hover:text-gray-800"
-                >
-                  {showPreview.options ? <EyeOff className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-0.5 sm:mr-1" /> : <Eye className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-0.5 sm:mr-1" />}
-                  <span className="hidden sm:inline">{showPreview.options ? 'Hide Preview' : 'Show Preview'}</span>
-                  <span className="sm:hidden">{showPreview.options ? 'Hide' : 'Show'}</span>
-                </Button>
-              </div>
-              <div className="space-y-2 sm:space-y-3">
-                {Object.entries(options).map(([key, value]) => (
-                  <div key={key} className="flex gap-1.5 sm:gap-2 items-start">
-                    <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-md sm:rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center shadow-sm">
-                      <span className="text-xs sm:text-sm font-bold text-blue-700">{key}</span>
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 max-w-7xl mx-auto">
+            {/* Left Column - Form */}
+            <div className="space-y-8">
+              {/* Question Text Section */}
+              <div className="bg-white rounded-3xl shadow-xl border border-gray-200/50 overflow-hidden">
+                <div className="px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-blue-50/50 to-indigo-50/30">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-blue-100 rounded-2xl flex items-center justify-center">
+                        <FileText className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-900">Question Text</h3>
+                        <p className="text-sm text-gray-600">Enter your question with LaTeX support</p>
+                      </div>
                     </div>
-                    <Input 
-                      value={value} 
-                      onChange={(e) => setOptions({ ...options, [key]: e.target.value })}
-                      className="flex-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg text-sm"
-                      placeholder={`Option ${key}...`}
-                    />
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => removeOption(key)} 
-                      className="h-8 w-8 sm:h-10 sm:w-10 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg"
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowPreview(prev => ({ ...prev, question: !prev.question }))}
+                      className="h-9 px-4 rounded-xl hover:bg-blue-50 transition-colors"
                     >
-                      <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      {showPreview.question ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                      {showPreview.question ? 'Hide Preview' : 'Show Preview'}
                     </Button>
                   </div>
-                ))}
-                <Button 
-                  variant="outline" 
-                  onClick={addOption} 
-                  className="w-full h-8 sm:h-10 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50 rounded-lg text-gray-600 hover:text-blue-600 text-sm"
-                >
-                  <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" /> 
-                  <span className="hidden sm:inline">Add Option</span>
-                  <span className="sm:hidden">Add</span>
-                </Button>
-              </div>
-              {errors.options && <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                <AlertCircle className="h-3 w-3" />
-                {errors.options}
-              </p>}
-              
-              {/* Options Preview - Mobile Only */}
-              {showPreview.options && Object.values(options).some(opt => opt.trim()) && (
-                <div className="sm:hidden p-3 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-200/60 shadow-sm">
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <Award className="h-3.5 w-3.5 text-green-600" />
-                    <span className="text-xs font-semibold text-green-800">Options Preview</span>
-                  </div>
-                  <div className="space-y-1.5">
-                    {Object.entries(options).map(([key, value]) => (
-                      value.trim() && (
-                        <div key={key} className="flex items-start gap-2 p-1.5 bg-white/60 rounded-md">
-                          <div className="flex-shrink-0 w-5 h-5 rounded-md bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
-                            <span className="text-xs font-bold text-green-700">{key}</span>
-                          </div>
-                          <div className="flex-1 prose prose-xs max-w-none text-gray-800">
-                            <UniversalContentRenderer text={value} />
-                          </div>
-                          {correct === key && (
-                            <CheckCircle2 className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
-                          )}
-                        </div>
-                      )
-                    ))}
-                  </div>
                 </div>
-              )}
-            </div>
-
-          {/* Correct Option Section */}
-          <div className="space-y-1.5 sm:space-y-2">
-            <Label className="text-xs sm:text-sm font-semibold text-gray-800 flex items-center gap-1.5 sm:gap-2">
-              <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-600" />
-              Correct Answer *
-            </Label>
-            <Select value={correct} onValueChange={(v) => setCorrect(v)}>
-              <SelectTrigger className="border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 rounded-lg text-sm">
-                <SelectValue placeholder="Select correct option" />
-              </SelectTrigger>
-            <SelectContent>
-                {Object.keys(options).map((k) => (
-                  <SelectItem key={k} value={k} className="font-medium text-sm">
-                    Option {k}
-                  </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-            {errors.correct && <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-              <AlertCircle className="h-3 w-3" />
-              {errors.correct}
-            </p>}
-        </div>
-
-            {/* Solution Section */}
-            <div className="space-y-2 sm:space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs sm:text-sm font-semibold text-gray-800 flex items-center gap-1.5 sm:gap-2">
-                  <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-600" />
-                  Solution (Optional)
-                </Label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowPreview(prev => ({ ...prev, solution: !prev.solution }))}
-                  className="h-6 sm:h-7 px-1.5 sm:px-2 text-xs text-gray-600 hover:text-gray-800"
-                >
-                  {showPreview.solution ? <EyeOff className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-0.5 sm:mr-1" /> : <Eye className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-0.5 sm:mr-1" />}
-                  <span className="hidden sm:inline">{showPreview.solution ? 'Hide Preview' : 'Show Preview'}</span>
-                  <span className="sm:hidden">{showPreview.solution ? 'Hide' : 'Show'}</span>
-                </Button>
-              </div>
-              <Textarea 
-                rows={2} 
-                value={solution} 
-                onChange={(e) => setSolution(e.target.value)}
-                className="resize-none border-gray-300 focus:border-amber-500 focus:ring-amber-500 rounded-lg sm:rounded-xl text-sm"
-                placeholder="Enter the solution explanation. Use LaTeX for mathematical expressions..."
-              />
-              
-              {/* Solution Preview - Mobile Only */}
-              {showPreview.solution && solution && (
-                <div className="sm:hidden p-3 bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg border border-amber-200/60 shadow-sm">
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <Star className="h-3.5 w-3.5 text-amber-600" />
-                    <span className="text-xs font-semibold text-amber-800">Solution Preview</span>
-                  </div>
-                  <div className="prose prose-xs max-w-none text-gray-800">
-                    <UniversalContentRenderer text={solution} />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Metadata Section */}
-            <div className="space-y-3 sm:space-y-4 p-3 sm:p-4 bg-gradient-to-br from-gray-50 to-slate-50 rounded-lg sm:rounded-xl border border-gray-200/60">
-              <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
-                <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-600" />
-                <span className="text-xs sm:text-sm font-semibold text-gray-800">Question Metadata</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div>
-                  <Label className="text-xs font-medium text-gray-600">Chapter Name</Label>
-                  <Input 
-                    value={chapter} 
-                    onChange={(e) => setChapter(e.target.value)} 
-                    placeholder="e.g., Algebra, Geometry"
-                    className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg text-sm"
+                <div className="p-8">
+                  <ClientOnlyAdvancedTipTapEditor
+                    value={questionText}
+                    onChange={(value: string) => setQuestionText(value)}
+                    placeholder="Enter your question text. Use $...$ for inline math and $$...$$ for block math..."
+                    showToolbar={true}
                   />
+                  {errors.questionText && (
+                    <div className="mt-3 flex items-center gap-2 text-red-600">
+                      <AlertCircle className="h-4 w-4" />
+                      <span className="text-sm font-medium">{errors.questionText}</span>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <Label className="text-xs font-medium text-gray-600">Difficulty Level</Label>
-                  <Select value={difficulty} onValueChange={(v) => setDifficulty(v)}>
-                    <SelectTrigger className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg text-sm">
-                      <SelectValue placeholder="Select difficulty" />
+              </div>
+
+              {/* Options Section */}
+              <div className="bg-white rounded-3xl shadow-xl border border-gray-200/50 overflow-hidden">
+                <div className="px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-green-50/50 to-emerald-50/30">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-green-100 rounded-2xl flex items-center justify-center">
+                        <Award className="h-5 w-5 text-green-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-900">Answer Options</h3>
+                        <p className="text-sm text-gray-600">Add multiple choice options</p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowPreview(prev => ({ ...prev, options: !prev.options }))}
+                      className="h-9 px-4 rounded-xl hover:bg-green-50 transition-colors"
+                    >
+                      {showPreview.options ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                      {showPreview.options ? 'Hide Preview' : 'Show Preview'}
+                    </Button>
+                  </div>
+                </div>
+                <div className="p-8 space-y-4">
+                  {Object.entries(options).map(([key, value]) => (
+                    <div key={key} className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center shadow-sm">
+                        <span className="text-lg font-bold text-blue-700">{key}</span>
+                      </div>
+                      <Input 
+                        value={value} 
+                        onChange={(e) => setOptions({ ...options, [key]: e.target.value })}
+                        className="flex-1 h-12 border-gray-200 focus:border-green-400 focus:ring-4 focus:ring-green-100 rounded-2xl text-base transition-all duration-200"
+                        placeholder={`Option ${key}...`}
+                      />
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => removeOption(key)} 
+                        className="h-12 w-12 rounded-2xl text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button 
+                    variant="outline" 
+                    onClick={addOption} 
+                    className="w-full h-12 border-2 border-dashed border-gray-300 hover:border-green-400 hover:bg-green-50 rounded-2xl text-gray-600 hover:text-green-600 text-base font-medium transition-all duration-200"
+                  >
+                    <Plus className="h-5 w-5 mr-3" /> 
+                    Add Option
+                  </Button>
+                  {errors.options && (
+                    <div className="flex items-center gap-2 text-red-600">
+                      <AlertCircle className="h-4 w-4" />
+                      <span className="text-sm font-medium">{errors.options}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Correct Answer Section */}
+              <div className="bg-white rounded-3xl shadow-xl border border-gray-200/50 overflow-hidden">
+                <div className="px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-emerald-50/50 to-teal-50/30">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-emerald-100 rounded-2xl flex items-center justify-center">
+                      <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900">Correct Answer</h3>
+                      <p className="text-sm text-gray-600">Select the correct option</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-8">
+                  <Select value={correct} onValueChange={(v) => setCorrect(v)}>
+                    <SelectTrigger className="h-12 border-gray-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 rounded-2xl text-base transition-all duration-200">
+                      <SelectValue placeholder="Select correct option" />
                     </SelectTrigger>
-                    <SelectContent>
-                      {['Easy','Easy-Moderate','Moderate','Moderate-Hard','Hard'].map((d) => (
-                        <SelectItem key={d} value={d} className="text-sm">{d}</SelectItem>
+                    <SelectContent className="rounded-2xl border-gray-200 shadow-xl">
+                      {Object.keys(options).map((k) => (
+                        <SelectItem key={k} value={k} className="text-base font-medium rounded-xl">
+                          Option {k}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                  {errors.correct && (
+                    <div className="mt-3 flex items-center gap-2 text-red-600">
+                      <AlertCircle className="h-4 w-4" />
+                      <span className="text-sm font-medium">{errors.correct}</span>
+                    </div>
+                  )}
                 </div>
               </div>
-              <div>
-                <Label className="text-xs font-medium text-gray-600">Admin Tags (comma separated)</Label>
-                <Input 
-                  value={tags} 
-                  onChange={(e) => setTags(e.target.value)}
-                  placeholder="e.g., geometry, algebra, trigonometry"
-                  className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg text-sm"
-                />
+
+              {/* Solution Section */}
+              <div className="bg-white rounded-3xl shadow-xl border border-gray-200/50 overflow-hidden">
+                <div className="px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-amber-50/50 to-orange-50/30">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-amber-100 rounded-2xl flex items-center justify-center">
+                        <Star className="h-5 w-5 text-amber-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-900">Solution (Optional)</h3>
+                        <p className="text-sm text-gray-600">Add explanation for the answer</p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowPreview(prev => ({ ...prev, solution: !prev.solution }))}
+                      className="h-9 px-4 rounded-xl hover:bg-amber-50 transition-colors"
+                    >
+                      {showPreview.solution ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                      {showPreview.solution ? 'Hide Preview' : 'Show Preview'}
+                    </Button>
+                  </div>
+                </div>
+                <div className="p-8">
+                  <ClientOnlyAdvancedTipTapEditor
+                    value={solution}
+                    onChange={(value: string) => setSolution(value)}
+                    placeholder="Enter the solution explanation. Use LaTeX for mathematical expressions..."
+                    showToolbar={true}
+                  />
+                </div>
+              </div>
+
+              {/* Metadata Section */}
+              <div className="bg-white rounded-3xl shadow-xl border border-gray-200/50 overflow-hidden">
+                <div className="px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-slate-50/50 to-gray-50/30">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-slate-100 rounded-2xl flex items-center justify-center">
+                      <Settings className="h-5 w-5 text-slate-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900">Question Metadata</h3>
+                      <p className="text-sm text-gray-600">Additional information about the question</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-8 space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label className="text-sm font-semibold text-gray-700 mb-3 block">Chapter Name</Label>
+                      <Input 
+                        value={chapter} 
+                        onChange={(e) => setChapter(e.target.value)} 
+                        placeholder="e.g., Algebra, Geometry"
+                        className="h-12 border-gray-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 rounded-2xl text-base transition-all duration-200"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-semibold text-gray-700 mb-3 block">Difficulty Level</Label>
+                      <Select value={difficulty} onValueChange={(v) => setDifficulty(v)}>
+                        <SelectTrigger className="h-12 border-gray-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 rounded-2xl text-base transition-all duration-200">
+                          <SelectValue placeholder="Select difficulty" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-2xl border-gray-200 shadow-xl">
+                          {['Easy','Easy-Moderate','Moderate','Moderate-Hard','Hard'].map((d) => (
+                            <SelectItem key={d} value={d} className="text-base font-medium rounded-xl">{d}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-semibold text-gray-700 mb-3 block">Admin Tags (comma separated)</Label>
+                    <Input 
+                      value={tags} 
+                      onChange={(e) => setTags(e.target.value)}
+                      placeholder="e.g., geometry, algebra, trigonometry"
+                      className="h-12 border-gray-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 rounded-2xl text-base transition-all duration-200"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Right Column - Live Preview (Desktop Only) */}
-          <div className="hidden lg:block space-y-4 sm:space-y-6">
-            <div className="sticky top-2 sm:top-4">
-              <div className="flex items-center gap-1.5 sm:gap-2 mb-3 sm:mb-4">
-                <Preview className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-600" />
-                <span className="text-xs sm:text-sm font-semibold text-gray-800">Live Preview</span>
-              </div>
-            
-            <div className="space-y-3 sm:space-y-4">
-              {/* Question Preview */}
-              {showPreview.question && questionText && (
-                <div className="p-3 sm:p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg sm:rounded-xl border border-blue-200/60 shadow-sm">
-                  <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
-                    <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600" />
-                    <span className="text-xs sm:text-sm font-semibold text-blue-800">Question Preview</span>
+            {/* Right Column - Live Preview */}
+            <div className="space-y-8">
+              <div className="sticky top-6">
+                <div className="bg-white rounded-3xl shadow-xl border border-gray-200/50 overflow-hidden">
+                  <div className="px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-purple-50/50 to-indigo-50/30">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-purple-100 rounded-2xl flex items-center justify-center">
+                        <Preview className="h-5 w-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-900">Live Preview</h3>
+                        <p className="text-sm text-gray-600">See how your question will look</p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="prose prose-xs sm:prose-sm max-w-none text-gray-800">
-                    <UniversalContentRenderer text={questionText} />
-                  </div>
-                </div>
-              )}
-
-              {/* Options Preview */}
-              {showPreview.options && Object.values(options).some(opt => opt.trim()) && (
-                <div className="p-3 sm:p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg sm:rounded-xl border border-green-200/60 shadow-sm">
-                  <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
-                    <Award className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600" />
-                    <span className="text-xs sm:text-sm font-semibold text-green-800">Options Preview</span>
-                  </div>
-                  <div className="space-y-1.5 sm:space-y-2">
-                    {Object.entries(options).map(([key, value]) => (
-                      value.trim() && (
-                        <div key={key} className="flex items-start gap-2 sm:gap-3 p-1.5 sm:p-2 bg-white/60 rounded-md sm:rounded-lg">
-                          <div className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
-                            <span className="text-xs font-bold text-green-700">{key}</span>
-                          </div>
-                          <div className="flex-1 prose prose-xs max-w-none text-gray-800">
-                            <UniversalContentRenderer text={value} />
-                          </div>
-                          {correct === key && (
-                            <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
-                          )}
+                  <div className="p-8 space-y-6">
+                    {/* Question Preview */}
+                    {showPreview.question && questionText && (
+                      <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200/60">
+                        <div className="flex items-center gap-2 mb-4">
+                          <FileText className="h-4 w-4 text-blue-600" />
+                          <span className="text-sm font-semibold text-blue-800">Question Preview</span>
                         </div>
-                      )
-                    ))}
-                  </div>
-                </div>
-              )}
+                        <div className="prose prose-sm max-w-none text-gray-800">
+                          <LivePreviewRenderer content={questionText} />
+                        </div>
+                      </div>
+                    )}
 
-              {/* Solution Preview */}
-              {showPreview.solution && solution && (
-                <div className="p-3 sm:p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg sm:rounded-xl border border-amber-200/60 shadow-sm">
-                  <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
-                    <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-600" />
-                    <span className="text-xs sm:text-sm font-semibold text-amber-800">Solution Preview</span>
-                  </div>
-                  <div className="prose prose-xs sm:prose-sm max-w-none text-gray-800">
-                    <UniversalContentRenderer text={solution} />
-                  </div>
-                </div>
-              )}
+                    {/* Options Preview */}
+                    {showPreview.options && Object.values(options).some(opt => opt.trim()) && (
+                      <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-200/60">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Award className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-semibold text-green-800">Options Preview</span>
+                        </div>
+                        <div className="space-y-3">
+                          {Object.entries(options).map(([key, value]) => (
+                            value.trim() && (
+                              <div key={key} className="flex items-start gap-3 p-3 bg-white/60 rounded-xl">
+                                <div className="flex-shrink-0 w-6 h-6 rounded-lg bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
+                                  <span className="text-xs font-bold text-green-700">{key}</span>
+                                </div>
+                                <div className="flex-1 prose prose-sm max-w-none text-gray-800">
+                                  <LivePreviewRenderer content={value} />
+                                </div>
+                                {correct === key && (
+                                  <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                                )}
+                              </div>
+                            )
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
-              {/* Empty State */}
-              {!questionText && !Object.values(options).some(opt => opt.trim()) && !solution && (
-                <div className="p-6 sm:p-8 text-center bg-gradient-to-br from-gray-50 to-slate-50 rounded-lg sm:rounded-xl border border-gray-200/60">
-                  <Code className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400 mx-auto mb-2 sm:mb-3" />
-                  <p className="text-xs sm:text-sm text-gray-600">Start typing to see live preview</p>
+                    {/* Solution Preview */}
+                    {showPreview.solution && solution && (
+                      <div className="p-6 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-200/60">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Star className="h-4 w-4 text-amber-600" />
+                          <span className="text-sm font-semibold text-amber-800">Solution Preview</span>
+                        </div>
+                        <div className="prose prose-sm max-w-none text-gray-800">
+                          <LivePreviewRenderer content={solution} />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Empty State */}
+                    {!questionText && !Object.values(options).some(opt => opt.trim()) && !solution && (
+                      <div className="p-8 text-center bg-gradient-to-br from-gray-50 to-slate-50 rounded-2xl border border-gray-200/60">
+                        <Code className="h-8 w-8 text-gray-400 mx-auto mb-4" />
+                        <p className="text-sm text-gray-600 font-medium">Start typing to see live preview</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Ultra-Premium Action Buttons - Fixed at Bottom */}
-      <div className="flex-shrink-0 p-4 sm:p-6 pt-3 sm:pt-4 border-t border-gray-200/60 bg-white">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
-          <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600">
-            <Palette className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span className="hidden sm:inline">LaTeX math supported: $inline$ and $$block$$</span>
-            <span className="sm:hidden">LaTeX supported</span>
+      {/* iOS-Inspired Action Buttons */}
+      <div className="flex-shrink-0 px-6 py-5 border-t border-gray-200/60 bg-white/80 backdrop-blur-xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Palette className="h-4 w-4" />
+            <span>LaTeX math supported: $inline$ and $$block$$</span>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-3">
             <Button 
               variant="outline" 
               onClick={onCancel}
-              className="flex-1 sm:flex-none h-8 sm:h-10 px-4 sm:px-6 border-gray-300 hover:border-gray-400 hover:bg-gray-50 rounded-lg text-sm"
+              className="h-12 px-8 border-gray-200 hover:border-gray-300 hover:bg-gray-50 rounded-2xl text-base font-medium transition-all duration-200"
             >
               Cancel
             </Button>
             <Button 
-              onClick={save} 
-              className="flex-1 sm:flex-none h-8 sm:h-10 px-4 sm:px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-1.5 sm:gap-2 text-sm"
+              onClick={save}
+              disabled={isSubmitting}
+              className="h-12 px-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-3 text-base font-medium"
             >
-              <Save className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Save Question to Test</span>
-              <span className="sm:hidden">Save</span>
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  Save Question to Test
+                </>
+              )}
             </Button>
           </div>
         </div>
