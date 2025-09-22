@@ -12,7 +12,7 @@ import { NextFAB } from '@/components/ui/floating-action-button'
 import { ArrowLeft, BookOpen, Plus, Settings, Target, Zap, Hash, Trash2, Tag, Award, Sparkles } from 'lucide-react'
 import type { TestQuestionSlot, ChapterInfo, BlueprintRule, ChapterBlueprint, TestBlueprint } from '@/lib/types'
 import type { Test } from '@/lib/supabase/admin'
-import { ReviewRefineInterface } from './review-refine-interface'
+import ReviewRefineInterface from './review-refine-interface'
 import { TestFinalizationStage, type TestFormData, type PublishData } from './test-finalization-stage'
 import { saveTest } from '@/lib/actions/tests'
 
