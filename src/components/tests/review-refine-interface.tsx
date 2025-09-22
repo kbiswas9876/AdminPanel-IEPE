@@ -1037,8 +1037,8 @@ function CreateQuestionForm({ onCancel, onSave }: { onCancel: () => void; onSave
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-6">
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 max-w-7xl mx-auto">
-            {/* Left Column - Form */}
+          <div className="max-w-4xl mx-auto">
+            {/* Single Column Layout with Previews Below Each Editor */}
             <div className="space-y-8">
               {/* Question Text Section */}
               <div className="bg-white rounded-3xl shadow-xl border border-gray-200/50 overflow-hidden">
@@ -1075,6 +1075,19 @@ function CreateQuestionForm({ onCancel, onSave }: { onCancel: () => void; onSave
                     <div className="mt-3 flex items-center gap-2 text-red-600">
                       <AlertCircle className="h-4 w-4" />
                       <span className="text-sm font-medium">{errors.questionText}</span>
+                    </div>
+                  )}
+                  
+                  {/* Question Text Preview */}
+                  {showPreview.question && questionText && (
+                    <div className="mt-6 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200/60">
+                      <div className="flex items-center gap-2 mb-4">
+                        <FileText className="h-4 w-4 text-blue-600" />
+                        <span className="text-sm font-semibold text-blue-800">Question Preview</span>
+                      </div>
+                      <div className="prose prose-sm max-w-none text-gray-800">
+                        <LivePreviewRenderer content={questionText} />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1138,6 +1151,33 @@ function CreateQuestionForm({ onCancel, onSave }: { onCancel: () => void; onSave
                     <div className="flex items-center gap-2 text-red-600">
                       <AlertCircle className="h-4 w-4" />
                       <span className="text-sm font-medium">{errors.options}</span>
+                    </div>
+                  )}
+                  
+                  {/* Options Preview */}
+                  {showPreview.options && Object.values(options).some(opt => opt.trim()) && (
+                    <div className="mt-6 p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-200/60">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Award className="h-4 w-4 text-green-600" />
+                        <span className="text-sm font-semibold text-green-800">Options Preview</span>
+                      </div>
+                      <div className="space-y-3">
+                        {Object.entries(options).map(([key, value]) => (
+                          value.trim() && (
+                            <div key={key} className="flex items-start gap-3 p-3 bg-white/60 rounded-xl">
+                              <div className="flex-shrink-0 w-6 h-6 rounded-lg bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
+                                <span className="text-xs font-bold text-green-700">{key}</span>
+                              </div>
+                              <div className="flex-1 prose prose-sm max-w-none text-gray-800">
+                                <LivePreviewRenderer content={value} />
+                              </div>
+                              {correct === key && (
+                                <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                              )}
+                            </div>
+                          )
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1209,6 +1249,19 @@ function CreateQuestionForm({ onCancel, onSave }: { onCancel: () => void; onSave
                     placeholder="Enter the solution explanation. Use LaTeX for mathematical expressions..."
                     showToolbar={true}
                   />
+                  
+                  {/* Solution Preview */}
+                  {showPreview.solution && solution && (
+                    <div className="mt-6 p-6 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-200/60">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Star className="h-4 w-4 text-amber-600" />
+                        <span className="text-sm font-semibold text-amber-800">Solution Preview</span>
+                      </div>
+                      <div className="prose prose-sm max-w-none text-gray-800">
+                        <LivePreviewRenderer content={solution} />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1258,87 +1311,6 @@ function CreateQuestionForm({ onCancel, onSave }: { onCancel: () => void; onSave
                       placeholder="e.g., geometry, algebra, trigonometry"
                       className="h-12 border-gray-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 rounded-2xl text-base transition-all duration-200"
                     />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column - Live Preview */}
-            <div className="space-y-8">
-              <div className="sticky top-6">
-                <div className="bg-white rounded-3xl shadow-xl border border-gray-200/50 overflow-hidden">
-                  <div className="px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-purple-50/50 to-indigo-50/30">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-purple-100 rounded-2xl flex items-center justify-center">
-                        <Preview className="h-5 w-5 text-purple-600" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-900">Live Preview</h3>
-                        <p className="text-sm text-gray-600">See how your question will look</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-8 space-y-6">
-                    {/* Question Preview */}
-                    {showPreview.question && questionText && (
-                      <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200/60">
-                        <div className="flex items-center gap-2 mb-4">
-                          <FileText className="h-4 w-4 text-blue-600" />
-                          <span className="text-sm font-semibold text-blue-800">Question Preview</span>
-                        </div>
-                        <div className="prose prose-sm max-w-none text-gray-800">
-                          <LivePreviewRenderer content={questionText} />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Options Preview */}
-                    {showPreview.options && Object.values(options).some(opt => opt.trim()) && (
-                      <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-200/60">
-                        <div className="flex items-center gap-2 mb-4">
-                          <Award className="h-4 w-4 text-green-600" />
-                          <span className="text-sm font-semibold text-green-800">Options Preview</span>
-                        </div>
-                        <div className="space-y-3">
-                          {Object.entries(options).map(([key, value]) => (
-                            value.trim() && (
-                              <div key={key} className="flex items-start gap-3 p-3 bg-white/60 rounded-xl">
-                                <div className="flex-shrink-0 w-6 h-6 rounded-lg bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
-                                  <span className="text-xs font-bold text-green-700">{key}</span>
-                                </div>
-                                <div className="flex-1 prose prose-sm max-w-none text-gray-800">
-                                  <LivePreviewRenderer content={value} />
-                                </div>
-                                {correct === key && (
-                                  <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
-                                )}
-                              </div>
-                            )
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Solution Preview */}
-                    {showPreview.solution && solution && (
-                      <div className="p-6 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-200/60">
-                        <div className="flex items-center gap-2 mb-4">
-                          <Star className="h-4 w-4 text-amber-600" />
-                          <span className="text-sm font-semibold text-amber-800">Solution Preview</span>
-                        </div>
-                        <div className="prose prose-sm max-w-none text-gray-800">
-                          <LivePreviewRenderer content={solution} />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Empty State */}
-                    {!questionText && !Object.values(options).some(opt => opt.trim()) && !solution && (
-                      <div className="p-8 text-center bg-gradient-to-br from-gray-50 to-slate-50 rounded-2xl border border-gray-200/60">
-                        <Code className="h-8 w-8 text-gray-400 mx-auto mb-4" />
-                        <p className="text-sm text-gray-600 font-medium">Start typing to see live preview</p>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
