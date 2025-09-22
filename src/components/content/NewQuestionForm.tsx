@@ -42,8 +42,6 @@ import {
   CheckCircle,
   Plus,
   Minus,
-  Edit3,
-  Pencil,
   Sparkles,
   Zap,
   Shield,

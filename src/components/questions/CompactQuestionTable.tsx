@@ -5,16 +5,10 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { 
-  ChevronDown, 
-  ChevronUp,
-  ChevronRight, 
-  Edit, 
+  ChevronDown,
+  ChevronRight,
+  Edit,
   BookOpen,
-  Tag,
-  Calendar,
-  Hash,
-  Info,
-  CheckCircle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { UIQuestion } from '@/lib/types'
@@ -85,25 +79,9 @@ export function CompactQuestionTable({
     }
   }
 
-  const toggleSection = (sectionId: string) => {
-    setCollapsedSections(prev => {
-      const newSet = new Set(prev)
-      if (newSet.has(sectionId)) {
-        newSet.delete(sectionId)
-      } else {
-        newSet.add(sectionId)
-      }
-      return newSet
-    })
-  }
+  // Section collapsing is currently not used in this table
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
+  // Date formatting helper not used in this table currently
 
   return (
     <div className="w-full">

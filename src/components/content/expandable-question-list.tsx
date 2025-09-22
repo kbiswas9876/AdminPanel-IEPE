@@ -6,8 +6,8 @@ import type { Question } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Edit, Sparkles, Target, BookOpen, Hash, Tag } from 'lucide-react'
-import { DeleteQuestionDialog } from './delete-question-dialog'
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Sparkles, Target, BookOpen, Hash, Tag } from 'lucide-react'
+// import { DeleteQuestionDialog } from './delete-question-dialog'
 import { UniversalContentRenderer } from '../editors/UniversalContentRenderer'
 import { CompactQuestionDetails } from '../questions/CompactQuestionDetails'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -331,8 +331,6 @@ export function ExpandableQuestionList({
         ) : (
           data.map((question, index) => {
             const isExpanded = expandedQuestionIds.has(question.id!)
-            const options = question.options || {}
-            const optionKeys = Object.keys(options).sort()
             
             // Use a more robust key that works for both regular and staged questions
             const questionKey = question.id || question.question_id || `staged-${index}`

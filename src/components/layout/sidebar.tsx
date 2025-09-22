@@ -14,8 +14,7 @@ import {
   FileText,
   Shield,
   Menu,
-  X,
-  AlertTriangle
+  X
 } from 'lucide-react'
 
 const navigation = [

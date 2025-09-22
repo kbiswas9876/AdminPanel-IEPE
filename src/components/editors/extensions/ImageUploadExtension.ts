@@ -1,6 +1,6 @@
 import { Extension } from '@tiptap/core'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
-import { Decoration, DecorationSet } from '@tiptap/pm/view'
+// Removed unused Decoration imports
 
 export interface ImageUploadOptions {
   uploadHandler: (file: File) => Promise<string>
@@ -24,7 +24,7 @@ export const ImageUploadExtension = Extension.create<ImageUploadOptions>({
       new Plugin({
         key: new PluginKey('imageUpload'),
         props: {
-          handleDrop: (view, event, slice, moved) => {
+          handleDrop: (view, event, _slice, moved) => {
             if (!moved && event.dataTransfer && event.dataTransfer.files) {
               const files = Array.from(event.dataTransfer.files)
               const imageFiles = files.filter(file => 
@@ -52,7 +52,7 @@ export const ImageUploadExtension = Extension.create<ImageUploadOptions>({
             }
             return false
           },
-          handlePaste: (view, event, slice) => {
+          handlePaste: (view, event, _slice) => {
             const items = Array.from(event.clipboardData?.items || [])
             const imageItems = items.filter(item => 
               item.type.startsWith('image/') && 

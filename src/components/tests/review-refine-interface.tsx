@@ -4,10 +4,9 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ArrowRight, Pencil, Edit3, Trash2, ChevronDown, Plus, Eye, EyeOff, Settings, Sparkles, Layers, RefreshCw, FileText, CheckCircle2, BarChart3, Award, Star, Shield, Zap as Lightning, Wand2, Palette, Code, Eye as Preview, Save, X, BookOpen, AlertCircle } from 'lucide-react'
+import { ArrowRight, Pencil, Edit3, Trash2, ChevronDown, Plus, Eye, EyeOff, Settings, Sparkles, Layers, RefreshCw, FileText, CheckCircle2, BarChart3, Award, Star, Shield, Zap as Lightning, Wand2, Palette, Save, X, BookOpen, AlertCircle } from 'lucide-react'
 import { UniversalContentRenderer } from '../editors/UniversalContentRenderer'
 import { ClientOnlyAdvancedTipTapEditor } from '@/components/editors/ClientOnlyAdvancedTipTapEditor'
 import { LivePreviewRenderer } from '@/components/editors/LivePreviewRenderer'
@@ -20,6 +19,7 @@ interface ReviewRefineInterfaceProps {
   onRegenerate: (index: number) => void
   onEdit: (index: number) => void
   onNext: () => void
+  isQuestionBankMode?: boolean
 }
 
 export default function ReviewRefineInterface({
@@ -27,7 +27,8 @@ export default function ReviewRefineInterface({
   onQuestionsChange,
   onRegenerate,
   onEdit,
-  onNext
+  onNext,
+  isQuestionBankMode: _isQuestionBankMode = false
 }: ReviewRefineInterfaceProps) {
   const [shuffleOptions, setShuffleOptions] = useState(false)
   const [overrideIndex, setOverrideIndex] = useState<number | null>(null)
@@ -173,19 +174,7 @@ export default function ReviewRefineInterface({
     })
   }
 
-  const removeEditOption = (key: string) => {
-    if (!editForm) return
-    const keys = Object.keys(editForm.options)
-    if (keys.length <= 2) return // Keep at least 2 options
-    
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { [key]: _, ...rest } = editForm.options
-    setEditForm({
-      ...editForm,
-      options: rest,
-      correct_option: editForm.correct_option === key ? Object.keys(rest).sort()[0] : editForm.correct_option
-    })
-  }
+  
 
   const handleToggleSolution = (questionId: string | number) => {
     setExpandedSolutionIds(prev => {

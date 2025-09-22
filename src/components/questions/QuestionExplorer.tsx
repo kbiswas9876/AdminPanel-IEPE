@@ -27,6 +27,7 @@ import {
   Settings
 } from 'lucide-react'
 import { deleteMultipleQuestions } from '@/lib/actions/questions'
+import type { UIQuestion } from '@/lib/types'
 import { toast } from 'sonner'
 
 interface QuestionExplorerProps {
@@ -36,7 +37,7 @@ interface QuestionExplorerProps {
   isAllSelected?: boolean
   isPartiallySelected?: boolean
   showSelectionControls?: boolean
-  questions?: any[]
+  questions?: UIQuestion[]
   loading?: boolean
   error?: string | null
 }
@@ -104,7 +105,8 @@ export function QuestionExplorer({
       if (isAllSelected) {
         setInternalSelectedQuestions(new Set())
       } else {
-        setInternalSelectedQuestions(new Set(questions.map((q: any) => q.id).filter((id: any) => id !== undefined)))
+        const ids = (questions as UIQuestion[]).map((q) => q.id).filter((id): id is number => id !== undefined)
+        setInternalSelectedQuestions(new Set(ids))
       }
     }
   }
@@ -158,7 +160,12 @@ export function QuestionExplorer({
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Failed to load questions. {errorState || (error as any)?.message || 'Unknown error occurred.'}
+            {(() => {
+              const msg = typeof errorState === 'string' 
+                ? errorState 
+                : (error instanceof Error ? error.message : 'Failed to load questions. Unknown error occurred.')
+              return <>Failed to load questions. {msg}</>
+            })()}
           </AlertDescription>
         </Alert>
         <Button onClick={() => refetch()} variant="outline" className="w-full">

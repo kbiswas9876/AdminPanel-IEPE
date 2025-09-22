@@ -3,7 +3,6 @@
 import React, { useState, memo, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
 import { 
   ChevronDown, 
   ChevronUp, 
@@ -94,7 +93,7 @@ export const CompactQuestionDetails = memo(function CompactQuestionDetails({
         month: 'short',
         day: 'numeric',
       })
-    } catch (error) {
+    } catch (_error) {
       return 'Invalid date'
     }
   }

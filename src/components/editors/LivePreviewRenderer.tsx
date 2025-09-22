@@ -26,7 +26,7 @@ export function LivePreviewRenderer({ content, className }: LivePreviewRendererP
     console.log('Contains \\dfrac:', htmlContent.includes('\\dfrac'))
     
     // First, decode HTML entities that might be encoding LaTeX
-    let processedContent = htmlContent
+    const processedContent = htmlContent
       .replace(/&lt;/g, '<')
       .replace(/&gt;/g, '>')
       .replace(/&amp;/g, '&')
