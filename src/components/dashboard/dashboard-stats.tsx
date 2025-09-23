@@ -25,7 +25,7 @@ interface RecentActivityProps {
   activities: RecentActivity[]
 }
 
-// Premium Stat Card Component
+// Premium Refined Stat Card Component
 function StatCard({ 
   title, 
   value, 
@@ -43,47 +43,63 @@ function StatCard({
 }) {
   return (
     <Link href={href} className="block group">
-      <Card className={`relative overflow-hidden smooth-animation hover-lift cursor-pointer border-0 rounded-ios-xl ${
-        isUrgent 
-          ? 'bg-gradient-to-br from-orange-50 to-red-50 shadow-ios-md border border-orange-200/60' 
-          : 'bg-white shadow-ios-sm border border-slate-200/60 hover:shadow-ios-md'
-      }`}>
-        {/* Subtle background pattern */}
-        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="group relative overflow-visible transition-all duration-300 hover:-translate-y-1">
+        {/* Enhanced Card Background with Better Contrast */}
+        <div className={`absolute inset-0 rounded-3xl backdrop-blur-xl border transition-all duration-300 ${
+          isUrgent 
+            ? 'bg-gradient-to-br from-orange-50 to-red-50 border-orange-200/80 shadow-orange-rounded' 
+            : 'bg-white border-slate-200/60 shadow-rounded-3xl'
+        }`} />
+        {/* Inner highlight for premium look */}
+        <div className="absolute inset-[1px] rounded-3xl bg-gradient-to-b from-white/40 to-transparent" />
         
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 relative z-10 p-ios-lg">
-          <CardTitle className="text-label text-slate-600">
-            {title}
-          </CardTitle>
-          <div className={`p-3 rounded-ios-md transition-all duration-300 shadow-ios-sm ${
-            isUrgent 
-              ? 'bg-gradient-to-br from-orange-100 to-red-100 text-orange-600 group-hover:scale-110' 
-              : 'bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600 group-hover:scale-110'
-          }`}>
-            <Icon className="h-5 w-5" />
-          </div>
-        </CardHeader>
-        <CardContent className="relative z-10 p-ios-lg pt-0">
-          <div className="text-hero text-slate-900 mb-2">
-            {value.toLocaleString()}
-          </div>
-          {description && (
-            <p className="text-caption text-slate-500">
-              {description}
-            </p>
-          )}
-          {isUrgent && value > 0 && (
-            <div className="mt-4">
-              <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 shadow-lg animate-pulse px-3 py-1 text-xs font-bold">
-                Action Required
-              </Badge>
+        {/* Content */}
+        <div className="relative z-10 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className={`flex h-12 w-12 items-center justify-center rounded-2xl shadow-lg transition-transform duration-300 group-hover:scale-110 ${
+              isUrgent
+                ? 'bg-gradient-to-br from-orange-500 to-red-500 shadow-orange-500/25'
+                : 'bg-gradient-to-br from-blue-500 to-indigo-600 shadow-blue-500/25'
+            }`}>
+              <Icon className="h-6 w-6 text-white" />
             </div>
-          )}
-        </CardContent>
+            
+            {isUrgent && value > 0 && (
+              <div className="px-3 py-1 rounded-full bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold shadow-lg animate-pulse">
+                Action Required
+              </div>
+            )}
+          </div>
+          
+          <div className="space-y-2">
+            <div className={`text-3xl font-bold tracking-tight transition-colors ${
+              isUrgent ? 'text-orange-900' : 'text-slate-900'
+            }`}>
+              {value.toLocaleString()}
+            </div>
+            
+            <div className="space-y-1">
+              <div className={`font-medium transition-colors ${
+                isUrgent ? 'text-orange-700' : 'text-slate-700'
+              }`}>
+                {title}
+              </div>
+              {description && (
+                <div className="text-sm text-slate-600">
+                  {description}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
         
-        {/* Hover effect overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      </Card>
+        {/* Hover Glow Effect */}
+        <div className={`absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+          isUrgent 
+            ? 'bg-gradient-to-br from-orange-400/10 to-red-400/10'
+            : 'bg-gradient-to-br from-blue-400/5 to-indigo-400/5'
+        }`} />
+      </div>
     </Link>
   )
 }
@@ -136,18 +152,18 @@ function ActivityItem({ activity }: { activity: RecentActivity }) {
   }
 
   return (
-    <div className="flex items-start space-x-4 p-ios-lg hover:bg-slate-50/80 transition-all duration-300 group border-l-4 border-transparent hover:border-blue-200">
-      <div className={`flex-shrink-0 mt-1 p-3 rounded-ios-md shadow-ios-sm ${getActivityIconBg(activity.type)} group-hover:scale-110 transition-transform duration-300`}>
+    <div className="flex items-start space-x-4 p-6 hover:bg-white/30 transition-all duration-300 group/activity">
+      <div className={`flex-shrink-0 mt-1 p-3 rounded-xl shadow-sm transition-all duration-300 group-hover/activity:scale-105 ${getActivityIconBg(activity.type)}`}>
         {getActivityIcon(activity.type)}
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-body font-semibold text-slate-900 group-hover:text-slate-700 transition-colors">
+      <div className="flex-1 min-w-0 space-y-2">
+        <p className="font-semibold text-slate-900 group-hover/activity:text-slate-700 transition-colors">
           {activity.title}
         </p>
-        <p className="text-caption text-slate-600 mt-1 leading-relaxed">
+        <p className="text-sm text-slate-600 leading-relaxed">
           {activity.description}
         </p>
-        <p className="text-caption text-slate-500 mt-3 font-medium">
+        <p className="text-xs text-slate-500 font-medium">
           {formatTimestamp(activity.timestamp)}
         </p>
       </div>
@@ -155,10 +171,10 @@ function ActivityItem({ activity }: { activity: RecentActivity }) {
   )
 }
 
-// Premium Dashboard Stats Component
+// Premium Dashboard Stats Component with Enhanced Layout
 export function DashboardStats({ stats }: DashboardStatsProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
       <StatCard
         title="Pending Approvals"
         value={stats.pendingUsers}
@@ -193,40 +209,54 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
   )
 }
 
-// iOS-Inspired Recent Activity Component
+// Premium Recent Activity Component with Refined iOS Aesthetic
 export function RecentActivity({ activities }: RecentActivityProps) {
   return (
-    <Card className="border-0 bg-white shadow-ios-md border border-slate-200/60 overflow-hidden rounded-ios-xl">
-      <CardHeader className="border-b border-slate-200/60 bg-gradient-to-r from-slate-50/50 to-white/80 p-ios-lg">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-heading text-slate-900">
-            Recent Activity
-          </CardTitle>
-          <Button variant="ghost" size="sm" asChild className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-all duration-300 hover:scale-105 rounded-ios-md">
-            <Link href="/reports" className="flex items-center space-x-2">
-              <span className="text-body font-medium">View All</span>
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="p-0 max-h-96 overflow-y-auto">
-        {activities.length === 0 ? (
-          <div className="p-ios-2xl text-center">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-slate-100 mb-6">
-              <Clock className="h-10 w-10 text-slate-400" />
+    <div className="group relative overflow-visible h-fit">
+      {/* Enhanced Solid Background for Better Visibility */}
+      <div className="absolute inset-0 rounded-3xl bg-white backdrop-blur-xl border border-slate-200/60 shadow-rounded-3xl" />
+      {/* Inner highlight */}
+      <div className="absolute inset-[1px] rounded-3xl bg-gradient-to-b from-white/50 to-transparent" />
+      
+      <div className="relative z-10">
+        {/* Header */}
+        <div className="p-6 border-b border-slate-200/30">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-2xl font-bold text-slate-900">Recent Activity</h3>
+              <p className="text-sm text-slate-600 mt-1">Latest system events</p>
             </div>
-            <p className="text-subheading text-slate-600">No recent activity</p>
-            <p className="text-caption text-slate-400 mt-2">Activity will appear here as it happens</p>
+            <Link 
+              href="/reports" 
+              className="group/btn flex items-center space-x-2 px-4 py-2 bg-slate-50/80 hover:bg-white border border-slate-200/60 rounded-2xl transition-all duration-300 shadow-rounded-2xl hover:shadow-rounded-xl"
+            >
+              <span className="text-sm font-medium text-slate-700 group-hover/btn:text-blue-600">View All</span>
+              <ArrowRight className="h-4 w-4 text-slate-400 group-hover/btn:text-blue-600 transition-colors" />
+            </Link>
           </div>
-        ) : (
-          <div className="divide-y divide-slate-200/60">
-            {activities.map((activity) => (
-              <ActivityItem key={activity.id} activity={activity} />
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+        
+        {/* Content */}
+        <div className="max-h-96 overflow-y-auto">
+          {activities.length === 0 ? (
+            <div className="p-12 text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-100/60 mb-4">
+                <Clock className="h-8 w-8 text-slate-400" />
+              </div>
+              <p className="text-lg font-medium text-slate-600">No recent activity</p>
+              <p className="text-sm text-slate-500 mt-1">Activity will appear here as it happens</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-200/30">
+              {activities.map((activity, index) => (
+                <div key={activity.id} className="group/item">
+                  <ActivityItem activity={activity} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }

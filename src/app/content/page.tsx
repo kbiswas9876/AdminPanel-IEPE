@@ -18,8 +18,8 @@ export default function ContentPage() {
             <div className="bg-white border-b px-4 py-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Database className="h-5 w-5 text-blue-600" />
-                  <h1 className="text-lg font-semibold text-gray-900">Question Management</h1>
+                  <Database className="h-6 w-6 text-blue-600" />
+                  <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Question Management</h1>
                 </div>
                 <Link href="/content/new">
                   <Button size="sm" className="bg-blue-600 hover:bg-blue-700">

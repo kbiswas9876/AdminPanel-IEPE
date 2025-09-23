@@ -84,29 +84,40 @@ export function CompactQuestionTable({
   // Date formatting helper not used in this table currently
 
   return (
-    <div className="w-full">
-      {/* Table Header */}
-      <div className="grid grid-cols-12 gap-2 px-4 py-3 bg-gray-50 border-b text-xs font-medium text-gray-600">
-        <div className="col-span-1 flex justify-center items-center">
-          <Checkbox
-            checked={isAllSelected}
-            ref={(el) => {
-              if (el) (el as HTMLInputElement).indeterminate = isPartiallySelected
-            }}
-            onCheckedChange={onSelectAll}
-            className="h-4 w-4"
-          />
+    <div className="w-full space-y-4">
+      {/* Mobile-Optimized Selection Bar */}
+      {questions.length > 0 && (
+        <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-3 xs:gap-0 px-6 py-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
+          <div className="flex items-center gap-3">
+            <Checkbox
+              checked={isAllSelected}
+              ref={(el) => {
+                if (el) (el as HTMLInputElement).indeterminate = isPartiallySelected
+              }}
+              onCheckedChange={onSelectAll}
+              className="h-4 w-4 rounded border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+            />
+            <div className="text-sm font-medium text-slate-700">
+              {isAllSelected ? 'All questions selected' : isPartiallySelected ? `${questions.filter(q => q.id && selectedQuestions.has(q.id)).length} questions selected` : 'Select questions'}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+            <span>ID</span>
+            <span>•</span>
+            <span>Question</span>
+            <span>•</span>
+            <span>Source</span>
+            <span>•</span>
+            <span>Level</span>
+            <span>•</span>
+            <span>Tags</span>
+          </div>
         </div>
-        <div className="col-span-1 flex items-center justify-center">ID</div>
-        <div className="col-span-4 flex items-center">Question</div>
-        <div className="col-span-2 flex items-center">Book/Chapter</div>
-        <div className="col-span-1 flex items-center justify-center">Difficulty</div>
-        <div className="col-span-2 flex items-center">Tags</div>
-        <div className="col-span-1 flex items-center justify-end">Actions</div>
-      </div>
+      )}
 
-      {/* Table Body */}
-      <div className="divide-y">
+      {/* Premium Card Grid */}
+      <div className="space-y-4">
+        {/* Questions */}
         {questions.map((question, index) => {
           if (!question.id) return null
           
@@ -115,162 +126,183 @@ export function CompactQuestionTable({
           const isEditing = editingQuestion === question.id
 
           return (
-            <div key={question.id} className="group">
-              {/* Main Row */}
+            <div 
+              key={question.id} 
+              className="group relative"
+            >
+              {/* Premium Question Card */}
               <div className={cn(
-                "grid grid-cols-12 gap-2 px-4 py-4 transition-colors duration-150 rounded-lg mx-2 min-h-[72px]",
-                index % 2 === 0 ? "bg-white" : "bg-slate-50/30",
-                "hover:bg-slate-50/60",
-                isSelected && "bg-blue-50/80 shadow-sm border-l-4 border-blue-400",
-                isEditing && "bg-green-50/80 shadow-sm border-l-4 border-green-400"
+                "relative bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg overflow-hidden transition-all duration-300 ease-out hover:-translate-y-0.5",
+                isSelected && "ring-2 ring-blue-500/20 border-blue-300 bg-blue-50/30 shadow-lg",
+                isEditing && "ring-2 ring-green-500/20 border-green-300 bg-green-50/30 shadow-lg"
               )}>
-                {/* Checkbox */}
-                <div className="col-span-1 flex items-center justify-center">
-                  <Checkbox
-                    checked={isSelected}
-                    onCheckedChange={() => onSelectQuestion(question.id!)}
-                    className="h-4 w-4"
-                  />
-                </div>
-
-                {/* ID */}
-                <div className="col-span-1 flex items-center justify-center text-xs text-gray-500">
-                  <span className="font-mono font-light">#{question.id}</span>
-                </div>
-
-                {/* Question Text - Single Line Preview */}
-                <div className="col-span-4 flex items-center">
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleExpansion(question.id!)}
-                      className="p-1 h-6 w-6 hover:bg-slate-100 transition-colors flex-shrink-0"
-                    >
-                      {isExpanded ? (
-                        <ChevronDown className="h-4 w-4 text-slate-600" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4 text-slate-600" />
-                      )}
-                    </Button>
-                    <div 
-                      className="flex-1 min-w-0 text-sm font-semibold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
-                      title={question.question_text}
-                      onClick={() => toggleExpansion(question.id!)}
-                    >
-                      <div className="whitespace-pre-wrap">
-                        <UniversalContentRenderer text={question.question_text} />
+                {/* Selection indicator */}
+                {isSelected && (
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-blue-600"></div>
+                )}
+                {isEditing && (
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 to-green-600"></div>
+                )}
+                
+                <div className="p-6">
+                  {/* Card Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                      {/* Selection Checkbox */}
+                      <div className="flex-shrink-0">
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => onSelectQuestion(question.id!)}
+                          className="h-4 w-4 rounded border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                        />
                       </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Book/Chapter - Two-Line Display */}
-                <div className="col-span-2 flex items-start text-xs text-gray-600">
-                  <div className="flex flex-col gap-1 min-w-0 w-full">
-                    <div className="flex items-center gap-1 min-w-0">
-                      <BookOpen className="h-3 w-3 flex-shrink-0 mt-0.5" />
-                      <span className="truncate font-medium text-gray-900" title={question.book_source}>
-                        {question.book_source.length > 20 
-                          ? `${question.book_source.substring(0, 20)}...` 
-                          : question.book_source
-                        }
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1 min-w-0 ml-4">
-                      <span className="text-gray-500 text-xs">
-                        {question.chapter_name}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Difficulty */}
-                <div className="col-span-1 flex items-center justify-center">
-                  {question.difficulty && (
-                    <Badge 
-                      variant="outline" 
-                      className={cn("text-xs px-2 py-1 rounded-full", getDifficultyColor(question.difficulty))}
-                    >
-                      {question.difficulty === 'Easy-Moderate' ? 'E' : 
-                       question.difficulty === 'Moderate' ? 'M' : 
-                       question.difficulty === 'Moderate-Hard' ? 'MH' : 
-                       question.difficulty === 'Hard' ? 'H' : question.difficulty}
-                    </Badge>
-                  )}
-                </div>
-
-                {/* Tags - Premium Pill Design */}
-                <div className="col-span-2 flex items-start">
-                  {question.admin_tags && question.admin_tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 max-w-full">
-                      {question.admin_tags.slice(0, 3).map((tag, index) => (
-                        <span 
-                          key={index} 
-                          className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border border-blue-200/50 shadow-sm hover:bg-blue-100/50 transition-colors duration-150"
+                      
+                      {/* Question ID Badge */}
+                      <div className="flex-shrink-0">
+                        <div className="px-3 py-1.5 bg-gradient-to-r from-slate-100 to-slate-200 rounded-xl text-xs font-mono font-medium text-slate-600 shadow-sm">
+                          #{question.id}
+                        </div>
+                      </div>
+                      
+                      {/* Difficulty Badge */}
+                      {question.difficulty && (
+                        <Badge 
+                          variant="outline" 
+                          className={cn("text-xs px-3 py-1.5 rounded-xl font-medium shadow-sm", getDifficultyColor(question.difficulty))}
                         >
-                          <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
-                          {tag}
-                        </span>
-                      ))}
-                      {question.admin_tags.length > 3 && (
-                        <span className="inline-flex items-center text-xs px-3 py-1.5 rounded-full bg-gradient-to-r from-gray-50 to-slate-50 text-gray-600 border border-gray-200/50 shadow-sm">
-                          +{question.admin_tags.length - 3}
-                        </span>
+                          {question.difficulty}
+                        </Badge>
                       )}
                     </div>
-                  )}
-                </div>
-
-                {/* Actions */}
-                <div className="col-span-1 flex items-center justify-end">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setEditingQuestion(question.id!)
-                      // Ensure the question is expanded when editing
-                      if (!isExpanded) {
-                        toggleExpansion(question.id!)
-                      }
-                    }}
-                    className="h-5 w-5 p-0"
-                  >
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Compact Question Details */}
-              {(isExpanded || isEditing) && (
-                <div className="border-t border-gray-200">
-                  {isEditing ? (
-                    <div className="p-6">
-                      <QuestionEditForm
-                        question={question}
-                        onSave={(updatedQuestion) => {
-                          onQuestionUpdate(updatedQuestion)
-                          setEditingQuestion(null)
+                    
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setEditingQuestion(question.id!)
+                          if (!isExpanded) {
+                            toggleExpansion(question.id!)
+                          }
                         }}
-                        onCancel={() => setEditingQuestion(null)}
-                      />
+                        className="h-9 w-9 p-0 rounded-xl hover:bg-slate-100 shadow-sm hover:shadow transition-all duration-200 group/edit"
+                      >
+                        <Edit className="h-4 w-4 text-slate-600 group-hover/edit:text-slate-800 transition-colors duration-200" />
+                      </Button>
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleExpansion(question.id!)}
+                        className="h-9 w-9 p-0 rounded-xl hover:bg-slate-100 shadow-sm hover:shadow transition-all duration-200 group/expand"
+                      >
+                        <div className="transition-transform duration-300 ease-out">
+                          {isExpanded ? (
+                            <ChevronDown className="h-4 w-4 text-slate-600 group-hover/expand:text-slate-800" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4 text-slate-600 group-hover/expand:text-slate-800" />
+                          )}
+                        </div>
+                      </Button>
                     </div>
-                  ) : (
-                    <CompactQuestionDetails
-                      question={question}
-                      isExpanded={isExpanded}
-                      onToggle={() => toggleExpansion(question.id!)}
-                      onEdit={() => setEditingQuestion(question.id!)}
-                      actionType="edit"
-                      onQuestionAction={(q, action) => {
-                        if (action === 'edit') {
-                          setEditingQuestion(q.id!)
-                        }
-                      }}
-                    />
-                  )}
+                  </div>
+                  
+                  {/* Question Content */}
+                  <div 
+                    className="mb-4 cursor-pointer group/content"
+                    onClick={() => toggleExpansion(question.id!)}
+                  >
+                    <div className="text-base font-medium text-slate-900 leading-relaxed group-hover/content:text-blue-700 transition-colors duration-200">
+                      <UniversalContentRenderer text={question.question_text} />
+                    </div>
+                  </div>
+                  
+                  {/* Metadata Row */}
+                  <div className="flex items-center justify-between">
+                    {/* Book/Chapter Info */}
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-xl">
+                        <BookOpen className="h-4 w-4 text-slate-500" />
+                        <div className="text-sm font-medium text-slate-700" title={question.book_source}>
+                          {question.book_source.length > 25 
+                            ? `${question.book_source.substring(0, 25)}...` 
+                            : question.book_source
+                          }
+                        </div>
+                      </div>
+                      
+                      {question.chapter_name && (
+                        <div className="text-sm text-slate-600 font-medium">
+                          {question.chapter_name.length > 30 
+                            ? `${question.chapter_name.substring(0, 30)}...` 
+                            : question.chapter_name
+                          }
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Tags */}
+                    {question.admin_tags && question.admin_tags.length > 0 && (
+                      <div className="flex items-center gap-2 max-w-md">
+                        <div className="flex flex-wrap gap-2">
+                          {question.admin_tags.slice(0, 3).map((tag, tagIndex) => (
+                            <span 
+                              key={tagIndex} 
+                              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border border-blue-200/50 font-medium hover:bg-blue-100/50 transition-all duration-200"
+                            >
+                              <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                              {tag}
+                            </span>
+                          ))}
+                          {question.admin_tags.length > 3 && (
+                            <span className="inline-flex items-center text-xs px-3 py-1.5 rounded-xl bg-gradient-to-r from-slate-50 to-slate-100 text-slate-600 border border-slate-200/50 font-medium shadow-sm">
+                              +{question.admin_tags.length - 3} more
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
+
+                {/* Expanded Content Section */}
+                {(isExpanded || isEditing) && (
+                  <div className="border-t border-slate-100 mt-6 pt-6 bg-slate-50/30 -mx-6 px-6 pb-6 rounded-b-2xl animate-in slide-in-from-top duration-300">
+                    {isEditing ? (
+                      <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                          <span className="text-sm font-medium text-green-700">Editing Mode</span>
+                        </div>
+                        <QuestionEditForm
+                          question={question}
+                          onSave={(updatedQuestion) => {
+                            onQuestionUpdate(updatedQuestion)
+                            setEditingQuestion(null)
+                          }}
+                          onCancel={() => setEditingQuestion(null)}
+                        />
+                      </div>
+                    ) : (
+                      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <CompactQuestionDetails
+                          question={question}
+                          isExpanded={isExpanded}
+                          onToggle={() => toggleExpansion(question.id!)}
+                          onEdit={() => setEditingQuestion(question.id!)}
+                          actionType="edit"
+                          onQuestionAction={(q, action) => {
+                            if (action === 'edit') {
+                              setEditingQuestion(q.id!)
+                            }
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           )
         })}

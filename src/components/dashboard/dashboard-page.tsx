@@ -52,238 +52,307 @@ export function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Admin Dashboard
-            </h1>
-            <p className="mt-2 text-gray-600">
-              Loading your command center...
-            </p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50/50 via-white to-blue-50/30">
+        <div className="mx-auto max-w-7xl space-y-8 p-6 lg:p-8">
+          {/* Loading Hero Section */}
+          <div className="group relative overflow-visible">
+            <div className="absolute inset-0 rounded-3xl bg-white/90 backdrop-blur-xl border border-slate-200/50 shadow-rounded-3xl shadow-blue-rounded" />
+            <div className="relative z-10 p-8 lg:p-12">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-6 lg:space-y-0">
+                <div className="flex items-start space-x-6">
+                  <div className="flex h-18 w-18 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/25 ring-1 ring-white/20">
+                    <LayoutDashboard className="h-9 w-9 text-white animate-pulse" />
+                  </div>
+                  <div className="space-y-3">
+                    <div className="h-12 w-64 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded-2xl animate-pulse"></div>
+                    <div className="h-6 w-48 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded-lg animate-pulse"></div>
+                  </div>
+                </div>
+                <div className="h-12 w-32 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded-2xl animate-pulse"></div>
+              </div>
+            </div>
           </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i} className="hover-lift">
-              <CardHeader className="space-y-0 pb-2">
-                <div className="h-4 skeleton rounded w-3/4"></div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-8 skeleton rounded w-1/2 mb-2"></div>
-                <div className="h-3 skeleton rounded w-full"></div>
-              </CardContent>
-            </Card>
-          ))}
+
+          {/* Loading Stats Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="group relative overflow-visible">
+                <div className="absolute inset-0 rounded-3xl bg-white/85 backdrop-blur-xl border border-slate-200/40 shadow-rounded-3xl" />
+                <div className="relative z-10 p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 animate-pulse"></div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="h-8 w-20 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded-lg animate-pulse"></div>
+                    <div className="h-4 w-full bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded animate-pulse"></div>
+                    <div className="h-3 w-3/4 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Loading Content Grid */}
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+            <div className="xl:col-span-8">
+              <div className="group relative overflow-visible">
+                <div className="absolute inset-0 rounded-3xl bg-white/90 backdrop-blur-xl border border-slate-200/50 shadow-rounded-3xl" />
+                <div className="relative z-10 p-6 space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                      <div className="h-8 w-48 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded-lg animate-pulse"></div>
+                      <div className="h-4 w-32 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded animate-pulse"></div>
+                    </div>
+                    <div className="h-10 w-24 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded-2xl animate-pulse"></div>
+                  </div>
+                  <div className="space-y-4">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="flex items-start space-x-4 p-4">
+                        <div className="h-12 w-12 rounded-xl bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 animate-pulse"></div>
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 w-3/4 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded animate-pulse"></div>
+                          <div className="h-3 w-full bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded animate-pulse"></div>
+                          <div className="h-3 w-20 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded animate-pulse"></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="xl:col-span-4 space-y-6">
+              {[...Array(2)].map((_, i) => (
+                <div key={i} className="group relative overflow-visible">
+                  <div className="absolute inset-0 rounded-3xl bg-white/90 backdrop-blur-xl border border-slate-200/50 shadow-rounded-3xl" />
+                  <div className="relative z-10 p-6 space-y-4">
+                    <div className="flex items-center space-x-4">
+                      <div className="h-12 w-12 rounded-xl bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 animate-pulse"></div>
+                      <div className="space-y-2">
+                        <div className="h-6 w-32 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded animate-pulse"></div>
+                        <div className="h-3 w-24 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded animate-pulse"></div>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      {[...Array(3)].map((_, j) => (
+                        <div key={j} className="flex items-center justify-between p-4 rounded-2xl bg-white/20">
+                          <div className="flex items-center space-x-3">
+                            <div className="h-8 w-8 rounded-lg bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 animate-pulse"></div>
+                            <div className="h-4 w-24 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded animate-pulse"></div>
+                          </div>
+                          <div className="h-4 w-16 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded animate-pulse"></div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-8 p-ios-md">
-      {/* iOS-Inspired Hero Header Section */}
-      <div className="relative overflow-hidden rounded-ios-2xl bg-gradient-to-br from-slate-50 to-blue-50/30 p-ios-xl shadow-ios-lg border border-slate-200/60">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-40" />
-        
-        <div className="relative z-10">
-          <div className="flex flex-col space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-6">
-                <div className="flex h-16 w-16 items-center justify-center rounded-ios-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-ios-md hover:scale-105 transition-transform duration-300">
-                  <LayoutDashboard className="h-8 w-8 text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-100/80 via-slate-50 to-blue-50/60">
+      <div className="mx-auto max-w-7xl space-y-8 p-6 lg:p-8">
+        {/* Refined Hero Section with Premium iOS Aesthetic */}
+        <div className="group relative overflow-visible">
+          {/* Enhanced Frosted Glass Background */}
+          <div className="absolute inset-0 rounded-3xl bg-white backdrop-blur-xl border border-slate-200/60 shadow-rounded-3xl shadow-blue-rounded" />
+          {/* Inner shadow for depth */}
+          <div className="absolute inset-[1px] rounded-3xl bg-gradient-to-b from-white/50 to-transparent" />
+          
+          {/* Subtle Pattern Overlay */}
+          <div className="absolute inset-0 opacity-30">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-indigo-500/5" />
+            <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-blue-400/10 to-transparent rounded-full blur-3xl" />
+          </div>
+          
+          <div className="relative z-10 p-8 lg:p-12">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-6 lg:space-y-0">
+              {/* Streamlined Header Content */}
+              <div className="flex items-start space-x-6">
+                <div className="flex h-18 w-18 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/25 ring-1 ring-white/20 group-hover:scale-105 transition-all duration-500">
+                  <LayoutDashboard className="h-9 w-9 text-white" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h1 className="text-display text-slate-900">
+                <div className="space-y-2">
+                  <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight">
                     Dashboard
                   </h1>
-                  <p className="mt-2 text-subheading text-slate-600">
-                    Welcome to your command center
+                  <p className="text-lg text-slate-600 font-medium">
+                    Your command center
                   </p>
                 </div>
               </div>
               
-              {/* iOS-style Refresh Button */}
-              <div className="hidden sm:block">
-                <Button 
-                  variant="outline" 
-                  size="lg"
-                  onClick={fetchDashboardData}
-                  disabled={loading}
-                  className="bg-white/80 border-slate-200 text-slate-700 hover:bg-white hover:border-slate-300 hover:text-slate-800 transition-all duration-300 hover:scale-105 shadow-ios-sm hover:shadow-ios-md px-6 py-3 rounded-ios-lg"
-                >
-                  <RefreshCw className={`h-5 w-5 mr-3 ${loading ? 'animate-spin' : ''}`} />
-                  <span className="text-body font-medium">Refresh</span>
-                </Button>
-              </div>
-            </div>
-            <p className="text-body text-slate-600 leading-relaxed max-w-3xl">
-              Monitor system status, manage your platform, and oversee all operations from this central hub.
-            </p>
-            
-            {/* Mobile-optimized refresh button */}
-            <div className="flex justify-start sm:hidden">
+              {/* Refined Action Button */}
               <Button 
                 variant="outline" 
                 size="lg"
                 onClick={fetchDashboardData}
                 disabled={loading}
-                className="bg-white/80 border-slate-200 text-slate-700 hover:bg-white hover:border-slate-300 hover:text-slate-800 transition-all duration-300 hover:scale-105 shadow-ios-sm w-full py-4 rounded-ios-lg"
+                className="group/btn relative overflow-hidden bg-white/80 border-0 shadow-lg shadow-slate-900/5 hover:shadow-xl hover:shadow-slate-900/10 transition-all duration-300 rounded-2xl px-8 py-4"
               >
-                <RefreshCw className={`h-5 w-5 mr-3 ${loading ? 'animate-spin' : ''}`} />
-                <span className="text-body font-medium">Refresh</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-indigo-500/5 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
+                <RefreshCw className={`h-5 w-5 mr-3 relative z-10 transition-transform duration-300 ${loading ? 'animate-spin' : 'group-hover/btn:rotate-180'}`} />
+                <span className="relative z-10 font-semibold text-slate-700 group-hover/btn:text-slate-900">Refresh Data</span>
               </Button>
             </div>
           </div>
         </div>
-        
-        {/* Decorative Elements */}
-        <div className="absolute top-4 right-4 w-32 h-32 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-4 left-4 w-24 h-24 bg-gradient-to-br from-indigo-400/20 to-blue-400/20 rounded-full blur-2xl" />
-      </div>
 
-      {/* Enhanced Stats Cards with Better Spacing */}
-      <div className="space-y-6">
+        {/* Premium Stats Grid */}
         <DashboardStats stats={stats} />
-      </div>
 
-      {/* Premium Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-        {/* Recent Activity - Takes 2 columns on large screens */}
-        <div className="lg:col-span-2">
-          <RecentActivity activities={activities} />
-        </div>
+        {/* Premium Content Grid with Enhanced Layout */}
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+          {/* Recent Activity - Enhanced Responsive Layout */}
+          <div className="xl:col-span-8">
+            <RecentActivity activities={activities} />
+          </div>
 
-        {/* Enhanced Quick Actions & System Status */}
-        <div className="space-y-6">
-          {/* iOS-Inspired Quick Actions Card */}
-          <Card className="border-0 bg-white shadow-ios-md border border-slate-200/60 rounded-ios-xl overflow-hidden hover:shadow-ios-lg transition-all duration-300">
-            <CardHeader className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 border-b border-slate-200/60 p-ios-lg">
-              <div className="flex items-center space-x-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-ios-lg bg-gradient-to-br from-blue-500 to-indigo-600 shadow-ios-sm hover:scale-105 transition-transform duration-300">
-                  <Zap className="h-6 w-6 text-white" />
+          {/* Sidebar with Quick Actions & System Status */}
+          <div className="xl:col-span-4 space-y-6">
+            {/* Refined Quick Actions Card */}
+            <div className="group relative overflow-visible">
+              <div className="absolute inset-0 rounded-3xl bg-white backdrop-blur-xl border border-slate-200/60 shadow-rounded-3xl" />
+              {/* Inner highlight */}
+              <div className="absolute inset-[1px] rounded-3xl bg-gradient-to-b from-white/50 to-transparent" />
+              
+              <div className="relative z-10 p-6">
+                <div className="flex items-center space-x-4 mb-6">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/25">
+                    <Zap className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900">Quick Actions</h3>
+                    <p className="text-sm text-slate-600">Essential tasks</p>
+                  </div>
                 </div>
-                <div>
-                  <CardTitle className="text-heading text-slate-900">
-                    Quick Actions
-                  </CardTitle>
-                  <p className="text-caption text-slate-600">Common tasks</p>
+                
+                <div className="space-y-3">
+                  <Link href="/content/new" className="group/action block">
+                    <div className="flex items-center space-x-4 p-4 rounded-2xl bg-slate-50/80 border border-slate-200/50 shadow-rounded-2xl hover:shadow-rounded-xl hover:bg-white transition-all duration-300">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/20">
+                        <Plus className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-slate-900 group-hover/action:text-blue-600 transition-colors">Add New Question</div>
+                        <div className="text-sm text-slate-600">Create content</div>
+                      </div>
+                    </div>
+                  </Link>
+                  
+                  <Link href="/tests/new" className="group/action block">
+                    <div className="flex items-center space-x-4 p-4 rounded-2xl bg-slate-50/80 border border-slate-200/50 shadow-rounded-2xl hover:shadow-rounded-xl hover:bg-white transition-all duration-300">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500/10 to-purple-600/10 border border-purple-500/20">
+                        <BookOpen className="h-5 w-5 text-purple-600" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-slate-900 group-hover/action:text-purple-600 transition-colors">Create Mock Test</div>
+                        <div className="text-sm text-slate-600">Build assessments</div>
+                      </div>
+                    </div>
+                  </Link>
+                  
+                  <Link href="/students" className="group/action block">
+                    <div className="flex items-center space-x-4 p-4 rounded-2xl bg-slate-50/80 border border-slate-200/50 shadow-rounded-2xl hover:shadow-rounded-xl hover:bg-white transition-all duration-300">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500/10 to-green-600/10 border border-green-500/20">
+                        <Users className="h-5 w-5 text-green-600" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-slate-900 group-hover/action:text-green-600 transition-colors">Manage Students</div>
+                        <div className="text-sm text-slate-600">User management</div>
+                      </div>
+                    </div>
+                  </Link>
+                  
+                  <Link href="/reports" className="group/action block">
+                    <div className="flex items-center space-x-4 p-4 rounded-2xl bg-slate-50/80 border border-slate-200/50 shadow-rounded-2xl hover:shadow-rounded-xl hover:bg-white transition-all duration-300">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-red-500/10 to-red-600/10 border border-red-500/20">
+                        <AlertTriangle className="h-5 w-5 text-red-600" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-slate-900 group-hover/action:text-red-600 transition-colors">View Error Reports</div>
+                        <div className="text-sm text-slate-600">System monitoring</div>
+                      </div>
+                    </div>
+                  </Link>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-4 p-ios-lg">
-              <Button asChild className="w-full justify-start group hover:scale-[1.02] transition-all duration-300 h-auto p-0" variant="outline">
-                <Link href="/content/new" className="flex items-center space-x-4 p-ios-lg rounded-ios-lg border border-blue-200/60 hover:border-blue-400 hover:bg-blue-50/80 w-full shadow-ios-sm hover:shadow-ios-md">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-ios-md bg-gradient-to-br from-blue-100 to-blue-200 group-hover:from-blue-200 group-hover:to-blue-300 transition-all duration-300 shadow-ios-sm">
-                    <Plus className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div className="text-left">
-                    <span className="text-body font-semibold text-slate-900">Add New Question</span>
-                    <p className="text-caption text-slate-600">Create content</p>
-                  </div>
-                </Link>
-              </Button>
-              <Button asChild className="w-full justify-start group hover:scale-[1.02] transition-all duration-300 h-auto p-0" variant="outline">
-                <Link href="/tests/new" className="flex items-center space-x-4 p-ios-lg rounded-ios-lg border border-purple-200/60 hover:border-purple-400 hover:bg-purple-50/80 w-full shadow-ios-sm hover:shadow-ios-md">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-ios-md bg-gradient-to-br from-purple-100 to-purple-200 group-hover:from-purple-200 group-hover:to-purple-300 transition-all duration-300 shadow-ios-sm">
-                    <BookOpen className="h-5 w-5 text-purple-600" />
-                  </div>
-                  <div className="text-left">
-                    <span className="text-body font-semibold text-slate-900">Create Mock Test</span>
-                    <p className="text-caption text-slate-600">Build assessments</p>
-                  </div>
-                </Link>
-              </Button>
-              <Button asChild className="w-full justify-start group hover:scale-[1.02] transition-all duration-300 h-auto p-0" variant="outline">
-                <Link href="/students" className="flex items-center space-x-4 p-ios-lg rounded-ios-lg border border-green-200/60 hover:border-green-400 hover:bg-green-50/80 w-full shadow-ios-sm hover:shadow-ios-md">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-ios-md bg-gradient-to-br from-green-100 to-green-200 group-hover:from-green-200 group-hover:to-green-300 transition-all duration-300 shadow-ios-sm">
-                    <Users className="h-5 w-5 text-green-600" />
-                  </div>
-                  <div className="text-left">
-                    <span className="text-body font-semibold text-slate-900">Manage Students</span>
-                    <p className="text-caption text-slate-600">User management</p>
-                  </div>
-                </Link>
-              </Button>
-              <Button asChild className="w-full justify-start group hover:scale-[1.02] transition-all duration-300 h-auto p-0" variant="outline">
-                <Link href="/reports" className="flex items-center space-x-4 p-ios-lg rounded-ios-lg border border-red-200/60 hover:border-red-400 hover:bg-red-50/80 w-full shadow-ios-sm hover:shadow-ios-md">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-ios-md bg-gradient-to-br from-red-100 to-red-200 group-hover:from-red-200 group-hover:to-red-300 transition-all duration-300 shadow-ios-sm">
-                    <AlertTriangle className="h-5 w-5 text-red-600" />
-                  </div>
-                  <div className="text-left">
-                    <span className="text-body font-semibold text-slate-900">View Error Reports</span>
-                    <p className="text-caption text-slate-600">System monitoring</p>
-                  </div>
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* iOS-Inspired System Status Card */}
-          <Card className="border-0 bg-white shadow-ios-md border border-slate-200/60 rounded-ios-xl overflow-hidden hover:shadow-ios-lg transition-all duration-300">
-            <CardHeader className="bg-gradient-to-r from-green-50/50 to-emerald-50/50 border-b border-slate-200/60 p-ios-lg">
-              <div className="flex items-center space-x-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-ios-lg bg-gradient-to-br from-green-500 to-emerald-600 shadow-ios-sm hover:scale-105 transition-transform duration-300">
-                  <Activity className="h-6 w-6 text-white" />
+            {/* Premium System Status Card */}
+            <div className="group relative overflow-visible">
+              <div className="absolute inset-0 rounded-3xl bg-white backdrop-blur-xl border border-slate-200/60 shadow-rounded-3xl" />
+              {/* Inner highlight */}
+              <div className="absolute inset-[1px] rounded-3xl bg-gradient-to-b from-white/50 to-transparent" />
+              
+              <div className="relative z-10 p-6">
+                <div className="flex items-center space-x-4 mb-6">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg shadow-green-500/25">
+                    <Activity className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900">System Status</h3>
+                    <p className="text-sm text-slate-600">All systems operational</p>
+                  </div>
                 </div>
-                <div>
-                  <CardTitle className="text-heading text-slate-900">
-                    System Status
-                  </CardTitle>
-                  <p className="text-caption text-slate-600">All systems operational</p>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-green-50/80 to-emerald-50/80 border border-green-200/40">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100/80">
+                        <Database className="h-4 w-4 text-green-600" />
+                      </div>
+                      <span className="font-medium text-slate-800">Database</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="relative">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <div className="absolute inset-0 w-2 h-2 bg-green-400/30 rounded-full animate-ping"></div>
+                      </div>
+                      <span className="text-sm font-semibold text-green-600">Online</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-green-50/80 to-emerald-50/80 border border-green-200/40">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100/80">
+                        <Globe className="h-4 w-4 text-green-600" />
+                      </div>
+                      <span className="font-medium text-slate-800">API Services</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="relative">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <div className="absolute inset-0 w-2 h-2 bg-green-400/30 rounded-full animate-ping"></div>
+                      </div>
+                      <span className="text-sm font-semibold text-green-600">Online</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-green-50/80 to-emerald-50/80 border border-green-200/40">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100/80">
+                        <HardDrive className="h-4 w-4 text-green-600" />
+                      </div>
+                      <span className="font-medium text-slate-800">File Storage</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="relative">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <div className="absolute inset-0 w-2 h-2 bg-green-400/30 rounded-full animate-ping"></div>
+                      </div>
+                      <span className="text-sm font-semibold text-green-600">Online</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-4 p-ios-lg">
-              <div className="flex items-center justify-between p-ios-lg rounded-ios-lg bg-gradient-to-r from-green-50/50 to-emerald-50/50 border border-green-200/60 hover:shadow-ios-sm transition-all duration-300 hover:scale-[1.01]">
-                <div className="flex items-center space-x-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-ios-md bg-green-100 shadow-ios-sm">
-                    <Database className="h-5 w-5 text-green-600" />
-                  </div>
-                  <span className="text-body font-semibold text-slate-800">Database</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="relative">
-                    <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-pulse shadow-ios-sm"></div>
-                    <div className="absolute inset-0 w-3 h-3 bg-green-400/30 rounded-full animate-ping"></div>
-                  </div>
-                  <span className="text-caption font-semibold text-green-600">Online</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between p-ios-lg rounded-ios-lg bg-gradient-to-r from-green-50/50 to-emerald-50/50 border border-green-200/60 hover:shadow-ios-sm transition-all duration-300 hover:scale-[1.01]">
-                <div className="flex items-center space-x-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-ios-md bg-green-100 shadow-ios-sm">
-                    <Globe className="h-5 w-5 text-green-600" />
-                  </div>
-                  <span className="text-body font-semibold text-slate-800">API Services</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="relative">
-                    <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-pulse shadow-ios-sm"></div>
-                    <div className="absolute inset-0 w-3 h-3 bg-green-400/30 rounded-full animate-ping"></div>
-                  </div>
-                  <span className="text-caption font-semibold text-green-600">Online</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between p-ios-lg rounded-ios-lg bg-gradient-to-r from-green-50/50 to-emerald-50/50 border border-green-200/60 hover:shadow-ios-sm transition-all duration-300 hover:scale-[1.01]">
-                <div className="flex items-center space-x-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-ios-md bg-green-100 shadow-ios-sm">
-                    <HardDrive className="h-5 w-5 text-green-600" />
-                  </div>
-                  <span className="text-body font-semibold text-slate-800">File Storage</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="relative">
-                    <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-pulse shadow-ios-sm"></div>
-                    <div className="absolute inset-0 w-3 h-3 bg-green-400/30 rounded-full animate-ping"></div>
-                  </div>
-                  <span className="text-caption font-semibold text-green-600">Online</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>
