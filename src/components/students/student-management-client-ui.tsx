@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { SmoothTabs, SmoothTabsContent, SmoothTabsList, SmoothTabsTrigger } from '@/components/ui/smooth-tabs'
 import { PendingApprovalTable } from './pending-approval-table'
 import { ActiveStudentsTable } from './active-students-table'
 import { AllStudentsTable } from './all-students-table'
@@ -32,12 +32,12 @@ export function StudentManagementClientUI({ users }: StudentManagementClientUIPr
   }
 
   return (
-    <Tabs defaultValue="pending" className="w-full">
+    <SmoothTabs defaultValue="pending" className="w-full">
       <div className="border-b border-gray-100/50 bg-gradient-to-r from-gray-50/50 to-white/50">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 bg-transparent h-auto p-0">
-          <TabsTrigger 
+        <SmoothTabsList className="grid w-full grid-cols-2 sm:grid-cols-4 bg-transparent h-auto p-0">
+          <SmoothTabsTrigger 
             value="pending" 
-            className="flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-red-500 transition-all duration-200 relative"
+            className="flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-red-500 relative"
           >
             <span className="hidden sm:inline">Pending Approval</span>
             <span className="sm:hidden">Pending</span>
@@ -46,10 +46,10 @@ export function StudentManagementClientUI({ users }: StudentManagementClientUIPr
                 {pendingUsers.length}
               </span>
             )}
-          </TabsTrigger>
-          <TabsTrigger 
+          </SmoothTabsTrigger>
+          <SmoothTabsTrigger 
             value="active"
-            className="flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-green-500 transition-all duration-200"
+            className="flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-green-500"
           >
             <span className="hidden sm:inline">Active Students</span>
             <span className="sm:hidden">Active</span>
@@ -58,10 +58,10 @@ export function StudentManagementClientUI({ users }: StudentManagementClientUIPr
                 {activeStudents.length}
               </span>
             )}
-          </TabsTrigger>
-          <TabsTrigger 
+          </SmoothTabsTrigger>
+          <SmoothTabsTrigger 
             value="admins"
-            className="flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-blue-500 transition-all duration-200"
+            className="flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-blue-500"
           >
             <span className="hidden sm:inline">Administrators</span>
             <span className="sm:hidden">Admins</span>
@@ -70,10 +70,10 @@ export function StudentManagementClientUI({ users }: StudentManagementClientUIPr
                 {admins.length}
               </span>
             )}
-          </TabsTrigger>
-          <TabsTrigger 
+          </SmoothTabsTrigger>
+          <SmoothTabsTrigger 
             value="all"
-            className="flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200"
+            className="flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-gray-500"
           >
             <span className="hidden sm:inline">All Users</span>
             <span className="sm:hidden">All</span>
@@ -82,11 +82,11 @@ export function StudentManagementClientUI({ users }: StudentManagementClientUIPr
                 {users.length}
               </span>
             )}
-          </TabsTrigger>
-        </TabsList>
+          </SmoothTabsTrigger>
+        </SmoothTabsList>
       </div>
       
-      <TabsContent value="pending" className="space-y-4 sm:space-y-6 m-0 p-4 sm:p-6">
+      <SmoothTabsContent value="pending" className="space-y-4 sm:space-y-6 m-0 p-4 sm:p-6">
         <div className="border-b border-gray-100/50 pb-4 sm:pb-6">
           <h2 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">
             Pending Approval
@@ -99,9 +99,9 @@ export function StudentManagementClientUI({ users }: StudentManagementClientUIPr
           users={pendingUsers} 
           onUserAction={refreshData} 
         />
-      </TabsContent>
+      </SmoothTabsContent>
       
-      <TabsContent value="active" className="space-y-4 sm:space-y-6 m-0 p-4 sm:p-6">
+      <SmoothTabsContent value="active" className="space-y-4 sm:space-y-6 m-0 p-4 sm:p-6">
         <div className="border-b border-gray-100/50 pb-4 sm:pb-6">
           <h2 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">
             Active Students
@@ -114,9 +114,9 @@ export function StudentManagementClientUI({ users }: StudentManagementClientUIPr
           users={activeStudents} 
           onUserAction={refreshData} 
         />
-      </TabsContent>
+      </SmoothTabsContent>
       
-      <TabsContent value="admins" className="space-y-4 sm:space-y-6 m-0 p-4 sm:p-6">
+      <SmoothTabsContent value="admins" className="space-y-4 sm:space-y-6 m-0 p-4 sm:p-6">
         <div className="border-b border-gray-100/50 pb-4 sm:pb-6">
           <h2 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">
             Administrators
@@ -129,9 +129,9 @@ export function StudentManagementClientUI({ users }: StudentManagementClientUIPr
           users={admins} 
           onUserAction={refreshData} 
         />
-      </TabsContent>
+      </SmoothTabsContent>
       
-      <TabsContent value="all" className="space-y-4 sm:space-y-6 m-0 p-4 sm:p-6">
+      <SmoothTabsContent value="all" className="space-y-4 sm:space-y-6 m-0 p-4 sm:p-6">
         <div className="border-b border-gray-100/50 pb-4 sm:pb-6">
           <h2 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">
             All Users
@@ -141,7 +141,7 @@ export function StudentManagementClientUI({ users }: StudentManagementClientUIPr
           </p>
         </div>
         <AllStudentsTable users={users} />
-      </TabsContent>
-    </Tabs>
+      </SmoothTabsContent>
+    </SmoothTabs>
   )
 }

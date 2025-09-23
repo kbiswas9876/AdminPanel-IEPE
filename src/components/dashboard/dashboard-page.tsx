@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { DashboardStats, RecentActivity } from './dashboard-stats'
 import { getDashboardStats, getRecentActivity, type DashboardStats as DashboardStatsType, type RecentActivity as RecentActivityType } from '@/lib/actions/dashboard'
+import { dataCache, CACHE_KEYS, CACHE_TTL, cacheUtils } from '@/lib/cache/data-cache'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { 
@@ -30,13 +31,24 @@ export function DashboardPage() {
   const [activities, setActivities] = useState<RecentActivityType[]>([])
   const [loading, setLoading] = useState(true)
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true)
+      
+      // Use cached data if available, otherwise fetch
       const [statsData, activitiesData] = await Promise.all([
-        getDashboardStats(),
-        getRecentActivity(7)
+        cacheUtils.getOrFetch(
+          CACHE_KEYS.DASHBOARD_STATS,
+          () => getDashboardStats(),
+          CACHE_TTL.SHORT
+        ),
+        cacheUtils.getOrFetch(
+          CACHE_KEYS.RECENT_ACTIVITY,
+          () => getRecentActivity(7),
+          CACHE_TTL.SHORT
+        )
       ])
+      
       setStats(statsData)
       setActivities(activitiesData)
     } catch (error) {
@@ -44,10 +56,28 @@ export function DashboardPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchDashboardData()
+  }, [fetchDashboardData])
+
+  // Preload other routes for instant navigation
+  useEffect(() => {
+    const preloadRoutes = async () => {
+      await cacheUtils.preloadBatch([
+        {
+          key: CACHE_KEYS.STUDENT_USERS_WITH_EMAILS,
+          fetchFn: async () => {
+            // This will be implemented in the students page optimization
+            return []
+          },
+          ttl: CACHE_TTL.MEDIUM
+        }
+      ])
+    }
+    
+    preloadRoutes()
   }, [])
 
   if (loading) {

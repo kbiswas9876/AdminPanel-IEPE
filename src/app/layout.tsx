@@ -5,6 +5,7 @@ import "katex/dist/katex.min.css";
 import { AuthProvider } from "@/lib/auth";
 import { QueryProvider } from "@/lib/providers/query-provider";
 import { Toaster } from "@/components/ui/sonner";
+import ClientShell from "@/components/layout/client-shell";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,7 +34,9 @@ export default function RootLayout({
       >
         <QueryProvider>
           <AuthProvider>
-            {children}
+            <ClientShell>
+              {children}
+            </ClientShell>
             <Toaster />
           </AuthProvider>
         </QueryProvider>

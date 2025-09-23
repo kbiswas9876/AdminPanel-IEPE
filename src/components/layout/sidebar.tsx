@@ -1,11 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useMobile } from '@/lib/contexts/mobile-context'
 import { cn } from '@/lib/utils'
 import { ErrorReportsNavItem } from './error-reports-nav-item'
-import { useState } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { 
   LayoutDashboard, 
   BookOpen, 
@@ -52,8 +52,25 @@ const navigation = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
   const { isMobile } = useMobile()
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [preloadedRoutes, setPreloadedRoutes] = useState<Set<string>>(new Set())
+
+  // Preload routes for instant navigation
+  const preloadRoute = useCallback((href: string) => {
+    if (!preloadedRoutes.has(href)) {
+      router.prefetch(href)
+      setPreloadedRoutes(prev => new Set([...prev, href]))
+    }
+  }, [router, preloadedRoutes])
+
+  // Preload all navigation routes on mount
+  useEffect(() => {
+    navigation.forEach(item => {
+      preloadRoute(item.href)
+    })
+  }, [preloadRoute])
 
   const sidebarWidth = isCollapsed ? 'w-16' : (isMobile ? 'w-64' : 'w-72')
   const isExpanded = !isCollapsed
@@ -61,7 +78,7 @@ export function Sidebar() {
   return (
     <div 
       className={cn(
-        "sidebar-split-header transition-all duration-300 ease-out",
+        "sidebar-split-header",
         isMobile 
           ? "bg-white/95 backdrop-blur-xl border-r border-slate-200/60 shadow-ios-xl" 
           : "bg-gradient-to-b from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl border-r border-slate-700/30 shadow-2xl",
@@ -85,8 +102,8 @@ export function Sidebar() {
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}
               className={cn(
-                "sidebar-toggle-button p-3 rounded-lg transition-all duration-300 ease-out",
-                "hover:bg-slate-700/50 hover:scale-105 active:scale-95",
+                "sidebar-toggle-button p-3 rounded-lg",
+                "hover:bg-slate-700/50",
                 "text-slate-400 hover:text-white",
                 "focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-slate-800"
               )}
@@ -121,8 +138,9 @@ export function Sidebar() {
             <div key={item.name} className="relative group">
               <Link
                 href={item.href}
-                className={cn(
-                  'group relative flex items-center transition-all duration-200 ease-out',
+                onMouseEnter={() => preloadRoute(item.href)}
+                        className={cn(
+                          'group relative flex items-center',
                   isMobile 
                     ? 'rounded-lg px-ios-md py-ios-md text-body touch-target' 
                     : isCollapsed
@@ -130,10 +148,10 @@ export function Sidebar() {
                       : 'rounded-lg px-4 py-4 text-sm',
                   isActive
                     ? isMobile 
-                      ? 'bg-blue-500 text-white shadow-sm' 
+                      ? 'bg-blue-500 text-white apple-shadow-sm' 
                       : isCollapsed
-                        ? 'bg-blue-600 text-white shadow-lg'
-                        : 'bg-blue-600 text-white shadow-lg'
+                        ? 'bg-blue-600 text-white apple-shadow-md'
+                        : 'bg-blue-600 text-white apple-shadow-md'
                     : isMobile
                       ? 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                       : isCollapsed
@@ -143,7 +161,7 @@ export function Sidebar() {
               >
                 {/* Clean Icon Container */}
                 <div className={cn(
-                  'flex items-center justify-center rounded-md transition-all duration-200 ease-out',
+                  'flex items-center justify-center rounded-md',
                   isMobile 
                     ? 'w-8 h-8 mr-3' 
                     : isCollapsed
@@ -174,9 +192,9 @@ export function Sidebar() {
               
                 {/* Clean Text Content */}
                 {isExpanded && (
-                  <div className="flex-1 min-w-0 transition-all duration-200 ease-out opacity-100 translate-x-0">
+                  <div className="flex-1 min-w-0 opacity-100 translate-x-0">
                     <div className={cn(
-                      'font-medium tracking-wide truncate transition-all duration-200',
+                      'font-medium tracking-wide truncate',
                       isMobile ? 'text-body' : 'text-base',
                       isActive ? 'font-semibold' : 'font-medium'
                     )}>
@@ -184,7 +202,7 @@ export function Sidebar() {
                     </div>
                     {!isMobile && (
                       <div className={cn(
-                        'text-xs transition-colors duration-200 truncate',
+                        'text-xs truncate',
                         isActive 
                           ? 'text-blue-100' 
                           : 'text-slate-500 group-hover:text-slate-300'
@@ -198,7 +216,7 @@ export function Sidebar() {
 
               {/* Professional Tooltip for Collapsed State */}
               {isCollapsed && !isMobile && (
-                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-2 bg-slate-800 text-white text-sm font-medium rounded-md shadow-lg border border-slate-700/30 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-out pointer-events-none group-hover:pointer-events-auto whitespace-nowrap">
+                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-2 bg-slate-800 text-white text-sm font-medium rounded-md shadow-lg border border-slate-700/30 z-50 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto whitespace-nowrap">
                   {item.name}
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-slate-800 rotate-45 border-l border-b border-slate-700/30"></div>
                 </div>

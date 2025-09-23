@@ -1000,32 +1000,6 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
         </div>
 
         {/* Professional Action Footer */}
-        <div className="sticky bottom-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 rounded-t-2xl shadow-lg">
-          <div className="px-8 py-4">
-            <div className="flex items-center justify-end gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onCancel}
-                disabled={isLoading}
-                className="gap-2 hover:bg-slate-50 transition-colors"
-              >
-                <XCircle className="h-4 w-4" />
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleSave}
-                disabled={isLoading}
-                className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-lg transition-all duration-200 hover:shadow-xl"
-                title="Save changes (Ctrl+S)"
-              >
-                <Save className="h-4 w-4" />
-                {isLoading ? 'Saving...' : 'Save changes'}
-              </Button>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   )

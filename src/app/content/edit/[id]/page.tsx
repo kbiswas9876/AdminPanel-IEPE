@@ -1,5 +1,3 @@
-import { MainLayout } from '@/components/layout/main-layout'
-import { ProtectedRoute } from '@/components/auth/protected-route'
 import { QuestionForm } from '@/components/content/question-form'
 import { getQuestionById, updateQuestion } from '@/lib/actions/questions'
 import { notFound } from 'next/navigation'
@@ -29,15 +27,11 @@ export default async function EditQuestionPage({ params }: EditQuestionPageProps
   }
 
   return (
-    <ProtectedRoute>
-      <MainLayout>
-        <QuestionForm 
-          question={question as unknown as import('@/lib/supabase/admin').Question} 
-          isEditing={true} 
-          onSubmit={(formData) => handleUpdate(questionId, formData)} 
-        />
-      </MainLayout>
-    </ProtectedRoute>
+    <QuestionForm 
+      question={question as unknown as import('@/lib/supabase/admin').Question} 
+      isEditing={true} 
+      onSubmit={(formData) => handleUpdate(questionId, formData)} 
+    />
   )
 }
 

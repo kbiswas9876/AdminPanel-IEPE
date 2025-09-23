@@ -42,6 +42,7 @@ export function CompactQuestionTable({
   const [expandedQuestions, setExpandedQuestions] = useState<Set<number>>(new Set())
   const [editingQuestion, setEditingQuestion] = useState<number | null>(null)
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set())
+  const [animatingQuestions, setAnimatingQuestions] = useState<Set<number>>(new Set())
 
   // Auto-expand edited question when context should be preserved
   useEffect(() => {
@@ -51,15 +52,29 @@ export function CompactQuestionTable({
   }, [shouldPreserveContext, expandedQuestionId])
 
   const toggleExpansion = (questionId: number) => {
-    setExpandedQuestions(prev => {
-      const newSet = new Set(prev)
-      if (newSet.has(questionId)) {
-        newSet.delete(questionId)
-      } else {
-        newSet.add(questionId)
-      }
-      return newSet
-    })
+    const isCurrentlyExpanded = expandedQuestions.has(questionId)
+    
+    if (isCurrentlyExpanded) {
+      // Start collapse animation
+      setAnimatingQuestions(prev => new Set([...prev, questionId]))
+      
+      // Remove from expanded after animation
+      setTimeout(() => {
+        setExpandedQuestions(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(questionId)
+          return newSet
+        })
+        setAnimatingQuestions(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(questionId)
+          return newSet
+        })
+      }, 300) // Match the animation duration
+    } else {
+      // Expand immediately
+      setExpandedQuestions(prev => new Set([...prev, questionId]))
+    }
   }
 
   const getDifficultyColor = (difficulty: string) => {
@@ -197,12 +212,12 @@ export function CompactQuestionTable({
                         onClick={() => toggleExpansion(question.id!)}
                         className="h-9 w-9 p-0 rounded-xl hover:bg-slate-100 shadow-sm hover:shadow transition-all duration-200 group/expand"
                       >
-                        <div className="transition-transform duration-300 ease-out">
-                          {isExpanded ? (
-                            <ChevronDown className="h-4 w-4 text-slate-600 group-hover/expand:text-slate-800" />
-                          ) : (
-                            <ChevronRight className="h-4 w-4 text-slate-600 group-hover/expand:text-slate-800" />
-                          )}
+                        <div className={`transition-transform duration-300 ease-out ${
+                          isExpanded ? 'rotate-0' : 'rotate-0'
+                        }`}>
+                          <ChevronDown className={`h-4 w-4 text-slate-600 group-hover/expand:text-slate-800 transition-transform duration-300 ease-out ${
+                            isExpanded ? 'rotate-0' : '-rotate-90'
+                          }`} />
                         </div>
                       </Button>
                     </div>
@@ -268,7 +283,11 @@ export function CompactQuestionTable({
 
                 {/* Expanded Content Section */}
                 {(isExpanded || isEditing) && (
-                  <div className="border-t border-slate-100 mt-6 pt-6 bg-slate-50/30 -mx-6 px-6 pb-6 rounded-b-2xl animate-in slide-in-from-top duration-300">
+                  <div className={`border-t border-slate-100 mt-6 pt-6 bg-slate-50/30 -mx-6 px-6 pb-6 rounded-b-2xl transition-all duration-300 ease-out ${
+                    animatingQuestions.has(question.id!) 
+                      ? 'animate-out slide-out-to-top' 
+                      : 'animate-in slide-in-from-top'
+                  }`}>
                     {isEditing ? (
                       <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
                         <div className="flex items-center gap-2 mb-4">

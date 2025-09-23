@@ -1,5 +1,3 @@
-import { MainLayout } from '@/components/layout/main-layout'
-import { ProtectedRoute } from '@/components/auth/protected-route'
 import { StudentProfile } from '@/components/students/student-profile'
 
 interface StudentProfilePageProps {
@@ -9,13 +7,6 @@ interface StudentProfilePageProps {
 }
 
 export default function StudentProfilePage({ params }: StudentProfilePageProps) {
-  return (
-    <ProtectedRoute>
-      <MainLayout>
-        <StudentProfile userId={params.userID} />
-      </MainLayout>
-    </ProtectedRoute>
-  )
+  return <StudentProfile userId={params.userID} />
 }
-
 

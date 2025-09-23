@@ -130,18 +130,16 @@ export function QuestionCard({ question, isSelected = false, onSelect, onQuestio
               size="sm"
               onClick={() => setIsExpanded(!isExpanded)}
             >
-              {isExpanded ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
+            <ChevronDown className={`h-4 w-4 transition-transform duration-300 ease-out ${
+              isExpanded ? 'rotate-180' : 'rotate-0'
+            }`} />
             </Button>
           </div>
         </div>
       </CardHeader>
 
       {isExpanded && (
-        <CardContent className="pt-0 px-6 pb-6 space-y-6 transition-all duration-300 ease-in-out">
+        <CardContent className="pt-0 px-6 pb-6 space-y-6 animate-in slide-in-from-top duration-300 ease-out">
           {isEditing ? (
             <QuestionEditForm
               question={currentQuestion}

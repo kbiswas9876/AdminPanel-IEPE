@@ -121,11 +121,9 @@ export const CompactQuestionDetails = memo(function CompactQuestionDetails({
             onClick={onToggle}
             className="p-2 hover:bg-gray-100 transition-colors duration-200"
           >
-            {isExpanded ? (
-              <ChevronUp className="h-4 w-4 text-gray-600" />
-            ) : (
-              <ChevronDown className="h-4 w-4 text-gray-600" />
-            )}
+            <ChevronDown className={`h-4 w-4 text-gray-600 transition-transform duration-300 ease-out ${
+              isExpanded ? 'rotate-180' : 'rotate-0'
+            }`} />
           </Button>
           
           <div className="flex items-center gap-2">
@@ -233,17 +231,22 @@ export const CompactQuestionDetails = memo(function CompactQuestionDetails({
                   Solution
                 </h3>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={() => setShowSolution(!showSolution)}
-                  className="text-xs text-gray-600 hover:text-gray-900"
+                  className="group relative bg-white hover:bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-900 shadow-sm hover:shadow-md transition-all duration-200 font-medium rounded-lg px-4 py-2"
                 >
-                  {showSolution ? 'Hide' : 'Show'} Solution
+                  <div className="flex items-center gap-2">
+                    <div className={`w-1.5 h-1.5 rounded-full transition-colors duration-200 ${
+                      showSolution ? 'bg-green-500' : 'bg-slate-400'
+                    }`}></div>
+                    {showSolution ? 'Hide Solution' : 'Show Solution'}
+                  </div>
                 </Button>
               </div>
               {showSolution && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 animate-in slide-in-from-top-2 duration-200">
-                  <div className="prose prose-sm max-w-none text-blue-900">
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 animate-in slide-in-from-top-2 duration-200 ease-out">
+                  <div className="prose prose-sm max-w-none text-slate-700 leading-relaxed">
                     <UniversalContentRenderer text={question.solution_text} />
                   </div>
                 </div>
