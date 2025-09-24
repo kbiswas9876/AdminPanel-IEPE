@@ -226,8 +226,8 @@ export function QuestionExplorer({
   return (
     <div className="h-full flex flex-col overflow-visible relative">
       {/* Premium Mobile-Optimized Header */}
-      <div className="flex-shrink-0 bg-gradient-to-r from-white via-slate-50/30 to-white backdrop-blur-xl border-b border-slate-200/60 px-4 sm:px-6 py-4 sm:py-5 shadow-sm">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex-shrink-0 bg-gradient-to-r from-white via-slate-50/30 to-white backdrop-blur-xl border-b border-slate-200/60 px-3 sm:px-4 py-1.5 sm:py-2 shadow-sm">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/25">
@@ -401,8 +401,8 @@ export function QuestionExplorer({
 
       {/* Apple-Inspired Mobile-Optimized Pagination */}
       {questions.length > 0 && (
-        <div className="flex-shrink-0 bg-gradient-to-r from-white via-slate-50/50 to-white border-t border-slate-200/60 px-0 py-3 sm:py-4 backdrop-blur-xl">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
+        <div className="flex-shrink-0 bg-gradient-to-r from-white via-slate-50/50 to-white border-t border-slate-200/60 px-0 py-1.5 sm:py-2 backdrop-blur-xl">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0">
             {/* Page Info */}
             <div className="flex flex-col xs:flex-row items-center gap-2 xs:gap-4 w-full sm:w-auto">
               <div className="flex items-center gap-2 xs:gap-3 px-3 xs:px-4 py-2 xs:py-2.5 bg-white rounded-xl xs:rounded-2xl border border-slate-200 shadow-sm">

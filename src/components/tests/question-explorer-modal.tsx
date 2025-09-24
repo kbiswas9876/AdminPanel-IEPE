@@ -190,7 +190,7 @@ export function QuestionExplorerModal({ open, onClose, onSelect, onSelectMultipl
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose() }}>
-      <DialogContent className="w-[96vw] sm:max-w-[96vw] lg:max-w-[96vw] h-[90vh] flex flex-col">
+      <DialogContent className="w-[96vw] sm:max-w-[96vw] lg:max-w-[96vw] h-[95vh] flex flex-col">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-2xl font-bold">
@@ -313,7 +313,7 @@ export function QuestionExplorerModal({ open, onClose, onSelect, onSelectMultipl
             <Button variant="outline" size="sm" onClick={() => setFilters((p) => ({ ...p, page: Math.min(totalPages, p.page + 1) }))} disabled={filters.page === totalPages || loading}><ChevronRight className="h-4 w-4" /></Button>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto min-h-0">
           {results.length === 0 && !loading && (
             <div className="text-center py-12 text-sm text-gray-500">No questions found.</div>
           )}

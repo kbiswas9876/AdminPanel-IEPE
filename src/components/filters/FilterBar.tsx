@@ -53,7 +53,7 @@ interface FilterOptions {
   exams: string[]
 }
 
-export function FilterBar() {
+export function FilterBar({ compact = false }: { compact?: boolean } = {}) {
   const {
     search,
     book_sources,
@@ -138,7 +138,7 @@ export function FilterBar() {
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="group w-full h-12 justify-between bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-sm hover:shadow-md hover:border-blue-200/50 transition-all duration-200 focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
+            className={cn("group w-full justify-between bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-sm hover:shadow-md hover:border-blue-200/50 transition-all duration-200 focus:ring-2 focus:ring-blue-100 focus:border-blue-300", compact ? "h-9" : "h-12")}
           >
             <div className="flex items-center gap-2">
               <Icon className="h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-colors duration-200" />
@@ -235,7 +235,7 @@ export function FilterBar() {
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="group w-full h-12 justify-between bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-sm hover:shadow-md hover:border-emerald-200/50 transition-all duration-200 focus:ring-2 focus:ring-emerald-100 focus:border-emerald-300"
+            className={cn("group w-full justify-between bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-sm hover:shadow-md hover:border-emerald-200/50 transition-all duration-200 focus:ring-2 focus:ring-emerald-100 focus:border-emerald-300", compact ? "h-9" : "h-12")}
           >
             <div className="flex items-center gap-2">
               <Icon className="h-4 w-4 text-gray-400 group-hover:text-emerald-500 transition-colors duration-200" />
@@ -327,25 +327,30 @@ export function FilterBar() {
   }
 
   return (
-    <div className="relative">
+    <div className={cn("relative", compact && "[&_h2]:text-lg [&_p]:text-[13px]") }>
       {/* Subtle background glow */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-white to-indigo-50/30 rounded-3xl blur-3xl -z-10 scale-105" />
       
-      <div className="bg-white/90 backdrop-blur-xl border border-white/40 rounded-3xl shadow-2xl shadow-blue-500/5 hover:shadow-blue-500/10 transition-all duration-700 px-10 md:px-12 py-8">
+      <div
+        className={cn(
+          "bg-white/90 backdrop-blur-xl border border-white/40 rounded-3xl shadow-2xl shadow-blue-500/5 hover:shadow-blue-500/10 transition-all duration-700",
+          compact ? "px-3 md:px-4 py-1.5" : "px-6 md:px-8 py-6"
+        )}
+      >
         {/* Header Section */}
-        <div className="flex items-center justify-between mb-8">
+        <div className={cn("flex items-center justify-between", compact ? "mb-1" : "mb-6") }>
           <div className="flex items-center space-x-4">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl blur-md opacity-20" />
-              <div className="relative bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-3 shadow-xl">
-                <Sparkles className="h-6 w-6 text-white" />
+              <div className={cn("relative bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-xl", compact ? "p-2" : "p-3") }>
+                <Sparkles className={cn("text-white", compact ? "h-4 w-4" : "h-6 w-6")} />
               </div>
             </div>
             <div>
-              <h2 className="text-xl font-semibold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+              <h2 className={cn("font-semibold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent", compact ? "text-base" : "text-xl") }>
                 Smart Filters
               </h2>
-              <p className="text-gray-500 text-sm font-medium">
+              <p className={cn("text-gray-500 font-medium", compact ? "text-xs" : "text-sm") }>
                 {activeFiltersCount > 0 
                   ? `${activeFiltersCount} filter${activeFiltersCount === 1 ? '' : 's'} applied`
                   : 'Refine your search with intelligent filtering'
@@ -355,17 +360,19 @@ export function FilterBar() {
           </div>
           
           {/* Quick Actions */}
-          <div className="flex items-center space-x-3">
+          <div className={cn("flex items-center", compact ? "space-x-2" : "space-x-3") }>
             <Popover open={showPresets} onOpenChange={setShowPresets}>
               <PopoverTrigger asChild>
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="group relative overflow-hidden bg-gray-50/80 backdrop-blur-sm border border-gray-200/50 hover:bg-white hover:border-blue-200/50 hover:shadow-md transition-all duration-300 rounded-xl h-10 px-4"
+                  className={cn("group relative overflow-hidden bg-gray-50/80 backdrop-blur-sm border border-gray-200/50 hover:bg-white hover:border-blue-200/50 hover:shadow-md transition-all duration-300 rounded-xl",
+                    compact ? "h-8 px-3" : "h-10 px-4"
+                  )}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/5 to-blue-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500" />
-                  <Bookmark className="h-4 w-4 mr-2 relative z-10" />
-                  <span className="text-sm font-medium relative z-10">Presets</span>
+                  <Bookmark className={cn("mr-2 relative z-10", compact ? "h-3.5 w-3.5" : "h-4 w-4")} />
+                  <span className={cn("font-medium relative z-10", compact ? "text-xs" : "text-sm")}>Presets</span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80 p-0 bg-white/95 backdrop-blur-xl border border-gray-200/50 rounded-2xl shadow-2xl">
@@ -375,7 +382,9 @@ export function FilterBar() {
                     <Button 
                       size="sm" 
                       onClick={handleSavePreset}
-                      className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl h-9 px-4"
+                      className={cn("bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl",
+                        compact ? "h-8 px-3" : "h-9 px-4"
+                      )}
                     >
                       <Save className="h-3 w-3 mr-2" />
                       Save Current
@@ -425,45 +434,51 @@ export function FilterBar() {
                 variant="ghost"
                 size="sm"
                 onClick={clearAllFilters}
-                className="group relative overflow-hidden bg-red-50/80 backdrop-blur-sm border border-red-200/50 hover:bg-red-100 hover:border-red-300/50 hover:shadow-md transition-all duration-300 rounded-xl h-10 px-4 text-red-600 hover:text-red-700"
+                className={cn("group relative overflow-hidden bg-red-50/80 backdrop-blur-sm border border-red-200/50 hover:bg-red-100 hover:border-red-300/50 hover:shadow-md transition-all duration-300 rounded-xl text-red-600 hover:text-red-700",
+                  compact ? "h-8 px-3" : "h-10 px-4"
+                )}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-red-500/0 via-red-500/5 to-red-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500" />
                 <RotateCcw className="h-4 w-4 mr-2 relative z-10" />
-                <span className="text-sm font-medium relative z-10">Reset All</span>
+                <span className={cn("font-medium relative z-10", compact ? "text-xs" : "text-sm")}>Reset All</span>
               </Button>
             )}
           </div>
         </div>
 
         {/* Search Section */}
-        <div className="mb-8">
+        <div className={cn(compact ? "mb-1" : "mb-6") }>
           <div className="relative max-w-2xl">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-2xl blur-xl" />
             <div className="relative flex items-center bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 focus-within:shadow-xl focus-within:border-blue-300/50">
-              <Search className="absolute left-6 h-5 w-5 text-gray-400 transition-colors duration-200" />
+              <Search className={cn("absolute left-6 text-gray-400 transition-colors duration-200", compact ? "h-4 w-4" : "h-5 w-5") } />
               <Input
                 placeholder="Search questions, books, chapters, or tags..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-14 pr-6 py-4 text-base bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-gray-400 font-medium rounded-2xl"
+                className={cn("pl-14 pr-6 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-gray-400 font-medium rounded-2xl",
+                  compact ? "py-2.5 text-sm" : "py-4 text-base"
+                )}
               />
             </div>
           </div>
         </div>
 
         {/* Filter Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
+        <div className={cn("grid", compact ? "grid-cols-2 lg:grid-cols-5 gap-1.5 mb-1" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mb-6") }>
           {/* Books Filter */}
           <div className="group relative">
             <div className="absolute inset-0 bg-gradient-to-br from-orange-100/50 to-red-100/50 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="relative bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 group-hover:border-orange-200/50 min-h-[150px]">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="p-2.5 bg-gradient-to-br from-orange-100 to-red-100 rounded-xl">
-                  <BookOpen className="h-5 w-5 text-orange-600" />
+            <div className={cn("relative bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group-hover:border-orange-200/50",
+              compact ? "p-1 min-h-[48px]" : "p-4 min-h-[120px]"
+            )}>
+              <div className={cn("flex items-center space-x-2", compact ? "mb-0.5" : "mb-4") }>
+                <div className={cn("bg-gradient-to-br from-orange-100 to-red-100 rounded-xl", compact ? "p-2" : "p-2.5") }>
+                  <BookOpen className={cn("text-orange-600", compact ? "h-4 w-4" : "h-5 w-5")} />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">Books</h3>
-                  <p className="text-xs text-gray-500">Source materials</p>
+                  <h3 className={cn("font-semibold text-gray-900", compact ? "text-sm" : undefined)}>Books</h3>
+                  <p className={cn("text-gray-500", compact ? "text-[11px]" : "text-xs")}>Source materials</p>
                 </div>
               </div>
               <MultiSelect
@@ -479,14 +494,16 @@ export function FilterBar() {
           {/* Chapters Filter */}
           <div className="group relative">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-100/50 to-indigo-100/50 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="relative bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 group-hover:border-blue-200/50 min-h-[150px]">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="p-2.5 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl">
-                  <Target className="h-5 w-5 text-blue-600" />
+            <div className={cn("relative bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group-hover:border-blue-200/50",
+              compact ? "p-1 min-h-[48px]" : "p-4 min-h-[120px]"
+            )}>
+              <div className={cn("flex items-center space-x-2", compact ? "mb-0.5" : "mb-4") }>
+                <div className={cn("bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl", compact ? "p-2" : "p-2.5") }>
+                  <Target className={cn("text-blue-600", compact ? "h-4 w-4" : "h-5 w-5")} />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">Chapters</h3>
-                  <p className="text-xs text-gray-500">Topic sections</p>
+                  <h3 className={cn("font-semibold text-gray-900", compact ? "text-sm" : undefined)}>Chapters</h3>
+                  <p className={cn("text-gray-500", compact ? "text-[11px]" : "text-xs")}>Topic sections</p>
                 </div>
               </div>
               <MultiSelect
@@ -502,14 +519,16 @@ export function FilterBar() {
           {/* Tags Filter */}
           <div className="group relative">
             <div className="absolute inset-0 bg-gradient-to-br from-purple-100/50 to-pink-100/50 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="relative bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 group-hover:border-purple-200/50 min-h-[150px]">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="p-2.5 bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl">
-                  <Tag className="h-5 w-5 text-purple-600" />
+            <div className={cn("relative bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group-hover:border-purple-200/50",
+              compact ? "p-1 min-h-[48px]" : "p-4 min-h-[120px]"
+            )}>
+              <div className={cn("flex items-center space-x-2", compact ? "mb-0.5" : "mb-4") }>
+                <div className={cn("bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl", compact ? "p-2" : "p-2.5") }>
+                  <Tag className={cn("text-purple-600", compact ? "h-4 w-4" : "h-5 w-5")} />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">Tags</h3>
-                  <p className="text-xs text-gray-500">Content labels</p>
+                  <h3 className={cn("font-semibold text-gray-900", compact ? "text-sm" : undefined)}>Tags</h3>
+                  <p className={cn("text-gray-500", compact ? "text-[11px]" : "text-xs")}>Content labels</p>
                 </div>
               </div>
               <MultiSelect
@@ -525,14 +544,16 @@ export function FilterBar() {
           {/* Difficulty Filter */}
           <div className="group relative">
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-100/50 to-green-100/50 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="relative bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 group-hover:border-emerald-200/50 min-h-[150px]">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="p-2.5 bg-gradient-to-br from-emerald-100 to-green-100 rounded-xl">
-                  <Zap className="h-5 w-5 text-emerald-600" />
+            <div className={cn("relative bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group-hover:border-emerald-200/50",
+              compact ? "p-1 min-h-[48px]" : "p-4 min-h-[120px]"
+            )}>
+              <div className={cn("flex items-center space-x-2", compact ? "mb-0.5" : "mb-4") }>
+                <div className={cn("bg-gradient-to-br from-emerald-100 to-green-100 rounded-xl", compact ? "p-2" : "p-2.5") }>
+                  <Zap className={cn("text-emerald-600", compact ? "h-4 w-4" : "h-5 w-5")} />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">Difficulty</h3>
-                  <p className="text-xs text-gray-500">Challenge level</p>
+                  <h3 className={cn("font-semibold text-gray-900", compact ? "text-sm" : undefined)}>Difficulty</h3>
+                  <p className={cn("text-gray-500", compact ? "text-[11px]" : "text-xs")}>Challenge level</p>
                 </div>
               </div>
               <SingleSelect 
@@ -545,11 +566,44 @@ export function FilterBar() {
             </div>
           </div>
 
-          {/* Sort Filter - Separated Design */}
+          {/* Sort Filter - Now included in same line */}
+          {compact && (
+            <div className="group relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-100/50 to-purple-100/50 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="relative bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group-hover:border-indigo-200/50 p-1 min-h-[48px]">
+                <div className="flex items-center space-x-2 mb-0.5">
+                  <div className="p-2 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl">
+                    <ArrowUpDown className="h-4 w-4 text-indigo-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900">Sort</h3>
+                    <p className="text-[11px] text-gray-500">Order results</p>
+                  </div>
+                </div>
+                <Select value={sort_by} onValueChange={setSortBy}>
+                  <SelectTrigger className="group w-full h-8 justify-between bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-200/50 transition-all duration-200 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300">
+                    <div className="flex items-center gap-2">
+                      <ArrowUpDown className="h-3 w-3 text-gray-400 group-hover:text-indigo-500 transition-colors duration-200" />
+                      <SelectValue className="font-medium truncate text-xs" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent className="bg-white/95 backdrop-blur-xl border border-gray-200/50 rounded-xl shadow-2xl">
+                    <SelectItem value="id_asc" className="font-medium text-sm">ID (Ascending)</SelectItem>
+                    <SelectItem value="id_desc" className="font-medium text-sm">ID (Descending)</SelectItem>
+                    <SelectItem value="created_at_asc" className="font-medium text-sm">Oldest First</SelectItem>
+                    <SelectItem value="created_at_desc" className="font-medium text-sm">Newest First</SelectItem>
+                    <SelectItem value="difficulty_asc" className="font-medium text-sm">Easy → Hard</SelectItem>
+                    <SelectItem value="difficulty_desc" className="font-medium text-sm">Hard → Easy</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Sorting Section - Separate from Filters */}
-        <div className="border-t border-gray-100 pt-8 mb-8">
+        {/* Sorting Section - Integrated with Filters in compact mode */}
+        {!compact && (
+        <div className={cn("border-t border-gray-100", "pt-8 mb-8") }>
           <div className="flex items-center space-x-3 mb-6">
             <div className="p-2 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl">
               <ArrowUpDown className="h-4 w-4 text-indigo-600" />
@@ -565,7 +619,9 @@ export function FilterBar() {
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-100/50 to-purple-100/50 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <div className="relative bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 group-hover:border-indigo-200/50">
                 <Select value={sort_by} onValueChange={setSortBy}>
-                  <SelectTrigger className="group w-[180px] h-12 justify-between bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-200/50 transition-all duration-200 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300">
+                  <SelectTrigger className={cn("group w-[180px] justify-between bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-200/50 transition-all duration-200 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300",
+                    compact ? "h-9" : "h-12"
+                  )}>
                     <div className="flex items-center gap-3">
                       <ArrowUpDown className="h-4 w-4 text-gray-400 group-hover:text-indigo-500 transition-colors duration-200" />
                       <SelectValue className="font-medium truncate" />
@@ -584,16 +640,17 @@ export function FilterBar() {
             </div>
           </div>
         </div>
+        )}
 
         {/* Active Filters Display */}
         {activeFiltersCount > 0 && (
-          <div className="border-t border-gray-100 pt-8">
+          <div className={cn("border-t border-gray-100", compact ? "pt-4" : "pt-8") }>
             <div className="flex items-center space-x-3 mb-4">
               <div className="p-2 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl">
                 <Filter className="h-4 w-4 text-blue-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">Active Filters</h3>
-              <span className="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+              <h3 className={cn("font-semibold text-gray-900", compact ? "text-base" : "text-lg")}>Active Filters</h3>
+              <span className={cn("font-medium text-gray-500 bg-gray-100 rounded-full", compact ? "text-xs px-2.5 py-0.5" : "text-sm px-3 py-1") }>
                 {activeFiltersCount} applied
               </span>
             </div>

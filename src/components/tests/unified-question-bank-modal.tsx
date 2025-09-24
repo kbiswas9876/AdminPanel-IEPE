@@ -85,10 +85,10 @@ export function UnifiedQuestionBankModal({
   return (
     <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
       <DialogContent 
-        className="w-[96vw] sm:max-w-[96vw] lg:max-w-[96vw] h-[90vh] flex flex-col"
+        className="w-[98vw] sm:max-w-[98vw] lg:max-w-[98vw] h-[98vh] min-h-[900px] max-h-[1400px] flex flex-col p-0"
         showCloseButton={false}
       >
-        <DialogHeader className="pb-4">
+        <DialogHeader className="p-1.5 pb-1 border-b">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-2xl font-bold">
               {title}
@@ -103,7 +103,7 @@ export function UnifiedQuestionBankModal({
                 variant="outline"
                 size="sm"
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200"
               >
                 <Filter className="h-4 w-4" />
                 {showFilters ? 'Hide Filters' : 'Show Filters'}
@@ -112,7 +112,7 @@ export function UnifiedQuestionBankModal({
                 variant="ghost"
                 size="sm"
                 onClick={onClose}
-                className="h-10 w-10 rounded-2xl hover:bg-gray-100 transition-all duration-200 flex items-center justify-center group"
+                className="h-9 w-9 rounded-xl hover:bg-gray-100 transition-all duration-200 flex items-center justify-center group"
               >
                 <X className="h-5 w-5 text-gray-500 group-hover:text-gray-700 transition-colors duration-200" />
               </Button>
@@ -120,16 +120,18 @@ export function UnifiedQuestionBankModal({
           </div>
         </DialogHeader>
         
-        <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="flex-1 overflow-hidden flex flex-col min-h-0">
           {/* Filter Bar */}
           {showFilters && (
             <div className="flex-shrink-0 border-b border-gray-200 bg-white">
-              <FilterBar />
+              <div className="w-full">
+                <FilterBar compact />
+              </div>
             </div>
           )}
 
           {/* Questions Content */}
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-[3] overflow-y-auto min-h-[600px] p-1.5">
             {isLoading ? (
               <div className="flex items-center justify-center h-64">
                 <div className="text-center">
@@ -169,7 +171,7 @@ export function UnifiedQuestionBankModal({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex-shrink-0 flex items-center justify-between p-4 border-t bg-gray-50/50">
+        <div className="flex-shrink-0 flex items-center justify-between px-3 py-1.5 border-t bg-gray-50/50">
           <div className="flex items-center gap-2">
             {selectedQuestions.size > 0 && (
               <span className="text-sm text-gray-600">
