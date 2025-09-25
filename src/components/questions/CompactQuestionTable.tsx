@@ -100,36 +100,6 @@ export function CompactQuestionTable({
 
   return (
     <div className="w-full space-y-4">
-      {/* Mobile-Optimized Selection Bar */}
-      {questions.length > 0 && (
-        <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-3 xs:gap-0 px-6 py-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
-          <div className="flex items-center gap-3">
-            <Checkbox
-              checked={isAllSelected}
-              ref={(el) => {
-                if (el) (el as HTMLInputElement).indeterminate = isPartiallySelected
-              }}
-              onCheckedChange={onSelectAll}
-              className="h-4 w-4 rounded border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-            />
-            <div className="text-sm font-medium text-slate-700">
-              {isAllSelected ? 'All questions selected' : isPartiallySelected ? `${questions.filter(q => q.id && selectedQuestions.has(q.id)).length} questions selected` : 'Select questions'}
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-            <span>ID</span>
-            <span>•</span>
-            <span>Question</span>
-            <span>•</span>
-            <span>Source</span>
-            <span>•</span>
-            <span>Level</span>
-            <span>•</span>
-            <span>Tags</span>
-          </div>
-        </div>
-      )}
-
       {/* Premium Card Grid */}
       <div className="space-y-4">
         {/* Questions */}

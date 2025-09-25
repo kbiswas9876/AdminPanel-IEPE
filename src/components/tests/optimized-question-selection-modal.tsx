@@ -223,7 +223,7 @@ export function OptimizedQuestionSelectionModal({
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="h-9 justify-between text-xs font-medium px-3 hover:bg-gray-50 w-full"
+            className="h-9 justify-between text-xs font-medium px-2 hover:bg-gray-50 w-full"
           >
             <div className="flex items-center gap-1.5">
               <Icon className="h-3.5 w-3.5 text-gray-500" />
@@ -301,12 +301,12 @@ export function OptimizedQuestionSelectionModal({
           </div>
         </DialogHeader>
 
-        {/* Compact Filter Bar - Fixed Height */}
+        {/* Single-Line Filter Bar - Compact */}
         {showFilters && (
-          <div className="px-4 py-3 border-b bg-white flex-shrink-0">
-            <div className="space-y-3">
-              {/* Search Bar */}
-              <div className="relative">
+          <div className="px-4 py-2 border-b bg-white flex-shrink-0">
+            <div className="flex items-center gap-3">
+              {/* Search Bar - 60% width */}
+              <div className="relative flex-1 max-w-[60%]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   placeholder="Search questions, books, chapters, or tags..."
@@ -316,84 +316,90 @@ export function OptimizedQuestionSelectionModal({
                 />
               </div>
 
-              {/* Compact Filter Grid - 2 rows */}
-              <div className="grid grid-cols-4 gap-2">
-                <CompactMultiSelect
-                  options={filterOptions.bookSources}
-                  selected={selectedBooks}
-                  onSelectionChange={setSelectedBooks}
-                  placeholder="Books"
-                  icon={BookOpen}
-                />
-                <CompactMultiSelect
-                  options={filterOptions.chapters}
-                  selected={selectedChapters}
-                  onSelectionChange={setSelectedChapters}
-                  placeholder="Chapters"
-                  icon={Target}
-                />
-                <CompactMultiSelect
-                  options={filterOptions.tags}
-                  selected={selectedTags}
-                  onSelectionChange={setSelectedTags}
-                  placeholder="Tags"
-                  icon={Tag}
-                />
-                <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
-                  <SelectTrigger className="h-9 text-xs font-medium">
-                    <div className="flex items-center gap-1.5">
-                      <Zap className="h-3.5 w-3.5 text-gray-500" />
-                      <SelectValue placeholder="Difficulty" />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Difficulties</SelectItem>
-                    {filterOptions.difficulties.map(diff => (
-                      <SelectItem key={diff} value={diff} className="text-xs">{diff}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Second Row - Sort and Actions */}
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="h-9 w-[160px] text-xs font-medium">
+              {/* Filter Dropdowns - Compact */}
+              <div className="flex items-center gap-2 flex-1">
+                <div className="w-32">
+                  <CompactMultiSelect
+                    options={filterOptions.bookSources}
+                    selected={selectedBooks}
+                    onSelectionChange={setSelectedBooks}
+                    placeholder="Books"
+                    icon={BookOpen}
+                  />
+                </div>
+                <div className="w-32">
+                  <CompactMultiSelect
+                    options={filterOptions.chapters}
+                    selected={selectedChapters}
+                    onSelectionChange={setSelectedChapters}
+                    placeholder="Chapters"
+                    icon={Target}
+                  />
+                </div>
+                <div className="w-32">
+                  <CompactMultiSelect
+                    options={filterOptions.tags}
+                    selected={selectedTags}
+                    onSelectionChange={setSelectedTags}
+                    placeholder="Tags"
+                    icon={Tag}
+                  />
+                </div>
+                <div className="w-32">
+                  <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
+                    <SelectTrigger className="h-9 text-xs font-medium">
                       <div className="flex items-center gap-1.5">
-                        <ArrowUpDown className="h-3.5 w-3.5 text-gray-500" />
-                        <SelectValue />
+                        <Zap className="h-3.5 w-3.5 text-gray-500" />
+                        <SelectValue placeholder="Difficulty" />
                       </div>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="id_asc" className="text-xs">ID (Ascending)</SelectItem>
-                      <SelectItem value="id_desc" className="text-xs">ID (Descending)</SelectItem>
-                      <SelectItem value="created_at_desc" className="text-xs">Newest First</SelectItem>
-                      <SelectItem value="difficulty_asc" className="text-xs">Easy → Hard</SelectItem>
+                      <SelectItem value="all">All Difficulties</SelectItem>
+                      {filterOptions.difficulties.map(diff => (
+                        <SelectItem key={diff} value={diff} className="text-xs">{diff}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
-                  
-                  {activeFiltersCount > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={resetFilters}
-                      className="h-9 px-3 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <X className="h-3.5 w-3.5 mr-1" />
-                      Reset Filters
-                    </Button>
-                  )}
                 </div>
+              </div>
+
+              {/* Sort Dropdown - Right aligned */}
+              <div className="flex items-center gap-2">
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="h-9 w-[140px] text-xs font-medium">
+                    <div className="flex items-center gap-1.5">
+                      <ArrowUpDown className="h-3.5 w-3.5 text-gray-500" />
+                      <SelectValue />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="id_asc" className="text-xs">ID (Ascending)</SelectItem>
+                    <SelectItem value="id_desc" className="text-xs">ID (Descending)</SelectItem>
+                    <SelectItem value="created_at_desc" className="text-xs">Newest First</SelectItem>
+                    <SelectItem value="difficulty_asc" className="text-xs">Easy → Hard</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                {activeFiltersCount > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={resetFilters}
+                    className="h-9 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <X className="h-3.5 w-3.5 mr-1" />
+                    Reset
+                  </Button>
+                )}
 
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => setShowFilters(!showFilters)}
-                  className="h-9 px-3 text-xs"
+                  className="h-9 px-2 text-xs"
                 >
                   <Filter className="h-3.5 w-3.5 mr-1" />
-                  {showFilters ? 'Hide' : 'Show'} Filters
+                  {showFilters ? 'Hide' : 'Show'}
                 </Button>
               </div>
             </div>
@@ -496,21 +502,21 @@ export function OptimizedQuestionSelectionModal({
           )}
         </div>
 
-        {/* Footer - Fixed */}
-        <div className="border-t bg-gray-50 px-4 py-3 flex-shrink-0">
+        {/* Footer - Compact */}
+        <div className="border-t bg-gray-50 px-4 py-2 flex-shrink-0">
           <div className="flex items-center justify-between">
             {/* Pagination */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
-                className="h-8 px-2"
+                className="h-7 px-1.5"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-3.5 w-3.5" />
               </Button>
-              <span className="text-sm text-gray-600 min-w-[100px] text-center">
+              <span className="text-xs text-gray-600 min-w-[80px] text-center">
                 Page {page} of {totalPages}
               </span>
               <Button
@@ -518,31 +524,31 @@ export function OptimizedQuestionSelectionModal({
                 size="sm"
                 onClick={() => setPage(Math.min(totalPages, page + 1))}
                 disabled={page === totalPages}
-                className="h-8 px-2"
+                className="h-7 px-1.5"
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-3.5 w-3.5" />
               </Button>
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-600">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-600">
                 {selectedQuestions.size} question{selectedQuestions.size !== 1 ? 's' : ''} selected
               </span>
               <Button
                 variant="outline"
                 onClick={onClose}
-                className="h-9 px-4"
+                className="h-8 px-3 text-sm"
               >
-                <X className="h-4 w-4 mr-2" />
+                <X className="h-3.5 w-3.5 mr-1.5" />
                 Cancel
               </Button>
               <Button
                 onClick={handleConfirmSelection}
                 disabled={selectedQuestions.size === 0}
-                className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white"
+                className="h-8 px-3 text-sm bg-blue-600 hover:bg-blue-700 text-white"
               >
-                <Check className="h-4 w-4 mr-2" />
+                <Check className="h-3.5 w-3.5 mr-1.5" />
                 Select Questions
               </Button>
             </div>
