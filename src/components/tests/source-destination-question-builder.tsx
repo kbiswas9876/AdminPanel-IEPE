@@ -45,6 +45,8 @@ import {
   Sparkles,
   ChevronLeft,
   ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   ChevronRightIcon,
   GripVertical,
   Trash2,
@@ -80,6 +82,7 @@ export function SourceDestinationQuestionBuilder({
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('')
   const [sortBy, setSortBy] = useState<string>('id_asc')
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
   const [questions, setQuestions] = useState<Question[]>([])
   const [total, setTotal] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
@@ -95,7 +98,6 @@ export function SourceDestinationQuestionBuilder({
   const [draggedItem, setDraggedItem] = useState<Question | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
 
-  const pageSize = 10
   const totalPages = Math.ceil(total / pageSize)
 
   // Load filter options
@@ -117,7 +119,7 @@ export function SourceDestinationQuestionBuilder({
     if (open) {
       fetchQuestions()
     }
-  }, [page, sortBy, selectedBooks, selectedChapters, selectedTags, selectedDifficulty, searchQuery])
+  }, [page, pageSize, sortBy, selectedBooks, selectedChapters, selectedTags, selectedDifficulty, searchQuery])
 
   const loadFilterOptions = async () => {
     try {
@@ -154,6 +156,11 @@ export function SourceDestinationQuestionBuilder({
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handlePageSizeChange = (newPageSize: string) => {
+    setPageSize(parseInt(newPageSize, 10))
+    setPage(1) // Reset to first page when changing page size
   }
 
   const handleSelectQuestion = (question: Question) => {
@@ -703,33 +710,167 @@ export function SourceDestinationQuestionBuilder({
             </div>
 
             {/* Left Panel Pagination */}
-            {totalPages > 1 && (
-              <div className="border-t px-4 py-2 flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage(Math.max(1, page - 1))}
-                    disabled={page === 1}
-                    className="h-7 px-1.5"
-                  >
-                    <ChevronLeft className="h-3.5 w-3.5" />
-                  </Button>
-                  <span className="text-xs text-gray-600 min-w-[80px] text-center">
-                    Page {page} of {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage(Math.min(totalPages, page + 1))}
-                    disabled={page === totalPages}
-                    className="h-7 px-1.5"
-                  >
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </Button>
+            <div className="flex-shrink-0 border-t border-gray-200 bg-gray-50 px-4 py-3">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                  {/* Page Info */}
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border border-gray-200">
+                      <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                      <span className="text-sm font-medium text-gray-700">
+                        Page {page} of {totalPages}
+                      </span>
+                    </div>
+                    
+                    {/* Items per page */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-600">Show</span>
+                      <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
+                        <SelectTrigger className="h-8 w-16 text-sm font-medium bg-white border-gray-200 hover:border-gray-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 rounded-lg transition-all duration-200">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border border-gray-200 shadow-xl rounded-lg p-1">
+                          {[5, 10, 20, 30, 50, 100].map(option => (
+                            <SelectItem 
+                              key={option} 
+                              value={option.toString()}
+                              className="text-sm font-medium hover:bg-gray-50 focus:bg-gray-50 rounded-md transition-colors duration-150"
+                            >
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <span className="text-sm font-medium text-gray-600">items</span>
+                    </div>
+                  </div>
+                  
+                  {/* Navigation Controls */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center gap-1 p-1 bg-white rounded-lg border border-gray-200">
+                      {/* First page */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setPage(1)}
+                        disabled={page === 1}
+                        className="h-8 w-8 p-0 rounded-md hover:bg-gray-100 disabled:opacity-50 transition-all duration-200"
+                      >
+                        <ChevronsLeft className="h-4 w-4" />
+                      </Button>
+                      
+                      {/* Previous page */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setPage(Math.max(1, page - 1))}
+                        disabled={page === 1}
+                        className="h-8 w-8 p-0 rounded-md hover:bg-gray-100 disabled:opacity-50 transition-all duration-200"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      
+                      {/* Page numbers */}
+                      <div className="flex items-center gap-0.5">
+                        {(() => {
+                          const pages = []
+                          const maxVisiblePages = 5
+                          let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2))
+                          const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1)
+                          
+                          if (endPage - startPage + 1 < maxVisiblePages) {
+                            startPage = Math.max(1, endPage - maxVisiblePages + 1)
+                          }
+                          
+                          if (startPage > 2) {
+                            pages.push(
+                              <Button
+                                key="page-1"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setPage(1)}
+                                className="h-8 w-8 p-0 rounded-md hover:bg-gray-100 text-sm font-medium transition-all duration-200"
+                              >
+                                1
+                              </Button>
+                            )
+                            if (startPage > 3) {
+                              pages.push(
+                                <span key="ellipsis-start" className="px-1 text-gray-400 text-sm font-medium">
+                                  •••
+                                </span>
+                              )
+                            }
+                          }
+                          
+                          for (let i = startPage; i <= endPage; i++) {
+                            const isActive = i === page
+                            pages.push(
+                              <Button
+                                key={`page-${i}`}
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setPage(i)}
+                                className={`h-8 w-8 p-0 rounded-md text-sm font-medium transition-all duration-200 ${
+                                  isActive 
+                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25 hover:shadow-xl' 
+                                    : 'hover:bg-gray-100'
+                                }`}
+                              >
+                                {i}
+                              </Button>
+                            )
+                          }
+                          
+                          if (endPage < totalPages - 1) {
+                            if (endPage < totalPages - 2) {
+                              pages.push(
+                                <span key="ellipsis-end" className="px-1 text-gray-400 text-sm font-medium">
+                                  •••
+                                </span>
+                              )
+                            }
+                            pages.push(
+                              <Button
+                                key={`page-${totalPages}`}
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setPage(totalPages)}
+                                className="h-8 w-8 p-0 rounded-md hover:bg-gray-100 text-sm font-medium transition-all duration-200"
+                              >
+                                {totalPages}
+                              </Button>
+                            )
+                          }
+                          
+                          return pages
+                        })()}
+                      </div>
+                      
+                      {/* Next page */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setPage(Math.min(totalPages, page + 1))}
+                        disabled={page === totalPages}
+                        className="h-8 w-8 p-0 rounded-md hover:bg-gray-100 disabled:opacity-50 transition-all duration-200"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                      
+                      {/* Last page */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setPage(totalPages)}
+                        disabled={page === totalPages}
+                        className="h-8 w-8 p-0 rounded-md hover:bg-gray-100 disabled:opacity-50 transition-all duration-200"
+                      >
+                        <ChevronsRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
           </div>
 
           {/* Right Panel - Selected Questions */}
