@@ -37,12 +37,12 @@ export function TestCreationWizard({
   testId 
 }: TestCreationWizardProps = {}) {
   const router = useRouter()
-  const [currentStep, setCurrentStep] = useState(isEditMode ? 2 : 0) // Start with options modal
+  const [currentStep, setCurrentStep] = useState(isEditMode ? 2 : 1) // Start with blueprint step for new tests
   const [error, setError] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
-  const [showOptionsModal, setShowOptionsModal] = useState(!isEditMode)
+  const [showOptionsModal, setShowOptionsModal] = useState(false) // Don't show options modal by default
   const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([])
-  const [creationMethod, setCreationMethod] = useState<'blueprint' | 'question-bank' | null>(null)
+  const [creationMethod, setCreationMethod] = useState<'blueprint' | 'question-bank' | null>('blueprint') // Default to blueprint
   
   // Step 1: Test Blueprint
   const [chapters, setChapters] = useState<ChapterInfo[]>([])
@@ -70,8 +70,10 @@ export function TestCreationWizard({
 
   const handleModalClose = () => {
     setShowOptionsModal(false)
-    // Don't default to any method - just close the modal
-    // The user should explicitly choose a creation method
+    // If no method was selected and we're not in edit mode, redirect back to tests page
+    if (!creationMethod && !isEditMode) {
+      router.push('/tests')
+    }
   }
 
   // Convert Question[] to TestQuestionSlot[]
