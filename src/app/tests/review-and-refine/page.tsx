@@ -1,3 +1,5 @@
+'use client'
+
 import ReviewRefineInterface from '@/components/tests/review-refine-interface'
 import { useTestCreationStore } from '@/stores/testCreationStore'
 import { convertQuestionsToSlots } from '@/components/tests/utils/convertQuestionsToSlots'

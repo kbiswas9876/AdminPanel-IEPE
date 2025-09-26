@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { 
@@ -19,6 +20,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { UIQuestion } from '@/lib/types'
 import { UniversalContentRenderer } from '@/components/editors/UniversalContentRenderer'
+import { QuestionEditForm } from './QuestionEditForm'
 
 interface QuestionPreviewPanelProps {
   question: UIQuestion | null
@@ -30,6 +32,15 @@ export function QuestionPreviewPanel({
   onEdit 
 }: QuestionPreviewPanelProps) {
   const [showSolution, setShowSolution] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [currentQuestion, setCurrentQuestion] = useState<UIQuestion | null>(question)
+  const router = useRouter()
+
+  // Sync currentQuestion with question prop
+  useEffect(() => {
+    setCurrentQuestion(question)
+  }, [question])
+
   if (!question) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-8 bg-gradient-to-b from-slate-50/50 to-white">
@@ -74,19 +85,46 @@ export function QuestionPreviewPanel({
 
   return (
     <div className="h-full flex flex-col bg-gradient-to-b from-slate-50/30 to-white">
-      {/* Header */}
-      <div className="flex-shrink-0 p-6 border-b border-slate-200/60 bg-white">
+      {isEditing ? (
+        // Edit Mode
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+              <span className="text-sm font-medium text-green-700">Editing Mode</span>
+            </div>
+            <QuestionEditForm
+              question={question}
+              onSave={(updatedQuestion) => {
+                setCurrentQuestion(updatedQuestion)
+                setIsEditing(false)
+                if (onEdit) {
+                  onEdit(updatedQuestion)
+                }
+              }}
+              onCancel={() => {
+                setIsEditing(false)
+                setCurrentQuestion(question) // Reset to original
+              }}
+            />
+          </div>
+        </div>
+      ) : (
+        // Preview Mode
+        <>
+          {/* Header */}
+          <div className="flex-shrink-0 p-6 border-b border-slate-200/60 bg-white">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="px-3 py-1.5 bg-gradient-to-r from-slate-100 to-slate-200 rounded-xl text-sm font-mono font-medium text-slate-600 shadow-sm">
-              #{question.id}
+              #{currentQuestion?.id}
             </div>
-            {question.difficulty && (
+            {currentQuestion?.difficulty && (
               <Badge 
                 variant="outline" 
-                className={cn("text-sm px-3 py-1.5 rounded-xl font-medium", getDifficultyColor(question.difficulty))}
+                className={cn("text-sm px-3 py-1.5 rounded-xl font-medium", getDifficultyColor(currentQuestion.difficulty))}
               >
-                {question.difficulty}
+                {currentQuestion.difficulty}
               </Badge>
             )}
           </div>
@@ -98,8 +136,8 @@ export function QuestionPreviewPanel({
               if (onEdit) {
                 onEdit(question)
               } else {
-                // Default behavior: navigate to edit page
-                window.open(`/content/edit?id=${question.id}`, '_blank')
+                // Start editing mode
+                setIsEditing(true)
               }
             }}
             className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 border-slate-200 hover:border-slate-300 rounded-xl font-medium text-slate-700 shadow-sm hover:shadow transition-all duration-200"
@@ -112,7 +150,7 @@ export function QuestionPreviewPanel({
         {/* Question Text */}
         <div className="prose prose-slate max-w-none">
           <div className="text-lg font-medium text-slate-900 leading-relaxed">
-            <UniversalContentRenderer text={question.question_text} />
+            <UniversalContentRenderer text={currentQuestion?.question_text || ''} />
           </div>
         </div>
       </div>
@@ -120,7 +158,7 @@ export function QuestionPreviewPanel({
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {/* Options */}
-        {question.options && (
+        {currentQuestion?.options && (
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
             <div className="flex items-center gap-2 pb-4 border-b border-slate-200/60 mb-4">
               <ListChecks className="h-4 w-4 text-slate-500" />
@@ -128,8 +166,8 @@ export function QuestionPreviewPanel({
             </div>
             <div className="grid grid-cols-2 gap-3">
               {['A', 'B', 'C', 'D'].map((optionKey, index) => {
-                const optionText = question.options?.[optionKey.toLowerCase() as keyof typeof question.options] || ''
-                const isCorrect = question.correct_option?.toUpperCase() === optionKey.toUpperCase()
+                const optionText = currentQuestion?.options?.[optionKey.toLowerCase() as keyof typeof currentQuestion.options] || ''
+                const isCorrect = currentQuestion?.correct_option?.toUpperCase() === optionKey.toUpperCase()
                 
                 return (
                   <div
@@ -176,7 +214,7 @@ export function QuestionPreviewPanel({
         )}
 
         {/* Solution - Collapsible */}
-        {(question.solution_text || question.explanation) && (
+        {currentQuestion?.solution_text && (
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
@@ -200,7 +238,7 @@ export function QuestionPreviewPanel({
             {showSolution && (
               <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 animate-in slide-in-from-top-2 duration-200 ease-out">
                 <div className="prose prose-sm max-w-none text-slate-700 leading-relaxed">
-                  <UniversalContentRenderer text={question.solution_text || question.explanation || ''} />
+                  <UniversalContentRenderer text={currentQuestion?.solution_text || ''} />
                 </div>
               </div>
             )}
@@ -223,32 +261,32 @@ export function QuestionPreviewPanel({
               </div>
               <div className="text-sm font-medium text-slate-900 flex items-center gap-2">
                 <BookOpen className="h-3 w-3 text-slate-500 flex-shrink-0" />
-                {question.book_source}
+                {currentQuestion?.book_source}
               </div>
             </div>
 
             {/* Chapter */}
-            {question.chapter_name && (
+            {currentQuestion?.chapter_name && (
               <div className="space-y-1">
                 <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                   Chapter
                 </div>
                 <div className="text-sm font-medium text-slate-900 flex items-center gap-2">
                   <Tag className="h-3 w-3 text-slate-500 flex-shrink-0" />
-                  {question.chapter_name}
+                  {currentQuestion?.chapter_name}
                 </div>
               </div>
             )}
 
             {/* Created Date */}
-            {question.created_at && (
+            {currentQuestion?.created_at && (
               <div className="space-y-1">
                 <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                   Created
                 </div>
                 <div className="text-sm font-medium text-slate-900 flex items-center gap-2">
                   <Clock className="h-3 w-3 text-slate-500 flex-shrink-0" />
-                  {new Date(question.created_at).toLocaleDateString('en-US', {
+                  {new Date(currentQuestion.created_at).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'
@@ -258,7 +296,7 @@ export function QuestionPreviewPanel({
             )}
 
             {/* Difficulty */}
-            {question.difficulty && (
+            {currentQuestion?.difficulty && (
               <div className="space-y-1">
                 <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                   Difficulty
@@ -266,9 +304,9 @@ export function QuestionPreviewPanel({
                 <div className="text-sm font-medium text-slate-900">
                   <Badge 
                     variant="outline" 
-                    className={cn("text-xs px-2 py-1 rounded-lg font-medium", getDifficultyColor(question.difficulty))}
+                    className={cn("text-xs px-2 py-1 rounded-lg font-medium", getDifficultyColor(currentQuestion.difficulty))}
                   >
-                    {question.difficulty}
+                    {currentQuestion.difficulty}
                   </Badge>
                 </div>
               </div>
@@ -276,14 +314,14 @@ export function QuestionPreviewPanel({
           </div>
 
           {/* Tags */}
-          {question.admin_tags && question.admin_tags.length > 0 && (
+          {currentQuestion?.admin_tags && currentQuestion.admin_tags.length > 0 && (
             <div className="mt-6 pt-4 border-t border-slate-200">
               <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-3 flex items-center gap-2">
                 <Tag className="h-3 w-3" />
                 Tags
               </div>
               <div className="flex flex-wrap gap-2">
-                {question.admin_tags.map((tag, index) => (
+                {currentQuestion.admin_tags.map((tag, index) => (
                   <span 
                     key={index}
                     className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border border-blue-200/50 font-medium hover:bg-blue-100/50 transition-all duration-200"
@@ -297,6 +335,8 @@ export function QuestionPreviewPanel({
           )}
         </div>
       </div>
+        </>
+      )}
     </div>
   )
 }
