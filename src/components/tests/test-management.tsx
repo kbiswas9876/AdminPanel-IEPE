@@ -14,10 +14,13 @@ import {
   CheckCircle, 
   AlertCircle
 } from 'lucide-react'
-import Link from 'next/link'
 import { TestActions } from './test-actions'
 
-export function TestManagement() {
+interface TestManagementProps {
+  onCreateTest?: () => void
+}
+
+export function TestManagement({ onCreateTest }: TestManagementProps = {}) {
   const [tests, setTests] = useState<Array<Test & { question_count?: number }>>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -137,13 +140,14 @@ export function TestManagement() {
           <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No Mock Tests Created</h3>
           <p className="text-gray-500 mb-4">Get started by creating your first mock test.</p>
-          <Link href="/tests/new">
-            <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-              <Plus className="h-4 w-4 mr-2 relative z-10" />
-              <span className="relative z-10">Create Your First Test</span>
-            </Button>
-          </Link>
+          <Button 
+            onClick={onCreateTest}
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+            <Plus className="h-4 w-4 mr-2 relative z-10" />
+            <span className="relative z-10">Create Your First Test</span>
+          </Button>
         </div>
       ) : (
         <div className="space-y-3">

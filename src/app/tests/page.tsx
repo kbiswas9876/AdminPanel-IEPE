@@ -1,9 +1,30 @@
+'use client'
+
+import { useState } from 'react'
 import { TestManagement } from '@/components/tests/test-management'
+import { TestCreationOptionsModal } from '@/components/tests/test-creation-options-modal'
 import { Plus, FileText } from 'lucide-react'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { useRouter } from 'next/navigation'
+import type { Question } from '@/lib/types'
 
 export default function TestsPage() {
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const router = useRouter()
+
+  const handleBlueprintSelect = () => {
+    setShowCreateModal(false)
+    router.push('/tests/new')
+  }
+
+  const handleQuestionBankSelect = (questions: Question[]) => {
+    setShowCreateModal(false)
+    // Store the selected questions in localStorage for the Review & Refine page
+    localStorage.setItem('selectedTestQuestions', JSON.stringify(questions))
+    // Navigate to the Review & Refine page
+    router.push('/tests/review-and-refine')
+  }
+
   return (
     <div className="min-h-screen bg-gray-50/30">
       {/* Ultra-Compact Mobile Header */}
@@ -27,12 +48,13 @@ export default function TestsPage() {
             
             {/* Right Section - Create Button */}
             <div className="flex-shrink-0 ml-3">
-              <Link href="/tests/new">
-                <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 text-sm px-3 py-2 h-8 flex items-center justify-center gap-1.5">
-                  <Plus className="h-3.5 w-3.5" />
-                  <span className="font-medium text-xs">New</span>
-                </Button>
-              </Link>
+              <Button 
+                onClick={() => setShowCreateModal(true)}
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 text-sm px-3 py-2 h-8 flex items-center justify-center gap-1.5"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span className="font-medium text-xs">New</span>
+              </Button>
             </div>
           </div>
         </div>
@@ -40,8 +62,16 @@ export default function TestsPage() {
       
       {/* Main Content - Perfectly Aligned with Header */}
       <div className="pb-4">
-        <TestManagement />
+        <TestManagement onCreateTest={() => setShowCreateModal(true)} />
       </div>
+
+      {/* Create New Test Modal */}
+      <TestCreationOptionsModal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onBlueprintSelect={handleBlueprintSelect}
+        onQuestionBankSelect={handleQuestionBankSelect}
+      />
     </div>
   )
 }
