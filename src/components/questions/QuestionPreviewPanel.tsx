@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { 
@@ -8,9 +8,13 @@ import {
   Tag,
   Clock,
   CheckCircle,
+  CheckCircle2,
   FileQuestion,
   Eye,
-  Edit
+  Edit,
+  Target,
+  ListChecks,
+  XCircle
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { UIQuestion } from '@/lib/types'
@@ -25,6 +29,7 @@ export function QuestionPreviewPanel({
   question, 
   onEdit 
 }: QuestionPreviewPanelProps) {
+  const [showSolution, setShowSolution] = useState(false)
   if (!question) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-8 bg-gradient-to-b from-slate-50/50 to-white">
@@ -86,17 +91,22 @@ export function QuestionPreviewPanel({
             )}
           </div>
           
-          {onEdit && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onEdit(question)}
-              className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 border-slate-200 hover:border-slate-300 rounded-xl font-medium text-slate-700 shadow-sm hover:shadow transition-all duration-200"
-            >
-              <Edit className="h-4 w-4" />
-              Edit
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (onEdit) {
+                onEdit(question)
+              } else {
+                // Default behavior: navigate to edit page
+                window.open(`/content/edit?id=${question.id}`, '_blank')
+              }
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 border-slate-200 hover:border-slate-300 rounded-xl font-medium text-slate-700 shadow-sm hover:shadow transition-all duration-200"
+          >
+            <Edit className="h-4 w-4" />
+            Edit
+          </Button>
         </div>
         
         {/* Question Text */}
@@ -110,109 +120,156 @@ export function QuestionPreviewPanel({
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {/* Options */}
-        {question.options && question.options.length > 0 && (
+        {question.options && (
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-            <h4 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-slate-600" />
-              Options
-            </h4>
-            <div className="space-y-3">
-              {question.options.map((option, index) => (
-                <div 
-                  key={index}
-                  className={cn(
-                    "flex items-start gap-3 p-3 rounded-lg border transition-all duration-200",
-                    option.is_correct 
-                      ? "bg-green-50 border-green-200 ring-1 ring-green-300/50" 
-                      : "bg-slate-50 border-slate-200"
-                  )}
-                >
-                  <div className={cn(
-                    "flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
-                    option.is_correct 
-                      ? "bg-green-500 text-white" 
-                      : "bg-slate-300 text-slate-600"
-                  )}>
-                    {String.fromCharCode(65 + index)}
+            <div className="flex items-center gap-2 pb-4 border-b border-slate-200/60 mb-4">
+              <ListChecks className="h-4 w-4 text-slate-500" />
+              <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Options</h4>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {['A', 'B', 'C', 'D'].map((optionKey, index) => {
+                const optionText = question.options?.[optionKey.toLowerCase() as keyof typeof question.options] || ''
+                const isCorrect = question.correct_option?.toUpperCase() === optionKey.toUpperCase()
+                
+                return (
+                  <div
+                    key={optionKey}
+                    className={cn(
+                      "flex items-center justify-between gap-2 p-3 rounded-lg border transition-all duration-200",
+                      isCorrect
+                        ? "bg-emerald-50 border-emerald-200 shadow-sm"
+                        : "bg-white border-slate-200 hover:bg-slate-50"
+                    )}
+                  >
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <div className="flex-shrink-0">
+                        <div className={cn(
+                          "w-7 h-7 rounded-full flex items-center justify-center text-sm font-semibold",
+                          isCorrect
+                            ? "bg-emerald-100 text-emerald-800"
+                            : "bg-slate-100 text-slate-700"
+                        )}>
+                          {optionKey}
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="prose prose-sm max-w-none">
+                          {optionText ? (
+                            <UniversalContentRenderer text={String(optionText)} />
+                          ) : (
+                            <span className="text-slate-400 italic text-xs">No option text</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {isCorrect && (
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                        <span className="text-xs font-medium text-emerald-700">Correct</span>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex-1 text-sm text-slate-900 leading-relaxed">
-                    <UniversalContentRenderer text={option.option_text} />
-                  </div>
-                  {option.is_correct && (
-                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
-                  )}
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Solution - Collapsible */}
+        {(question.solution_text || question.explanation) && (
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                <Target className="h-4 w-4 text-blue-600" />
+                Solution
+              </h4>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSolution(!showSolution)}
+                className="group relative bg-white hover:bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-900 shadow-sm hover:shadow-md transition-all duration-200 font-medium rounded-lg px-4 py-2"
+              >
+                <div className="flex items-center gap-2">
+                  <div className={`w-1.5 h-1.5 rounded-full transition-colors duration-200 ${
+                    showSolution ? 'bg-green-500' : 'bg-slate-400'
+                  }`}></div>
+                  {showSolution ? 'Hide Solution' : 'Show Solution'}
                 </div>
-              ))}
+              </Button>
             </div>
-          </div>
-        )}
-
-        {/* Explanation */}
-        {question.explanation && (
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-            <h4 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
-              <Eye className="h-4 w-4 text-slate-600" />
-              Explanation
-            </h4>
-            <div className="prose prose-slate max-w-none">
-              <div className="text-sm text-slate-700 leading-relaxed">
-                <UniversalContentRenderer text={question.explanation} />
+            {showSolution && (
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 animate-in slide-in-from-top-2 duration-200 ease-out">
+                <div className="prose prose-sm max-w-none text-slate-700 leading-relaxed">
+                  <UniversalContentRenderer text={question.solution_text || question.explanation || ''} />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
-        {/* Metadata */}
+        {/* Metadata - Multi-column Grid Layout */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
           <h4 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
             <FileQuestion className="h-4 w-4 text-slate-600" />
             Details
           </h4>
           
-          <div className="grid grid-cols-1 gap-4">
+          {/* Grid Layout - 2 columns */}
+          <div className="grid grid-cols-2 gap-4">
             {/* Book Source */}
-            <div className="flex items-center gap-3">
-              <BookOpen className="h-4 w-4 text-slate-500 flex-shrink-0" />
-              <div className="min-w-0 flex-1">
-                <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">
-                  Source
-                </div>
-                <div className="text-sm font-medium text-slate-900">
-                  {question.book_source}
-                </div>
+            <div className="space-y-1">
+              <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                Source
+              </div>
+              <div className="text-sm font-medium text-slate-900 flex items-center gap-2">
+                <BookOpen className="h-3 w-3 text-slate-500 flex-shrink-0" />
+                {question.book_source}
               </div>
             </div>
 
             {/* Chapter */}
             {question.chapter_name && (
-              <div className="flex items-center gap-3">
-                <Tag className="h-4 w-4 text-slate-500 flex-shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">
-                    Chapter
-                  </div>
-                  <div className="text-sm font-medium text-slate-900">
-                    {question.chapter_name}
-                  </div>
+              <div className="space-y-1">
+                <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  Chapter
+                </div>
+                <div className="text-sm font-medium text-slate-900 flex items-center gap-2">
+                  <Tag className="h-3 w-3 text-slate-500 flex-shrink-0" />
+                  {question.chapter_name}
                 </div>
               </div>
             )}
 
             {/* Created Date */}
             {question.created_at && (
-              <div className="flex items-center gap-3">
-                <Clock className="h-4 w-4 text-slate-500 flex-shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">
-                    Created
-                  </div>
-                  <div className="text-sm font-medium text-slate-900">
-                    {new Date(question.created_at).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </div>
+              <div className="space-y-1">
+                <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  Created
+                </div>
+                <div className="text-sm font-medium text-slate-900 flex items-center gap-2">
+                  <Clock className="h-3 w-3 text-slate-500 flex-shrink-0" />
+                  {new Date(question.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Difficulty */}
+            {question.difficulty && (
+              <div className="space-y-1">
+                <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  Difficulty
+                </div>
+                <div className="text-sm font-medium text-slate-900">
+                  <Badge 
+                    variant="outline" 
+                    className={cn("text-xs px-2 py-1 rounded-lg font-medium", getDifficultyColor(question.difficulty))}
+                  >
+                    {question.difficulty}
+                  </Badge>
                 </div>
               </div>
             )}

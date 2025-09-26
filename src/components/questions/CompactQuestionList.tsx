@@ -87,11 +87,11 @@ export function CompactQuestionList({
               )}
               
               <div className="p-4">
-                {/* Top Row: Checkbox, ID, and Question Text */}
-                <div className="flex items-start gap-3 mb-3">
+                {/* Top Row: Checkbox, ID, Question Text, Tags, and Navigation Arrow */}
+                <div className="flex items-center gap-3 mb-3">
                   {/* Selection Checkbox */}
                   <div 
-                    className="flex-shrink-0 mt-1"
+                    className="flex-shrink-0"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <Checkbox
@@ -115,25 +115,44 @@ export function CompactQuestionList({
                     </div>
                   </div>
                   
+                  {/* Tags - Right aligned */}
+                  {question.admin_tags && question.admin_tags.length > 0 && (
+                    <div className="flex-shrink-0 flex items-center gap-1">
+                      {question.admin_tags.slice(0, 2).map((tag, tagIndex) => (
+                        <span 
+                          key={tagIndex} 
+                          className="inline-flex items-center text-xs px-2 py-1 rounded-md bg-blue-50 text-blue-700 border border-blue-200/50 font-medium"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                      {question.admin_tags.length > 2 && (
+                        <span className="inline-flex items-center text-xs px-2 py-1 rounded-md bg-slate-50 text-slate-600 border border-slate-200/50 font-medium">
+                          +{question.admin_tags.length - 2}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  
                   {/* Navigation Arrow */}
-                  <div className="flex-shrink-0 mt-1">
+                  <div className="flex-shrink-0">
                     <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-blue-600 transition-colors duration-200" />
                   </div>
                 </div>
                 
-                {/* Bottom Row: Metadata */}
+                {/* Bottom Row: Metadata - Full width without truncation */}
                 <div className="flex items-center justify-between">
-                  {/* Book/Chapter Info */}
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                  {/* Book/Chapter Info - Allow full text */}
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 rounded-lg">
                       <BookOpen className="h-3.5 w-3.5 text-slate-500" />
-                      <div className="text-xs font-medium text-slate-700 truncate max-w-[120px]" title={question.book_source}>
+                      <div className="text-xs font-medium text-slate-700" title={question.book_source}>
                         {question.book_source}
                       </div>
                     </div>
                     
                     {question.chapter_name && (
-                      <div className="text-xs text-slate-600 font-medium truncate max-w-[100px]" title={question.chapter_name}>
+                      <div className="text-xs text-slate-600 font-medium" title={question.chapter_name}>
                         {question.chapter_name}
                       </div>
                     )}
@@ -149,25 +168,6 @@ export function CompactQuestionList({
                     </Badge>
                   )}
                 </div>
-                
-                {/* Tags */}
-                {question.admin_tags && question.admin_tags.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {question.admin_tags.slice(0, 2).map((tag, tagIndex) => (
-                      <span 
-                        key={tagIndex} 
-                        className="inline-flex items-center text-xs px-2 py-1 rounded-md bg-blue-50 text-blue-700 border border-blue-200/50 font-medium"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                    {question.admin_tags.length > 2 && (
-                      <span className="inline-flex items-center text-xs px-2 py-1 rounded-md bg-slate-50 text-slate-600 border border-slate-200/50 font-medium">
-                        +{question.admin_tags.length - 2}
-                      </span>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
           )
