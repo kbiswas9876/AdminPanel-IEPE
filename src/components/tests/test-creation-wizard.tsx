@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { getChapterQuestionCount, getChaptersWithTags, generateTestPaperFromBlueprint, regenerateSingleQuestion } from '@/lib/actions/tests'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -35,6 +36,7 @@ export function TestCreationWizard({
   isEditMode = false, 
   testId 
 }: TestCreationWizardProps = {}) {
+  const router = useRouter()
   const [currentStep, setCurrentStep] = useState(isEditMode ? 2 : 0) // Start with options modal
   const [error, setError] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -58,16 +60,18 @@ export function TestCreationWizard({
     setCreationMethod('question-bank')
     setSelectedQuestions(questions)
     setShowOptionsModal(false)
-    setCurrentStep(2) // Go directly to review and refine
+    
+    // Store the selected questions in localStorage for the Review & Refine page
+    localStorage.setItem('selectedTestQuestions', JSON.stringify(questions))
+    
+    // Navigate to the Review & Refine page
+    router.push('/tests/review-and-refine')
   }
 
   const handleModalClose = () => {
     setShowOptionsModal(false)
-    // If no method was selected, default to blueprint
-    if (!creationMethod) {
-      setCreationMethod('blueprint')
-      setCurrentStep(1)
-    }
+    // Don't default to any method - just close the modal
+    // The user should explicitly choose a creation method
   }
 
   // Convert Question[] to TestQuestionSlot[]
