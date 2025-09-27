@@ -267,38 +267,50 @@ export function TwoColumnBlueprintBuilder({
                 return (
                   <div 
                     key={chapter.name} 
-                    className={`bg-white rounded-lg border transition-all duration-200 shadow-sm hover:shadow-md ${
+                    className={`relative overflow-hidden transition-all duration-300 ease-out ${
                       isExpanded 
-                        ? 'border-blue-200 shadow-md ring-1 ring-blue-100' 
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
+                        ? 'bg-white shadow-2xl ring-1 ring-blue-500/20 scale-[1.02]' 
+                        : 'bg-white/95 backdrop-blur-xl shadow-lg hover:shadow-xl hover:bg-white'
+                    } rounded-2xl border border-gray-200/30 hover:border-blue-300/50 group`}
+                    style={{
+                      background: isExpanded 
+                        ? 'linear-gradient(145deg, #ffffff 0%, #f8faff 100%)'
+                        : 'linear-gradient(145deg, #ffffff 0%, #fafbfc 100%)'
+                    }}
                   >
-                    {/* Compact Chapter Header */}
+                    {/* Premium Chapter Header */}
                     <button
                       onClick={() => setSelectedChapter(isExpanded ? null : chapter.name)}
-                      className="w-full p-3 text-left transition-all duration-200 hover:bg-gray-50/50 rounded-t-lg"
+                      className="w-full p-3 text-left transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50/40 hover:to-indigo-50/20 rounded-t-2xl group active:scale-[0.98]"
                     >
                         <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <div className={`w-2 h-2 rounded-full transition-colors duration-200 ${
-                            hasRules ? 'bg-green-500' : 'bg-gray-300'
-                          }`} />
+                          <div className={`relative w-4 h-4 rounded-full transition-all duration-300 flex items-center justify-center ${
+                            hasRules 
+                              ? 'bg-gradient-to-br from-green-400 via-green-500 to-green-600 shadow-lg shadow-green-500/25' 
+                              : 'bg-gray-200 group-hover:bg-gray-300 border-2 border-gray-100'
+                          }`}>
+                            {hasRules && (
+                              <div className="w-2 h-2 bg-white rounded-full shadow-sm animate-pulse" />
+                            )}
+                          </div>
                           <div>
-                            <p className="font-medium text-gray-900 text-sm">{chapter.name}</p>
-                            <p className="text-xs text-gray-500">{chapter.available} questions</p>
+                            <p className="font-bold text-gray-900 text-sm tracking-tight group-hover:text-blue-900 transition-colors duration-300 leading-tight">{chapter.name}</p>
+                            <p className="text-xs text-gray-500 font-medium mt-0.5">{chapter.available} questions available</p>
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
                           {selectedCount > 0 && (
-                            <div className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                              {selectedCount}
+                            <div className="relative px-3 py-1 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 text-white rounded-full text-xs font-semibold shadow-lg shadow-blue-500/30 group-hover:shadow-xl transition-all duration-300 border border-blue-400/30">
+                              <div className="absolute inset-0 bg-white/10 rounded-full"></div>
+                              <span className="relative">{selectedCount} selected</span>
                             </div>
                           )}
-                          <div className={`transform transition-transform duration-200 ${
+                          <div className={`transform transition-all duration-300 p-1 rounded-xl group-hover:bg-blue-100/50 ${
                             isExpanded ? 'rotate-180' : ''
                           }`}>
-                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            <svg className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                             </svg>
                           </div>
                         </div>
@@ -307,101 +319,101 @@ export function TwoColumnBlueprintBuilder({
 
                     {/* Compact Expanded Configuration */}
                     {isExpanded && (
-                      <div className="px-4 pb-4 border-t border-gray-200/40">
-                        <div className="pt-4 space-y-4">
-                          {/* Apple-style Random Questions */}
-                          <div className="space-y-4">
-                            <div className="flex items-center space-x-4">
-                              <div className="relative w-10 h-10 rounded-[12px] flex items-center justify-center shadow-lg" style={{
+                      <div className="px-3 pb-3 border-t border-gray-200/40">
+                        <div className="pt-3 space-y-3">
+                          {/* Compact Random Questions */}
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-3">
+                              <div className="relative w-8 h-8 rounded-lg flex items-center justify-center shadow-sm" style={{
                                 background: 'linear-gradient(145deg, #22c55e 0%, #16a34a 100%)'
                               }}>
-                                <div className="absolute inset-0 bg-white/10 rounded-[12px]"></div>
-                                <Shuffle className="relative h-5 w-5 text-white" />
+                                <div className="absolute inset-0 bg-white/10 rounded-lg"></div>
+                                <Shuffle className="relative h-4 w-4 text-white" />
                               </div>
-                              <Label className="text-base font-bold text-gray-900 tracking-tight">Random Questions</Label>
+                              <Label className="text-sm font-bold text-gray-900 tracking-tight">Random Questions</Label>
                             </div>
-                            <div className="flex items-center space-x-5">
+                            <div className="flex items-center space-x-3">
                               <Input
                                 type="number"
                                 min={0}
                                 max={chapter.available}
                                 value={(chState.random || 0).toString()}
                                 onChange={(e) => setChapterRandom(chapter.name, parseInt(e.target.value) || 0)}
-                                className="w-28 h-12 text-base font-semibold text-center border-gray-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-md"
+                                className="w-20 h-8 text-sm font-semibold text-center border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
                               />
-                              <span className="text-sm text-gray-600 font-bold bg-gray-100 px-3 py-2 rounded-xl">
+                              <span className="text-xs text-gray-600 font-medium bg-gray-100 px-2 py-1 rounded-lg">
                                 Max: {chapter.available}
                               </span>
                             </div>
                           </div>
 
-                          {/* Apple-style Custom Rules */}
-                          <div className="space-y-5">
+                          {/* Compact Custom Rules */}
+                          <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-4">
-                              <div className="relative w-10 h-10 rounded-[12px] flex items-center justify-center shadow-lg" style={{
+                              <div className="flex items-center space-x-3">
+                              <div className="relative w-8 h-8 rounded-lg flex items-center justify-center shadow-sm" style={{
                                 background: 'linear-gradient(145deg, #f97316 0%, #ea580c 100%)'
                               }}>
-                                <div className="absolute inset-0 bg-white/10 rounded-[12px]"></div>
-                                <SlidersHorizontal className="relative h-5 w-5 text-white" />
+                                <div className="absolute inset-0 bg-white/10 rounded-lg"></div>
+                                <SlidersHorizontal className="relative h-4 w-4 text-white" />
                               </div>
-                                <Label className="text-base font-bold text-gray-900 tracking-tight">Custom Rules</Label>
+                                <Label className="text-sm font-bold text-gray-900 tracking-tight">Custom Rules</Label>
                               </div>
                               <Button
                                 onClick={() => addRule(chapter.name)}
-                                className="h-11 px-6 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                                className="h-8 px-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
                               >
-                                <PlusCircle className="h-4 w-4 mr-2" />
+                                <PlusCircle className="h-3 w-3 mr-1" />
                                 Add Rule
                               </Button>
                             </div>
 
                             {rules.length === 0 ? (
-                              <div className="text-center py-10 bg-gradient-to-br from-gray-50/80 to-gray-100/30 rounded-3xl border-2 border-dashed border-gray-200 backdrop-blur-sm">
-                                <div className="w-16 h-16 bg-gradient-to-br from-gray-200 to-gray-300 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-sm">
-                                  <Sparkles className="h-8 w-8 text-gray-500" />
+                              <div className="text-center py-4 bg-gradient-to-br from-gray-50/80 to-gray-100/30 rounded-lg border-2 border-dashed border-gray-200 backdrop-blur-sm">
+                                <div className="w-10 h-10 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg flex items-center justify-center mx-auto mb-2 shadow-sm">
+                                  <Sparkles className="h-5 w-5 text-gray-500" />
                                 </div>
-                                <p className="text-base text-gray-700 font-bold mb-1">No custom rules added</p>
-                                <p className="text-sm text-gray-500 font-medium">Add specific question selection criteria</p>
+                                <p className="text-sm text-gray-700 font-semibold mb-1">No custom rules added</p>
+                                <p className="text-xs text-gray-500">Add specific question selection criteria</p>
                               </div>
                             ) : (
-                              <div className="space-y-3">
+                              <div className="space-y-2">
                                 {rules.map((rule, idx) => (
-                                  <div key={idx} className="p-4 bg-gradient-to-br from-white to-gray-50/50 rounded-2xl border border-gray-200 shadow-sm">
-                                    {/* Apple-style Rule Header */}
-                                    <div className="flex items-center justify-between mb-4">
+                                  <div key={idx} className="p-3 bg-gradient-to-br from-white to-gray-50/50 rounded-lg border border-gray-200 shadow-sm">
+                                    {/* Compact Rule Header */}
+                                    <div className="flex items-center justify-between mb-2">
                                       <div className="flex items-center space-x-2">
-                                        <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center">
-                                          <Hash className="h-3 w-3 text-blue-600" />
+                                        <div className="w-5 h-5 bg-blue-100 rounded-md flex items-center justify-center">
+                                          <Hash className="h-2.5 w-2.5 text-blue-600" />
                                         </div>
-                                        <span className="text-sm font-semibold text-gray-900">Rule #{idx + 1}</span>
+                                        <span className="text-xs font-semibold text-gray-900">Rule #{idx + 1}</span>
                                       </div>
                                       <Button
                                         variant="outline"
                                         size="sm"
                                         onClick={() => removeRule(chapter.name, idx)}
-                                        className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 border-red-200 hover:border-red-300 rounded-lg transition-all duration-200"
+                                        className="h-6 w-6 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 border-red-200 hover:border-red-300 rounded-md transition-all duration-200"
                                       >
-                                        <Trash2 className="h-4 w-4" />
+                                        <Trash2 className="h-3 w-3" />
                                       </Button>
                                     </div>
                                     
-                                    {/* Apple-style Horizontal Rule Inputs */}
-                                    <div className="grid grid-cols-12 gap-3 items-end">
+                                    {/* Compact Horizontal Rule Inputs */}
+                                    <div className="grid grid-cols-12 gap-2 items-end">
                                       {/* Tag Selection */}
                                       <div className="col-span-4">
-                                        <Label className="text-xs font-semibold text-gray-700 mb-2 block">Tag</Label>
+                                        <Label className="text-xs font-semibold text-gray-700 mb-1 block">Tag</Label>
                                         <Select 
                                           value={rule.tag ?? 'any'} 
                                           onValueChange={(v) => updateRule(chapter.name, idx, { tag: v === 'any' ? null : v })}
                                         >
-                                          <SelectTrigger className="h-12 text-sm font-semibold border-gray-300 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-md">
+                                          <SelectTrigger className="h-8 text-xs font-semibold border-gray-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md">
                                             <SelectValue placeholder="Any tag" />
                                           </SelectTrigger>
-                                          <SelectContent className="border-gray-300 rounded-2xl shadow-2xl backdrop-blur-sm">
-                                            <SelectItem value="any" className="focus:bg-blue-50 rounded-xl m-1 font-medium">Any tag</SelectItem>
+                                          <SelectContent className="border-gray-300 rounded-lg shadow-xl backdrop-blur-sm">
+                                            <SelectItem value="any" className="focus:bg-blue-50 rounded-lg m-1 font-medium">Any tag</SelectItem>
                                             {chapter.tags.filter(Boolean).map((t: string) => (
-                                              <SelectItem key={t} value={t} className="focus:bg-blue-50 rounded-xl m-1 font-medium">{t}</SelectItem>
+                                              <SelectItem key={t} value={t} className="focus:bg-blue-50 rounded-lg m-1 font-medium">{t}</SelectItem>
                                             ))}
                                           </SelectContent>
                                         </Select>
@@ -409,18 +421,18 @@ export function TwoColumnBlueprintBuilder({
 
                                       {/* Difficulty Selection */}
                                       <div className="col-span-4">
-                                        <Label className="text-xs font-semibold text-gray-700 mb-2 block">Difficulty</Label>
+                                        <Label className="text-xs font-semibold text-gray-700 mb-1 block">Difficulty</Label>
                                         <Select 
                                           value={rule.difficulty ?? 'any'} 
                                           onValueChange={(v) => updateRule(chapter.name, idx, { difficulty: v === 'any' ? null : v })}
                                         >
-                                          <SelectTrigger className="h-12 text-sm font-semibold border-gray-300 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-md">
+                                          <SelectTrigger className="h-8 text-xs font-semibold border-gray-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md">
                                             <SelectValue placeholder="Any difficulty" />
                                           </SelectTrigger>
-                                          <SelectContent className="border-gray-300 rounded-2xl shadow-2xl backdrop-blur-sm">
-                                            <SelectItem value="any" className="focus:bg-blue-50 rounded-xl m-1 font-medium">Any difficulty</SelectItem>
+                                          <SelectContent className="border-gray-300 rounded-lg shadow-xl backdrop-blur-sm">
+                                            <SelectItem value="any" className="focus:bg-blue-50 rounded-lg m-1 font-medium">Any difficulty</SelectItem>
                                             {difficultyLevels.map((d) => (
-                                              <SelectItem key={d} value={d} className="focus:bg-blue-50 rounded-xl m-1 font-medium">{d}</SelectItem>
+                                              <SelectItem key={d} value={d} className="focus:bg-blue-50 rounded-lg m-1 font-medium">{d}</SelectItem>
                                             ))}
                                           </SelectContent>
                                         </Select>
@@ -428,14 +440,14 @@ export function TwoColumnBlueprintBuilder({
 
                                       {/* Quantity Input */}
                                       <div className="col-span-3">
-                                        <Label className="text-xs font-semibold text-gray-700 mb-2 block">Quantity</Label>
+                                        <Label className="text-xs font-semibold text-gray-700 mb-1 block">Quantity</Label>
                                         <Input
                                           type="number"
                                           min={0}
                                           value={rule.quantity}
                                           onChange={(e) => updateRule(chapter.name, idx, { quantity: Number(e.target.value) })}
                                           placeholder="0"
-                                          className="h-12 text-base font-semibold text-center border-gray-300 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-md"
+                                          className="h-8 text-xs font-semibold text-center border-gray-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
                                         />
                                       </div>
 
