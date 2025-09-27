@@ -737,51 +737,71 @@ export default function ReviewRefineInterface({
           })}
         </div>
 
-        {/* Ultra-Premium Summary */}
-        <div className="mt-6 sm:mt-8 p-4 sm:p-6 bg-gradient-to-br from-blue-50/90 via-indigo-50/70 to-purple-50/50 rounded-xl sm:rounded-2xl border border-blue-200/60 shadow-lg sm:shadow-xl">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 shadow-lg">
-                  <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+        {/* Test Summary - Minimalist iOS Design */}
+        <div className="mt-8 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="px-8 py-6 border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
+                  <BarChart3 className="h-5 w-5 text-gray-600" />
                 </div>
-                <h3 className="text-base sm:text-lg font-bold text-blue-900 tracking-tight">Test Summary</h3>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-white/60 rounded-lg sm:rounded-xl border border-blue-200/40 shadow-sm">
-                  <div className="p-1.5 sm:p-2 rounded-md sm:rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100">
-                    <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600" />
-                  </div>
-            <div>
-                    <p className="text-xs font-semibold text-blue-600">Total Questions</p>
-                    <p className="text-base sm:text-lg font-bold text-blue-800">{questions.length}</p>
-            </div>
-                </div>
-                <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-white/60 rounded-lg sm:rounded-xl border border-green-200/40 shadow-sm">
-                  <div className="p-1.5 sm:p-2 rounded-md sm:rounded-lg bg-gradient-to-br from-green-100 to-emerald-100">
-                    <Lightning className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-green-600">Shuffle</p>
-                    <p className="text-base sm:text-lg font-bold text-green-800">Available</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-white/60 rounded-lg sm:rounded-xl border border-purple-200/40 shadow-sm">
-                  <div className="p-1.5 sm:p-2 rounded-md sm:rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100">
-                    <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-purple-600">Options</p>
-                    <p className="text-base sm:text-lg font-bold text-purple-800">{shuffleOptions ? 'On' : 'Off'}</p>
-                  </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900">Test Summary</h3>
+                  <p className="text-sm text-gray-500">Review your test configuration</p>
                 </div>
               </div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-green-50 rounded-full">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-sm font-medium text-green-700">Ready</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-green-100 to-emerald-100 rounded-xl sm:rounded-2xl border border-green-200/60 shadow-lg">
-              <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
-              <span className="text-xs sm:text-sm font-bold text-green-800">
+          </div>
+          
+          <div className="px-8 py-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              {/* Total Questions */}
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
+                  <FileText className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Total Questions</p>
+                  <p className="text-2xl font-semibold text-gray-900">{questions.length}</p>
+                </div>
+              </div>
+              
+              {/* Shuffle Status */}
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center">
+                  <Lightning className="h-6 w-6 text-gray-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Shuffle</p>
+                  <p className="text-2xl font-semibold text-gray-900">Available</p>
+                </div>
+              </div>
+              
+              {/* Options Status */}
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center">
+                  <Settings className="h-6 w-6 text-gray-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Options</p>
+                  <p className="text-2xl font-semibold text-gray-900">{shuffleOptions ? 'On' : 'Off'}</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Action Button */}
+            <div className="flex justify-end">
+              <Button 
+                onClick={onNext}
+                className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-3"
+              >
+                <CheckCircle2 className="h-5 w-5" />
                 Ready to Proceed
-              </span>
+              </Button>
             </div>
           </div>
         </div>
@@ -802,63 +822,63 @@ export default function ReviewRefineInterface({
         title={overrideIndex === questions.length ? "Add Questions from Bank" : "Select Replacement Question"}
       />
 
-      {/* Ultra-Premium Choice Modal */}
+      {/* Add New Question Modal */}
       {chooseOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl border border-gray-200/60 w-full max-w-md sm:max-w-lg my-4 sm:my-8">
-            {/* Premium Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 sm:px-6 py-3 sm:py-4 rounded-t-xl sm:rounded-t-2xl">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-white/20 backdrop-blur-sm">
-                  <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-            </div>
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl border border-gray-200 w-full max-w-md mx-4">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-100">
+                  <Plus className="h-5 w-5 text-blue-600" />
+                </div>
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold text-white">Add New Question</h3>
-                  <p className="text-xs sm:text-sm text-blue-100">Choose how you&apos;d like to add a question</p>
+                  <h3 className="text-lg font-semibold text-gray-900">Add New Question</h3>
+                  <p className="text-sm text-gray-600">Choose how you'd like to add a question</p>
                 </div>
               </div>
             </div>
 
-            {/* Premium Content */}
-            <div className="p-4 sm:p-6 space-y-3 sm:space-y-4">
+            {/* Modal Content */}
+            <div className="p-6 space-y-4">
               {/* Write New Question Option */}
               <Button 
                 onClick={() => { setChooseOpen(false); setCreateOpen(true) }}
-                className="w-full h-14 sm:h-16 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-3 sm:gap-4 group"
+                className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-4 group"
               >
-                <div className="p-1.5 sm:p-2 rounded-md sm:rounded-lg bg-white/20 backdrop-blur-sm group-hover:bg-white/30 transition-colors">
-                  <Wand2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                <div className="p-2 rounded-lg bg-white/20">
+                  <Wand2 className="h-5 w-5" />
                 </div>
                 <div className="flex-1 text-left">
-                  <div className="font-semibold text-sm sm:text-base">Write a New Question</div>
-                  <div className="text-xs sm:text-sm text-purple-100">Create a custom question with LaTeX support</div>
+                  <div className="font-semibold text-base">Write a New Question</div>
+                  <div className="text-sm text-blue-100">Create a custom question with LaTeX support</div>
                 </div>
-                <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Button>
 
               {/* Add from Question Bank Option */}
               <Button 
                 variant="outline"
                 onClick={() => { setChooseOpen(false); setModalOpen(true); setOverrideIndex(questions.length) }}
-                className="w-full h-14 sm:h-16 border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-3 sm:gap-4 group"
+                className="w-full h-16 border border-gray-200 hover:border-blue-300 hover:bg-blue-50 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-4 group"
               >
-                <div className="p-1.5 sm:p-2 rounded-md sm:rounded-lg bg-blue-100 group-hover:bg-blue-200 transition-colors">
-                  <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                <div className="p-2 rounded-lg bg-blue-100">
+                  <BookOpen className="h-5 w-5 text-blue-600" />
                 </div>
                 <div className="flex-1 text-left">
-                  <div className="font-semibold text-sm sm:text-base text-gray-800">Add from Question Bank</div>
-                  <div className="text-xs sm:text-sm text-gray-600">Select from existing questions in the database</div>
+                  <div className="font-semibold text-base text-gray-800">Add from Question Bank</div>
+                  <div className="text-sm text-gray-600">Select from existing questions in the database</div>
                 </div>
-                <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 group-hover:translate-x-1 group-hover:text-gray-600 transition-all" />
+                <ArrowRight className="h-4 w-4 text-gray-400 group-hover:translate-x-1 group-hover:text-gray-600 transition-all" />
               </Button>
             </div>
 
-            {/* Premium Footer */}
-            <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-t border-gray-200/60 rounded-b-xl sm:rounded-b-2xl flex justify-end">
+            {/* Modal Footer */}
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg flex justify-end">
               <Button 
                 variant="ghost"
                 onClick={() => setChooseOpen(false)}
-                className="h-8 sm:h-10 px-4 sm:px-6 text-sm sm:text-base text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                className="h-10 px-6 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 Cancel
               </Button>
