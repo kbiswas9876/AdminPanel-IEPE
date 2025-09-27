@@ -1,30 +1,30 @@
-/* Apple-Inspired Design System */
-/* Consistent colors, spacing, and component patterns */
+/* Modern Apple-Inspired Design System */
+/* Premium UI with sophisticated color palette and micro-animations */
 
 :root {
-  /* Primary Color Palette */
+  /* Primary Color Palette - Deep Blue Focus */
   --apple-blue-50: #eff6ff;
   --apple-blue-100: #dbeafe;
-  --apple-blue-500: #3b82f6;
-  --apple-blue-600: #2563eb;
-  --apple-blue-700: #1d4ed8;
+  --apple-blue-500: #0066CC;
+  --apple-blue-600: #0052A3;
+  --apple-blue-700: #003D7A;
 
-  /* Neutral Palette */
-  --apple-slate-50: #f8fafc;
-  --apple-slate-100: #f1f5f9;
-  --apple-slate-200: #e2e8f0;
-  --apple-slate-300: #cbd5e1;
-  --apple-slate-400: #94a3b8;
-  --apple-slate-500: #64748b;
-  --apple-slate-600: #475569;
-  --apple-slate-700: #334155;
-  --apple-slate-800: #1e293b;
-  --apple-slate-900: #0f172a;
+  /* Neutral Palette - Modern Gray Scale */
+  --apple-slate-50: #F5F7FA;
+  --apple-slate-100: #E5E7EB;
+  --apple-slate-200: #E5E7EB;
+  --apple-slate-300: #D1D5DB;
+  --apple-slate-400: #9CA3AF;
+  --apple-slate-500: #6B7280;
+  --apple-slate-600: #4B5563;
+  --apple-slate-700: #374151;
+  --apple-slate-800: #1F2937;
+  --apple-slate-900: #1A1A1A;
 
-  /* Success & Status Colors */
+  /* Success & Status Colors - Subtle Green */
   --apple-green-50: #f0fdf4;
-  --apple-green-500: #22c55e;
-  --apple-green-600: #16a34a;
+  --apple-green-500: #10B981;
+  --apple-green-600: #059669;
   
   --apple-red-50: #fef2f2;
   --apple-red-500: #ef4444;
@@ -59,29 +59,48 @@
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 
-  /* Typography Scale */
-  --text-xs: 0.75rem;      /* 12px */
-  --text-sm: 0.875rem;     /* 14px */
-  --text-base: 1rem;       /* 16px */
-  --text-lg: 1.125rem;     /* 18px */
-  --text-xl: 1.25rem;      /* 20px */
+  /* Modern Typography Scale - SF Pro/Inter Inspired */
+  --text-xs: 0.75rem;      /* 12px - Captions */
+  --text-sm: 0.875rem;     /* 14px - Body small */
+  --text-base: 0.9375rem;  /* 15px - Body */
+  --text-lg: 1.25rem;      /* 20px - H2 */
+  --text-xl: 1.75rem;      /* 28px - H1 */
+  
+  /* Font Weights */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  
+  /* Line Heights */
+  --leading-tight: 1.4;
+  --leading-normal: 1.6;
 }
 
 /* Component Base Classes */
 
-/* Cards */
+/* Cards - Modern Borderless Design */
 .design-card {
-  background: white;
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--apple-slate-200);
-  box-shadow: var(--shadow-sm);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #FFFFFF;
+  border-radius: var(--radius-lg);
+  border: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: var(--space-5);
 }
 
 .design-card:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-1px);
-  border-color: var(--apple-slate-300);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.design-card-interactive {
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.design-card-interactive:hover {
+  border-color: var(--apple-blue-200);
+  background: var(--apple-blue-50);
 }
 
 .design-card-selected {
@@ -92,46 +111,50 @@
   background-opacity: 0.3;
 }
 
-/* Buttons */
+/* Buttons - Modern Design */
 .design-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   font-size: var(--text-sm);
-  font-weight: 500;
+  font-weight: var(--font-medium);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   border: none;
   gap: var(--space-2);
+  height: 36px;
+  padding: 0 var(--space-3);
 }
 
 .design-button-primary {
-  background: linear-gradient(to right, var(--apple-blue-600), var(--apple-blue-700));
+  background: var(--apple-blue-500);
   color: white;
-  padding: var(--space-3) var(--space-6);
-  box-shadow: 0 4px 6px -1px rgb(59 130 246 / 0.25);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .design-button-primary:hover {
-  background: linear-gradient(to right, var(--apple-blue-700), var(--apple-blue-800));
-  box-shadow: 0 8px 15px -3px rgb(59 130 246 / 0.3);
-  transform: translateY(-1px);
+  background: var(--apple-blue-600);
+  box-shadow: 0 4px 8px rgba(0, 102, 204, 0.25);
+  transform: scale(1.02);
+}
+
+.design-button-primary:active {
+  transform: scale(0.98);
 }
 
 .design-button-secondary {
   background: white;
   color: var(--apple-slate-700);
   border: 1px solid var(--apple-slate-200);
-  padding: var(--space-3) var(--space-6);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .design-button-secondary:hover {
   background: var(--apple-slate-50);
   border-color: var(--apple-slate-300);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transform: scale(1.02);
 }
 
 .design-button-ghost {
@@ -227,31 +250,35 @@
   gap: var(--space-4);
 }
 
-/* Typography */
+/* Typography - Modern Hierarchy */
 .design-heading {
-  font-size: var(--text-lg);
-  font-weight: 600;
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
   color: var(--apple-slate-900);
-  line-height: 1.4;
+  line-height: var(--leading-tight);
 }
 
 .design-subheading {
-  font-size: var(--text-base);
-  font-weight: 500;
-  color: var(--apple-slate-700);
-  line-height: 1.5;
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--apple-slate-800);
+  line-height: var(--leading-tight);
 }
 
 .design-body {
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
+  font-weight: var(--font-normal);
   color: var(--apple-slate-600);
-  line-height: 1.6;
+  line-height: var(--leading-normal);
 }
 
 .design-caption {
   font-size: var(--text-xs);
+  font-weight: var(--font-medium);
   color: var(--apple-slate-500);
-  line-height: 1.4;
+  line-height: var(--leading-tight);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 /* Status Indicators */
@@ -358,4 +385,212 @@
 .design-checkbox:focus-visible {
   outline: 2px solid var(--apple-blue-500);
   outline-offset: 2px;
+}
+
+/* Modern Review & Refine Components */
+
+/* Question Card Styles */
+.design-question-card {
+  background: white;
+  border-radius: var(--radius-lg);
+  border: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.design-question-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Answer Option Cards */
+.design-answer-option {
+  background: var(--apple-slate-50);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin: var(--space-2) 0;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.design-answer-option:hover {
+  background: var(--apple-blue-50);
+  border-color: var(--apple-blue-200);
+  transform: translateY(-1px);
+}
+
+.design-answer-option-selected {
+  background: var(--apple-blue-100);
+  border-color: var(--apple-blue-300);
+  color: var(--apple-blue-800);
+}
+
+.design-answer-option-correct {
+  background: var(--apple-green-50);
+  border-color: var(--apple-green-200);
+  color: var(--apple-green-800);
+}
+
+/* Option Label */
+.design-option-label {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--apple-slate-200);
+  color: var(--apple-slate-600);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  flex-shrink: 0;
+}
+
+.design-answer-option-selected .design-option-label {
+  background: var(--apple-blue-500);
+  color: white;
+}
+
+.design-answer-option-correct .design-option-label {
+  background: var(--apple-green-500);
+  color: white;
+}
+
+/* Modern Badge System */
+.design-badge-modern {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  background: white;
+  border: 1px solid var(--apple-slate-200);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.design-badge-blue {
+  background: var(--apple-blue-50);
+  color: var(--apple-blue-700);
+  border-color: var(--apple-blue-200);
+}
+
+.design-badge-green {
+  background: var(--apple-green-50);
+  color: var(--apple-green-700);
+  border-color: var(--apple-green-200);
+}
+
+/* Modern Toggle Switch */
+.design-toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: var(--apple-slate-300);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.design-toggle-active {
+  background: var(--apple-blue-500);
+}
+
+.design-toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.design-toggle-active::after {
+  transform: translateX(20px);
+}
+
+/* Modern Header */
+.design-header {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--apple-slate-200);
+  padding: var(--space-4) var(--space-6);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Action Button Group */
+.design-action-group {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* Status Indicators */
+.design-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--apple-slate-50);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: var(--apple-slate-600);
+}
+
+.design-status-indicator-ready {
+  background: var(--apple-green-50);
+  color: var(--apple-green-700);
+}
+
+/* Question Actions */
+.design-question-actions {
+  display: flex;
+  gap: var(--space-2);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.design-question-card:hover .design-question-actions {
+  opacity: 1;
+}
+
+.design-action-button {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  background: white;
+  border: 1px solid var(--apple-slate-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--apple-slate-600);
+}
+
+.design-action-button:hover {
+  background: var(--apple-slate-50);
+  border-color: var(--apple-slate-300);
+  transform: scale(1.05);
+}
+
+.design-action-button-danger:hover {
+  background: var(--apple-red-50);
+  border-color: var(--apple-red-200);
+  color: var(--apple-red-600);
 }

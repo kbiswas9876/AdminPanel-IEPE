@@ -218,118 +218,99 @@ export default function ReviewRefineInterface({
 
   return (
     <div className="w-full">
-      {/* Ultra-Premium Mobile Header */}
-      <div className="sticky top-0 z-40 bg-white/98 backdrop-blur-md border-b border-gray-200/60 shadow-lg">
-        <div className="px-3 sm:px-4 py-3 sm:py-5 max-w-none mx-auto w-full">
-          {/* Main Header Row */}
-          <div className="flex items-center justify-between mb-3 sm:mb-4">
-            {/* Left Section - Title & Status */}
-            <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
-              <div className="flex-shrink-0 p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-100 via-green-100 to-teal-100 shadow-lg">
-                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
+      {/* Modern Header */}
+      <div className="design-header">
+        <div className="flex items-center justify-between">
+          {/* Left Section - Title & Status */}
+          <div className="flex items-center gap-4 min-w-0 flex-1">
+            <div className="flex-shrink-0 p-3 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 shadow-sm">
+              <Sparkles className="h-5 w-5 text-blue-600" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="design-heading mb-2">
+                Review & Refine
+              </h2>
+              <div className="flex items-center gap-3">
+                <div className="design-status-indicator">
+                  <FileText className="h-3.5 w-3.5" />
+                  <span>{questions.length} questions</span>
                 </div>
-              <div className="min-w-0 flex-1">
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight mb-1">
-                    Review & Refine
-                  </h2>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
-                  <div className="flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-full border border-blue-200/50">
-                    <FileText className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-600" />
-                    <span className="text-xs sm:text-sm font-semibold text-blue-700">{questions.length} questions</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1 bg-gradient-to-r from-green-50 to-emerald-50 rounded-full border border-green-200/50">
-                    <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-green-600" />
-                    <span className="text-xs sm:text-sm font-semibold text-green-700">Ready</span>
-                  </div>
+                <div className="design-status-indicator design-status-indicator-ready">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <span>Ready</span>
                 </div>
               </div>
-            </div>
-            
-            {/* Right Section - Primary Actions */}
-            <div className="flex-shrink-0 ml-2 sm:ml-4 flex items-center gap-2 sm:gap-3">
-              <Button 
-                onClick={() => setChooseOpen(true)}
-                className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 text-xs sm:text-sm px-3 sm:px-5 py-2 sm:py-2.5 h-8 sm:h-10 rounded-lg sm:rounded-xl font-semibold group"
-              >
-                <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 group-hover:scale-110 transition-transform duration-200" />
-                <span className="hidden sm:inline">Add Question</span>
-                <span className="sm:hidden">Add</span>
-              </Button>
-              
-              <Button 
-                onClick={onNext}
-                className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 text-xs sm:text-sm px-3 sm:px-5 py-2 sm:py-2.5 h-8 sm:h-10 rounded-lg sm:rounded-xl font-semibold group"
-              >
-                <span className="hidden sm:inline">Next Step</span>
-                <span className="sm:hidden">Next</span>
-                <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1 sm:ml-2 group-hover:translate-x-1 transition-transform duration-200" />
-              </Button>
             </div>
           </div>
-          
-          {/* Premium Action Controls */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 pt-3 sm:pt-4 border-t border-gray-200/60">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
-              {/* Premium Shuffle Button */}
-              <Button 
-                onClick={handleShuffleQuestions}
-                disabled={isShuffling}
-                className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 h-8 sm:h-10 rounded-lg sm:rounded-xl font-semibold group w-full sm:w-auto"
-              >
-                {isShuffling ? (
-                  <>
-                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white mr-1.5 sm:mr-2"></div>
-                    <span className="hidden sm:inline">Shuffling...</span>
-                    <span className="sm:hidden">Shuffling</span>
-                  </>
-                ) : (
-                  <>
-                    <Lightning className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 group-hover:rotate-12 transition-transform duration-200" />
-                    <span className="hidden sm:inline">Shuffle Questions</span>
-                    <span className="sm:hidden">Shuffle</span>
-                  </>
-                )}
-              </Button>
-              
-              {/* Ultra-Premium Toggle Switch */}
-              <div className="flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-2.5 sm:py-3 bg-gradient-to-r from-gray-50/80 to-blue-50/40 rounded-xl sm:rounded-2xl border border-gray-200/60 shadow-lg w-full sm:w-auto">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 shadow-sm">
-                    <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <span className="text-xs sm:text-sm font-bold text-gray-800">Shuffle Options</span>
-                    <p className="text-xs text-gray-600 hidden sm:block">Randomize option order</p>
-                  </div>
+            
+          {/* Right Section - Primary Actions */}
+          <div className="design-action-group">
+            <Button 
+              onClick={() => setChooseOpen(true)}
+              className="design-button design-button-primary"
+            >
+              <Plus className="h-4 w-4" />
+              Add Question
+            </Button>
+            
+            <Button 
+              onClick={onNext}
+              className="design-button design-button-primary"
+            >
+              Next Step
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+        
+        {/* Action Controls */}
+        <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+          <div className="flex items-center gap-4">
+            {/* Shuffle Button */}
+            <Button 
+              onClick={handleShuffleQuestions}
+              disabled={isShuffling}
+              className="design-button design-button-secondary"
+            >
+              {isShuffling ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                  Shuffling...
+                </>
+              ) : (
+                <>
+                  <Lightning className="h-4 w-4 mr-2" />
+                  Shuffle Questions
+                </>
+              )}
+            </Button>
+            
+            {/* Toggle Switch */}
+            <div className="flex items-center gap-3 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="flex items-center gap-2">
+                <Settings className="h-4 w-4 text-gray-600" />
+                <div>
+                  <span className="text-sm font-medium text-gray-800">Shuffle Options</span>
+                  <p className="text-xs text-gray-600">Randomize option order</p>
                 </div>
-                
-                {/* Premium Toggle Switch */}
-                <button
-                  onClick={() => setShuffleOptions(!shuffleOptions)}
-                  className={`relative inline-flex h-6 w-12 sm:h-7 sm:w-14 items-center rounded-full transition-all duration-300 shadow-inner focus:outline-none focus:ring-4 focus:ring-blue-200/50 ${
-                    shuffleOptions 
-                      ? 'bg-gradient-to-r from-emerald-400 to-green-500 shadow-emerald-200' 
-                      : 'bg-gray-300 shadow-gray-200'
-                  }`}
-                  aria-pressed={shuffleOptions}
-                >
-                  <span
-                    className={`inline-block h-5 w-5 sm:h-6 sm:w-6 transform rounded-full bg-white shadow-lg transition-all duration-300 ${
-                      shuffleOptions ? 'translate-x-6 sm:translate-x-7' : 'translate-x-0.5'
-                    }`}
-                  />
-                </button>
               </div>
+              
+              {/* Modern Toggle Switch */}
+              <button
+                onClick={() => setShuffleOptions(!shuffleOptions)}
+                className={`design-toggle ${shuffleOptions ? 'design-toggle-active' : ''}`}
+                aria-pressed={shuffleOptions}
+              />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content - Full Width */}
-      <div className="p-3 sm:p-4">
-        <div className="max-w-none mx-auto w-full">
-        {/* Ultra-Premium Questions List */}
-        <div className="space-y-4 sm:space-y-6">
+      {/* Main Content */}
+      <div className="p-6">
+        <div className="max-w-4xl mx-auto">
+        {/* Questions List */}
+        <div className="space-y-6">
           {questions.map((item, index) => {
             const q = item.question
             const options = q.options || {}
@@ -337,54 +318,47 @@ export default function ReviewRefineInterface({
             const optionKeys = Object.keys(options).filter(key => options[key] && options[key].trim()) as Array<keyof typeof options>
             
             return (
-              <Card key={index} className="group border border-gray-200/60 rounded-xl sm:rounded-2xl overflow-hidden bg-white shadow-lg sm:shadow-xl hover:shadow-xl sm:hover:shadow-2xl transition-all duration-300 hover:scale-[1.005] sm:hover:scale-[1.01]">
-                <CardContent className="p-4 sm:p-6">
-                  {/* Ultra-Premium Question Header */}
-                  <div className="flex items-start justify-between mb-4 sm:mb-6">
-                    <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
+              <div key={index} className="design-question-card group">
+                  {/* Question Header */}
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="flex items-center gap-4 min-w-0 flex-1">
                       <div className="min-w-0 flex-1">
-                        <h3 className="text-sm sm:text-base font-bold text-gray-900 tracking-tight mb-1 sm:mb-2">
-                              Question {index + 1}
-                            </h3>
-                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                          <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-full border border-blue-200/50 shadow-sm">
-                            <Layers className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-600" />
-                            <span className="text-xs sm:text-sm font-semibold text-blue-700">{item.chapter_name}</span>
+                        <h3 className="design-subheading mb-2">
+                          Question {index + 1}
+                        </h3>
+                        <div className="flex items-center gap-2">
+                          <div className="design-badge-modern design-badge-blue">
+                            <Layers className="h-3.5 w-3.5" />
+                            <span>{item.chapter_name}</span>
                           </div>
-                          <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-gray-50 to-slate-50 rounded-full border border-gray-200/50 shadow-sm">
-                            <FileText className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-600" />
-                            <span className="text-xs sm:text-sm font-semibold text-gray-700">{item.source_type}</span>
-                            {item.source_value && <span className="text-xs text-gray-500">: {item.source_value}</span>}
-                        </div>
-                          </div>
+                          <div className="design-badge-modern">
+                            <FileText className="h-3.5 w-3.5" />
+                            <span>{item.source_type}</span>
+                            {item.source_value && <span>: {item.source_value}</span>}
                           </div>
                         </div>
+                      </div>
+                    </div>
                     
-                    {/* Ultra-Premium Action Buttons */}
-                    <div className="flex items-center gap-0.5 sm:gap-2 ml-1 sm:ml-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
+                    {/* Question Actions */}
+                    <div className="design-question-actions">
+                      <button
                         onClick={() => onRegenerate(index)}
-                        className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-200 rounded-md sm:rounded-xl shadow-sm hover:shadow-md group"
+                        className="design-action-button"
                         title="Regenerate Question"
                       >
-                        <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 group-hover:rotate-180 transition-transform duration-300" />
-                      </Button>
+                        <RefreshCw className="h-4 w-4" />
+                      </button>
                       
-                      <Button
-                        variant="outline"
-                        size="sm"
+                      <button
                         onClick={() => handleOverride(index)}
-                        className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-green-50 hover:border-green-300 hover:text-green-700 transition-all duration-200 rounded-md sm:rounded-xl shadow-sm hover:shadow-md group"
+                        className="design-action-button"
                         title="Override with Bank Question"
                       >
-                        <Pencil className="h-3 w-3 sm:h-4 sm:w-4 group-hover:scale-110 transition-transform duration-200" />
-                      </Button>
+                        <Pencil className="h-4 w-4" />
+                      </button>
                       
-                      <Button
-                        variant="outline"
-                        size="sm"
+                      <button
                         onClick={() => {
                           if (editingIndex === index) {
                             cancelEdit()
@@ -393,25 +367,23 @@ export default function ReviewRefineInterface({
                           }
                           onEdit(index)
                         }}
-                        className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 transition-all duration-200 rounded-md sm:rounded-xl shadow-sm hover:shadow-md group"
+                        className="design-action-button"
                         title="Edit Question"
                       >
-                        <Edit3 className="h-3 w-3 sm:h-4 sm:w-4 group-hover:scale-110 transition-transform duration-200" />
-                      </Button>
+                        <Edit3 className="h-4 w-4" />
+                      </button>
                       
-                      <Button
-                        variant="outline"
-                        size="sm"
+                      <button
                         onClick={() => handleDelete(index)}
-                        className="h-7 w-7 sm:h-9 sm:w-9 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300 transition-all duration-200 rounded-md sm:rounded-xl shadow-sm hover:shadow-md group"
+                        className="design-action-button design-action-button-danger"
                         title="Delete Question"
                       >
-                        <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 group-hover:scale-110 transition-transform duration-200" />
-                      </Button>
-                      </div>
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
-                  {/* Ultra-Premium Question Content */}
-                  <div className="space-y-4 sm:space-y-6">
+                  {/* Question Content */}
+                  <div className="space-y-6">
                       {editingIndex === index && editForm ? (
                       <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-200/50 overflow-hidden">
                         {/* Premium Header */}
@@ -641,21 +613,21 @@ export default function ReviewRefineInterface({
                         </div>
                       ) : (
                         <div>
-                        {/* Ultra-Premium Question Text */}
-                        <div className="mb-4 sm:mb-6 p-4 sm:p-6 bg-gradient-to-br from-gray-50/80 via-white/50 to-blue-50/30 rounded-xl sm:rounded-2xl border border-gray-200/60 shadow-lg">
-                          <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                            <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-gradient-to-br from-purple-100 to-indigo-100 shadow-sm">
-                              <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-600" />
+                        {/* Question Text */}
+                        <div className="mb-6 p-6 bg-gray-50 rounded-lg border border-gray-200">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 rounded-lg bg-purple-100">
+                              <FileText className="h-4 w-4 text-purple-600" />
                             </div>
-                            <h4 className="text-xs sm:text-sm font-bold text-gray-800">Question</h4>
+                            <h4 className="text-sm font-semibold text-gray-800">Question</h4>
                           </div>
-                          <div className="prose prose-xs sm:prose-lg max-w-none text-gray-800 leading-relaxed">
+                          <div className="prose prose-sm max-w-none text-gray-800 leading-relaxed">
                               {renderMathContent(q.question_text)}
                             </div>
                           </div>
 
-                        {/* Ultra-Premium Options */}
-                        <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
+                        {/* Answer Options */}
+                        <div className="space-y-3 mb-6">
                             {optionKeys.map((optionKey) => {
                               const optionText = options[optionKey]
                               const isCorrect = q.correct_option === optionKey
@@ -663,23 +635,19 @@ export default function ReviewRefineInterface({
                               return (
                                 <div
                                   key={optionKey}
-                                className={`flex items-start space-x-3 sm:space-x-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl border transition-all duration-300 hover:shadow-md ${
-                                    isCorrect 
-                                      ? 'bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 border-green-300/60 shadow-lg' 
-                                      : 'bg-white/90 border-gray-200/60 hover:bg-gray-50/80'
+                                  className={`design-answer-option ${
+                                    isCorrect ? 'design-answer-option-correct' : ''
                                   }`}
                                 >
-                                <div className={`flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl flex items-center justify-center text-sm sm:text-lg font-bold transition-all duration-300 shadow-sm ${
-                                    isCorrect
-                                      ? 'bg-gradient-to-br from-green-100 to-emerald-100 text-green-800 shadow-green-200'
-                                      : 'bg-gradient-to-br from-gray-100 to-slate-200 text-gray-700'
+                                  <div className={`design-option-label ${
+                                    isCorrect ? 'design-answer-option-correct .design-option-label' : ''
                                   }`}>
                                     {getOptionLabel(String(optionKey))}
                                     {isCorrect && (
-                                    <span className="ml-0.5 sm:ml-1 text-green-600 text-xs sm:text-sm">✓</span>
+                                      <CheckCircle2 className="h-3 w-3 ml-1" />
                                     )}
                                   </div>
-                                  <div className="flex-1 prose prose-xs sm:prose-lg max-w-none text-gray-800 leading-relaxed">
+                                  <div className="flex-1 prose prose-sm max-w-none text-gray-800 leading-relaxed">
                                     {renderMathContent(String(optionText))}
                                   </div>
                                 </div>
@@ -764,8 +732,7 @@ export default function ReviewRefineInterface({
                         </div>
                       )}
                     </div>
-                </CardContent>
-              </Card>
+                </div>
             )
           })}
         </div>
