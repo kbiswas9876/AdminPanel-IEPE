@@ -324,10 +324,10 @@ export default function ReviewRefineInterface({
       </div>
 
       {/* Main Content - Full Width */}
-      <div className="p-3 sm:p-4">
+      <div className="px-3 sm:px-4">
         <div className="max-w-none mx-auto w-full">
         {/* Ultra-Premium Questions List */}
-        <div className="space-y-4 sm:space-y-6">
+        <div className="space-y-4 sm:space-y-6 pt-3 sm:pt-4 -mx-3 sm:-mx-4">
           {questions.map((item, index) => {
             const q = item.question
             const options = q.options || {}
@@ -336,7 +336,7 @@ export default function ReviewRefineInterface({
             
             return (
               <Card key={index} className="group border border-gray-200/60 rounded-xl sm:rounded-2xl overflow-hidden bg-white shadow-lg sm:shadow-xl hover:shadow-xl sm:hover:shadow-2xl transition-all duration-300 hover:scale-[1.005] sm:hover:scale-[1.01]">
-                <CardContent className="p-4 sm:p-6">
+                <CardContent className="py-4 sm:py-6 px-3 sm:px-4">
                   {/* Ultra-Premium Question Header */}
                   <div className="flex items-start justify-between mb-4 sm:mb-6">
                     <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
@@ -771,7 +771,7 @@ export default function ReviewRefineInterface({
         </div>
 
         {/* Ultra-Premium Summary */}
-        <div className="mt-6 sm:mt-8 p-4 sm:p-6 bg-gradient-to-br from-blue-50/90 via-indigo-50/70 to-purple-50/50 rounded-xl sm:rounded-2xl border border-blue-200/60 shadow-lg sm:shadow-xl">
+        <div className="mt-6 sm:mt-8 py-4 sm:py-6 px-3 sm:px-4 bg-gradient-to-br from-blue-50/90 via-indigo-50/70 to-purple-50/50 rounded-xl sm:rounded-2xl border border-blue-200/60 shadow-lg sm:shadow-xl -mx-3 sm:-mx-4">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6">
             <div className="flex-1">
               <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
