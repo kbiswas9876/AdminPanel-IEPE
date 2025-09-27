@@ -5,6 +5,7 @@ import { useTestCreationStore } from '@/stores/testCreationStore'
 import { convertQuestionsToSlots } from '@/components/tests/utils/convertQuestionsToSlots'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { regenerateSingleQuestion } from '@/lib/actions/tests'
 import type { Question } from '@/lib/types'
 
 export default function ReviewAndRefinePage() {
@@ -39,6 +40,33 @@ export default function ReviewAndRefinePage() {
     }
   }, [questionsToUse.length, router])
 
+  const handleRegenerate = async (index: number) => {
+    // For blueprint-generated questions, we need to regenerate based on the original criteria
+    // For now, we'll implement a simple regeneration that replaces the question
+    // This could be enhanced to store the original blueprint criteria
+    const currentQuestion = questionsToUse[index]
+    if (!currentQuestion) return
+
+    try {
+      // For simplicity, we'll just regenerate from the same chapter
+      // In a more advanced implementation, we'd store the original blueprint criteria
+      const newQuestion = await regenerateSingleQuestion({
+        chapter_name: currentQuestion.chapter_name,
+        source_type: 'random',
+        exclude_ids: questionsToUse.map(q => q.id as number).filter(Boolean)
+      })
+      
+      if (newQuestion) {
+        const updatedQuestions = [...questionsToUse]
+        updatedQuestions[index] = newQuestion
+        setQuestionsFromModal(updatedQuestions)
+        setSelectedQuestions(updatedQuestions)
+      }
+    } catch (error) {
+      console.error('Failed to regenerate question:', error)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50/30">
       <ReviewRefineInterface
@@ -48,9 +76,12 @@ export default function ReviewAndRefinePage() {
           setSelectedQuestions(newQuestions)
           setQuestionsFromModal(newQuestions)
         }}
-        onRegenerate={() => {}}
+        onRegenerate={handleRegenerate}
         onEdit={() => {}}
-        onNext={() => {}}
+        onNext={() => {
+          // Navigate to the finalization stage
+          router.push('/tests/finalize')
+        }}
         isQuestionBankMode
       />
     </div>

@@ -2,17 +2,14 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { getChapterQuestionCount, getChaptersWithTags, generateTestPaperFromBlueprint, regenerateSingleQuestion } from '@/lib/actions/tests'
+import { getChapterQuestionCount, getChaptersWithTags, generateTestPaperFromBlueprint } from '@/lib/actions/tests'
 import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/ui/section-header'
 import { ArrowLeft } from 'lucide-react'
 import type { TestQuestionSlot, ChapterInfo, BlueprintRule, ChapterBlueprint, TestBlueprint } from '@/lib/types'
 import type { Test } from '@/lib/supabase/admin'
-import ReviewRefineInterface from './review-refine-interface'
-import { TestFinalizationStage, type TestFormData, type PublishData } from './test-finalization-stage'
 import { TestCreationOptionsModal } from './test-creation-options-modal'
 import { TwoColumnBlueprintBuilder } from './two-column-blueprint-builder'
-import { saveTest } from '@/lib/actions/tests'
 import type { Question } from '@/lib/types'
 
 type BlueprintState = Record<string, ChapterBlueprint>
@@ -97,7 +94,7 @@ export function TestCreationWizard({
   }, [blueprint])
   
 
-  // Stage 2: Review & Refine
+  // Store generated questions for potential use
   const [reviewQuestions, setReviewQuestions] = useState<TestQuestionSlot[]>(initialData?.questions || [])
 
   useEffect(() => {
@@ -140,7 +137,13 @@ export function TestCreationWizard({
             source_type: slot.source_type === 'rule' ? 'tag' : slot.source_type
           }))
           setReviewQuestions(convertedSlots)
-          setCurrentStep(2)
+          
+          // Store the generated questions in localStorage for the unified Review & Refine page
+          const questions = convertedSlots.map(slot => slot.question)
+          localStorage.setItem('selectedTestQuestions', JSON.stringify(questions))
+          
+          // Navigate to the unified Review & Refine page
+          router.push('/tests/review-and-refine')
           setError(null)
         })
         .catch((err) => {
@@ -152,83 +155,8 @@ export function TestCreationWizard({
         })
       return
     }
-    setCurrentStep(2)
-    setError(null)
   }
 
-  const handlePrevious = () => {
-    setCurrentStep(1)
-    setError(null)
-  }
-
-  const handleRegenerateAt = async (index: number) => {
-    const slot = reviewQuestions[index]
-    if (!slot) return
-    const exclude = reviewQuestions.map((s) => s.question.id as number).filter(Boolean)
-    
-    // Map the source_type to the expected format
-    let sourceType: 'random' | 'rule' = 'random'
-    let ruleTag: string | null = null
-    let ruleDifficulty: string | null = null
-    
-    if (slot.source_type === 'tag' && slot.source_value) {
-      sourceType = 'rule'
-      ruleTag = slot.source_value
-    } else if (slot.source_type === 'difficulty' && slot.source_value) {
-      sourceType = 'rule'
-      ruleDifficulty = slot.source_value
-    }
-    
-    const newQ = await regenerateSingleQuestion({
-      chapter_name: slot.chapter_name,
-      source_type: sourceType,
-      rule_tag: ruleTag,
-      rule_difficulty: ruleDifficulty,
-      exclude_ids: exclude,
-    })
-    if (newQ) {
-      const copy = [...reviewQuestions]
-      copy[index] = { ...slot, question: newQ }
-      setReviewQuestions(copy)
-    }
-  }
-
-  const handleSaveTest = async (testData: TestFormData) => {
-    const questionIds = reviewQuestions.map((slot) => slot.question.id as number).filter(Boolean)
-    
-    await saveTest({
-      testId: isEditMode ? testId : undefined,
-      name: testData.name,
-      description: testData.description || undefined,
-      total_time_minutes: testData.totalTimeMinutes,
-      marks_per_correct: testData.marksPerCorrect,
-      negative_marks_per_incorrect: testData.negativeMarksPerIncorrect,
-      result_policy: testData.resultPolicy,
-      result_release_at: testData.resultPolicy === 'scheduled' ? testData.resultReleaseAt : null,
-      question_ids: questionIds,
-      publish: null // Save as draft
-    })
-  }
-
-  const handlePublishTest = async (testData: TestFormData, publishData: PublishData) => {
-    const questionIds = reviewQuestions.map((slot) => slot.question.id as number).filter(Boolean)
-    
-    await saveTest({
-      testId: isEditMode ? testId : undefined,
-      name: testData.name,
-      description: testData.description || undefined,
-      total_time_minutes: testData.totalTimeMinutes,
-      marks_per_correct: testData.marksPerCorrect,
-      negative_marks_per_incorrect: testData.negativeMarksPerIncorrect,
-      result_policy: testData.resultPolicy,
-      result_release_at: testData.resultPolicy === 'scheduled' ? testData.resultReleaseAt : null,
-      question_ids: questionIds,
-      publish: {
-        start_time: publishData.startTime,
-        end_time: publishData.endTime
-      }
-    })
-  }
 
 
   return (
@@ -252,32 +180,6 @@ export function TestCreationWizard({
       )}
       {!showOptionsModal && (
         <>
-          {/* Page Header - Only show for steps 2 and 3, Blueprint component has its own header */}
-          {currentStep > 1 && !(isEditMode && currentStep === 3) && (
-            <PageHeader
-              title={isEditMode ? 'Edit Mock Test' : 'Create Mock Test'}
-              subtitle={
-                currentStep === 2 ? 'Review and refine questions'
-                : currentStep === 3 ? 'Set rules and publish'
-                : undefined
-              }
-              actions={
-                currentStep > 1 && currentStep !== 3 ? (
-                  <Button
-                variant="outline"
-                size="sm"
-                onClick={handlePrevious}
-                className="group relative overflow-hidden h-10 px-4 bg-white/80 backdrop-blur-sm border-gray-200 hover:bg-white hover:border-blue-300 shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl"
-                title="Go back"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2 text-gray-600 group-hover:text-blue-600 transition-colors duration-300" />
-                <span className="font-medium">Back</span>
-              </Button>
-            ) : undefined
-          }
-          className="mb-8"
-        />
-      )}
 
       {/* Main Content */}
       <div className="flex-1 overflow-hidden">
@@ -298,33 +200,7 @@ export function TestCreationWizard({
           </div>
         )}
 
-      {/* Step 2: Review & Refine */}
-      {currentStep === 2 && !showOptionsModal && (
-        <ReviewRefineInterface
-          questions={creationMethod === 'question-bank' ? convertQuestionsToSlots(selectedQuestions) : reviewQuestions}
-          onQuestionsChange={creationMethod === 'question-bank' ? (slots) => setSelectedQuestions(slots.map(slot => slot.question)) : setReviewQuestions}
-          onRegenerate={handleRegenerateAt}
-          onEdit={(index) => {
-            // Placeholder for edit functionality
-            console.log('Edit question at index:', index)
-          }}
-          onNext={() => setCurrentStep(3)}
-          isQuestionBankMode={creationMethod === 'question-bank'}
-        />
-      )}
 
-      {/* Step 3: Finalize & Publish */}
-      {currentStep === 3 && (
-        <TestFinalizationStage
-          questions={reviewQuestions}
-          onPrevious={() => setCurrentStep(2)}
-          onSave={handleSaveTest}
-          onPublish={handlePublishTest}
-          initialTestData={isEditMode ? initialData?.test : undefined}
-          isEditMode={isEditMode}
-          testId={testId}
-        />
-      )}
 
         </div>
       </div>
