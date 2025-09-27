@@ -252,7 +252,7 @@ export function TestCreationWizard({
       )}
       {!showOptionsModal && (
         <>
-          {/* Page Header - Only show for steps 2 and 3, not for step 1 (blueprint builder has its own header) */}
+          {/* Page Header - Only show for steps 2 and 3, Blueprint component has its own header */}
           {currentStep > 1 && !(isEditMode && currentStep === 3) && (
             <PageHeader
               title={isEditMode ? 'Edit Mock Test' : 'Create Mock Test'}
