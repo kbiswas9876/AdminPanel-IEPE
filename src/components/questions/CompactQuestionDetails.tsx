@@ -246,8 +246,10 @@ export const CompactQuestionDetails = memo(function CompactQuestionDetails({
               </div>
               {showSolution && (
                 <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 animate-in slide-in-from-top-2 duration-200 ease-out">
-                  <div className="prose prose-sm max-w-none text-slate-700 leading-relaxed">
-                    <UniversalContentRenderer text={question.solution_text} />
+                  <div className="prose prose-xs max-w-none text-slate-700 leading-relaxed">
+                    <div className="text-sm font-medium text-slate-800 [&_*]:text-sm [&_*]:leading-relaxed [&_p]:mb-2 [&_p]:last:mb-0 [&_strong]:font-semibold [&_em]:italic">
+                      <UniversalContentRenderer text={question.solution_text} />
+                    </div>
                   </div>
                 </div>
               )}
