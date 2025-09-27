@@ -1,8 +1,6 @@
-import { MainLayout } from '@/components/layout/main-layout'
-import { ProtectedRoute } from '@/components/auth/protected-route'
-import { TestCreationWizard } from '@/components/tests/test-creation-wizard'
 import { getTestDetailsForEdit } from '@/lib/actions/tests'
 import { notFound } from 'next/navigation'
+import EditTestRedirect from './edit-test-redirect'
 
 interface EditTestPageProps {
   params: {
@@ -11,7 +9,8 @@ interface EditTestPageProps {
 }
 
 export default async function EditTestPage({ params }: EditTestPageProps) {
-  const testID = parseInt(params.testID)
+  const resolvedParams = await params
+  const testID = parseInt(resolvedParams.testID)
   
   if (isNaN(testID)) {
     notFound()
@@ -24,22 +23,10 @@ export default async function EditTestPage({ params }: EditTestPageProps) {
   }
 
   return (
-    <ProtectedRoute>
-      <MainLayout>
-        <div className="min-h-screen bg-gray-50/30">
-          {/* Main Content */}
-          <div className="p-4 sm:p-6">
-                    <div className="max-w-none mx-auto w-full">
-              <TestCreationWizard 
-                initialData={testData}
-                isEditMode={true}
-                testId={testID}
-              />
-            </div>
-          </div>
-        </div>
-      </MainLayout>
-    </ProtectedRoute>
+    <EditTestRedirect 
+      testData={testData}
+      testId={testID}
+    />
   )
 }
 

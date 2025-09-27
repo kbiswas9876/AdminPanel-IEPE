@@ -12,10 +12,13 @@ export default function TestFinalizePage() {
   const router = useRouter()
   const { selectedQuestions, setSelectedQuestions } = useTestCreationStore()
   const [questionsFromModal, setQuestionsFromModal] = useState<Question[]>([])
+  const [editTestId, setEditTestId] = useState<number | undefined>(undefined)
 
-  // Load questions from localStorage if they exist (from the question bank flow)
+  // Load questions from localStorage if they exist (from the question bank flow or edit flow)
   useEffect(() => {
     const storedQuestions = localStorage.getItem('selectedTestQuestions')
+    const storedTestId = localStorage.getItem('editingTestId')
+    
     if (storedQuestions) {
       try {
         const parsedQuestions = JSON.parse(storedQuestions)
@@ -26,6 +29,12 @@ export default function TestFinalizePage() {
       } catch (error) {
         console.error('Error parsing stored questions:', error)
       }
+    }
+    
+    if (storedTestId) {
+      setEditTestId(parseInt(storedTestId))
+      // Clear the stored test ID after loading
+      localStorage.removeItem('editingTestId')
     }
   }, [setSelectedQuestions])
 
@@ -44,7 +53,7 @@ export default function TestFinalizePage() {
     const questionIds = questionSlots.map((slot) => slot.question.id as number).filter(Boolean)
     
     await saveTest({
-      testId: undefined,
+      testId: editTestId,
       name: testData.name,
       description: testData.description || undefined,
       total_time_minutes: testData.totalTimeMinutes,
@@ -61,7 +70,7 @@ export default function TestFinalizePage() {
     const questionIds = questionSlots.map((slot) => slot.question.id as number).filter(Boolean)
     
     await saveTest({
-      testId: undefined,
+      testId: editTestId,
       name: testData.name,
       description: testData.description || undefined,
       total_time_minutes: testData.totalTimeMinutes,
@@ -99,7 +108,8 @@ export default function TestFinalizePage() {
       onPrevious={handlePrevious}
       onSave={handleSave}
       onPublish={handlePublish}
-      isEditMode={false}
+      isEditMode={!!editTestId}
+      testId={editTestId}
     />
   )
 }

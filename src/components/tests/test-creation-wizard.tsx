@@ -30,12 +30,32 @@ export function TestCreationWizard({
   testId 
 }: TestCreationWizardProps = {}) {
   const router = useRouter()
-  const [currentStep, setCurrentStep] = useState(isEditMode ? 2 : 1) // Start with blueprint step for new tests
+  const [currentStep, setCurrentStep] = useState(1) // Always start with step 1 (blueprint configuration)
   const [error, setError] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [showOptionsModal, setShowOptionsModal] = useState(false) // Don't show options modal by default
   const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([])
   const [creationMethod, setCreationMethod] = useState<'blueprint' | 'question-bank' | null>('blueprint') // Default to blueprint
+  const [isNavigatingToEdit, setIsNavigatingToEdit] = useState(false)
+
+  // Handle edit mode - navigate directly to Review & Refine page
+  useEffect(() => {
+    if (isEditMode && initialData?.questions) {
+      setIsNavigatingToEdit(true)
+      
+      // Store the existing test questions in localStorage for the Review & Refine page
+      const questions = initialData.questions.map(slot => slot.question)
+      localStorage.setItem('selectedTestQuestions', JSON.stringify(questions))
+      
+      // Store the test ID for the finalization page
+      if (testId) {
+        localStorage.setItem('editingTestId', testId.toString())
+      }
+      
+      // Navigate to the unified Review & Refine page
+      router.push('/tests/review-and-refine')
+    }
+  }, [isEditMode, initialData, router, testId])
   
   // Step 1: Test Blueprint
   const [chapters, setChapters] = useState<ChapterInfo[]>([])
@@ -180,14 +200,22 @@ export function TestCreationWizard({
       )}
       {!showOptionsModal && (
         <>
+          {/* Show loading state when navigating to edit mode */}
+          {isNavigatingToEdit ? (
+            <div className="flex-1 overflow-hidden flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading test editor...</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Main Content */}
+              <div className="flex-1 overflow-hidden">
+                <div className="h-full">
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-hidden">
-        <div className="h-full">
-
-
-        {/* Step 1: Test Blueprint - Two-Column Blueprint Builder */}
-        {currentStep === 1 && !showOptionsModal && (
+                {/* Step 1: Test Blueprint - Two-Column Blueprint Builder */}
+                {currentStep === 1 && !showOptionsModal && (
           <div className="w-full h-full">
             <TwoColumnBlueprintBuilder
               chapters={chapters}
@@ -202,9 +230,11 @@ export function TestCreationWizard({
 
 
 
-        </div>
-      </div>
-      </>
+                </div>
+              </div>
+            </>
+          )}
+        </>
       )}
     </div>
   )
