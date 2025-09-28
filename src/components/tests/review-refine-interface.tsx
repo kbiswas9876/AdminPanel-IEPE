@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ArrowRight, Pencil, Edit3, Trash2, ChevronDown, Plus, Eye, EyeOff, Sparkles, Layers, RefreshCw, FileText, CheckCircle2, BarChart3, Award, Star, Shield, Zap as Lightning, Wand2, Palette, Save, X, BookOpen, AlertCircle, Info, ToggleLeft, ToggleRight } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 import { UniversalContentRenderer } from '../editors/UniversalContentRenderer'
 import { ClientOnlyAdvancedTipTapEditor } from '@/components/editors/ClientOnlyAdvancedTipTapEditor'
 import { LivePreviewRenderer } from '@/components/editors/LivePreviewRenderer'
@@ -49,6 +51,7 @@ export default function ReviewRefineInterface({
     solution: true
   })
   const [isShuffling, setIsShuffling] = useState(false)
+
 
   const handleShuffleQuestions = async () => {
     setIsShuffling(true)
@@ -218,81 +221,76 @@ export default function ReviewRefineInterface({
 
   return (
     <div className="w-full">
-      {/* Ultra-Premium Mobile Header */}
+      {/* Clean & Organized Header */}
       <div className="sticky top-0 z-40 bg-white/98 backdrop-blur-md border-b border-gray-200/60 shadow-lg">
-        <div className="px-3 sm:px-4 py-3 sm:py-5 max-w-none mx-auto w-full">
-          {/* Main Header Row */}
-          <div className="flex items-center justify-between mb-3 sm:mb-4">
-            {/* Left Section - Title & Status */}
-            <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
-              <div className="flex-shrink-0 p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-100 via-green-100 to-teal-100 shadow-lg">
-                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
-                </div>
-              <div className="min-w-0 flex-1">
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight mb-1">
-                    Review & Refine
-                  </h2>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
-                  <div className="flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-full border border-blue-200/50">
-                    <FileText className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-600" />
-                    <span className="text-xs sm:text-sm font-semibold text-blue-700">{questions.length} questions</span>
+        <div className="px-3 sm:px-4 py-4 sm:py-5 max-w-none mx-auto w-full">
+          {/* Title & Status Row */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <Sparkles className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
+                  Review & Refine
+                </h2>
+                <div className="flex items-center gap-3 mt-1">
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 rounded-full border border-blue-200/50">
+                    <FileText className="h-3.5 w-3.5 text-blue-600" />
+                    <span className="text-sm font-semibold text-blue-700">{questions.length} questions</span>
                   </div>
-                  <div className="flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1 bg-gradient-to-r from-green-50 to-emerald-50 rounded-full border border-green-200/50">
-                    <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-green-600" />
-                    <span className="text-xs sm:text-sm font-semibold text-green-700">Ready</span>
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-green-50 rounded-full border border-green-200/50">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+                    <span className="text-sm font-semibold text-green-700">Ready</span>
                   </div>
                 </div>
               </div>
             </div>
-            
-            {/* Right Section - Primary Actions */}
-            <div className="flex-shrink-0 ml-4 sm:ml-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+          </div>
+
+          {/* Action Buttons Row */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Left Side - Primary Actions */}
+            <div className="flex gap-3">
               <Button 
                 onClick={() => setChooseOpen(true)}
-                className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 text-xs sm:text-sm px-4 sm:px-6 py-2.5 sm:py-3 h-10 sm:h-11 rounded-xl font-semibold group order-1 sm:order-1"
+                className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 text-sm px-5 py-2.5 h-10 rounded-xl font-semibold flex-1 sm:flex-none"
               >
-                <Plus className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-200" />
-                <span className="hidden sm:inline">Add Question</span>
-                <span className="sm:hidden">Add</span>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Question
               </Button>
               
               <Button 
                 onClick={onNext}
-                className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 text-xs sm:text-sm px-4 sm:px-6 py-2.5 sm:py-3 h-10 sm:h-11 rounded-xl font-semibold group order-2 sm:order-2"
+                className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 text-sm px-5 py-2.5 h-10 rounded-xl font-semibold flex-1 sm:flex-none"
               >
-                <span className="hidden sm:inline">Next Step</span>
-                <span className="sm:hidden">Next</span>
-                <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
+                Next Step
+                <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </div>
-          </div>
-          
-          {/* Premium Action Controls */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 pt-4 sm:pt-6 border-t border-gray-200/60">
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-4 w-full sm:w-auto">
-              {/* Premium Shuffle Button */}
+
+            {/* Right Side - Shuffle Controls */}
+            <div className="flex gap-3">
               <Button 
                 onClick={handleShuffleQuestions}
                 disabled={isShuffling}
-                className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm px-5 py-3 h-11 rounded-xl font-semibold group w-full sm:w-auto"
+                className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm px-4 py-2.5 h-10 rounded-xl font-semibold"
               >
                 {isShuffling ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    <span className="hidden sm:inline">Shuffling...</span>
-                    <span className="sm:hidden">Shuffling</span>
+                    Shuffling...
                   </>
                 ) : (
                   <>
-                    <Lightning className="h-4 w-4 mr-2 group-hover:rotate-12 transition-transform duration-200" />
-                    <span className="hidden sm:inline">Shuffle Questions</span>
-                    <span className="sm:hidden">Shuffle</span>
+                    <Lightning className="h-4 w-4 mr-2" />
+                    Shuffle
                   </>
                 )}
               </Button>
               
-              {/* New Modern Shuffle Options Toggle */}
-              <div className="flex items-center justify-between w-full sm:w-auto bg-white/80 backdrop-blur-sm rounded-2xl border border-blue-200/50 shadow-lg p-3 sm:p-4">
+              {/* Modern Shuffle Options Toggle */}
+              <div className="flex items-center justify-between bg-white/80 backdrop-blur-sm rounded-2xl border border-blue-200/50 shadow-lg p-3 sm:p-4">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
                     <RefreshCw className="h-4 w-4 text-white" />
@@ -835,76 +833,63 @@ export default function ReviewRefineInterface({
         title={overrideIndex === questions.length ? "Add Questions from Bank" : "Select Replacement Question"}
       />
 
-      {/* Ultra-Premium Choice Modal */}
-      {chooseOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl border border-gray-200/60 w-full max-w-md sm:max-w-lg my-4 sm:my-8">
-            {/* Premium Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 sm:px-6 py-3 sm:py-4 rounded-t-xl sm:rounded-t-2xl">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-white/20 backdrop-blur-sm">
-                  <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-            </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-bold text-white">Add New Question</h3>
-                  <p className="text-xs sm:text-sm text-blue-100">Choose how you&apos;d like to add a question</p>
-                </div>
+      {/* Add New Question Choice Modal */}
+      <Dialog open={chooseOpen} onOpenChange={setChooseOpen}>
+        <DialogContent className="max-w-md sm:max-w-lg">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600">
+                <Plus className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <DialogTitle className="text-lg font-bold">Add New Question</DialogTitle>
+                <DialogDescription>Choose how you'd like to add a question</DialogDescription>
               </div>
             </div>
+          </DialogHeader>
 
-            {/* Premium Content */}
-            <div className="p-4 sm:p-6 space-y-3 sm:space-y-4">
-              {/* Write New Question Option */}
-              <Button 
-                onClick={() => { setChooseOpen(false); setCreateOpen(true) }}
-                className="w-full h-14 sm:h-16 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-3 sm:gap-4 group"
-              >
-                <div className="p-1.5 sm:p-2 rounded-md sm:rounded-lg bg-white/20 backdrop-blur-sm group-hover:bg-white/30 transition-colors">
-                  <Wand2 className="h-4 w-4 sm:h-5 sm:w-5" />
-                </div>
-                <div className="flex-1 text-left">
-                  <div className="font-semibold text-sm sm:text-base">Write a New Question</div>
-                  <div className="text-xs sm:text-sm text-purple-100">Create a custom question with LaTeX support</div>
-                </div>
-                <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 group-hover:translate-x-1 transition-transform" />
-              </Button>
+          <div className="space-y-4">
+            {/* Write New Question Option */}
+            <Button 
+              onClick={() => { setChooseOpen(false); setCreateOpen(true) }}
+              className="w-full h-16 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-4 group"
+            >
+              <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm group-hover:bg-white/30 transition-colors">
+                <Wand2 className="h-5 w-5" />
+              </div>
+              <div className="flex-1 text-left">
+                <div className="font-semibold text-base">Write a New Question</div>
+                <div className="text-sm text-purple-100">Create a custom question with LaTeX support</div>
+              </div>
+              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
 
-              {/* Add from Question Bank Option */}
-              <Button 
-                variant="outline"
-                onClick={() => { setChooseOpen(false); setModalOpen(true); setOverrideIndex(questions.length) }}
-                className="w-full h-14 sm:h-16 border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-3 sm:gap-4 group"
-              >
-                <div className="p-1.5 sm:p-2 rounded-md sm:rounded-lg bg-blue-100 group-hover:bg-blue-200 transition-colors">
-                  <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-                </div>
-                <div className="flex-1 text-left">
-                  <div className="font-semibold text-sm sm:text-base text-gray-800">Add from Question Bank</div>
-                  <div className="text-xs sm:text-sm text-gray-600">Select from existing questions in the database</div>
-                </div>
-                <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 group-hover:translate-x-1 group-hover:text-gray-600 transition-all" />
-              </Button>
-            </div>
-
-            {/* Premium Footer */}
-            <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-t border-gray-200/60 rounded-b-xl sm:rounded-b-2xl flex justify-end">
-              <Button 
-                variant="ghost"
-                onClick={() => setChooseOpen(false)}
-                className="h-8 sm:h-10 px-4 sm:px-6 text-sm sm:text-base text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                Cancel
-              </Button>
-            </div>
+            {/* Add from Question Bank Option */}
+            <Button 
+              variant="outline"
+              onClick={() => { setChooseOpen(false); setModalOpen(true); setOverrideIndex(questions.length) }}
+              className="w-full h-16 border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-4 group"
+            >
+              <div className="p-2 rounded-lg bg-blue-100 group-hover:bg-blue-200 transition-colors">
+                <BookOpen className="h-5 w-5 text-blue-600" />
+              </div>
+              <div className="flex-1 text-left">
+                <div className="font-semibold text-base text-gray-800">Add from Question Bank</div>
+                <div className="text-sm text-gray-600">Select from existing questions in the database</div>
+              </div>
+              <ArrowRight className="h-4 w-4 text-gray-400 group-hover:translate-x-1 group-hover:text-gray-600 transition-all" />
+            </Button>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
-      {/* Ultra-Premium Create Question Modal */}
-      {createOpen && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-start justify-center p-2 sm:p-4 overflow-y-auto">
-          <div className="bg-white w-full max-w-4xl sm:max-w-6xl rounded-xl sm:rounded-2xl shadow-2xl border border-gray-200/60 my-4 sm:my-8 min-h-[90vh] max-h-[95vh] flex flex-col">
-            <div className="flex-1 overflow-y-auto">
+      {/* Create New Question Modal */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="max-w-4xl sm:max-w-6xl h-[95vh] flex flex-col" showCloseButton={false}>
+          <VisuallyHidden>
+            <DialogTitle>Create New Question</DialogTitle>
+          </VisuallyHidden>
+          <div className="flex-1 overflow-y-auto">
             <CreateQuestionForm
               onCancel={() => setCreateOpen(false)}
               onSave={(newQ) => {
@@ -912,10 +897,9 @@ export default function ReviewRefineInterface({
                 setCreateOpen(false)
               }}
             />
-            </div>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -1008,7 +992,7 @@ function CreateQuestionForm({ onCancel, onSave }: { onCancel: () => void; onSave
               <Wand2 className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Create New Question</h2>
+              <h2 className="text-xl font-bold text-gray-900 tracking-tight">Create New Question</h2>
               <p className="text-sm text-gray-600 font-medium">Design a custom question with LaTeX support</p>
             </div>
           </div>
@@ -1016,9 +1000,9 @@ function CreateQuestionForm({ onCancel, onSave }: { onCancel: () => void; onSave
             variant="ghost"
             size="sm"
             onClick={onCancel}
-            className="h-10 w-10 rounded-xl hover:bg-gray-100 transition-colors"
+            className="h-12 w-12 rounded-2xl hover:bg-red-50 hover:border-red-200 border-2 border-transparent transition-all duration-200 group"
           >
-            <X className="h-5 w-5" />
+            <X className="h-6 w-6 text-gray-600 group-hover:text-red-600 transition-colors" />
           </Button>
         </div>
       </div>
