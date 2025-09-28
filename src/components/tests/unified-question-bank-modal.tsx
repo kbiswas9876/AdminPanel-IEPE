@@ -16,7 +16,6 @@ import { useFilterStore } from '@/stores/filterStore'
 import { searchQuestions } from '@/lib/actions/tests'
 import type { Question, UIQuestion } from '@/lib/types'
 import { Check, X, Filter, FileQuestion, RefreshCw, List, Eye } from 'lucide-react'
-import { FilterBar } from '@/components/filters/FilterBar'
 import { SourceDestinationQuestionBuilder } from './source-destination-question-builder'
 
 interface UnifiedQuestionBankModalProps {
