@@ -14,11 +14,15 @@ export default function TestsPage() {
 
   const handleBlueprintSelect = () => {
     setShowCreateModal(false)
+    // Clear any existing editingTestId to ensure we're in create mode
+    localStorage.removeItem('editingTestId')
     router.push('/tests/new')
   }
 
   const handleQuestionBankSelect = (questions: Question[]) => {
     setShowCreateModal(false)
+    // Clear any existing editingTestId to ensure we're in create mode
+    localStorage.removeItem('editingTestId')
     // Store the selected questions in localStorage for the Review & Refine page
     localStorage.setItem('selectedTestQuestions', JSON.stringify(questions))
     // Navigate to the Review & Refine page

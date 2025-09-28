@@ -26,8 +26,8 @@ import {
   Upload,
   Settings
 } from 'lucide-react'
-import { deleteMultipleQuestions } from '@/lib/actions/questions'
-import type { UIQuestion } from '@/lib/types'
+import { SafeDeletionModal } from '@/components/ui/safe-deletion-modal'
+import type { UIQuestion, Question } from '@/lib/types'
 import { toast } from 'sonner'
 
 interface QuestionExplorerProps {
@@ -79,6 +79,7 @@ export function QuestionExplorer({
   // Selection state - use external if provided, otherwise internal
   const [internalSelectedQuestions, setInternalSelectedQuestions] = useState<Set<number>>(new Set())
   const [isDeleting, setIsDeleting] = useState(false)
+  const [showSafeDeletionModal, setShowSafeDeletionModal] = useState(false)
   
   const selectedQuestions = externalSelectedQuestions || internalSelectedQuestions
   const setSelectedQuestions = externalOnSelectQuestion ? 
@@ -125,29 +126,18 @@ export function QuestionExplorer({
     }
   }
 
-  const handleDeleteSelected = async () => {
+  const handleDeleteSelected = () => {
     if (selectedQuestions.size === 0) {
       toast.error('No questions selected for deletion')
       return
     }
 
-    setIsDeleting(true)
-    try {
-      const result = await deleteMultipleQuestions(Array.from(selectedQuestions))
-      
-      if (result.success) {
-        toast.success(result.message)
-        setSelectedQuestions(new Set())
-        refetch() // Refresh the questions list
-      } else {
-        toast.error(result.message)
-      }
-    } catch (error) {
-      console.error('Error deleting questions:', error)
-      toast.error('Failed to delete questions')
-    } finally {
-      setIsDeleting(false)
-    }
+    setShowSafeDeletionModal(true)
+  }
+
+  const handleSafeDeletionComplete = () => {
+    setSelectedQuestions(new Set())
+    refetch() // Refresh the questions list
   }
 
   if (loading) {
@@ -250,58 +240,61 @@ export function QuestionExplorer({
             )}
           </div>
           
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
-            {/* Selection Controls - Always show when questions exist */}
-            {questions.length > 0 && (
-              <div className="flex items-center gap-1 sm:gap-2 p-1 bg-white rounded-xl border border-slate-200 shadow-sm">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleSelectAll}
-                  className="h-10 sm:h-9 px-3 sm:px-3 text-sm font-medium hover:bg-slate-100 rounded-lg transition-all duration-200 touch-target flex-1 sm:flex-initial"
-                >
-                  {isAllSelected ? (
-                    <CheckSquare className="h-4 w-4 mr-1.5 sm:mr-2 text-blue-600" />
-                  ) : isPartiallySelected ? (
-                    <CheckSquare className="h-4 w-4 mr-1.5 sm:mr-2 opacity-50" />
-                  ) : (
-                    <Square className="h-4 w-4 mr-1.5 sm:mr-2" />
-                  )}
-                  <span className="hidden xs:inline">{isAllSelected ? 'Deselect All' : 'Select All'}</span>
-                  <span className="xs:hidden">{isAllSelected ? 'Deselect' : 'Select'}</span>
-                </Button>
-                
-                {selectedQuestions.size > 0 && (
+          {/* Fixed Pagination Control - Proper Spacing and No Overlap */}
+          <div className="flex items-center justify-between bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-sm px-6 py-3">
+            {/* Left Group: Selection Controls - Properly Spaced */}
+            <div className="flex items-center gap-4">
+              {questions.length > 0 && (
+                <>
                   <Button
-                    variant="destructive"
+                    variant="outline"
                     size="sm"
-                    onClick={handleDeleteSelected}
-                    disabled={isDeleting}
-                    className="h-10 sm:h-9 px-3 sm:px-3 text-sm font-medium bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all duration-200 shadow-lg shadow-red-500/25 touch-target flex-1 sm:flex-initial"
+                    onClick={handleSelectAll}
+                    className="h-8 px-4 text-xs font-medium hover:bg-blue-50 hover:border-blue-200 rounded-lg transition-all duration-200 whitespace-nowrap"
                   >
-                    <Trash2 className="h-4 w-4 mr-1.5 sm:mr-2" />
-                    <span className="hidden xs:inline">{isDeleting ? 'Deleting...' : `Delete ${selectedQuestions.size}`}</span>
-                    <span className="xs:hidden">{isDeleting ? '...' : selectedQuestions.size}</span>
+                    {isAllSelected ? (
+                      <CheckSquare className="h-3.5 w-3.5 mr-2 text-blue-600" />
+                    ) : isPartiallySelected ? (
+                      <CheckSquare className="h-3.5 w-3.5 mr-2 opacity-50" />
+                    ) : (
+                      <Square className="h-3.5 w-3.5 mr-2" />
+                    )}
+                    <span className="hidden sm:inline">{isAllSelected ? 'Deselect All' : 'Select All'}</span>
+                    <span className="sm:hidden">{isAllSelected ? 'Deselect' : 'Select'}</span>
                   </Button>
-                )}
-              </div>
-            )}
+                  
+                  {selectedQuestions.size > 0 && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleDeleteSelected}
+                      className="h-8 px-4 text-xs font-medium bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all duration-200 shadow-sm hover:shadow-md whitespace-nowrap"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 mr-2" />
+                      <span className="hidden xs:inline">Delete {selectedQuestions.size}</span>
+                      <span className="xs:hidden">{selectedQuestions.size}</span>
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
             
-            {/* Status Info */}
-            <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 bg-white rounded-xl border border-slate-200 shadow-sm ml-auto">
-              <div className="text-xs font-medium text-slate-600 text-center sm:text-left">
+            {/* Right Group: Status and Actions - Properly Separated */}
+            <div className="flex items-center gap-4">
+              <div className="text-xs font-medium text-gray-600 px-2 py-1 bg-gray-50 rounded-md whitespace-nowrap">
                 <span className="hidden sm:inline">{startItem.toLocaleString()}-{endItem.toLocaleString()} of {total.toLocaleString()}</span>
                 <span className="sm:hidden">{currentPage}/{totalPages}</span>
               </div>
-              <div className="w-px h-4 bg-slate-200 hidden sm:block"></div>
+              
               <Button 
                 onClick={() => refetch()} 
                 variant="ghost" 
                 size="sm"
                 disabled={isFetching}
-                className="h-9 w-9 p-0 hover:bg-slate-100 rounded-lg transition-all duration-200 touch-target"
+                className="h-8 w-8 p-0 hover:bg-gray-100 rounded-lg transition-all duration-200"
+                title="Refresh questions"
               >
-                <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin text-blue-600' : 'text-slate-500 hover:text-slate-700'}`} />
+                <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin text-blue-600' : 'text-gray-500 hover:text-gray-700'}`} />
               </Button>
             </div>
           </div>
@@ -567,6 +560,18 @@ export function QuestionExplorer({
           </div>
         </div>
       )}
+
+      {/* Safe Deletion Modal */}
+      <SafeDeletionModal
+        open={showSafeDeletionModal}
+        onOpenChange={setShowSafeDeletionModal}
+        questions={questions.filter(q => q.id !== undefined).map(q => ({ 
+          id: q.id!, 
+          question_text: q.question_text 
+        }))}
+        selectedQuestionIds={Array.from(selectedQuestions)}
+        onDeleted={handleSafeDeletionComplete}
+      />
     </div>
   )
 }

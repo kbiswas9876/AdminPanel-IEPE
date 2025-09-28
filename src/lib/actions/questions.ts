@@ -183,6 +183,116 @@ export async function updateQuestion(id: number, formData: FormData) {
 }
 
 // Check if a question is being used in any tests
+// Analyze multiple questions for safe deletion without attempting deletion
+export async function analyzeQuestionsForDeletion(questionIds: number[]): Promise<{ 
+  safeToDelete: number[]; 
+  usedInTests: { questionId: number; testNames: string[] }[]; 
+  canProceed: boolean;
+  totalSafeCount: number;
+  totalUsedCount: number;
+}> {
+  try {
+    console.log('🔍 Analyzing questions for deletion:', questionIds)
+    
+    if (!questionIds || questionIds.length === 0) {
+      console.log('❌ No question IDs provided')
+      return {
+        safeToDelete: [],
+        usedInTests: [],
+        canProceed: false,
+        totalSafeCount: 0,
+        totalUsedCount: 0
+      }
+    }
+
+    const supabase = createAdminClient()
+    
+    // First, let's verify what's actually in the test_questions table
+    console.log('🔍 Verifying test_questions table structure...')
+    const { data: allTestQuestions, error: verifyError } = await supabase
+      .from('test_questions')
+      .select('question_id')
+      .limit(5)
+    
+    if (verifyError) {
+      console.error('❌ Error verifying test_questions table:', verifyError)
+    } else {
+      console.log('📊 Sample test_questions data:', allTestQuestions)
+    }
+    
+    // Check if any of the questions are being used in tests
+    console.log('🔍 Querying test_questions table for question IDs:', questionIds)
+    const { data: testQuestions, error: testQuestionsError } = await supabase
+      .from('test_questions')
+      .select(`
+        question_id,
+        test_name,
+        test_status
+      `)
+      .in('question_id', questionIds)
+    
+    if (testQuestionsError) {
+      console.error('❌ Error analyzing question usage:', testQuestionsError)
+      console.error('❌ Error details:', testQuestionsError.message, testQuestionsError.details, testQuestionsError.hint)
+      throw new Error('Failed to analyze question usage')
+    }
+    
+    console.log('📊 Raw test questions found:', testQuestions)
+    console.log('📊 Query result count:', testQuestions?.length || 0)
+    
+    // Group by question_id to get test names for each question
+    const usedQuestions = new Map<number, string[]>()
+    
+    if (testQuestions && testQuestions.length > 0) {
+      testQuestions.forEach((tq: { question_id: number; test_name: string; test_status: string }) => {
+        const questionId = tq.question_id
+        const testName = tq.test_name || 'Unknown Test'
+        const testStatus = tq.test_status || 'Unknown'
+        
+        console.log(`📝 Question ${questionId} used in test: ${testName} (${testStatus})`)
+        
+        const displayName = testStatus !== 'Unknown' ? `${testName} (${testStatus})` : testName
+        
+        if (!usedQuestions.has(questionId)) {
+          usedQuestions.set(questionId, [])
+        }
+        usedQuestions.get(questionId)!.push(displayName)
+      })
+    }
+    
+    console.log('🗺️ Used questions map:', usedQuestions)
+    
+    // Categorize questions
+    const safeToDelete: number[] = []
+    const usedInTests: { questionId: number; testNames: string[] }[] = []
+    
+    questionIds.forEach(questionId => {
+      const testNames = usedQuestions.get(questionId)
+      if (testNames && testNames.length > 0) {
+        usedInTests.push({ questionId, testNames })
+        console.log(`⚠️ Question ${questionId} is in use:`, testNames)
+      } else {
+        safeToDelete.push(questionId)
+        console.log(`✅ Question ${questionId} is safe to delete`)
+      }
+    })
+    
+    const result = {
+      safeToDelete,
+      usedInTests,
+      canProceed: safeToDelete.length > 0,
+      totalSafeCount: safeToDelete.length,
+      totalUsedCount: usedInTests.length
+    }
+    
+    console.log('🎯 Analysis result:', result)
+    return result
+  } catch (error) {
+    console.error('❌ Unexpected error analyzing questions:', error)
+    throw new Error('Failed to analyze questions for deletion')
+  }
+}
+
 export async function checkQuestionUsage(questionId: number): Promise<{ 
   isUsed: boolean; 
   testCount: number; 
@@ -196,7 +306,7 @@ export async function checkQuestionUsage(questionId: number): Promise<{
       .from('test_questions')
       .select(`
         test_id,
-        tests!inner(name)
+        tests!inner(name, status)
       `)
       .eq('question_id', questionId)
     
@@ -206,7 +316,15 @@ export async function checkQuestionUsage(questionId: number): Promise<{
     }
     
     const testCount = testQuestions?.length || 0
-    const testNames = testQuestions?.map((tq: { test_id: number; tests: { name: string }[] }) => tq.tests?.[0]?.name || 'Unknown Test') || []
+    const testNames = testQuestions?.map((tq: { test_id: number; tests: { name: string; status: string }[] }) => {
+      const test = tq.tests?.[0]
+      if (test) {
+        const testName = test.name || 'Unknown Test'
+        const testStatus = test.status || 'Unknown'
+        return testStatus !== 'Unknown' ? `${testName} (${testStatus})` : testName
+      }
+      return 'Unknown Test'
+    }) || []
     
     return {
       isUsed: testCount > 0,
@@ -270,7 +388,64 @@ export async function deleteQuestion(id: number): Promise<{
   }
 }
 
-// Bulk delete multiple questions with data integrity checks
+// Delete multiple questions without usage checks (for use after analysis)
+export async function deleteQuestionsDirectly(questionIds: number[]): Promise<{ 
+  success: boolean; 
+  message: string; 
+  deletedCount?: number;
+}> {
+  try {
+    console.log('🗑️ Direct deletion called for questions:', questionIds)
+    
+    if (!questionIds || questionIds.length === 0) {
+      console.log('❌ No question IDs provided for deletion')
+      return {
+        success: false,
+        message: 'No questions selected for deletion'
+      }
+    }
+
+    const supabase = createAdminClient()
+    
+    // Direct deletion without usage checks (trust that analysis was done)
+    console.log('🚀 Attempting direct deletion...')
+    const { error: deleteError } = await supabase
+      .from('questions')
+      .delete()
+      .in('id', questionIds)
+    
+    if (deleteError) {
+      console.error('❌ Error deleting questions:', deleteError)
+      return {
+        success: false,
+        message: 'Failed to delete questions. Please try again.'
+      }
+    }
+    
+    console.log('✅ Questions deleted successfully')
+    
+    // Revalidate the content page to refresh the UI
+    revalidatePath('/content')
+    
+    const result = {
+      success: true,
+      message: `Successfully deleted ${questionIds.length} question${questionIds.length !== 1 ? 's' : ''}`,
+      deletedCount: questionIds.length
+    }
+    
+    console.log('🎉 Deletion result:', result)
+    return result
+    
+  } catch (error) {
+    console.error('❌ Unexpected error in direct delete:', error)
+    return {
+      success: false,
+      message: 'An unexpected error occurred while deleting questions'
+    }
+  }
+}
+
+// Bulk delete multiple questions with data integrity checks (legacy function)
 export async function deleteMultipleQuestions(questionIds: number[]): Promise<{ 
   success: boolean; 
   message: string; 
@@ -292,7 +467,7 @@ export async function deleteMultipleQuestions(questionIds: number[]): Promise<{
       .from('test_questions')
       .select(`
         question_id,
-        tests!inner(name)
+        tests!inner(name, status)
       `)
       .in('question_id', questionIds)
     
@@ -309,14 +484,20 @@ export async function deleteMultipleQuestions(questionIds: number[]): Promise<{
       // Group by question_id to get test names for each question
       const usedQuestions = new Map<number, string[]>()
       
-      testQuestions.forEach((tq: { question_id: number; tests: { name: string }[] }) => {
+      testQuestions.forEach((tq: { question_id: number; tests: { name: string; status: string }[] }) => {
         const questionId = tq.question_id
-        const testName = tq.tests?.[0]?.name || 'Unknown Test'
+        const test = tq.tests?.[0]
         
-        if (!usedQuestions.has(questionId)) {
-          usedQuestions.set(questionId, [])
+        if (test) {
+          const testName = test.name || 'Unknown Test'
+          const testStatus = test.status || 'Unknown'
+          const displayName = testStatus !== 'Unknown' ? `${testName} (${testStatus})` : testName
+          
+          if (!usedQuestions.has(questionId)) {
+            usedQuestions.set(questionId, [])
+          }
+          usedQuestions.get(questionId)!.push(displayName)
         }
-        usedQuestions.get(questionId)!.push(testName)
       })
       
       const usedInTests = Array.from(usedQuestions.entries()).map(([questionId, testNames]) => ({

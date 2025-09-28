@@ -19,6 +19,8 @@ export default function TestFinalizePage() {
     const storedQuestions = localStorage.getItem('selectedTestQuestions')
     const storedTestId = localStorage.getItem('editingTestId')
     
+    console.log('🔍 Finalize page - localStorage check:', { storedQuestions: !!storedQuestions, storedTestId })
+    
     if (storedQuestions) {
       try {
         const parsedQuestions = JSON.parse(storedQuestions)
@@ -31,10 +33,15 @@ export default function TestFinalizePage() {
       }
     }
     
-    if (storedTestId) {
+    // Only set editTestId if we have a valid stored test ID
+    // This prevents false edit mode detection from stale localStorage data
+    if (storedTestId && !isNaN(parseInt(storedTestId))) {
+      console.log('🔍 Setting editTestId:', parseInt(storedTestId))
       setEditTestId(parseInt(storedTestId))
       // Clear the stored test ID after loading
       localStorage.removeItem('editingTestId')
+    } else {
+      console.log('🔍 No valid editTestId found, staying in create mode')
     }
   }, [setSelectedQuestions])
 
@@ -51,6 +58,13 @@ export default function TestFinalizePage() {
 
   const handleSave = async (testData: TestFormData) => {
     const questionIds = questionSlots.map((slot) => slot.question.id as number).filter(Boolean)
+    
+    console.log('🔍 Finalize page - handleSave called:', { 
+      editTestId, 
+      isEditMode: !!editTestId, 
+      questionIdsCount: questionIds.length,
+      testName: testData.name 
+    })
     
     await saveTest({
       testId: editTestId,

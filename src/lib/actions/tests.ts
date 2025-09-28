@@ -515,6 +515,13 @@ export async function saveTest(args: {
   } | null
 }): Promise<{ success: boolean; message: string; testId?: number }> {
   try {
+    console.log('🔍 saveTest called with args:', { 
+      testId: args.testId, 
+      isEditMode: typeof args.testId === 'number' && Number.isFinite(args.testId),
+      questionIdsCount: args.question_ids?.length || 0,
+      testName: args.name 
+    })
+    
     const supabase = createAdminClient()
 
     // Determine status based on publish payload
@@ -538,6 +545,7 @@ export async function saveTest(args: {
     let testId: number | undefined = args.testId
 
     if (typeof testId === 'number' && Number.isFinite(testId)) {
+      console.log('🔍 UPDATE MODE: Updating existing test with ID:', testId)
       // UPDATE existing test
       const { error: updateErr } = await supabase
         .from('tests')
@@ -549,6 +557,7 @@ export async function saveTest(args: {
         return { success: false, message: `Failed to update test: ${updateErr.message}` }
       }
     } else {
+      console.log('🔍 CREATE MODE: Creating new test')
       // CREATE new test - let DB generate the id
       const { data: created, error: insertErr } = await supabase
         .from('tests')
@@ -557,26 +566,42 @@ export async function saveTest(args: {
         .single()
 
       if (insertErr || !created) {
-        console.error('Error creating test:', insertErr)
+        console.error('❌ Error creating test:', insertErr)
         return { success: false, message: `Failed to create test: ${insertErr?.message}` }
       }
       testId = created.id as number
+      console.log('✅ Test created successfully with ID:', testId)
     }
 
     // Reset mappings then insert fresh
+    console.log('🔍 Clearing existing test_questions for test ID:', testId)
     const { error: delErr } = await supabase.from('test_questions').delete().eq('test_id', testId!)
     if (delErr) {
-      console.error('Error clearing mappings:', delErr)
+      console.error('❌ Error clearing mappings:', delErr)
       return { success: false, message: `Failed to reset test questions: ${delErr.message}` }
     }
 
-    const mappings = (args.question_ids || []).map((qid) => ({ test_id: testId!, question_id: qid }))
+    const mappings = (args.question_ids || []).map((qid) => ({ 
+      test_id: testId!, 
+      question_id: qid,
+      test_name: args.name,
+      test_status: status
+    }))
+    
+    console.log('🔍 Inserting test_questions mappings:', { 
+      testId, 
+      mappingsCount: mappings.length,
+      testName: args.name,
+      testStatus: status 
+    })
+    
     if (mappings.length > 0) {
       const { error: insErr } = await supabase.from('test_questions').insert(mappings)
       if (insErr) {
-        console.error('Error inserting mappings:', insErr)
+        console.error('❌ Error inserting mappings:', insErr)
         return { success: false, message: `Failed to add questions: ${insErr.message}` }
       }
+      console.log('✅ Test questions inserted successfully')
     }
 
     revalidatePath('/tests')
@@ -742,7 +767,12 @@ export async function saveTestFromForm(formData: FormData): Promise<{ success: b
         for (let i = 0; i < list.length; i++) {
           const qid = finalQuestionIds[i]
           const override = list[i].override || null
-          const row: Record<string, unknown> = { test_id: testId!, question_id: qid }
+          const row: Record<string, unknown> = { 
+            test_id: testId!, 
+            question_id: qid,
+            test_name: payload.name,
+            test_status: status
+          }
           if (override && Object.keys(override).length > 0) {
             row.question_override_data = override
           }
@@ -756,7 +786,12 @@ export async function saveTestFromForm(formData: FormData): Promise<{ success: b
           console.error('Cleanup failed after override attempt:', del3)
         }
         if (finalQuestionIds.length > 0) {
-          const mappings = finalQuestionIds.map((qid) => ({ test_id: testId!, question_id: qid }))
+          const mappings = finalQuestionIds.map((qid) => ({ 
+            test_id: testId!, 
+            question_id: qid,
+            test_name: payload.name,
+            test_status: status
+          }))
           const { error: insErr } = await supabase.from('test_questions').insert(mappings)
           if (insErr) {
             console.error('Error inserting mappings (fallback):', insErr)
@@ -773,7 +808,12 @@ export async function saveTestFromForm(formData: FormData): Promise<{ success: b
       return { success: false, message: `Failed to reset test questions: ${delErr.message}` }
     }
       if (finalQuestionIds.length > 0) {
-        const mappings = finalQuestionIds.map((qid) => ({ test_id: testId!, question_id: qid }))
+        const mappings = finalQuestionIds.map((qid) => ({ 
+          test_id: testId!, 
+          question_id: qid,
+          test_name: payload.name,
+          test_status: status
+        }))
       const { error: insErr } = await supabase.from('test_questions').insert(mappings)
       if (insErr) {
         console.error('Error inserting mappings:', insErr)
@@ -880,10 +920,12 @@ export async function createTest(testData: TestCreationData): Promise<{ success:
       }
     }
     
-    // Create test_questions records
+    // Create test_questions records with denormalized test metadata
     const testQuestionsData = allQuestionIds.map(questionId => ({
       test_id: testId,
-      question_id: questionId
+      question_id: questionId,
+      test_name: testData.name,
+      test_status: 'draft'
     }))
     
     const { error: testQuestionsError } = await supabase
@@ -942,6 +984,22 @@ export async function updateTest(testId: number, testData: Partial<TestCreationD
       }
     }
     
+    // Sync denormalized data in test_questions table if name changed
+    if (testData.name) {
+      const syncData: Record<string, unknown> = {}
+      syncData.test_name = testData.name
+      
+      const { error: syncError } = await supabase
+        .from('test_questions')
+        .update(syncData)
+        .eq('test_id', testId)
+      
+      if (syncError) {
+        console.error('Error syncing denormalized test data:', syncError)
+        // Don't fail the whole operation, just log the error
+      }
+    }
+    
     revalidatePath('/tests')
     
     return {
@@ -986,6 +1044,17 @@ export async function publishTest(
         success: false,
         message: `Failed to publish test: ${error.message}`
       }
+    }
+    
+    // Sync the status change in test_questions table
+    const { error: syncError } = await supabase
+      .from('test_questions')
+      .update({ test_status: 'scheduled' })
+      .eq('test_id', testId)
+    
+    if (syncError) {
+      console.error('Error syncing test status in test_questions:', syncError)
+      // Don't fail the whole operation, just log the error
     }
     
     revalidatePath('/tests')
@@ -1209,7 +1278,12 @@ export async function cloneTest(testId: number): Promise<{ success: boolean; mes
     const newTestId = created.id as number
     const questionIds = (mappings || []).map((m) => m.question_id as number)
     if (questionIds.length > 0) {
-      const insertData = questionIds.map((qid) => ({ test_id: newTestId, question_id: qid }))
+      const insertData = questionIds.map((qid) => ({ 
+        test_id: newTestId, 
+        question_id: qid,
+        test_name: `${original.name} (Copy)`,
+        test_status: 'draft'
+      }))
       const { error: insErr } = await supabase.from('test_questions').insert(insertData)
       if (insErr) {
         console.error('Error inserting cloned mappings:', insErr)
