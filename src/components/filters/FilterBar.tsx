@@ -44,6 +44,7 @@ import {
   ArrowUpDown
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { SavePresetModal } from '@/components/ui/save-preset-modal'
 
 interface FilterOptions {
   books: string[]
@@ -85,6 +86,8 @@ export function FilterBar({ compact = false }: { compact?: boolean } = {}) {
   })
   const [isLoading, setIsLoading] = useState(true)
   const [showPresets, setShowPresets] = useState(false)
+  const [showSaveModal, setShowSaveModal] = useState(false)
+  const [localPresets, setLocalPresets] = useState<string[]>([])
 
   // Load filter options
   useEffect(() => {
@@ -107,6 +110,11 @@ export function FilterBar({ compact = false }: { compact?: boolean } = {}) {
 
     loadOptions()
   }, [])
+
+  // Sync local presets with store
+  useEffect(() => {
+    setLocalPresets(getPresets())
+  }, [getPresets])
 
   // Multi-select component (shared visuals)
   const MultiSelect = ({ 
@@ -308,14 +316,22 @@ export function FilterBar({ compact = false }: { compact?: boolean } = {}) {
   ].filter(Boolean).length
 
   // Handle preset operations
-  const handleSavePreset = () => {
-    const name = prompt('Enter preset name:')
-    if (name) {
-      savePreset(name)
-    }
+  const handleSavePreset = (name: string) => {
+    savePreset(name)
+    setShowSaveModal(false)
+    // Update local presets immediately
+    setLocalPresets(prev => [...prev, name])
   }
 
-  const presets = getPresets()
+  const handleDeletePreset = (presetName: string) => {
+    // Optimistic UI update - remove from local list immediately
+    setLocalPresets(prev => prev.filter(p => p !== presetName))
+    
+    // Delete from store (async)
+    deletePreset(presetName)
+  }
+
+  const presets = localPresets
 
   if (isLoading) {
     return (
@@ -433,7 +449,7 @@ export function FilterBar({ compact = false }: { compact?: boolean } = {}) {
                         <h4 className="text-lg font-semibold text-gray-900">Filter Presets</h4>
                         <Button 
                           size="sm" 
-                          onClick={handleSavePreset}
+                          onClick={() => setShowSaveModal(true)}
                           className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl h-8 px-3"
                         >
                           <Save className="h-3 w-3 mr-2" />
@@ -458,7 +474,7 @@ export function FilterBar({ compact = false }: { compact?: boolean } = {}) {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => deletePreset(preset)}
+                                onClick={() => handleDeletePreset(preset)}
                                 className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 hover:bg-red-50 transition-all duration-200 rounded-lg h-8 w-8 p-0"
                               >
                                 <X className="h-3 w-3" />
@@ -873,6 +889,14 @@ export function FilterBar({ compact = false }: { compact?: boolean } = {}) {
             </div>
           </div>
         )}
+
+        {/* Save Preset Modal */}
+        <SavePresetModal
+          open={showSaveModal}
+          onOpenChange={setShowSaveModal}
+          onSave={handleSavePreset}
+          existingPresets={presets}
+        />
       </div>
     </div>
   )
