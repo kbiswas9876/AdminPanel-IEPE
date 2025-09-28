@@ -52,6 +52,7 @@ export function UnifiedQuestionBankModal({
       onClose={onClose}
       onSelectMultiple={handleSelectMultiple}
       title={title}
+      singleSelect={!multiSelect}
     />
   )
 }

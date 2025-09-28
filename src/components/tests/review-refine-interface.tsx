@@ -829,7 +829,7 @@ export default function ReviewRefineInterface({
         onSelect={handleSelectOverride}
         onSelectMultiple={handleSelectMultiple}
         initialChapter={overrideIndex !== null ? questions[overrideIndex]?.chapter_name : undefined}
-        multiSelect={overrideIndex === questions.length}
+        multiSelect={overrideIndex !== null && overrideIndex === questions.length}
         title={overrideIndex === questions.length ? "Add Questions from Bank" : "Select Replacement Question"}
       />
 
