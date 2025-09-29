@@ -99,12 +99,12 @@ export function TestActions({ test, onAction }: TestActionsProps) {
   })()
 
   return (
-    <div className="flex items-center space-x-1.5">
+    <div className="flex items-center flex-wrap gap-2">
       {/* Edit Button - Allowed if start_time is in the future */}
       {canEdit && (
         <Link href={`/tests/edit/${test.id}`}>
-          <Button variant="outline" size="sm" className="h-7 px-2.5 text-xs font-medium hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-all duration-200 shadow-sm hover:shadow-md">
-            <Edit className="h-3 w-3 mr-1" />
+          <Button variant="outline" size="sm" className="h-8 px-4 text-sm font-medium bg-white hover:bg-blue-50 border-blue-200 hover:border-blue-300 text-blue-700 hover:text-blue-800 transition-colors duration-150 shadow-sm rounded-lg">
+            <Edit className="h-4 w-4 mr-2" />
             <span>Edit</span>
           </Button>
         </Link>
@@ -120,8 +120,8 @@ export function TestActions({ test, onAction }: TestActionsProps) {
 
       {/* View Results Button - Only for Completed tests */}
       {test.status === 'completed' && (
-        <Button variant="outline" size="sm" disabled className="h-7 px-2.5 text-xs font-medium hover:bg-green-50 hover:border-green-200 hover:text-green-700 transition-all duration-200 shadow-sm">
-          <BarChart3 className="h-3 w-3 mr-1" />
+        <Button variant="outline" size="sm" disabled className="h-8 px-4 text-sm font-medium bg-white hover:bg-green-50 border-green-200 hover:border-green-300 text-green-700 hover:text-green-800 transition-colors duration-150 shadow-sm rounded-lg">
+          <BarChart3 className="h-4 w-4 mr-2" />
           <span>Results</span>
         </Button>
       )}
@@ -132,9 +132,9 @@ export function TestActions({ test, onAction }: TestActionsProps) {
           <Button 
             variant="outline" 
             size="sm" 
-            className="h-7 px-2.5 text-xs font-medium text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 transition-all duration-200 shadow-sm hover:shadow-md"
+            className="h-8 px-4 text-sm font-medium bg-white text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 hover:text-red-700 transition-colors duration-150 shadow-sm rounded-lg"
           >
-            <Trash2 className="h-3 w-3 mr-1" />
+            <Trash2 className="h-4 w-4 mr-2" />
             <span>Delete</span>
           </Button>
         </AlertDialogTrigger>
@@ -178,8 +178,8 @@ export function TestActions({ test, onAction }: TestActionsProps) {
       {/* More actions dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="h-7 w-7 p-0 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 shadow-sm hover:shadow-md">
-            <MoreHorizontal className="h-3 w-3" />
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-gray-100 transition-colors duration-150 rounded-lg">
+            <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">

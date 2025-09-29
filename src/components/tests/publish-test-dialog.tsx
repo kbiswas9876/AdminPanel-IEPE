@@ -81,8 +81,8 @@ export function PublishTestDialog({ test, onPublish }: PublishTestDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="h-7 px-2.5 text-xs font-medium bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white transition-all duration-200 shadow-sm hover:shadow-md">
-          <Calendar className="h-3 w-3 mr-1" />
+        <Button size="sm" className="h-8 px-5 text-sm font-semibold bg-green-600 hover:bg-green-700 text-white transition-colors duration-150 shadow-sm hover:shadow-md rounded-lg">
+          <Calendar className="h-3.5 w-3.5 mr-1.5" />
           <span>Publish</span>
         </Button>
       </DialogTrigger>

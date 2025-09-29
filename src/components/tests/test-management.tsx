@@ -75,31 +75,31 @@ export function TestManagement({ onCreateTest }: TestManagementProps = {}) {
     switch (status) {
       case 'draft':
         return (
-          <Badge variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs px-2 py-0.5">
+          <Badge variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs px-3 py-1 rounded-full font-medium border-0 shadow-sm transition-colors duration-150">
             Draft
           </Badge>
         )
       case 'scheduled':
         return (
-          <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs px-2 py-0.5">
+          <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs px-3 py-1 rounded-full font-medium border-0 shadow-sm transition-colors duration-150">
             Scheduled
           </Badge>
         )
       case 'live':
         return (
-          <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-200 text-xs px-2 py-0.5">
+          <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-200 text-xs px-3 py-1 rounded-full font-medium border-0 shadow-sm transition-colors duration-150">
             Live
           </Badge>
         )
       case 'completed':
         return (
-          <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-200 text-xs px-2 py-0.5">
+          <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-200 text-xs px-3 py-1 rounded-full font-medium border-0 shadow-sm transition-colors duration-150">
             Completed
           </Badge>
         )
       default:
         return (
-          <Badge variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs px-2 py-0.5">
+          <Badge variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs px-3 py-1 rounded-full font-medium border-0 shadow-sm transition-colors duration-150">
             Unknown
           </Badge>
         )
@@ -152,84 +152,87 @@ export function TestManagement({ onCreateTest }: TestManagementProps = {}) {
       ) : (
         <div className="space-y-3">
           {tests.map((test) => (
-            <Card key={test.id} className="group border border-gray-200/50 rounded-lg overflow-hidden bg-white hover:bg-white shadow-sm hover:shadow-md transition-all duration-200 w-full">
-              <CardContent className="p-4">
-                <div className="flex flex-col gap-3">
-                  {/* Premium Header Row */}
-                  <div className="flex items-start justify-between">
-                    <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-bold text-gray-900 tracking-tight">
-                        {test.name}
-                      </h3>
-                      {test.description && (
-                        <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                          {test.description}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-2 ml-3">
-                      {getStatusIcon(test.status)}
-                      {getStatusBadge(test.status)}
+            <Card key={test.id} className="group border border-gray-200/50 rounded-xl overflow-hidden bg-white hover:bg-white hover:shadow-lg hover:shadow-gray-200/30 transition-all duration-200 w-full hover:-translate-y-0.5">
+              <CardContent className="p-0">
+                <div className="flex flex-col">
+                  {/* Premium Header Section */}
+                  <div className="px-5 py-4 border-b border-gray-100/60">
+                    <div className="flex items-start justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                          <h3 className="text-lg font-semibold text-gray-900 tracking-tight leading-tight">
+                            {test.name}
+                          </h3>
+                          {getStatusBadge(test.status)}
+                        </div>
+                        {test.description && (
+                          <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 font-medium">
+                            {test.description}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                   
-                  {/* Premium Stats Grid - Full Width */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-2.5 border border-blue-200/50">
-                      <div className="flex items-center space-x-2">
-                        <FileText className="h-3.5 w-3.5 text-blue-600" />
-                        <div>
-                          <p className="text-xs text-blue-600 font-medium">Questions</p>
-                          <p className="text-sm font-bold text-blue-900">
+                  {/* Premium Minimalist Meta Section */}
+                  <div className="px-5 py-4 bg-gray-50/40">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                      {/* Questions */}
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                          <FileText className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Questions</p>
+                          <p className="text-lg font-bold text-gray-900">
                             {typeof test.question_count === 'number' ? test.question_count : '—'}
                           </p>
                         </div>
                       </div>
-                    </div>
-                    
-                    <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-2.5 border border-green-200/50">
-                      <div className="flex items-center space-x-2">
-                        <Clock className="h-3.5 w-3.5 text-green-600" />
-                        <div>
-                          <p className="text-xs text-green-600 font-medium">Duration</p>
-                          <p className="text-sm font-bold text-green-900">
-                            {test.total_time_minutes}m
-                          </p>
+
+                      {/* Duration */}
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
+                          <Clock className="h-4 w-4 text-green-600" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Duration</p>
+                          <p className="text-lg font-bold text-gray-900">{test.total_time_minutes}m</p>
                         </div>
                       </div>
-                    </div>
-                    
-                    <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-2.5 border border-purple-200/50">
-                      <div className="flex items-center space-x-2">
-                        <Calendar className="h-3.5 w-3.5 text-purple-600" />
-                        <div>
-                          <p className="text-xs text-purple-600 font-medium">Start</p>
-                          <p className="text-xs font-medium text-purple-900">
-                            {formatDateTime(test.start_time)}
-                          </p>
+
+                      {/* Start Time */}
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
+                          <Calendar className="h-4 w-4 text-purple-600" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Start</p>
+                          <p className="text-sm font-semibold text-gray-900 truncate">{formatDateTime(test.start_time)}</p>
                         </div>
                       </div>
-                    </div>
-                    
-                    <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-2.5 border border-orange-200/50">
-                      <div className="flex items-center space-x-2">
-                        <Calendar className="h-3.5 w-3.5 text-orange-600" />
-                        <div>
-                          <p className="text-xs text-orange-600 font-medium">End</p>
-                          <p className="text-xs font-medium text-orange-900">
-                            {formatDateTime(test.end_time)}
-                          </p>
+
+                      {/* End Time */}
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center">
+                          <Calendar className="h-4 w-4 text-orange-600" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">End</p>
+                          <p className="text-sm font-semibold text-gray-900 truncate">{formatDateTime(test.end_time)}</p>
                         </div>
                       </div>
                     </div>
                   </div>
                   
-                  {/* Premium Actions Row - Full Width */}
-                  <div className="flex items-center justify-end pt-3 border-t border-gray-100">
-                    <TestActions 
-                      test={test} 
-                      onAction={handleTestAction}
-                    />
+                  {/* Premium Actions Section */}
+                  <div className="px-5 py-3 bg-white border-t border-gray-100/60">
+                    <div className="flex items-center justify-end">
+                      <TestActions 
+                        test={test} 
+                        onAction={handleTestAction}
+                      />
+                    </div>
                   </div>
                 </div>
               </CardContent>
