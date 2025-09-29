@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useReactToPrint } from 'react-to-print'
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
 
@@ -104,6 +105,16 @@ export function PremiumPDFExporter({ test, questions, isOpen, onClose }: Premium
   const [config, setConfig] = useState<PDFConfig>(defaultConfig)
   const [isGenerating, setIsGenerating] = useState(false)
   const [previewContent, setPreviewContent] = useState('')
+  
+  // Create a ref to attach to the component we want to print
+  const previewComponentRef = useRef<HTMLDivElement>(null)
+
+  // Configure the print handler
+  const handlePrint = useReactToPrint({
+    contentRef: previewComponentRef,
+    documentTitle: `${test?.name || 'test'}-question-paper`,
+    onAfterPrint: () => console.log('Print job completed.'),
+  })
 
   // Update preview when config changes
   useEffect(() => {
@@ -153,60 +164,6 @@ export function PremiumPDFExporter({ test, questions, isOpen, onClose }: Premium
     console.log('Preview HTML length:', previewHTML.length);
   }
 
-  const handleGeneratePDF = async () => {
-    setIsGenerating(true)
-    try {
-      console.log('Starting PDF generation...')
-      console.log('Test data:', test)
-      console.log('Questions:', questions)
-      console.log('Config:', config)
-
-      const response = await fetch('/api/generate-pdf', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          testData: { ...test, questions },
-          config
-        }),
-      })
-
-      console.log('Response status:', response.status)
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()))
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('API Error:', errorText)
-        throw new Error(`Server error: ${response.status} - ${errorText}`)
-      }
-
-      const blob = await response.blob()
-      console.log('PDF blob size:', blob.size, 'bytes')
-      
-      if (blob.size === 0) {
-        throw new Error('Generated PDF is empty')
-      }
-
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${test.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
-      
-      console.log('PDF downloaded successfully')
-      onClose()
-    } catch (error) {
-      console.error('PDF generation failed:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      alert(`Failed to generate PDF: ${errorMessage}. Please check the console for details.`)
-    } finally {
-      setIsGenerating(false)
-    }
-  }
 
   const updateConfig = (key: keyof PDFConfig, value: any) => {
     setConfig(prev => ({ ...prev, [key]: value }))
@@ -394,7 +351,7 @@ export function PremiumPDFExporter({ test, questions, isOpen, onClose }: Premium
             {/* Generate Button - Fixed at bottom */}
             <div className="p-4 border-t border-gray-200 bg-gradient-to-r from-blue-600 to-indigo-600 flex-shrink-0">
               <Button 
-                onClick={handleGeneratePDF}
+                onClick={handlePrint}
                 disabled={isGenerating}
                 className="w-full bg-white text-blue-600 hover:bg-blue-50 hover:text-blue-700 font-bold py-3 text-base shadow-lg hover:shadow-xl transition-all duration-200 border border-blue-200"
               >
@@ -440,6 +397,7 @@ export function PremiumPDFExporter({ test, questions, isOpen, onClose }: Premium
                     }}
                   >
                     <div 
+                      ref={previewComponentRef}
                       data-preview-content
                       dangerouslySetInnerHTML={{ __html: previewContent }} 
                     />
