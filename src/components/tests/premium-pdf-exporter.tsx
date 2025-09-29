@@ -485,7 +485,7 @@ function generatePreviewHTML(test: Test, questions: AdminQuestion[], config: PDF
   // Instructions
   if (config.showInstructions) {
     content += `
-      <div style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); padding: 20px; border-radius: 12px; margin-bottom: 35px; border-left: 5px solid #3b82f6; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+      <div style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); padding: 20px; border-radius: 12px; margin-bottom: 35px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
         <h3 style="margin-bottom: 15px; font-size: 18px; font-weight: bold; color: #1f2937;">📋 Instructions:</h3>
         <ul style="margin-left: 25px; line-height: 1.8;">
           <li style="margin-bottom: 8px; font-weight: 500;">Read all questions carefully before answering</li>
@@ -500,7 +500,7 @@ function generatePreviewHTML(test: Test, questions: AdminQuestion[], config: PDF
   // Marking Scheme
   if (config.showMarkingScheme) {
     content += `
-      <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 20px; border-radius: 12px; margin-bottom: 35px; border-left: 5px solid #f59e0b; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+      <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 20px; border-radius: 12px; margin-bottom: 35px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
         <h3 style="margin-bottom: 15px; font-size: 18px; font-weight: bold; color: #1f2937;">📊 Marking Scheme:</h3>
         <ul style="margin-left: 25px; line-height: 1.8;">
           <li style="margin-bottom: 8px; font-weight: 500;">Each question carries equal marks</li>
@@ -538,7 +538,7 @@ function generatePreviewHTML(test: Test, questions: AdminQuestion[], config: PDF
   if (config.showAnswerKey) {
     content += `
       <div style="page-break-before: always; margin-top: 40px;"></div>
-      <div style="background: #d1fae5; padding: 20px; border-radius: 8px; margin-top: 30px; border-left: 4px solid #10b981;">
+      <div style="background: #d1fae5; padding: 20px; border-radius: 8px; margin-top: 30px;">
         <h2 style="margin-bottom: 15px;">Answer Key</h2>
         ${questions.map((question, index) => `
           <div style="margin-bottom: 10px;">
@@ -554,7 +554,7 @@ function generatePreviewHTML(test: Test, questions: AdminQuestion[], config: PDF
   if (config.showSolutions) {
     content += `
       <div style="page-break-before: always; margin-top: 40px;"></div>
-      <div style="background: #e0f2fe; padding: 20px; border-radius: 8px; margin-top: 30px; border-left: 4px solid #0ea5e9;">
+      <div style="background: #e0f2fe; padding: 20px; border-radius: 8px; margin-top: 30px;">
         <h2 style="margin-bottom: 15px;">Solutions</h2>
         ${questions.map((question, index) => `
           <div style="margin-bottom: 20px;">
@@ -586,7 +586,7 @@ function renderOptionsGrid(options: any, questionIndex: number): string {
     console.log(`❌ No options for question ${questionIndex + 1}`);
     // Return sample options for testing
     return `
-      <div style="margin: 15px 0; padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #007bff;">
+      <div style="margin: 15px 0; padding: 12px; background: #f8f9fa; border-radius: 6px; ">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start;">
           <div style="display: flex; align-items: flex-start; padding: 6px; background: white; border-radius: 4px; border: 1px solid #e2e8f0;">
             <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: #e5e7eb; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(a)</span>
@@ -626,7 +626,7 @@ function renderOptionsGrid(options: any, questionIndex: number): string {
     const optionD = opts.d || opts.D;
     
     optionsHtml = `
-      <div style="margin: 15px 0; padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #007bff;">
+      <div style="margin: 15px 0; padding: 12px; background: #f8f9fa; border-radius: 6px; ">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start;">
           ${optionA ? `
             <div style="display: flex; align-items: flex-start; padding: 6px; background: white; border-radius: 4px; border: 1px solid #e2e8f0;">
@@ -658,7 +658,7 @@ function renderOptionsGrid(options: any, questionIndex: number): string {
   } else if (Array.isArray(opts) && opts.length > 0) {
     // Handle array structure
     optionsHtml = `
-      <div style="margin: 15px 0; padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #007bff;">
+      <div style="margin: 15px 0; padding: 12px; background: #f8f9fa; border-radius: 6px; ">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start;">
           ${opts.map((option, optIndex) => `
             <div style="display: flex; align-items: flex-start; padding: 6px; background: white; border-radius: 4px; border: 1px solid #e2e8f0;">
@@ -689,10 +689,10 @@ function renderLatex(text: string): string {
           throwOnError: false,
           strict: false
         })
-        return `<div style="text-align: center; margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #007bff;">${html}</div>`
+        return `<div style="text-align: center; margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 4px;">${html}</div>`
       } catch (error) {
         console.warn('KaTeX display math error:', error)
-        return `<div style="text-align: center; margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #dc3545; color: #dc3545;">Math Error: ${latex}</div>`
+        return `<div style="text-align: center; margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 4px; color: #dc3545;">Math Error: ${latex}</div>`
       }
     })
     
