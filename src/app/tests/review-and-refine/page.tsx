@@ -12,6 +12,10 @@ export default function ReviewAndRefinePage() {
   const { selectedQuestions, setSelectedQuestions } = useTestCreationStore()
   const [questionsFromModal, setQuestionsFromModal] = useState<Question[]>([])
   const [isLoadingFromStorage, setIsLoadingFromStorage] = useState(true)
+  const [globalMarkingRules, setGlobalMarkingRules] = useState({
+    marksPerCorrect: 1,
+    penaltyPerIncorrect: 0.25
+  })
   const router = useRouter()
 
   // Load questions from localStorage if they exist (from the new modal)
@@ -88,17 +92,30 @@ export default function ReviewAndRefinePage() {
       <ReviewRefineInterface
         questions={questionSlots}
         onQuestionsChange={(slots) => {
-          const newQuestions = slots.map((slot) => slot.question)
+          console.log('🔄 onQuestionsChange called with slots:', slots)
+          // Preserve custom marking data by storing it on the question object
+          const newQuestions = slots.map((slot) => {
+            const question = { ...slot.question }
+            if (slot.customMarking) {
+              (question as any).customMarking = slot.customMarking
+            }
+            return question
+          })
+          console.log('💾 Updated questions with custom marking:', newQuestions)
           setSelectedQuestions(newQuestions)
           setQuestionsFromModal(newQuestions)
         }}
         onRegenerate={handleRegenerate}
         onEdit={() => {}}
         onNext={() => {
+          // Store global marking rules in localStorage for the finalization page
+          localStorage.setItem('globalMarkingRules', JSON.stringify(globalMarkingRules))
           // Navigate to the finalization stage
           router.push('/tests/finalize')
         }}
         isQuestionBankMode
+        globalMarkingRules={globalMarkingRules}
+        onGlobalMarkingRulesChange={setGlobalMarkingRules}
       />
     </div>
   )

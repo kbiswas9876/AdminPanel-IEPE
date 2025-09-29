@@ -696,7 +696,7 @@ export async function saveTestFromForm(formData: FormData): Promise<{ success: b
         correct_option?: string
         solution_text?: string | null
       }
-      type Item = { id?: number; new?: NewPayload; override?: OverridePayload }
+      type Item = { id?: number; new?: NewPayload; override?: OverridePayload; customMarking?: { marksPerCorrect: number; penaltyPerIncorrect: number } }
       let list: Item[] = []
       try {
         list = JSON.parse(questionsPayloadRaw) as Item[]
@@ -770,14 +770,16 @@ export async function saveTestFromForm(formData: FormData): Promise<{ success: b
         for (let i = 0; i < list.length; i++) {
           const qid = finalQuestionIds[i]
           const override = list[i].override || null
+          const customMarking = list[i].customMarking || null
+          
           const row: Record<string, unknown> = { 
             test_id: testId!, 
             question_id: qid,
             test_name: payload.name,
             test_status: status,
             total_time_minutes: payload.total_time_minutes,
-            marks_per_correct: payload.marks_per_correct,
-            penalty_per_incorrect: payload.negative_marks_per_incorrect
+            marks_per_correct: customMarking?.marksPerCorrect ?? payload.marks_per_correct,
+            penalty_per_incorrect: customMarking?.penaltyPerIncorrect ?? payload.negative_marks_per_incorrect
           }
           if (override && Object.keys(override).length > 0) {
             row.question_override_data = override
@@ -792,15 +794,18 @@ export async function saveTestFromForm(formData: FormData): Promise<{ success: b
           console.error('Cleanup failed after override attempt:', del3)
         }
         if (finalQuestionIds.length > 0) {
-          const mappings = finalQuestionIds.map((qid) => ({ 
-            test_id: testId!, 
-            question_id: qid,
-            test_name: payload.name,
-            test_status: status,
-            total_time_minutes: payload.total_time_minutes,
-            marks_per_correct: payload.marks_per_correct,
-            penalty_per_incorrect: payload.negative_marks_per_incorrect
-          }))
+          const mappings = finalQuestionIds.map((qid, index) => {
+            const customMarking = list[index]?.customMarking || null
+            return { 
+              test_id: testId!, 
+              question_id: qid,
+              test_name: payload.name,
+              test_status: status,
+              total_time_minutes: payload.total_time_minutes,
+              marks_per_correct: customMarking?.marksPerCorrect ?? payload.marks_per_correct,
+              penalty_per_incorrect: customMarking?.penaltyPerIncorrect ?? payload.negative_marks_per_incorrect
+            }
+          })
           const { error: insErr } = await supabase.from('test_questions').insert(mappings)
           if (insErr) {
             console.error('Error inserting mappings (fallback):', insErr)

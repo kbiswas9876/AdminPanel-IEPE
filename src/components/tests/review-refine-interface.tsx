@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ArrowRight, Pencil, Edit3, Trash2, ChevronDown, Plus, Eye, EyeOff, Sparkles, Layers, RefreshCw, FileText, CheckCircle2, BarChart3, Award, Star, Shield, Zap as Lightning, Wand2, Palette, Save, X, BookOpen, AlertCircle, Info, ToggleLeft, ToggleRight } from 'lucide-react'
+import { ArrowRight, Pencil, Edit3, Trash2, ChevronDown, Plus, Eye, EyeOff, Sparkles, Layers, RefreshCw, FileText, CheckCircle2, BarChart3, Award, Star, Shield, Zap as Lightning, Wand2, Palette, Save, X, BookOpen, AlertCircle, Info, ToggleLeft, ToggleRight, Tag, Minus } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 import { UniversalContentRenderer } from '../editors/UniversalContentRenderer'
@@ -22,6 +22,11 @@ interface ReviewRefineInterfaceProps {
   onEdit: (index: number) => void
   onNext: () => void
   isQuestionBankMode?: boolean
+  globalMarkingRules?: {
+    marksPerCorrect: number
+    penaltyPerIncorrect: number
+  }
+  onGlobalMarkingRulesChange?: (rules: { marksPerCorrect: number; penaltyPerIncorrect: number }) => void
 }
 
 export default function ReviewRefineInterface({
@@ -30,7 +35,9 @@ export default function ReviewRefineInterface({
   onRegenerate,
   onEdit,
   onNext,
-  isQuestionBankMode: _isQuestionBankMode = false
+  isQuestionBankMode: _isQuestionBankMode = false,
+  globalMarkingRules = { marksPerCorrect: 1, penaltyPerIncorrect: 0.25 },
+  onGlobalMarkingRulesChange
 }: ReviewRefineInterfaceProps) {
   const [shuffleOptions, setShuffleOptions] = useState(false)
   const [overrideIndex, setOverrideIndex] = useState<number | null>(null)
@@ -51,6 +58,12 @@ export default function ReviewRefineInterface({
     solution: true
   })
   const [isShuffling, setIsShuffling] = useState(false)
+  const [customMarkingIndex, setCustomMarkingIndex] = useState<number | null>(null)
+  const [customMarkingModal, setCustomMarkingModal] = useState(false)
+  const [customMarkingForm, setCustomMarkingForm] = useState<{
+    marksPerCorrect: number
+    penaltyPerIncorrect: number
+  }>({ marksPerCorrect: 1, penaltyPerIncorrect: 0.25 })
 
 
   const handleShuffleQuestions = async () => {
@@ -68,6 +81,57 @@ export default function ReviewRefineInterface({
     onQuestionsChange(shuffled)
     
     setIsShuffling(false)
+  }
+
+  const handleCustomMarking = (index: number) => {
+    console.log('🎯 Opening custom marking modal for question:', index + 1)
+    setCustomMarkingIndex(index)
+    const question = questions[index]
+    // Initialize with global rules or existing custom rules
+    const initialForm = {
+      marksPerCorrect: question.customMarking?.marksPerCorrect ?? globalMarkingRules.marksPerCorrect,
+      penaltyPerIncorrect: question.customMarking?.penaltyPerIncorrect ?? globalMarkingRules.penaltyPerIncorrect
+    }
+    console.log('📝 Initial form values:', initialForm)
+    setCustomMarkingForm(initialForm)
+    setCustomMarkingModal(true)
+  }
+
+  const handleSaveCustomMarking = () => {
+    console.log('💾 Save custom marking called with:', { customMarkingIndex, customMarkingForm })
+    if (customMarkingIndex !== null) {
+      const updatedQuestions = [...questions]
+      const newCustomMarking = {
+        marksPerCorrect: customMarkingForm.marksPerCorrect,
+        penaltyPerIncorrect: customMarkingForm.penaltyPerIncorrect
+      }
+      console.log('🔄 Updating question with custom marking:', newCustomMarking)
+      
+      updatedQuestions[customMarkingIndex] = {
+        ...updatedQuestions[customMarkingIndex],
+        customMarking: newCustomMarking
+      }
+      
+      console.log('📤 Calling onQuestionsChange with updated questions')
+      onQuestionsChange(updatedQuestions)
+      
+      // Show success feedback
+      const questionNumber = customMarkingIndex + 1
+      console.log(`✅ Custom marking saved for Question ${questionNumber}: +${customMarkingForm.marksPerCorrect} / -${customMarkingForm.penaltyPerIncorrect}`)
+    }
+    setCustomMarkingModal(false)
+    setCustomMarkingIndex(null)
+  }
+
+  const handleRemoveCustomMarking = (index: number) => {
+    const updatedQuestions = [...questions]
+    const { customMarking, ...rest } = updatedQuestions[index]
+    updatedQuestions[index] = rest
+    onQuestionsChange(updatedQuestions)
+    
+    // Show feedback
+    const questionNumber = index + 1
+    console.log(`🔄 Custom marking removed for Question ${questionNumber}, reverted to default`)
   }
 
   const handleOverride = (index: number) => {
@@ -248,13 +312,14 @@ export default function ReviewRefineInterface({
             </div>
           </div>
 
-          {/* Action Buttons Row */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            {/* Left Side - Primary Actions */}
-            <div className="flex gap-3">
+          {/* Professional Control Bar */}
+          <div className="flex flex-col xl:flex-row items-stretch gap-3 xl:gap-4">
+            
+            {/* Left Section - Primary Actions */}
+            <div className="flex gap-2">
               <Button 
                 onClick={() => setChooseOpen(true)}
-                className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 text-sm px-5 py-2.5 h-10 rounded-xl font-semibold flex-1 sm:flex-none"
+                className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 text-sm px-4 py-2.5 h-10 rounded-xl font-semibold min-w-[140px]"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Question
@@ -262,19 +327,54 @@ export default function ReviewRefineInterface({
               
               <Button 
                 onClick={onNext}
-                className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 text-sm px-5 py-2.5 h-10 rounded-xl font-semibold flex-1 sm:flex-none"
+                className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 text-sm px-4 py-2.5 h-10 rounded-xl font-semibold min-w-[140px]"
               >
                 Next Step
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </div>
 
-            {/* Right Side - Shuffle Controls */}
-            <div className="flex gap-3">
+            {/* Center Section - Default Marking Rules */}
+            <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-xl border border-emerald-200/60 shadow-lg px-4 py-2.5 h-10">
+              <span className="text-sm font-semibold text-gray-800 whitespace-nowrap">Default Marking:</span>
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-gray-500">+</span>
+                <Input
+                  type="number"
+                  step="0.25"
+                  min="0"
+                  value={globalMarkingRules.marksPerCorrect}
+                  onChange={(e) => onGlobalMarkingRulesChange?.({
+                    ...globalMarkingRules,
+                    marksPerCorrect: Number(e.target.value)
+                  })}
+                  className="h-7 w-16 text-center text-sm border-gray-200 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-100 rounded-md transition-all duration-200 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                  placeholder="1.0"
+                />
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-gray-500">-</span>
+                <Input
+                  type="number"
+                  step="0.25"
+                  min="0"
+                  value={globalMarkingRules.penaltyPerIncorrect}
+                  onChange={(e) => onGlobalMarkingRulesChange?.({
+                    ...globalMarkingRules,
+                    penaltyPerIncorrect: Number(e.target.value)
+                  })}
+                  className="h-7 w-16 text-center text-sm border-gray-200 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-100 rounded-md transition-all duration-200 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                  placeholder="0.25"
+                />
+              </div>
+            </div>
+
+            {/* Right Section - Shuffle Controls */}
+            <div className="flex items-center gap-2">
               <Button 
                 onClick={handleShuffleQuestions}
                 disabled={isShuffling}
-                className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm px-4 py-2.5 h-10 rounded-xl font-semibold"
+                className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm px-4 py-2.5 h-10 rounded-xl font-semibold min-w-[120px]"
               >
                 {isShuffling ? (
                   <>
@@ -289,29 +389,23 @@ export default function ReviewRefineInterface({
                 )}
               </Button>
               
-              {/* Modern Shuffle Options Toggle */}
-              <div className="flex items-center justify-between bg-white/80 backdrop-blur-sm rounded-2xl border border-blue-200/50 shadow-lg p-3 sm:p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
-                    <RefreshCw className="h-4 w-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-800">Shuffle Options</p>
-                    <p className="text-xs text-gray-500 hidden sm:block">Randomize answer order</p>
-                  </div>
+              {/* Compact Shuffle Options */}
+              <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-xl border border-blue-200/60 shadow-lg px-3 py-2.5 h-10">
+                <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center shadow-sm">
+                  <RefreshCw className="h-3 w-3 text-white" />
                 </div>
-                
+                <span className="text-sm font-semibold text-gray-800">Shuffle Options</span>
                 <button
                   onClick={() => setShuffleOptions(!shuffleOptions)}
-                  className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
                   style={{
                     backgroundColor: shuffleOptions ? '#3b82f6' : '#d1d5db'
                   }}
                 >
                   <span
-                    className="inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform"
+                    className="inline-block h-3 w-3 transform rounded-full bg-white shadow-lg transition-transform"
                     style={{
-                      transform: shuffleOptions ? 'translateX(1.25rem)' : 'translateX(0.125rem)'
+                      transform: shuffleOptions ? 'translateX(1rem)' : 'translateX(0.125rem)'
                     }}
                   />
                 </button>
@@ -324,6 +418,7 @@ export default function ReviewRefineInterface({
       {/* Main Content - Full Width */}
       <div className="px-3 sm:px-4">
         <div className="max-w-none mx-auto w-full">
+        
         {/* Ultra-Premium Questions List */}
         <div className="space-y-4 sm:space-y-6 pt-3 sm:pt-4 -mx-3 sm:-mx-4">
           {questions.map((item, index) => {
@@ -352,6 +447,44 @@ export default function ReviewRefineInterface({
                             <span className="text-xs sm:text-sm font-semibold text-gray-700">{item.source_type}</span>
                             {item.source_value && <span className="text-xs text-gray-500">: {item.source_value}</span>}
                         </div>
+                        {/* Enhanced Marking Rules Display */}
+                        {(() => {
+                          const hasCustomMarking = !!item.customMarking
+                          const marksPerCorrect = item.customMarking?.marksPerCorrect ?? globalMarkingRules.marksPerCorrect
+                          const penaltyPerIncorrect = item.customMarking?.penaltyPerIncorrect ?? globalMarkingRules.penaltyPerIncorrect
+                          
+                          console.log(`🏷️ Question ${index + 1} marking display:`, {
+                            hasCustomMarking,
+                            marksPerCorrect,
+                            penaltyPerIncorrect,
+                            customMarking: item.customMarking,
+                            globalRules: globalMarkingRules
+                          })
+                          
+                          return (
+                            <div className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border shadow-sm transition-all duration-200 ${
+                              hasCustomMarking 
+                                ? 'bg-gradient-to-r from-orange-50 to-amber-50 border-orange-300/60 shadow-orange-100' 
+                                : 'bg-gradient-to-r from-gray-50 to-slate-50 border-gray-300/60 shadow-gray-100'
+                            }`}>
+                              <Tag className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${
+                                hasCustomMarking ? 'text-orange-600' : 'text-gray-600'
+                              }`} />
+                              <span className={`text-xs sm:text-sm font-bold ${
+                                hasCustomMarking ? 'text-orange-800' : 'text-gray-800'
+                              }`}>
+                                {hasCustomMarking ? 'Custom' : 'Default'} Marking
+                              </span>
+                              <span className={`text-xs sm:text-sm font-mono font-bold px-1.5 py-0.5 rounded ${
+                                hasCustomMarking 
+                                  ? 'bg-orange-100 text-orange-800 border border-orange-200' 
+                                  : 'bg-gray-100 text-gray-800 border border-gray-200'
+                              }`}>
+                                +{marksPerCorrect} / -{penaltyPerIncorrect}
+                              </span>
+                            </div>
+                          )
+                        })()}
                           </div>
                           </div>
                         </div>
@@ -393,6 +526,20 @@ export default function ReviewRefineInterface({
                         title="Edit Question"
                       >
                         <Edit3 className="h-3 w-3 sm:h-4 sm:w-4 group-hover:scale-110 transition-transform duration-200" />
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCustomMarking(index)}
+                        className={`h-7 w-7 sm:h-9 sm:w-9 p-0 transition-all duration-200 rounded-md sm:rounded-xl shadow-sm hover:shadow-md group ${
+                          item.customMarking 
+                            ? 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 border-emerald-200 hover:border-emerald-300' 
+                            : 'text-gray-600 hover:text-gray-700 hover:bg-gray-50 border-gray-200 hover:border-gray-300'
+                        }`}
+                        title={item.customMarking ? "Edit Custom Marking" : "Set Custom Marking"}
+                      >
+                        <Tag className="h-3 w-3 sm:h-4 sm:w-4 group-hover:scale-110 transition-transform duration-200" />
                       </Button>
                       
                       <Button
@@ -897,6 +1044,100 @@ export default function ReviewRefineInterface({
                 setCreateOpen(false)
               }}
             />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Custom Marking Modal */}
+      <Dialog open={customMarkingModal} onOpenChange={setCustomMarkingModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600">
+                <Tag className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <DialogTitle className="text-lg font-bold">Custom Marking for This Question</DialogTitle>
+                <DialogDescription>Set custom scoring for this specific question</DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-gray-700">Marks for Correct Answer</Label>
+              <Input
+                type="number"
+                step="0.25"
+                min="0"
+                value={customMarkingForm.marksPerCorrect}
+                onChange={(e) => setCustomMarkingForm({
+                  ...customMarkingForm,
+                  marksPerCorrect: Number(e.target.value)
+                })}
+                className="h-12 border-gray-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 rounded-xl text-base transition-all duration-200"
+                placeholder="1.0"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-gray-700">Penalty for Incorrect Answer</Label>
+              <Input
+                type="number"
+                step="0.25"
+                min="0"
+                value={customMarkingForm.penaltyPerIncorrect}
+                onChange={(e) => setCustomMarkingForm({
+                  ...customMarkingForm,
+                  penaltyPerIncorrect: Number(e.target.value)
+                })}
+                className="h-12 border-gray-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 rounded-xl text-base transition-all duration-200"
+                placeholder="0.25"
+              />
+            </div>
+
+            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center gap-2">
+                <Info className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-800">
+                  These custom marks will override the default marking rules for this specific question only. The change will be visible immediately on the question card.
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (customMarkingIndex !== null) {
+                  handleRemoveCustomMarking(customMarkingIndex)
+                }
+                setCustomMarkingModal(false)
+                setCustomMarkingIndex(null)
+              }}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
+            >
+              <Minus className="h-4 w-4 mr-2" />
+              Remove Custom Marking
+            </Button>
+            
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setCustomMarkingModal(false)}
+                className="border-gray-200 hover:border-gray-300"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveCustomMarking}
+                className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Save Marking
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

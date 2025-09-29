@@ -40,6 +40,10 @@ export type TestQuestionSlot = {
   chapter_name: string;
   source_value?: string | null;
   tempId?: string;
+  customMarking?: {
+    marksPerCorrect: number;
+    penaltyPerIncorrect: number;
+  };
 };
 
 // Type for PDF customization settings

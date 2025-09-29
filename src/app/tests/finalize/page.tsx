@@ -13,13 +13,18 @@ export default function TestFinalizePage() {
   const { selectedQuestions, setSelectedQuestions } = useTestCreationStore()
   const [questionsFromModal, setQuestionsFromModal] = useState<Question[]>([])
   const [editTestId, setEditTestId] = useState<number | undefined>(undefined)
+  const [globalMarkingRules, setGlobalMarkingRules] = useState({
+    marksPerCorrect: 1,
+    penaltyPerIncorrect: 0.25
+  })
 
   // Load questions from localStorage if they exist (from the question bank flow or edit flow)
   useEffect(() => {
     const storedQuestions = localStorage.getItem('selectedTestQuestions')
     const storedTestId = localStorage.getItem('editingTestId')
+    const storedGlobalMarkingRules = localStorage.getItem('globalMarkingRules')
     
-    console.log('🔍 Finalize page - localStorage check:', { storedQuestions: !!storedQuestions, storedTestId })
+    console.log('🔍 Finalize page - localStorage check:', { storedQuestions: !!storedQuestions, storedTestId, storedGlobalMarkingRules: !!storedGlobalMarkingRules })
     
     if (storedQuestions) {
       try {
@@ -30,6 +35,17 @@ export default function TestFinalizePage() {
         localStorage.removeItem('selectedTestQuestions')
       } catch (error) {
         console.error('Error parsing stored questions:', error)
+      }
+    }
+    
+    if (storedGlobalMarkingRules) {
+      try {
+        const parsedRules = JSON.parse(storedGlobalMarkingRules)
+        setGlobalMarkingRules(parsedRules)
+        // Clear the stored rules after loading
+        localStorage.removeItem('globalMarkingRules')
+      } catch (error) {
+        console.error('Error parsing stored global marking rules:', error)
       }
     }
     
@@ -71,10 +87,10 @@ export default function TestFinalizePage() {
       name: testData.name,
       description: testData.description || undefined,
       total_time_minutes: testData.totalTimeMinutes,
-      marks_per_correct: testData.marksPerCorrect,
-      negative_marks_per_incorrect: testData.negativeMarksPerIncorrect,
-      result_policy: testData.resultPolicy,
-      result_release_at: testData.resultPolicy === 'scheduled' ? testData.resultReleaseAt : null,
+      marks_per_correct: globalMarkingRules.marksPerCorrect,
+      negative_marks_per_incorrect: globalMarkingRules.penaltyPerIncorrect,
+      result_policy: 'instant',
+      result_release_at: null,
       question_ids: questionIds,
       publish: null // Save as draft
     })
@@ -88,8 +104,8 @@ export default function TestFinalizePage() {
       name: testData.name,
       description: testData.description || undefined,
       total_time_minutes: testData.totalTimeMinutes,
-      marks_per_correct: testData.marksPerCorrect,
-      negative_marks_per_incorrect: testData.negativeMarksPerIncorrect,
+      marks_per_correct: globalMarkingRules.marksPerCorrect,
+      negative_marks_per_incorrect: globalMarkingRules.penaltyPerIncorrect,
       result_policy: publishData.resultPolicy,
       result_release_at: publishData.resultPolicy === 'scheduled' ? publishData.resultReleaseAt : null,
       question_ids: questionIds,
@@ -124,6 +140,7 @@ export default function TestFinalizePage() {
       onPublish={handlePublish}
       isEditMode={!!editTestId}
       testId={editTestId}
+      globalMarkingRules={globalMarkingRules}
     />
   )
 }
