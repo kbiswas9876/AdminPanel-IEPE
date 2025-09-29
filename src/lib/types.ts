@@ -33,6 +33,9 @@ export type ChapterBlueprint = {
 // Type for test blueprint configuration
 export type TestBlueprint = Record<string, ChapterBlueprint>;
 
+// Type alias for blueprint state (same as TestBlueprint)
+export type BlueprintState = TestBlueprint;
+
 // Type for test question slot in the test creation wizard
 export type TestQuestionSlot = {
   question: Question;
