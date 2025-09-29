@@ -63,10 +63,12 @@ const styles = StyleSheet.create({
   },
   infoItem: {
     backgroundColor: '#f7fafc',
-    padding: '4 8',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
     borderRadius: 4,
     borderWidth: 1,
     borderColor: '#e2e8f0',
+    borderStyle: 'solid',
     textAlign: 'center',
   },
   instructions: {
@@ -93,7 +95,9 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     padding: 12,
     backgroundColor: '#ffffff',
-    border: '1px solid #e2e8f0',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderStyle: 'solid',
     borderRadius: 4,
   },
   questionHeader: {
@@ -117,14 +121,14 @@ const styles = StyleSheet.create({
   optionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
     marginTop: 8,
   },
   option: {
     width: '48%',
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 4,
+    marginBottom: 6,
+    marginRight: 6,
   },
   optionLabel: {
     fontSize: 10,

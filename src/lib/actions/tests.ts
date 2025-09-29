@@ -585,7 +585,10 @@ export async function saveTest(args: {
       test_id: testId!, 
       question_id: qid,
       test_name: args.name,
-      test_status: status
+      test_status: status,
+      total_time_minutes: args.total_time_minutes,
+      marks_per_correct: args.marks_per_correct,
+      penalty_per_incorrect: args.negative_marks_per_incorrect
     }))
     
     console.log('🔍 Inserting test_questions mappings:', { 
@@ -771,7 +774,10 @@ export async function saveTestFromForm(formData: FormData): Promise<{ success: b
             test_id: testId!, 
             question_id: qid,
             test_name: payload.name,
-            test_status: status
+            test_status: status,
+            total_time_minutes: payload.total_time_minutes,
+            marks_per_correct: payload.marks_per_correct,
+            penalty_per_incorrect: payload.negative_marks_per_incorrect
           }
           if (override && Object.keys(override).length > 0) {
             row.question_override_data = override
@@ -790,7 +796,10 @@ export async function saveTestFromForm(formData: FormData): Promise<{ success: b
             test_id: testId!, 
             question_id: qid,
             test_name: payload.name,
-            test_status: status
+            test_status: status,
+            total_time_minutes: payload.total_time_minutes,
+            marks_per_correct: payload.marks_per_correct,
+            penalty_per_incorrect: payload.negative_marks_per_incorrect
           }))
           const { error: insErr } = await supabase.from('test_questions').insert(mappings)
           if (insErr) {
@@ -812,7 +821,10 @@ export async function saveTestFromForm(formData: FormData): Promise<{ success: b
           test_id: testId!, 
           question_id: qid,
           test_name: payload.name,
-          test_status: status
+          test_status: status,
+          total_time_minutes: payload.total_time_minutes,
+          marks_per_correct: payload.marks_per_correct,
+          penalty_per_incorrect: payload.negative_marks_per_incorrect
         }))
       const { error: insErr } = await supabase.from('test_questions').insert(mappings)
       if (insErr) {

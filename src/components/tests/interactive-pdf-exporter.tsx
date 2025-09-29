@@ -145,10 +145,11 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
     if (selectedTheme) {
       setSettings(prev => ({
         ...prev,
-        theme: selectedTheme,
+        theme: {
+          ...prev.theme,
+          ...selectedTheme,
+        },
         fontSize: selectedTheme.fontSize,
-        primaryColor: selectedTheme.primaryColor,
-        secondaryColor: selectedTheme.secondaryColor
       }))
     }
   }
@@ -213,7 +214,7 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-[1800px] h-[95vh] p-0 overflow-hidden flex flex-col">
+      <DialogContent unconstrainedWidth className="w-[95vw] max-w-[1800px] h-[95vh] p-0 overflow-hidden flex flex-col">
         <DialogHeader className="p-6 pb-4 flex-shrink-0">
           <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
             <FileText className="h-6 w-6" />
