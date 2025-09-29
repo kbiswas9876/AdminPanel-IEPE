@@ -81,7 +81,7 @@ const defaultConfig: PDFConfig = {
   fontSize: 12,
   lineHeight: 1.5,
   questionsPerPage: 2,
-  margins: 20,
+  margins: 15,
   showHeader: true,
   showTotalQuestions: true,
   showFullMarks: true,
