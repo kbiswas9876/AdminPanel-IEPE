@@ -111,7 +111,7 @@ export function MaterialTimePicker({
     if (timeInputRef.current) {
       const inputRect = timeInputRef.current.getBoundingClientRect()
       const viewportWidth = window.innerWidth
-      const timePickerWidth = 280
+      const timePickerWidth = 240 // Compact width
       const spaceRight = viewportWidth - inputRect.left
       const spaceLeft = inputRect.left
       const padding = 16
@@ -218,15 +218,16 @@ export function MaterialTimePicker({
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
           overflow: hidden;
           margin-top: 4px;
-          width: 320px;
-          min-width: 320px;
+          width: 240px;
+          min-width: 240px;
+          max-width: 240px;
         }
 
         .material-time-picker-time-columns {
           display: flex;
-          gap: 16px;
+          gap: 8px;
           justify-content: space-between;
-          padding: 12px;
+          padding: 6px;
         }
 
         .material-time-picker-time-column {
@@ -248,19 +249,19 @@ export function MaterialTimePicker({
         .material-time-picker-time-list {
           background: white;
           border: 1px solid #e0e0e0;
-          border-radius: 8px;
-          max-height: 120px;
+          border-radius: 6px;
+          max-height: 100px;
           overflow-y: auto;
           width: 100%;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .material-time-picker-time-option {
-          padding: 8px 12px;
+          padding: 4px 6px;
           text-align: center;
           cursor: pointer;
           transition: all 0.2s ease;
-          font-size: 14px;
+          font-size: 12px;
           border-bottom: 1px solid #f5f5f5;
         }
 
@@ -285,18 +286,18 @@ export function MaterialTimePicker({
 
         .material-time-picker-time-toggle {
           display: flex;
-          gap: 8px;
-          margin-bottom: 12px;
+          gap: 6px;
+          margin-bottom: 8px;
           justify-content: center;
         }
 
         .material-time-picker-time-toggle-button {
-          padding: 6px 12px;
+          padding: 4px 8px;
           border: 1px solid #e0e0e0;
           border-radius: 4px;
           background: white;
           cursor: pointer;
-          font-size: 12px;
+          font-size: 11px;
           font-weight: 500;
           transition: all 0.2s ease;
         }
@@ -345,6 +346,29 @@ export function MaterialTimePicker({
 
         .material-time-picker-time-list::-webkit-scrollbar-thumb:hover {
           background: #a8a8a8;
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 400px) {
+          .material-time-picker-dropdown {
+            width: 220px;
+            min-width: 220px;
+            max-width: 220px;
+          }
+          
+          .material-time-picker-time-columns {
+            gap: 6px;
+            padding: 4px;
+          }
+          
+          .material-time-picker-time-option {
+            padding: 3px 4px;
+            font-size: 11px;
+          }
+          
+          .material-time-picker-time-list {
+            max-height: 80px;
+          }
         }
       `}</style>
 
