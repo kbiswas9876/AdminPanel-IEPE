@@ -7,7 +7,6 @@ import 'katex/dist/katex.min.css'
 // Declare global KaTeX functions
 declare global {
   interface Window {
-    katex: any
     renderMathInElement: (element: HTMLElement, options?: any) => void
   }
 }
@@ -133,6 +132,16 @@ export function PremiumPDFExporter({ test, questions, isOpen, onClose }: Premium
         console.log('  - options:', q.options);
         console.log('  - correct_option:', q.correct_option);
         console.log('  - solution_text:', q.solution_text?.substring(0, 100) + '...');
+        
+        // Check if options exist and what they contain
+        if (q.options) {
+          console.log(`  - options.a:`, q.options.a);
+          console.log(`  - options.b:`, q.options.b);
+          console.log(`  - options.c:`, q.options.c);
+          console.log(`  - options.d:`, q.options.d);
+        } else {
+          console.log(`  - ❌ No options object for question ${i + 1}`);
+        }
       });
     }
     console.log('=== END DEBUG ===');
@@ -192,7 +201,8 @@ export function PremiumPDFExporter({ test, questions, isOpen, onClose }: Premium
       onClose()
     } catch (error) {
       console.error('PDF generation failed:', error)
-      alert(`Failed to generate PDF: ${error.message || 'Unknown error'}. Please check the console for details.`)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      alert(`Failed to generate PDF: ${errorMessage}. Please check the console for details.`)
     } finally {
       setIsGenerating(false)
     }
@@ -515,74 +525,11 @@ function generatePreviewHTML(test: Test, questions: AdminQuestion[], config: PDF
     
     content += `
       <div style="margin-bottom: 35px; padding: 25px; border: 2px solid #e5e7eb; border-radius: 12px; background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%); box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-        <div style="font-weight: bold; color: #1f2937; margin-bottom: 15px; font-size: 18px; padding-bottom: 10px; border-bottom: 2px solid #e5e7eb;">
-          Question ${index + 1} (${test.marks_per_correct || 1} mark${(test.marks_per_correct || 1) > 1 ? 's' : ''})
+        <div style="display:flex; gap:4px; align-items:flex-start; margin-bottom:12px;">
+          <span style="font-weight:bold; color:#1f2937; min-width:20px; flex-shrink:0;">${index + 1}.</span>
+          <span style="flex:1; line-height:${config.lineHeight || 1.5}; font-size:${config.fontSize || 12}px; color:#374151;">${renderLatex(question.question_text || 'Question text not available')}</span>
         </div>
-        <div style="margin-bottom: 20px; line-height: 1.8; font-size: 16px; color: #374151;">
-          ${renderLatex(question.question_text || 'Question text not available')}
-        </div>
-        ${(() => {
-          // Debug options structure for each question
-          console.log(`Question ${index + 1} options:`, question.options);
-          console.log(`Question ${index + 1} options type:`, typeof question.options);
-          
-          if (!question.options) {
-            console.log(`No options for question ${index + 1}`);
-            return '';
-          }
-          
-          const opts = question.options;
-          let optionsHtml = '';
-          
-          // Try different possible option structures
-          if (opts.a || opts.b || opts.c || opts.d) {
-            optionsHtml = `
-              <div style="margin-left: 25px; background: #f9fafb; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6;">
-                ${opts.a ? `
-                  <div style="margin-bottom: 12px; padding: 8px 0; display: flex; align-items: flex-start;">
-                    <span style="font-weight: bold; margin-right: 12px; color: #1f2937; background: #e5e7eb; padding: 4px 8px; border-radius: 4px; min-width: 24px; text-align: center;">A</span>
-                    <span style="flex: 1; line-height: 1.6;">${renderLatex(opts.a)}</span>
-                  </div>
-                ` : ''}
-                ${opts.b ? `
-                  <div style="margin-bottom: 12px; padding: 8px 0; display: flex; align-items: flex-start;">
-                    <span style="font-weight: bold; margin-right: 12px; color: #1f2937; background: #e5e7eb; padding: 4px 8px; border-radius: 4px; min-width: 24px; text-align: center;">B</span>
-                    <span style="flex: 1; line-height: 1.6;">${renderLatex(opts.b)}</span>
-                  </div>
-                ` : ''}
-                ${opts.c ? `
-                  <div style="margin-bottom: 12px; padding: 8px 0; display: flex; align-items: flex-start;">
-                    <span style="font-weight: bold; margin-right: 12px; color: #1f2937; background: #e5e7eb; padding: 4px 8px; border-radius: 4px; min-width: 24px; text-align: center;">C</span>
-                    <span style="flex: 1; line-height: 1.6;">${renderLatex(opts.c)}</span>
-                  </div>
-                ` : ''}
-                ${opts.d ? `
-                  <div style="margin-bottom: 12px; padding: 8px 0; display: flex; align-items: flex-start;">
-                    <span style="font-weight: bold; margin-right: 12px; color: #1f2937; background: #e5e7eb; padding: 4px 8px; border-radius: 4px; min-width: 24px; text-align: center;">D</span>
-                    <span style="flex: 1; line-height: 1.6;">${renderLatex(opts.d)}</span>
-                  </div>
-                ` : ''}
-              </div>
-            `;
-          } else if (Array.isArray(opts) && opts.length > 0) {
-            // Handle array structure
-            optionsHtml = `
-              <div style="margin-left: 25px; background: #f9fafb; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6;">
-                ${opts.map((option, optIndex) => `
-                  <div style="margin-bottom: 12px; padding: 8px 0; display: flex; align-items: flex-start;">
-                    <span style="font-weight: bold; margin-right: 12px; color: #1f2937; background: #e5e7eb; padding: 4px 8px; border-radius: 4px; min-width: 24px; text-align: center;">${String.fromCharCode(65 + optIndex)}</span>
-                    <span style="flex: 1; line-height: 1.6;">${renderLatex(option)}</span>
-                  </div>
-                `).join('')}
-              </div>
-            `;
-          } else {
-            console.log(`Unrecognized options structure for question ${index + 1}:`, opts);
-            return '';
-          }
-          
-          return optionsHtml;
-        })()}
+        ${renderOptionsGrid(question.options, index)}
       </div>
     `
   })
@@ -620,6 +567,114 @@ function generatePreviewHTML(test: Test, questions: AdminQuestion[], config: PDF
   }
 
   return content
+}
+
+function renderOptionsGrid(options: any, questionIndex: number): string {
+  // Debug options structure for each question
+  console.log(`=== Question ${questionIndex + 1} DEBUG ===`);
+  console.log('Options received:', options);
+  console.log('Options type:', typeof options);
+  console.log('Options keys:', options ? Object.keys(options) : 'N/A');
+  console.log('Options values:', options ? Object.values(options) : 'N/A');
+  console.log('Is options null/undefined:', options === null || options === undefined);
+  console.log('Options.a exists:', options?.a);
+  console.log('Options.b exists:', options?.b);
+  console.log('Options.c exists:', options?.c);
+  console.log('Options.d exists:', options?.d);
+  
+  if (!options) {
+    console.log(`❌ No options for question ${questionIndex + 1}`);
+    // Return sample options for testing
+    return `
+      <div style="margin: 15px 0; padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #007bff;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start;">
+          <div style="display: flex; align-items: flex-start; padding: 6px; background: white; border-radius: 4px; border: 1px solid #e2e8f0;">
+            <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: #e5e7eb; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(a)</span>
+            <span style="flex: 1; line-height: 1.4; font-size: 14px;">Sample option A</span>
+          </div>
+          <div style="display: flex; align-items: flex-start; padding: 6px; background: white; border-radius: 4px; border: 1px solid #e2e8f0;">
+            <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: #e5e7eb; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(b)</span>
+            <span style="flex: 1; line-height: 1.4; font-size: 14px;">Sample option B</span>
+          </div>
+          <div style="display: flex; align-items: flex-start; padding: 6px; background: white; border-radius: 4px; border: 1px solid #e2e8f0;">
+            <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: #e5e7eb; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(c)</span>
+            <span style="flex: 1; line-height: 1.4; font-size: 14px;">Sample option C</span>
+          </div>
+          <div style="display: flex; align-items: flex-start; padding: 6px; background: white; border-radius: 4px; border: 1px solid #e2e8f0;">
+            <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: #e5e7eb; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(d)</span>
+            <span style="flex: 1; line-height: 1.4; font-size: 14px;">Sample option D</span>
+          </div>
+        </div>
+        <div style="margin-top: 8px; padding: 8px; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 4px; color: #dc2626; font-size: 12px;">
+          ⚠️ No options data available - showing sample options
+        </div>
+      </div>
+    `;
+  }
+  
+  const opts = options;
+  let optionsHtml = '';
+  
+  // Try different possible option structures
+  if (opts.a || opts.b || opts.c || opts.d || opts.A || opts.B || opts.C || opts.D) {
+    console.log('✅ Found options object structure');
+    
+    // Handle both lowercase and uppercase keys
+    const optionA = opts.a || opts.A;
+    const optionB = opts.b || opts.B;
+    const optionC = opts.c || opts.C;
+    const optionD = opts.d || opts.D;
+    
+    optionsHtml = `
+      <div style="margin: 15px 0; padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #007bff;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start;">
+          ${optionA ? `
+            <div style="display: flex; align-items: flex-start; padding: 6px; background: white; border-radius: 4px; border: 1px solid #e2e8f0;">
+              <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: #e5e7eb; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(a)</span>
+              <span style="flex: 1; line-height: 1.4; font-size: 14px;">${renderLatex(optionA)}</span>
+            </div>
+          ` : '<div></div>'}
+          ${optionB ? `
+            <div style="display: flex; align-items: flex-start; padding: 6px; background: white; border-radius: 4px; border: 1px solid #e2e8f0;">
+              <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: #e5e7eb; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(b)</span>
+              <span style="flex: 1; line-height: 1.4; font-size: 14px;">${renderLatex(optionB)}</span>
+            </div>
+          ` : '<div></div>'}
+          ${optionC ? `
+            <div style="display: flex; align-items: flex-start; padding: 6px; background: white; border-radius: 4px; border: 1px solid #e2e8f0;">
+              <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: #e5e7eb; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(c)</span>
+              <span style="flex: 1; line-height: 1.4; font-size: 14px;">${renderLatex(optionC)}</span>
+            </div>
+          ` : '<div></div>'}
+          ${optionD ? `
+            <div style="display: flex; align-items: flex-start; padding: 6px; background: white; border-radius: 4px; border: 1px solid #e2e8f0;">
+              <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: #e5e7eb; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(d)</span>
+              <span style="flex: 1; line-height: 1.4; font-size: 14px;">${renderLatex(optionD)}</span>
+            </div>
+          ` : '<div></div>'}
+        </div>
+      </div>
+    `;
+  } else if (Array.isArray(opts) && opts.length > 0) {
+    // Handle array structure
+    optionsHtml = `
+      <div style="margin: 15px 0; padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #007bff;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start;">
+          ${opts.map((option, optIndex) => `
+            <div style="display: flex; align-items: flex-start; padding: 6px; background: white; border-radius: 4px; border: 1px solid #e2e8f0;">
+              <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: #e5e7eb; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(${String.fromCharCode(97 + optIndex)})</span>
+              <span style="flex: 1; line-height: 1.4; font-size: 14px;">${renderLatex(option)}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  } else {
+    console.log(`Unrecognized options structure for question ${questionIndex + 1}:`, opts);
+    return `<div style="color: orange; font-style: italic; padding: 10px; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 4px;">Unrecognized options structure: ${JSON.stringify(opts)}</div>`;
+  }
+  
+  return optionsHtml;
 }
 
 function renderLatex(text: string): string {

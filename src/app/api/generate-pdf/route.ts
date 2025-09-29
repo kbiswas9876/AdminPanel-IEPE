@@ -40,18 +40,27 @@ export async function POST(request: NextRequest) {
     // Wait for LaTeX to render completely
     try {
       await page.waitForFunction(() => {
-        const mathElements = document.querySelectorAll('.katex')
-        console.log('Found', mathElements.length, 'KaTeX elements')
+        // Check if KaTeX has loaded and rendered math elements
+        if (typeof window.katex === 'undefined') return false
+        
+        const mathElements = document.querySelectorAll('.katex, .katex-display, .katex-inline')
+        console.log('Found', mathElements.length, 'math elements')
+        
+        // If no math elements, consider rendering complete
+        if (mathElements.length === 0) return true
+        
+        // Check if all math elements have been rendered
         return Array.from(mathElements).every(el => 
-          el.querySelector('.katex-mathml') !== null
+          el.textContent && el.textContent.trim().length > 0
         )
-      }, { timeout: 15000 })
+      }, { timeout: 10000 })
+      console.log('LaTeX rendering completed')
     } catch (error) {
       console.log('LaTeX rendering timeout, proceeding anyway...')
     }
 
     // Additional wait to ensure all LaTeX is fully rendered
-    await page.waitForTimeout(3000)
+    await new Promise(resolve => setTimeout(resolve, 3000))
 
     console.log('Generating PDF...')
     // Generate PDF with high quality settings
@@ -75,7 +84,7 @@ export async function POST(request: NextRequest) {
       await browser.close()
     }
 
-    return new NextResponse(pdf, {
+    return new NextResponse(pdf as any, {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${testData.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf"`
@@ -97,8 +106,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         error: 'Failed to generate PDF',
-        details: error.message,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        details: error instanceof Error ? error.message : String(error),
+        stack: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.stack : undefined) : undefined
       },
       { status: 500 }
     )
@@ -163,18 +172,49 @@ function generatePDFHTML(testData: any, config: any) {
           line-height: 1.6;
         }
         
-        .options {
-          margin-left: 20px;
+        .options-container {
+          margin: 20px 0;
+          padding: 15px;
+          background: #f8f9fa;
+          border-radius: 8px;
+          border-left: 4px solid #007bff;
+        }
+        
+        .options-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+          align-items: start;
         }
         
         .option {
-          margin-bottom: 8px;
-          padding: 5px 0;
+          display: flex;
+          align-items: flex-start;
+          padding: 10px;
+          background: white;
+          border-radius: 6px;
+          border: 1px solid #e2e8f0;
+        }
+        
+        .option-empty {
+          /* Empty grid cell */
         }
         
         .option-label {
           font-weight: bold;
-          margin-right: 8px;
+          margin-right: 10px;
+          color: #1f2937;
+          background: #e5e7eb;
+          padding: 4px 8px;
+          border-radius: 4px;
+          min-width: 32px;
+          text-align: center;
+          flex-shrink: 0;
+        }
+        
+        .option-text {
+          flex: 1;
+          line-height: 1.5;
         }
         
         .header {
@@ -274,7 +314,7 @@ function generateTestContent(testData: any, config: any) {
         ${testData.description ? `<div style="font-size: 16px; color: #6b7280; margin-bottom: 15px;">${testData.description}</div>` : ''}
         <div class="test-info">
           ${config.showTotalQuestions ? `<div>Total Questions: ${testData.questions?.length || 0}</div>` : ''}
-          ${config.showFullMarks ? `<div>Total Marks: ${testData.questions?.reduce((sum: number, q: any) => sum + (q.marks || 1), 0) || 0}</div>` : ''}
+          ${config.showFullMarks ? `<div>Total Marks: ${(testData.questions?.length || 0) * (testData.marks_per_correct || 1)}</div>` : ''}
           <div>Duration: ${testData.total_time_minutes || 0} minutes</div>
         </div>
       </div>
@@ -319,16 +359,36 @@ function generateTestContent(testData: any, config: any) {
       
       content += `
         <div class="question">
-          <div class="question-number">Question ${index + 1} ${question.marks ? `(${question.marks} marks)` : ''}</div>
+          <div class="question-number">Question ${index + 1} (${testData.marks_per_correct || 1} mark${(testData.marks_per_correct || 1) > 1 ? 's' : ''})</div>
           <div class="question-text">${renderLatex(question.question_text || '')}</div>
-          ${question.options && question.options.length > 0 ? `
-            <div class="options">
-              ${question.options.map((option: any, optIndex: number) => `
-                <div class="option">
-                  <span class="option-label">${String.fromCharCode(65 + optIndex)}.</span>
-                  ${renderLatex(option)}
-                </div>
-              `).join('')}
+          ${question.options ? `
+            <div class="options-container">
+              <div class="options-grid">
+                ${question.options.a ? `
+                  <div class="option">
+                    <span class="option-label">(A)</span>
+                    <span class="option-text">${renderLatex(question.options.a)}</span>
+                  </div>
+                ` : '<div class="option-empty"></div>'}
+                ${question.options.b ? `
+                  <div class="option">
+                    <span class="option-label">(B)</span>
+                    <span class="option-text">${renderLatex(question.options.b)}</span>
+                  </div>
+                ` : '<div class="option-empty"></div>'}
+                ${question.options.c ? `
+                  <div class="option">
+                    <span class="option-label">(C)</span>
+                    <span class="option-text">${renderLatex(question.options.c)}</span>
+                  </div>
+                ` : '<div class="option-empty"></div>'}
+                ${question.options.d ? `
+                  <div class="option">
+                    <span class="option-label">(D)</span>
+                    <span class="option-text">${renderLatex(question.options.d)}</span>
+                  </div>
+                ` : '<div class="option-empty"></div>'}
+              </div>
             </div>
           ` : ''}
         </div>
@@ -345,7 +405,7 @@ function generateTestContent(testData: any, config: any) {
         ${testData.questions.map((question: any, index: number) => `
           <div style="margin-bottom: 10px;">
             <strong>Q${index + 1}:</strong> 
-            ${question.correct_answer ? String.fromCharCode(65 + question.correct_answer) : 'Not specified'}
+            ${question.correct_option ? question.correct_option.toUpperCase() : 'Not specified'}
           </div>
         `).join('')}
       </div>
@@ -361,7 +421,7 @@ function generateTestContent(testData: any, config: any) {
         ${testData.questions.map((question: any, index: number) => `
           <div style="margin-bottom: 20px;">
             <h4>Question ${index + 1}:</h4>
-            <div>${renderLatex(question.solution || 'Solution not provided')}</div>
+            <div>${renderLatex(question.solution_text || 'Solution not provided')}</div>
           </div>
         `).join('')}
       </div>
@@ -377,7 +437,7 @@ function renderLatex(text: string) {
   // Enhanced LaTeX rendering with proper KaTeX integration
   return text
     // Handle display math ($$...$$)
-    .replace(/\$\$(.*?)\$\$/gs, '<div class="katex-display">$1</div>')
+    .replace(/\$\$([\s\S]*?)\$\$/g, '<div class="katex-display">$1</div>')
     // Handle inline math ($...$)
     .replace(/\$(.*?)\$/g, '<span class="katex-inline">$1</span>')
     // Handle bold text
