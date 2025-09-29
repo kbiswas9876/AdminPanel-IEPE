@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { deleteTest, cloneTest } from '@/lib/actions/tests'
-import { InteractivePDFExporter } from './interactive-pdf-exporter'
+import { PremiumPDFExporter } from './premium-pdf-exporter'
 import type { Question as AdminQuestion } from '@/lib/supabase/admin'
 import { Button } from '@/components/ui/button'
 import {
@@ -34,7 +34,7 @@ interface TestActionsProps {
 
 export function TestActions({ test, onAction }: TestActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false)
-  const [showInteractiveExporter, setShowInteractiveExporter] = useState(false)
+  const [showPremiumExporter, setShowPremiumExporter] = useState(false)
   const [testData, setTestData] = useState<{ test: Test; questions: AdminQuestion[] } | null>(null)
 
   const handleDelete = async () => {
@@ -72,22 +72,33 @@ export function TestActions({ test, onAction }: TestActionsProps) {
     }
   }
 
-  const handleOpenInteractiveExporter = async () => {
+  const handleOpenPremiumExporter = async () => {
     try {
       // Fetch test and questions data
       const { getTestDetailsForEdit } = await import('@/lib/actions/tests')
       const testDetails = await getTestDetailsForEdit(test.id)
       
       if (testDetails && testDetails.test && testDetails.questions) {
+        console.log('Raw testDetails structure:', testDetails);
+        console.log('testDetails.questions structure:', testDetails.questions);
+        console.log('First question slot:', testDetails.questions[0]);
+        
         // Convert TestQuestionSlot[] to Question[]
-        const questionData = testDetails.questions.map(slot => slot.question) as AdminQuestion[]
+        const questionData = testDetails.questions.map((slot, index) => {
+          console.log(`Processing question slot ${index + 1}:`, slot);
+          return slot.question;
+        }) as AdminQuestion[];
+        
+        console.log('Extracted question data:', questionData);
+        console.log('First extracted question:', questionData[0]);
+        
         setTestData({ test: testDetails.test, questions: questionData })
-        setShowInteractiveExporter(true)
+        setShowPremiumExporter(true)
       } else {
-        console.error('Failed to fetch test data')
+        console.error('Failed to fetch test data:', testDetails)
       }
     } catch (error) {
-      console.error('Error opening interactive exporter:', error)
+      console.error('Error opening premium exporter:', error)
     }
   }
 
@@ -184,7 +195,7 @@ export function TestActions({ test, onAction }: TestActionsProps) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem 
-            onClick={handleOpenInteractiveExporter}
+            onClick={handleOpenPremiumExporter}
           >
             <FileDown className="h-4 w-4 mr-2" />
             Export PDF
@@ -197,14 +208,14 @@ export function TestActions({ test, onAction }: TestActionsProps) {
       </DropdownMenu>
 
 
-      {/* Interactive PDF Exporter */}
+      {/* Premium PDF Exporter */}
       {testData && (
-        <InteractivePDFExporter
+        <PremiumPDFExporter
           test={testData.test}
           questions={testData.questions}
-          isOpen={showInteractiveExporter}
+          isOpen={showPremiumExporter}
           onClose={() => {
-            setShowInteractiveExporter(false)
+            setShowPremiumExporter(false)
             setTestData(null)
           }}
         />
