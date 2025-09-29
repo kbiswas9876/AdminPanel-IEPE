@@ -109,10 +109,41 @@ export function PremiumPDFExporter({ test, questions, isOpen, onClose }: Premium
   // Create a ref to attach to the component we want to print
   const previewComponentRef = useRef<HTMLDivElement>(null)
 
-  // Configure the print handler
+  // Define print-specific styles to maintain layout and margins
+  const getPageStyle = (marginValue: number) => `
+    @page {
+      size: A4;
+      margin: ${marginValue}mm;
+    }
+
+    @media print {
+      body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        font-family: ${config.fontFamily}, sans-serif;
+        font-size: ${config.fontSize}px;
+        line-height: ${config.lineHeight};
+      }
+      
+      /* Ensure proper spacing and layout in print */
+      * {
+        box-sizing: border-box;
+      }
+      
+      /* Maintain the professional spacing from live preview */
+      .print-container {
+        max-width: 100%;
+        margin: 0 auto;
+        padding: 0;
+      }
+    }
+  `
+
+  // Configure the print handler with print-specific styles
   const handlePrint = useReactToPrint({
     contentRef: previewComponentRef,
     documentTitle: `${test?.name || 'test'}-question-paper`,
+    pageStyle: getPageStyle(config.margins),
     onAfterPrint: () => console.log('Print job completed.'),
   })
 
@@ -398,6 +429,7 @@ export function PremiumPDFExporter({ test, questions, isOpen, onClose }: Premium
                   >
                     <div 
                       ref={previewComponentRef}
+                      className="print-container"
                       data-preview-content
                       dangerouslySetInnerHTML={{ __html: previewContent }} 
                     />
