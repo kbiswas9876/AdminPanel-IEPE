@@ -71,8 +71,16 @@ export function TestManagement({ onCreateTest }: TestManagementProps = {}) {
     }
   }
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
+  const getStatusBadge = (test: Test) => {
+    if (isPerpetualTest(test)) {
+      return (
+        <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-200 text-xs px-3 py-1 rounded-full font-medium border-0 shadow-sm transition-colors duration-150">
+          Perpetual
+        </Badge>
+      )
+    }
+    
+    switch (test.status) {
       case 'draft':
         return (
           <Badge variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs px-3 py-1 rounded-full font-medium border-0 shadow-sm transition-colors duration-150">
@@ -115,6 +123,10 @@ export function TestManagement({ onCreateTest }: TestManagementProps = {}) {
       hour: '2-digit',
       minute: '2-digit'
     })
+  }
+
+  const isPerpetualTest = (test: Test) => {
+    return test.status === 'scheduled' && !test.end_time
   }
 
   if (loading) {
@@ -163,7 +175,7 @@ export function TestManagement({ onCreateTest }: TestManagementProps = {}) {
                           <h3 className="text-lg font-semibold text-gray-900 tracking-tight leading-tight">
                             {test.name}
                           </h3>
-                          {getStatusBadge(test.status)}
+                          {getStatusBadge(test)}
                         </div>
                         {test.description && (
                           <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 font-medium">
@@ -208,18 +220,34 @@ export function TestManagement({ onCreateTest }: TestManagementProps = {}) {
                         </div>
                         <div className="min-w-0">
                           <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Start</p>
-                          <p className="text-sm font-semibold text-gray-900 truncate">{formatDateTime(test.start_time)}</p>
+                          <p className="text-sm font-semibold text-gray-900 truncate">
+                            {test.start_time ? formatDateTime(test.start_time) : 'Not set'}
+                          </p>
                         </div>
                       </div>
 
                       {/* End Time */}
                       <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center">
-                          <Calendar className="h-4 w-4 text-orange-600" />
+                        <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${
+                          isPerpetualTest(test) 
+                            ? 'bg-green-50' 
+                            : 'bg-orange-50'
+                        }`}>
+                          {isPerpetualTest(test) ? (
+                            <Clock className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <Calendar className="h-4 w-4 text-orange-600" />
+                          )}
                         </div>
                         <div className="min-w-0">
                           <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">End</p>
-                          <p className="text-sm font-semibold text-gray-900 truncate">{formatDateTime(test.end_time)}</p>
+                          <p className={`text-sm font-semibold truncate ${
+                            isPerpetualTest(test) 
+                              ? 'text-green-700' 
+                              : 'text-gray-900'
+                          }`}>
+                            {isPerpetualTest(test) ? 'Perpetual' : formatDateTime(test.end_time)}
+                          </p>
                         </div>
                       </div>
                     </div>

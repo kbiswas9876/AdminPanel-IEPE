@@ -111,7 +111,8 @@ export default function TestFinalizePage() {
       question_ids: questionIds,
       publish: {
         start_time: publishData.startTime,
-        end_time: publishData.endTime
+        end_time: publishData.resultPolicy === 'perpetual' ? null : publishData.endTime,
+        is_perpetual: publishData.resultPolicy === 'perpetual'
       }
     })
   }

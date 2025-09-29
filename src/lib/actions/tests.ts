@@ -506,12 +506,13 @@ export async function saveTest(args: {
   total_time_minutes: number
   marks_per_correct: number
   negative_marks_per_incorrect: number
-  result_policy: 'instant' | 'scheduled'
+  result_policy: 'instant' | 'scheduled' | 'perpetual'
   result_release_at?: string | null
   question_ids: number[]
   publish?: {
     start_time: string
-    end_time: string
+    end_time?: string | null
+    is_perpetual?: boolean
   } | null
 }): Promise<{ success: boolean; message: string; testId?: number }> {
   try {
@@ -538,7 +539,7 @@ export async function saveTest(args: {
       result_release_at: args.result_policy === 'scheduled' ? (args.result_release_at || null) : null,
       status,
       start_time: args.publish?.start_time || null,
-      end_time: args.publish?.end_time || null,
+      end_time: args.publish?.is_perpetual ? null : (args.publish?.end_time || null),
       updated_at: new Date().toISOString()
     }
 
@@ -628,12 +629,14 @@ export async function saveTestFromForm(formData: FormData): Promise<{ success: b
       result_policy: (String(formData.get('result_policy') || 'instant') as 'instant' | 'scheduled'),
       result_release_at: formData.get('result_release_at') ? String(formData.get('result_release_at')) : null,
       question_ids: (() => { try { return JSON.parse(String(formData.get('question_ids') || '[]')) as number[] } catch { return [] } })(),
-      publish: ((): { start_time: string; end_time: string } | null => {
+      publish: ((): { start_time: string; end_time?: string | null; is_perpetual?: boolean } | null => {
         const status = String(formData.get('status') || 'draft')
         if (status === 'scheduled') {
+          const isPerpetual = String(formData.get('is_perpetual') || 'false') === 'true'
           return {
             start_time: String(formData.get('start_time') || ''),
-            end_time: String(formData.get('end_time') || '')
+            end_time: isPerpetual ? null : String(formData.get('end_time') || ''),
+            is_perpetual: isPerpetual
           }
         }
         return null

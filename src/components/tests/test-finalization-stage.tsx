@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ArrowLeft, Save, Calendar, FileText, BarChart3, Tag, Layers } from 'lucide-react'
-import { PublishTestModal } from './publish-test-modal'
+import { UnifiedPublishModal, type UnifiedPublishData } from './unified-publish-modal'
 import { saveTestFromForm } from '@/lib/actions/tests'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
@@ -41,10 +41,11 @@ export interface TestFormData {
   totalTimeMinutes: number
 }
 
+// Legacy interface - keeping for backward compatibility
 export interface PublishData {
   startTime: string
   endTime: string
-  resultPolicy: 'instant' | 'scheduled'
+  resultPolicy: 'instant' | 'scheduled' | 'perpetual'
   resultReleaseAt?: string
 }
 
@@ -146,7 +147,7 @@ export function TestFinalizationStage({
     setShowPublishModal(true)
   }
 
-  const handlePublishConfirm = async (publishData: PublishData) => {
+  const handlePublishConfirm = async (publishData: UnifiedPublishData) => {
     setIsSaving(true)
     const fd = new FormData()
     if (isEditMode && typeof testId === 'number') {
@@ -161,7 +162,8 @@ export function TestFinalizationStage({
     fd.append('result_release_at', publishData.resultPolicy === 'scheduled' ? (publishData.resultReleaseAt || '') : '')
     fd.append('status', 'scheduled')
     fd.append('start_time', publishData.startTime)
-    fd.append('end_time', publishData.endTime)
+    fd.append('end_time', publishData.schedulingMode === 'perpetual' ? '' : publishData.endTime)
+    fd.append('is_perpetual', String(publishData.schedulingMode === 'perpetual'))
     const questionsPayload = questions.map((slot) => {
       const q = slot.question
       const normalizedOptions = Object.fromEntries(Object.entries(q.options || {}).map(([k, v]) => [String(k).toUpperCase(), v]))
@@ -519,12 +521,13 @@ export function TestFinalizationStage({
         </div>
       </div>
 
-      {/* Publish Modal */}
-      <PublishTestModal
+      {/* Unified Publish Modal */}
+      <UnifiedPublishModal
         open={showPublishModal}
         onClose={() => setShowPublishModal(false)}
         onConfirm={handlePublishConfirm}
         isProcessing={isSaving}
+        mode="new"
       />
     </div>
   )
