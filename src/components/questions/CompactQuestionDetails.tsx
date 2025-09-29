@@ -281,6 +281,20 @@ export const CompactQuestionDetails = memo(function CompactQuestionDetails({
                       <div className="font-medium text-gray-900">{question.chapter_name}</div>
                     </div>
                   </div>
+                  
+                  {question.exam_metadata && (
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 flex items-center justify-center">
+                        <div className="w-2 h-2 rounded-full bg-indigo-500" />
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Exam:</span>
+                        <div className="font-medium text-indigo-700">
+                          {question.exam_metadata}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Right Column */}
