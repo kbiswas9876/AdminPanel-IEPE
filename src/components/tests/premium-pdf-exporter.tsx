@@ -61,7 +61,6 @@ interface PDFConfig {
   lineHeight: number
   
   // Layout & Spacing
-  questionsPerPage: number
   margins: number
   
   // Content Options
@@ -80,7 +79,6 @@ const defaultConfig: PDFConfig = {
   fontFamily: 'Helvetica',
   fontSize: 12,
   lineHeight: 1.5,
-  questionsPerPage: 2,
   margins: 15,
   showHeader: true,
   showTotalQuestions: true,
@@ -135,6 +133,24 @@ export function PremiumPDFExporter({ test, questions, isOpen, onClose }: Premium
         max-width: 100%;
         margin: 0 auto;
         padding: 0;
+      }
+      
+      /* Automatic content flow - intelligent page breaks */
+      .question-container {
+        page-break-inside: avoid; /* Prevent splitting questions across pages */
+        break-inside: avoid;
+        margin-bottom: 35px;
+      }
+      
+      /* Allow natural page breaks between questions */
+      .question-container + .question-container {
+        page-break-before: auto;
+      }
+      
+      /* Ensure proper spacing at page breaks */
+      .question-container {
+        orphans: 3; /* Minimum lines at bottom of page */
+        widows: 3;  /* Minimum lines at top of page */
       }
     }
   `
@@ -313,17 +329,6 @@ export function PremiumPDFExporter({ test, questions, isOpen, onClose }: Premium
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="space-y-3">
-                    <Label htmlFor="questions-per-page" className="text-sm font-medium text-gray-700">Questions per Page: {config.questionsPerPage}</Label>
-                    <Slider
-                      value={[config.questionsPerPage]}
-                      onValueChange={([value]) => updateConfig('questionsPerPage', value)}
-                      min={1}
-                      max={5}
-                      step={1}
-                      className="w-full"
-                    />
-                  </div>
 
                   <div className="space-y-3">
                     <Label htmlFor="margins" className="text-sm font-medium text-gray-700">Margins: {config.margins}mm</Label>
@@ -509,12 +514,9 @@ function generatePreviewHTML(test: Test, questions: AdminQuestion[], config: PDF
       return;
     }
     
-    if (index > 0 && config.questionsPerPage && index % config.questionsPerPage === 0) {
-      content += '<div style="page-break-before: always; margin-top: 40px;"></div>'
-    }
     
     content += `
-      <div style="margin-bottom: 35px; padding: 25px; border: 2px solid #e5e7eb; border-radius: 12px; background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%); box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+      <div class="question-container" style="padding: 25px; border: 2px solid #e5e7eb; border-radius: 12px; background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%); box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
         <div style="display:flex; gap:4px; align-items:flex-start; margin-bottom:12px;">
           <span style="font-weight:bold; color:#1f2937; min-width:20px; flex-shrink:0;">${index + 1}.</span>
           <span style="flex:1; line-height:${config.lineHeight || 1.5}; font-size:${config.fontSize || 12}px; color:#374151;">${renderLatex(question.question_text || 'Question text not available')}</span>
