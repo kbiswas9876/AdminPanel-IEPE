@@ -35,11 +35,33 @@ interface EditorToolbarProps {
 export function EditorToolbar({ editor, isUploading = false }: EditorToolbarProps) {
   if (!editor) return null
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
-      // For now, just insert a placeholder - image upload will be handled by drag/drop
-      editor.chain().focus().insertContent(`<img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlPC90ZXh0Pjwvc3ZnPg==" alt="Image placeholder" />`).run()
+      try {
+        // Upload to Cloudinary
+        const formData = new FormData()
+        formData.append('image', file)
+        
+        const response = await fetch('/api/cloudinary-upload', {
+          method: 'POST',
+          body: formData
+        })
+        
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || 'Upload failed')
+        }
+        
+        const result = await response.json()
+        
+        // Insert the uploaded image into the editor
+        editor.chain().focus().insertContent(`<img src="${result.url}" alt="Uploaded image" />`).run()
+      } catch (error) {
+        console.error('Image upload failed:', error)
+        // Fallback: insert placeholder
+        editor.chain().focus().insertContent(`<img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlPC90ZXh0Pjwvc3ZnPg==" alt="Image placeholder" />`).run()
+      }
     }
     // Reset input
     event.target.value = ''

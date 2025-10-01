@@ -44,15 +44,22 @@ export function AdvancedTipTapEditor({
   const handleImageUpload = async (file: File): Promise<string> => {
     setIsUploading(true)
     try {
-      // For now, create a temporary URL for the file
-      // This will be replaced with proper Cloudinary upload once the preset is configured
-      const tempUrl = URL.createObjectURL(file)
+      // Use Cloudinary upload API
+      const formData = new FormData()
+      formData.append('image', file)
       
-      // Simulate upload delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const response = await fetch('/api/cloudinary-upload', {
+        method: 'POST',
+        body: formData
+      })
       
-      // Return a placeholder URL - in production this would be the Cloudinary URL
-      return tempUrl
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Upload failed')
+      }
+      
+      const result = await response.json()
+      return result.url
     } catch (error) {
       console.error('Image upload failed:', error)
       throw error

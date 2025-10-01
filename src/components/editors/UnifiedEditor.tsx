@@ -48,10 +48,11 @@ export function UnifiedEditor({
   const handleImageUpload = useCallback(async (file: File): Promise<string> => {
     setIsUploading(true)
     try {
+      // Use Cloudinary upload API
       const formData = new FormData()
       formData.append('image', file)
       
-      const response = await fetch('/api/upload-image', {
+      const response = await fetch('/api/cloudinary-upload', {
         method: 'POST',
         body: formData
       })
