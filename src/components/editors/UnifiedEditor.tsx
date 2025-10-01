@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
@@ -18,6 +18,7 @@ import { TableHeader } from '@tiptap/extension-table-header'
 import { createLowlight } from 'lowlight'
 // import { MathExtension } from './extensions/MathExtension'
 import { ImageUploadExtension } from './extensions/ImageUploadExtension'
+import { ResizableImageExtension } from './extensions/ResizableImageExtension'
 import { LineBreakExtension } from './extensions/LineBreakExtension'
 import { LatexLineBreakExtension } from './extensions/LatexLineBreakExtension'
 import { EditorToolbar } from './EditorToolbar'
@@ -78,7 +79,7 @@ export function UnifiedEditor({
       StarterKit.configure({
         codeBlock: false, // We'll use CodeBlockLowlight instead
       }),
-      Image.configure({
+      ResizableImageExtension.configure({
         HTMLAttributes: {
           class: 'editor-image rounded-lg shadow-sm max-w-full h-auto',
         },
@@ -132,6 +133,7 @@ export function UnifiedEditor({
     },
     autofocus: autoFocus,
   })
+
 
   if (!editor) {
     return null

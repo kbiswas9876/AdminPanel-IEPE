@@ -556,3 +556,85 @@
 .ProseMirror * {
   font-family: inherit;
 }
+
+/* Image Resize Styles */
+.image-resize-container {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  border: 2px dashed transparent;
+  border-radius: 4px;
+  transition: border-color 0.2s ease;
+}
+
+.image-resize-container:hover {
+  border-color: #007bff;
+}
+
+.resize-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background-color: #007bff;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  z-index: 1000;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.image-resize-container:hover .resize-handle {
+  opacity: 1;
+}
+
+.resize-handle-nw {
+  top: -6px;
+  left: -6px;
+  cursor: nw-resize;
+}
+
+.resize-handle-ne {
+  top: -6px;
+  right: -6px;
+  cursor: ne-resize;
+}
+
+.resize-handle-sw {
+  bottom: -6px;
+  left: -6px;
+  cursor: sw-resize;
+}
+
+.resize-handle-se {
+  bottom: -6px;
+  right: -6px;
+  cursor: se-resize;
+}
+
+.resize-handle:hover {
+  background-color: #0056b3;
+  transform: scale(1.1);
+}
+
+/* Image styles within resize container */
+.image-resize-container img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 4px;
+}
+
+/* Image resize container styles */
+.image-resize-container {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  border: 2px dashed transparent;
+  border-radius: 4px;
+  transition: border-color 0.2s ease;
+}
+
+.image-resize-container:hover {
+  border-color: #007bff;
+}

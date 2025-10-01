@@ -1,5 +1,6 @@
 'use client'
 
+import React, { useState, useEffect } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import { StarterKit } from '@tiptap/starter-kit'
 import { Mathematics } from '@tiptap/extension-mathematics'
@@ -16,9 +17,9 @@ import { FontFamily } from '@tiptap/extension-font-family'
 import { FontSize } from '@tiptap/extension-font-size'
 import { Placeholder } from '@tiptap/extension-placeholder'
 import { LatexLineBreakInputExtension } from './extensions/LatexLineBreakInputExtension'
+import { ResizableImageExtension } from './extensions/ResizableImageExtension'
 import { cn } from '@/lib/utils'
 import { AdvancedToolbar } from './AdvancedToolbar'
-import { useState } from 'react'
 
 export interface AdvancedTipTapEditorProps {
   value: string
@@ -129,6 +130,7 @@ export function AdvancedTipTapEditor({
         placeholder,
       }),
       LatexLineBreakInputExtension,
+      ResizableImageExtension,
     ],
     content: processContent(value),
     onCreate: ({ editor }) => {
@@ -148,6 +150,7 @@ export function AdvancedTipTapEditor({
     },
     autofocus: autoFocus,
   })
+
 
   if (!editor) {
     return null
