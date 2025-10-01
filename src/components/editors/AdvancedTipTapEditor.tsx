@@ -17,9 +17,10 @@ import { FontFamily } from '@tiptap/extension-font-family'
 import { FontSize } from '@tiptap/extension-font-size'
 import { Placeholder } from '@tiptap/extension-placeholder'
 import { LatexLineBreakInputExtension } from './extensions/LatexLineBreakInputExtension'
-import { ResizableImageExtension } from './extensions/ResizableImageExtension'
+import { ResizableImage } from 'tiptap-extension-resizable-image'
 import { cn } from '@/lib/utils'
 import { AdvancedToolbar } from './AdvancedToolbar'
+import 'tiptap-extension-resizable-image/styles.css'
 
 export interface AdvancedTipTapEditorProps {
   value: string
@@ -130,7 +131,7 @@ export function AdvancedTipTapEditor({
         placeholder,
       }),
       LatexLineBreakInputExtension,
-      ResizableImageExtension,
+      ResizableImage,
     ],
     content: processContent(value),
     onCreate: ({ editor }) => {

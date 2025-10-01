@@ -183,6 +183,7 @@ export function EditorToolbar({ editor, isUploading = false }: EditorToolbarProp
         variant={editor.isActive({ textAlign: 'left' }) ? 'default' : 'ghost'}
         size="sm"
         onClick={() => editor.chain().focus().setTextAlign('left').run()}
+        title="Align Left"
       >
         <AlignLeft className="h-4 w-4" />
       </Button>
@@ -190,6 +191,7 @@ export function EditorToolbar({ editor, isUploading = false }: EditorToolbarProp
         variant={editor.isActive({ textAlign: 'center' }) ? 'default' : 'ghost'}
         size="sm"
         onClick={() => editor.chain().focus().setTextAlign('center').run()}
+        title="Align Center"
       >
         <AlignCenter className="h-4 w-4" />
       </Button>
@@ -197,6 +199,7 @@ export function EditorToolbar({ editor, isUploading = false }: EditorToolbarProp
         variant={editor.isActive({ textAlign: 'right' }) ? 'default' : 'ghost'}
         size="sm"
         onClick={() => editor.chain().focus().setTextAlign('right').run()}
+        title="Align Right"
       >
         <AlignRight className="h-4 w-4" />
       </Button>

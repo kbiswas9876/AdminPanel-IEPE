@@ -18,12 +18,13 @@ import { TableHeader } from '@tiptap/extension-table-header'
 import { createLowlight } from 'lowlight'
 // import { MathExtension } from './extensions/MathExtension'
 import { ImageUploadExtension } from './extensions/ImageUploadExtension'
-import { ResizableImageExtension } from './extensions/ResizableImageExtension'
+import { ResizableImage } from 'tiptap-extension-resizable-image'
 import { LineBreakExtension } from './extensions/LineBreakExtension'
 import { LatexLineBreakExtension } from './extensions/LatexLineBreakExtension'
 import { EditorToolbar } from './EditorToolbar'
 import { cn } from '@/lib/utils'
 import './editor-styles.css'
+import 'tiptap-extension-resizable-image/styles.css'
 
 interface UnifiedEditorProps {
   value: string
@@ -79,7 +80,7 @@ export function UnifiedEditor({
       StarterKit.configure({
         codeBlock: false, // We'll use CodeBlockLowlight instead
       }),
-      ResizableImageExtension.configure({
+      ResizableImage.configure({
         HTMLAttributes: {
           class: 'editor-image rounded-lg shadow-sm max-w-full h-auto',
         },
