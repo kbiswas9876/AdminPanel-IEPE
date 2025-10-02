@@ -247,21 +247,58 @@ export const ImageNodeView: React.FC<ImageNodeViewProps> = ({
     }
   }, [updateAttributes])
 
-  const alignmentClass = float ? '' : `text-${alignment}`
-  const floatStyle = float
-    ? { 
-        float: float as 'left' | 'right', 
-        margin: float === 'left' ? '0 16px 16px 0' : '0 0 16px 16px',
-        maxWidth: '50%' // Prevent images from being too wide when floating
+  // Create proper alignment styles for the editor view
+  const getContainerStyle = () => {
+    let style: React.CSSProperties = { 
+      maxWidth: '100%', 
+      boxSizing: 'border-box',
+      display: 'block',
+      margin: '1rem 0'
+    }
+
+    if (float) {
+      style.float = float as 'left' | 'right'
+      style.margin = float === 'left' ? '0 16px 16px 0' : '0 0 16px 16px'
+      style.maxWidth = '50%'
+      style.display = 'inline-block'
+    } else {
+      // Apply text alignment for non-floating images
+      style.textAlign = alignment as 'left' | 'center' | 'right'
+    }
+
+    return style
+  }
+
+  const getImageStyle = () => {
+    let style: React.CSSProperties = {
+      width: width ? `${width}px` : 'auto',
+      height: height ? `${height}px` : 'auto',
+      display: 'block'
+    }
+
+    // For non-floating images, also apply margin-based alignment
+    if (!float) {
+      if (alignment === 'left') {
+        style.marginLeft = '0'
+        style.marginRight = 'auto'
+      } else if (alignment === 'right') {
+        style.marginLeft = 'auto'
+        style.marginRight = '0'
+      } else {
+        style.marginLeft = 'auto'
+        style.marginRight = 'auto'
       }
-    : {}
+    }
+
+    return style
+  }
 
   return (
     <NodeViewWrapper className="my-4 max-w-full">
       <div
         ref={containerRef}
-        className={cn('relative', float ? 'inline-block' : 'block', alignmentClass)}
-        style={{ ...floatStyle, maxWidth: '100%', boxSizing: 'border-box' }}
+        className="relative"
+        style={getContainerStyle()}
         onClick={() => setIsSelected(true)}
       >
         <div className="relative group">
@@ -271,10 +308,7 @@ export const ImageNodeView: React.FC<ImageNodeViewProps> = ({
             alt={alt}
             title={title}
             className="max-w-full h-auto block rounded-lg shadow-lg transition-shadow hover:shadow-xl"
-            style={{ 
-              width: width ? `${width}px` : 'auto', 
-              height: height ? `${height}px` : 'auto' 
-            }}
+            style={getImageStyle()}
           />
 
           {isSelected && (

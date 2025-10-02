@@ -210,6 +210,9 @@ export const AdvancedImage = Node.create<AdvancedImageOptions>({
   renderHTML({ HTMLAttributes }) {
     const { alignment = 'center', float, caption, ...imgAttrs } = HTMLAttributes
     
+    // Debug logging
+    console.log('🎯 AdvancedImage renderHTML called with:', { alignment, float, caption, imgAttrs })
+    
     // Always wrap in a div for consistent alignment control
     let wrapperStyle = 'display: block; margin: 1rem 0;'
     let imageStyle = 'max-width: 100%; height: auto; border-radius: 8px; display: block;'
@@ -265,6 +268,9 @@ export const AdvancedImage = Node.create<AdvancedImageOptions>({
         caption
       ])
     }
+    
+    // Debug logging
+    console.log('🎯 AdvancedImage renderHTML output:', wrapperElement)
     
     return wrapperElement
   },
