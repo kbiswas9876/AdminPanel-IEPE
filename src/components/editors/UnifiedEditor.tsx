@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import Image from '@tiptap/extension-image'
+// import Image from '@tiptap/extension-image' // Replaced with AdvancedImage
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
 import TextAlign from '@tiptap/extension-text-align'
@@ -19,6 +19,7 @@ import { createLowlight } from 'lowlight'
 // import { MathExtension } from './extensions/MathExtension'
 import { ImageUploadExtension } from './extensions/ImageUploadExtension'
 import { AdvancedImage } from './extensions/AdvancedImage'
+import { transformImageContent } from './extensions/image-content-transformer'
 import { LineBreakExtension } from './extensions/LineBreakExtension'
 import { LatexLineBreakExtension } from './extensions/LatexLineBreakExtension'
 import { EditorToolbar } from './EditorToolbar'
@@ -80,6 +81,7 @@ export function UnifiedEditor({
     extensions: [
       StarterKit.configure({
         codeBlock: false, // We'll use CodeBlockLowlight instead
+        // Note: StarterKit doesn't include Image by default, so no need to exclude it
       }),
       AdvancedImage.configure({
         HTMLAttributes: {
@@ -121,7 +123,7 @@ export function UnifiedEditor({
         allowedFileTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'],
       }),
     ],
-    content: value,
+    content: transformImageContent(value),
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML())
     },

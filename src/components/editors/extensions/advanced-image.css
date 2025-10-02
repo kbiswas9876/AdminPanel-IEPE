@@ -294,11 +294,51 @@
 .advanced-image-wrapper[data-float="left"] {
   float: left;
   margin: 0 16px 16px 0;
+  max-width: 50%;
+  clear: left;
 }
 
 .advanced-image-wrapper[data-float="right"] {
   float: right;
   margin: 0 0 16px 16px;
+  max-width: 50%;
+  clear: right;
+}
+
+/* Ensure floating images stay within editor bounds */
+.ProseMirror .advanced-image-wrapper {
+  max-width: 100%;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.ProseMirror .advanced-image-wrapper img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Editor containment for floating elements */
+.ProseMirror {
+  overflow: hidden;
+  position: relative;
+}
+
+.ProseMirror::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Prevent toolbar from going outside editor */
+.advanced-image-wrapper .floating-toolbar {
+  position: absolute;
+  top: -48px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100vw - 40px);
+  white-space: nowrap;
+  z-index: 50;
 }
 
 /* Alignment classes */

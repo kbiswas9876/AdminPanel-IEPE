@@ -8,7 +8,7 @@ import { Table } from '@tiptap/extension-table'
 import { TableRow } from '@tiptap/extension-table-row'
 import { TableCell } from '@tiptap/extension-table-cell'
 import { TableHeader } from '@tiptap/extension-table-header'
-import { Image } from '@tiptap/extension-image'
+// import { Image } from '@tiptap/extension-image' // Replaced with AdvancedImage
 import { Link } from '@tiptap/extension-link'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { Color } from '@tiptap/extension-color'
@@ -18,6 +18,7 @@ import { FontSize } from '@tiptap/extension-font-size'
 import { Placeholder } from '@tiptap/extension-placeholder'
 import { LatexLineBreakInputExtension } from './extensions/LatexLineBreakInputExtension'
 import { AdvancedImage } from './extensions/AdvancedImage'
+import { transformImageContent } from './extensions/image-content-transformer'
 import { cn } from '@/lib/utils'
 import { AdvancedToolbar } from './AdvancedToolbar'
 import 'tiptap-extension-resizable-image/styles.css'
@@ -94,6 +95,7 @@ export function AdvancedTipTapEditor({
     extensions: [
       StarterKit.configure({
         codeBlock: false, // We'll use CodeBlockLowlight instead
+        // Note: StarterKit doesn't include Image by default, so no need to exclude it
       }),
       Mathematics.configure({
         katexOptions: {
@@ -106,11 +108,7 @@ export function AdvancedTipTapEditor({
       TableRow,
       TableHeader,
       TableCell,
-      Image.configure({
-        HTMLAttributes: {
-          class: 'editor-image rounded-lg shadow-sm max-w-full h-auto',
-        },
-      }),
+      // Image extension replaced with AdvancedImage below
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
@@ -138,10 +136,10 @@ export function AdvancedTipTapEditor({
         },
       }),
     ],
-    content: processContent(value),
+    content: transformImageContent(processContent(value)),
     onCreate: ({ editor }) => {
       // Set content with whitespace preservation
-      editor.commands.setContent(processContent(value))
+      editor.commands.setContent(transformImageContent(processContent(value)))
     },
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML())

@@ -171,12 +171,25 @@ export const ImageNodeView: React.FC<ImageNodeViewProps> = ({
 
   // Alignment
   const handleAlignment = useCallback((align: 'left' | 'center' | 'right') => {
+    // Clear any existing float first, then apply new alignment
     if (align === 'left' || align === 'right') {
-      updateAttributes({ alignment: align, float: align })
+      updateAttributes({ 
+        alignment: align, 
+        float: align,
+        // Ensure width doesn't exceed container when floating
+        width: width && width > (editor?.view?.dom?.offsetWidth || 800) * 0.5 
+          ? Math.round((editor?.view?.dom?.offsetWidth || 800) * 0.4) 
+          : width
+      })
     } else {
-      updateAttributes({ alignment: align, float: null })
+      updateAttributes({ 
+        alignment: align, 
+        float: null,
+        // Reset width constraints for center alignment
+        width: width
+      })
     }
-  }, [updateAttributes])
+  }, [updateAttributes, width, editor])
 
   // Preset resize
   const handlePresetResize = useCallback((percent: number) => {
@@ -236,15 +249,19 @@ export const ImageNodeView: React.FC<ImageNodeViewProps> = ({
 
   const alignmentClass = float ? '' : `text-${alignment}`
   const floatStyle = float
-    ? { float: float as 'left' | 'right', margin: float === 'left' ? '0 16px 16px 0' : '0 0 16px 16px' }
+    ? { 
+        float: float as 'left' | 'right', 
+        margin: float === 'left' ? '0 16px 16px 0' : '0 0 16px 16px',
+        maxWidth: '50%' // Prevent images from being too wide when floating
+      }
     : {}
 
   return (
-    <NodeViewWrapper className="my-4">
+    <NodeViewWrapper className="my-4 max-w-full">
       <div
         ref={containerRef}
-        className={cn('relative inline-block', alignmentClass)}
-        style={{ ...floatStyle, maxWidth: '100%' }}
+        className={cn('relative', float ? 'inline-block' : 'block', alignmentClass)}
+        style={{ ...floatStyle, maxWidth: '100%', boxSizing: 'border-box' }}
         onClick={() => setIsSelected(true)}
       >
         <div className="relative group">

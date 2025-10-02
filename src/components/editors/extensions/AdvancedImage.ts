@@ -39,6 +39,7 @@ export const AdvancedImage = Node.create<AdvancedImageOptions>({
   group: 'block',
   atom: true,
   draggable: true,
+  priority: 1000, // Higher priority than basic Image extension
 
   addOptions() {
     return {
@@ -155,16 +156,45 @@ export const AdvancedImage = Node.create<AdvancedImageOptions>({
 
   parseHTML() {
     return [
+      // Parse wrapped images (our format)
+      {
+        tag: 'div[data-image-wrapper]',
+        getAttrs: dom => {
+          const element = dom as HTMLElement
+          const img = element.querySelector('img')
+          if (!img) return false
+          
+          return {
+            src: img.getAttribute('src'),
+            alt: img.getAttribute('alt') || '',
+            title: img.getAttribute('title') || '',
+            width: img.getAttribute('data-width') ? parseInt(img.getAttribute('data-width')!) : null,
+            height: img.getAttribute('data-height') ? parseInt(img.getAttribute('data-height')!) : null,
+            alignment: img.getAttribute('data-alignment') || element.getAttribute('data-alignment') || 'center',
+            caption: img.getAttribute('data-caption') || element.getAttribute('data-caption') || '',
+            float: img.getAttribute('data-float') || element.getAttribute('data-float'),
+            aspectRatio: img.getAttribute('data-aspect-ratio') ? parseFloat(img.getAttribute('data-aspect-ratio')!) : null,
+            originalWidth: img.getAttribute('data-original-width') ? parseInt(img.getAttribute('data-original-width')!) : null,
+            originalHeight: img.getAttribute('data-original-height') ? parseInt(img.getAttribute('data-original-height')!) : null,
+          }
+        },
+      },
+      // Parse direct img tags (fallback)
       {
         tag: 'img[src]',
         getAttrs: dom => {
           const element = dom as HTMLElement
+          // Skip if this img is already inside a wrapper div
+          if (element.closest('[data-image-wrapper]')) return false
+          
           return {
             src: element.getAttribute('src'),
-            alt: element.getAttribute('alt'),
-            title: element.getAttribute('title'),
-            width: element.getAttribute('data-width') ? parseInt(element.getAttribute('data-width')!) : null,
-            height: element.getAttribute('data-height') ? parseInt(element.getAttribute('data-height')!) : null,
+            alt: element.getAttribute('alt') || '',
+            title: element.getAttribute('title') || '',
+            width: element.getAttribute('data-width') ? parseInt(element.getAttribute('data-width')!) : 
+                   element.getAttribute('width') ? parseInt(element.getAttribute('width')!) : null,
+            height: element.getAttribute('data-height') ? parseInt(element.getAttribute('data-height')!) : 
+                    element.getAttribute('height') ? parseInt(element.getAttribute('height')!) : null,
             alignment: element.getAttribute('data-alignment') || 'center',
             caption: element.getAttribute('data-caption') || '',
             float: element.getAttribute('data-float'),
