@@ -208,32 +208,65 @@ export const AdvancedImage = Node.create<AdvancedImageOptions>({
   },
 
   renderHTML({ HTMLAttributes }) {
-    const { alignment, float, caption, ...imgAttrs } = HTMLAttributes
+    const { alignment = 'center', float, caption, ...imgAttrs } = HTMLAttributes
     
-    // Create wrapper div with alignment and float styles
-    const wrapperAttrs: Record<string, any> = {
-      'data-image-wrapper': 'true',
-      style: '',
-    }
-
+    // Always wrap in a div for consistent alignment control
+    let wrapperStyle = 'display: block; margin: 1rem 0;'
+    let imageStyle = 'max-width: 100%; height: auto; border-radius: 8px; display: block;'
+    
+    // Apply alignment styles
     if (float) {
-      wrapperAttrs.style += `float: ${float}; margin: ${float === 'left' ? '0 16px 16px 0' : '0 0 16px 16px'};`
-    } else if (alignment) {
-      wrapperAttrs.style += `text-align: ${alignment};`
+      // Floating images
+      wrapperStyle += ` float: ${float}; margin: ${float === 'left' ? '0 16px 16px 0' : '0 0 16px 16px'}; max-width: 50%; text-align: ${float};`
+      imageStyle += ' width: 100%;'
+    } else {
+      // Non-floating images - use text-align on wrapper
+      wrapperStyle += ` text-align: ${alignment};`
+      
+      // For left/right alignment without float, also set margin
+      if (alignment === 'left') {
+        imageStyle += ' margin-left: 0; margin-right: auto;'
+      } else if (alignment === 'right') {
+        imageStyle += ' margin-left: auto; margin-right: 0;'
+      } else {
+        imageStyle += ' margin-left: auto; margin-right: auto;'
+      }
     }
-
-    const imgElement = ['img', mergeAttributes(this.options.HTMLAttributes, imgAttrs)]
     
+    // Create image element with all necessary attributes
+    const imgElement = ['img', mergeAttributes(this.options.HTMLAttributes, {
+      ...imgAttrs,
+      'data-alignment': alignment,
+      'data-float': float || null,
+      'data-caption': caption || null,
+      style: imageStyle,
+    })]
+    
+    // Create wrapper div
+    const wrapperElement = [
+      'div',
+      { 
+        'data-image-wrapper': 'true',
+        'data-alignment': alignment,
+        'data-float': float || null,
+        style: wrapperStyle
+      },
+      imgElement
+    ]
+    
+    // Add caption if present
     if (caption) {
-      return [
-        'div',
-        wrapperAttrs,
-        imgElement,
-        ['div', { class: 'image-caption', style: 'margin-top: 8px; font-size: 14px; color: #666; font-style: italic;' }, caption]
-      ]
+      wrapperElement.push([
+        'div', 
+        { 
+          class: 'image-caption',
+          style: 'margin-top: 8px; font-size: 14px; color: #666; font-style: italic; text-align: inherit; clear: both;' 
+        }, 
+        caption
+      ])
     }
-
-    return ['div', wrapperAttrs, imgElement]
+    
+    return wrapperElement
   },
 
   addNodeView() {

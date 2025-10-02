@@ -346,6 +346,94 @@
 .text-center { text-align: center; }
 .text-right { text-align: right; }
 
+/* Preview mode alignment (when not in editor) - Very high specificity */
+div[data-image-wrapper="true"] {
+  display: block !important;
+  margin: 1rem 0 !important;
+}
+
+div[data-image-wrapper="true"][data-alignment="left"],
+.prose div[data-image-wrapper="true"][data-alignment="left"],
+body div[data-image-wrapper="true"][data-alignment="left"] {
+  text-align: left !important;
+}
+
+div[data-image-wrapper="true"][data-alignment="center"],
+.prose div[data-image-wrapper="true"][data-alignment="center"],
+body div[data-image-wrapper="true"][data-alignment="center"] {
+  text-align: center !important;
+}
+
+div[data-image-wrapper="true"][data-alignment="right"],
+.prose div[data-image-wrapper="true"][data-alignment="right"],
+body div[data-image-wrapper="true"][data-alignment="right"] {
+  text-align: right !important;
+}
+
+/* Force image alignment with margin */
+div[data-image-wrapper="true"][data-alignment="left"] img,
+.prose div[data-image-wrapper="true"][data-alignment="left"] img {
+  margin-left: 0 !important;
+  margin-right: auto !important;
+}
+
+div[data-image-wrapper="true"][data-alignment="center"] img,
+.prose div[data-image-wrapper="true"][data-alignment="center"] img {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+div[data-image-wrapper="true"][data-alignment="right"] img,
+.prose div[data-image-wrapper="true"][data-alignment="right"] img {
+  margin-left: auto !important;
+  margin-right: 0 !important;
+}
+
+div[data-image-wrapper="true"][data-float="left"] {
+  float: left;
+  margin: 0 16px 16px 0;
+  max-width: 50%;
+  text-align: left;
+}
+
+div[data-image-wrapper="true"][data-float="right"] {
+  float: right;
+  margin: 0 0 16px 16px;
+  max-width: 50%;
+  text-align: right;
+}
+
+/* Handle floating images without wrapper */
+img[data-float="left"] {
+  float: left;
+  margin: 0 16px 16px 0;
+  max-width: 50%;
+}
+
+img[data-float="right"] {
+  float: right;
+  margin: 0 0 16px 16px;
+  max-width: 50%;
+}
+
+/* Ensure images in preview maintain their styling */
+div[data-image-wrapper="true"] img,
+img[data-alignment] {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 8px;
+}
+
+/* Caption styling */
+.image-caption {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #666;
+  font-style: italic;
+  text-align: inherit;
+}
+
 /* Selection ring */
 .advanced-image-wrapper .selection-ring {
   position: absolute;

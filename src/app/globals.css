@@ -3,6 +3,7 @@
 @import "../styles/mobile.css";
 @import "../styles/animations.css";
 @import "../styles/design-system.css";
+@import "../components/editors/extensions/advanced-image.css";
 
 @custom-variant dark (&:is(.dark *));
 
