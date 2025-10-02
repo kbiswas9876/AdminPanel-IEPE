@@ -1,0 +1,239 @@
+import { Node, mergeAttributes } from '@tiptap/core'
+import { ReactNodeViewRenderer } from '@tiptap/react'
+import { ImageNodeView } from './ImageNodeView'
+
+export interface AdvancedImageOptions {
+  HTMLAttributes: Record<string, any>
+}
+
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    advancedImage: {
+      /**
+       * Insert an advanced image
+       */
+      setImage: (options: {
+        src: string
+        alt?: string
+        title?: string
+        width?: number
+        height?: number
+        alignment?: 'left' | 'center' | 'right'
+        caption?: string
+        float?: 'left' | 'right' | null
+      }) => ReturnType
+      /**
+       * Set image alignment
+       */
+      setImageAlignment: (alignment: 'left' | 'center' | 'right') => ReturnType
+      /**
+       * Set image float
+       */
+      setImageFloat: (float: 'left' | 'right' | null) => ReturnType
+    }
+  }
+}
+
+export const AdvancedImage = Node.create<AdvancedImageOptions>({
+  name: 'advancedImage',
+  group: 'block',
+  atom: true,
+  draggable: true,
+
+  addOptions() {
+    return {
+      HTMLAttributes: {},
+    }
+  },
+
+  addAttributes() {
+    return {
+      src: {
+        default: null,
+        parseHTML: element => element.getAttribute('src'),
+        renderHTML: attributes => {
+          if (!attributes.src) return {}
+          return { src: attributes.src }
+        },
+      },
+      alt: {
+        default: '',
+        parseHTML: element => element.getAttribute('alt'),
+        renderHTML: attributes => {
+          if (!attributes.alt) return {}
+          return { alt: attributes.alt }
+        },
+      },
+      title: {
+        default: '',
+        parseHTML: element => element.getAttribute('title'),
+        renderHTML: attributes => {
+          if (!attributes.title) return {}
+          return { title: attributes.title }
+        },
+      },
+      width: {
+        default: null,
+        parseHTML: element => {
+          const width = element.getAttribute('data-width')
+          return width ? parseInt(width) : null
+        },
+        renderHTML: attributes => {
+          if (!attributes.width) return {}
+          return { 'data-width': attributes.width }
+        },
+      },
+      height: {
+        default: null,
+        parseHTML: element => {
+          const height = element.getAttribute('data-height')
+          return height ? parseInt(height) : null
+        },
+        renderHTML: attributes => {
+          if (!attributes.height) return {}
+          return { 'data-height': attributes.height }
+        },
+      },
+      aspectRatio: {
+        default: null,
+        parseHTML: element => {
+          const ratio = element.getAttribute('data-aspect-ratio')
+          return ratio ? parseFloat(ratio) : null
+        },
+        renderHTML: attributes => {
+          if (!attributes.aspectRatio) return {}
+          return { 'data-aspect-ratio': attributes.aspectRatio }
+        },
+      },
+      alignment: {
+        default: 'center',
+        parseHTML: element => element.getAttribute('data-alignment') || 'center',
+        renderHTML: attributes => {
+          return { 'data-alignment': attributes.alignment || 'center' }
+        },
+      },
+      caption: {
+        default: '',
+        parseHTML: element => element.getAttribute('data-caption') || '',
+        renderHTML: attributes => {
+          if (!attributes.caption) return {}
+          return { 'data-caption': attributes.caption }
+        },
+      },
+      float: {
+        default: null,
+        parseHTML: element => element.getAttribute('data-float'),
+        renderHTML: attributes => {
+          if (!attributes.float) return {}
+          return { 'data-float': attributes.float }
+        },
+      },
+      originalWidth: {
+        default: null,
+        parseHTML: element => {
+          const width = element.getAttribute('data-original-width')
+          return width ? parseInt(width) : null
+        },
+        renderHTML: attributes => {
+          if (!attributes.originalWidth) return {}
+          return { 'data-original-width': attributes.originalWidth }
+        },
+      },
+      originalHeight: {
+        default: null,
+        parseHTML: element => {
+          const height = element.getAttribute('data-original-height')
+          return height ? parseInt(height) : null
+        },
+        renderHTML: attributes => {
+          if (!attributes.originalHeight) return {}
+          return { 'data-original-height': attributes.originalHeight }
+        },
+      },
+    }
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: 'img[src]',
+        getAttrs: dom => {
+          const element = dom as HTMLElement
+          return {
+            src: element.getAttribute('src'),
+            alt: element.getAttribute('alt'),
+            title: element.getAttribute('title'),
+            width: element.getAttribute('data-width') ? parseInt(element.getAttribute('data-width')!) : null,
+            height: element.getAttribute('data-height') ? parseInt(element.getAttribute('data-height')!) : null,
+            alignment: element.getAttribute('data-alignment') || 'center',
+            caption: element.getAttribute('data-caption') || '',
+            float: element.getAttribute('data-float'),
+            aspectRatio: element.getAttribute('data-aspect-ratio') ? parseFloat(element.getAttribute('data-aspect-ratio')!) : null,
+            originalWidth: element.getAttribute('data-original-width') ? parseInt(element.getAttribute('data-original-width')!) : null,
+            originalHeight: element.getAttribute('data-original-height') ? parseInt(element.getAttribute('data-original-height')!) : null,
+          }
+        },
+      },
+    ]
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    const { alignment, float, caption, ...imgAttrs } = HTMLAttributes
+    
+    // Create wrapper div with alignment and float styles
+    const wrapperAttrs: Record<string, any> = {
+      'data-image-wrapper': 'true',
+      style: '',
+    }
+
+    if (float) {
+      wrapperAttrs.style += `float: ${float}; margin: ${float === 'left' ? '0 16px 16px 0' : '0 0 16px 16px'};`
+    } else if (alignment) {
+      wrapperAttrs.style += `text-align: ${alignment};`
+    }
+
+    const imgElement = ['img', mergeAttributes(this.options.HTMLAttributes, imgAttrs)]
+    
+    if (caption) {
+      return [
+        'div',
+        wrapperAttrs,
+        imgElement,
+        ['div', { class: 'image-caption', style: 'margin-top: 8px; font-size: 14px; color: #666; font-style: italic;' }, caption]
+      ]
+    }
+
+    return ['div', wrapperAttrs, imgElement]
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(ImageNodeView, {
+      className: 'advanced-image-wrapper',
+    })
+  },
+
+  addCommands() {
+    return {
+      setImage:
+        options =>
+        ({ commands }) => {
+          return commands.insertContent({
+            type: this.name,
+            attrs: options,
+          })
+        },
+      setImageAlignment:
+        alignment =>
+        ({ commands }) => {
+          return commands.updateAttributes(this.name, { alignment })
+        },
+      setImageFloat:
+        float =>
+        ({ commands }) => {
+          return commands.updateAttributes(this.name, { float })
+        },
+    }
+  },
+})
+
+export default AdvancedImage

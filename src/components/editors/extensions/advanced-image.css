@@ -1,0 +1,412 @@
+/* Advanced Image Editor Styles */
+
+.advanced-image-wrapper {
+  position: relative;
+  margin: 1rem 0;
+}
+
+.advanced-image-wrapper .ProseMirror-selectednode {
+  outline: none;
+}
+
+/* Custom cursor styles for resize handles */
+.cursor-nw-resize { cursor: nw-resize; }
+.cursor-ne-resize { cursor: ne-resize; }
+.cursor-sw-resize { cursor: sw-resize; }
+.cursor-se-resize { cursor: se-resize; }
+.cursor-n-resize { cursor: n-resize; }
+.cursor-s-resize { cursor: s-resize; }
+.cursor-e-resize { cursor: e-resize; }
+.cursor-w-resize { cursor: w-resize; }
+
+/* Smooth transitions for images */
+.advanced-image-wrapper img {
+  transition: box-shadow 0.2s ease-in-out, transform 0.1s ease-in-out;
+}
+
+/* Resize handles */
+.advanced-image-wrapper .resize-handle {
+  position: absolute;
+  background: #3b82f6;
+  border: 2px solid white;
+  border-radius: 50%;
+  z-index: 10;
+  transition: all 0.2s ease-in-out;
+}
+
+.advanced-image-wrapper .resize-handle:hover {
+  background: #2563eb;
+  transform: scale(1.1);
+}
+
+/* Corner handles */
+.advanced-image-wrapper .resize-handle.corner {
+  width: 12px;
+  height: 12px;
+}
+
+/* Side handles */
+.advanced-image-wrapper .resize-handle.side-horizontal {
+  width: 24px;
+  height: 12px;
+}
+
+.advanced-image-wrapper .resize-handle.side-vertical {
+  width: 12px;
+  height: 24px;
+}
+
+/* Floating toolbar */
+.advanced-image-wrapper .floating-toolbar {
+  position: absolute;
+  top: -48px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1f2937;
+  color: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 50;
+  opacity: 0;
+  animation: fadeInUp 0.2s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.advanced-image-wrapper .floating-toolbar button {
+  padding: 6px;
+  border: none;
+  background: transparent;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.advanced-image-wrapper .floating-toolbar button:hover {
+  background: #374151;
+}
+
+.advanced-image-wrapper .floating-toolbar button.active {
+  background: #3b82f6;
+}
+
+.advanced-image-wrapper .floating-toolbar .separator {
+  width: 1px;
+  height: 24px;
+  background: #4b5563;
+  margin: 0 4px;
+}
+
+/* Dimension panel */
+.advanced-image-wrapper .dimension-panel {
+  position: absolute;
+  bottom: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 50;
+  opacity: 0;
+  animation: fadeInDown 0.2s ease-out forwards;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.advanced-image-wrapper .dimension-input {
+  display: flex;
+  flex-direction: column;
+}
+
+.advanced-image-wrapper .dimension-input label {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.advanced-image-wrapper .dimension-input input {
+  width: 80px;
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.advanced-image-wrapper .dimension-input input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Caption input */
+.advanced-image-wrapper .caption-input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 8px;
+  font-size: 14px;
+  color: #6b7280;
+  font-style: italic;
+  border: none;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  transition: border-color 0.2s ease-in-out;
+}
+
+.advanced-image-wrapper .caption-input:hover {
+  border-bottom-color: #d1d5db;
+}
+
+.advanced-image-wrapper .caption-input:focus {
+  outline: none;
+  border-bottom-color: #3b82f6;
+}
+
+/* Alt text modal */
+.alt-text-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.alt-text-modal .modal-content {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 400px;
+  width: 100%;
+  margin: 16px;
+  animation: scaleIn 0.2s ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.alt-text-modal h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #1f2937;
+}
+
+.alt-text-modal textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  resize: none;
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.alt-text-modal textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.alt-text-modal .modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.alt-text-modal button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.alt-text-modal .cancel-button {
+  background: transparent;
+  color: #6b7280;
+}
+
+.alt-text-modal .cancel-button:hover {
+  background: #f3f4f6;
+}
+
+.alt-text-modal .save-button {
+  background: #3b82f6;
+  color: white;
+}
+
+.alt-text-modal .save-button:hover {
+  background: #2563eb;
+}
+
+/* Floating images */
+.advanced-image-wrapper[data-float="left"] {
+  float: left;
+  margin: 0 16px 16px 0;
+}
+
+.advanced-image-wrapper[data-float="right"] {
+  float: right;
+  margin: 0 0 16px 16px;
+}
+
+/* Alignment classes */
+.text-left { text-align: left; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+
+/* Selection ring */
+.advanced-image-wrapper .selection-ring {
+  position: absolute;
+  inset: 0;
+  border: 2px solid #3b82f6;
+  border-radius: 8px;
+  pointer-events: none;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .advanced-image-wrapper .floating-toolbar {
+    top: -44px;
+    padding: 3px 6px;
+    gap: 2px;
+  }
+  
+  .advanced-image-wrapper .floating-toolbar button {
+    padding: 4px;
+  }
+  
+  .advanced-image-wrapper .resize-handle.corner {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .advanced-image-wrapper .resize-handle.side-horizontal {
+    width: 28px;
+    height: 14px;
+  }
+  
+  .advanced-image-wrapper .resize-handle.side-vertical {
+    width: 14px;
+    height: 28px;
+  }
+  
+  .advanced-image-wrapper .dimension-panel {
+    bottom: -90px;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  
+  .advanced-image-wrapper .dimension-input input {
+    width: 70px;
+    padding: 4px 6px;
+    font-size: 13px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .advanced-image-wrapper .dimension-panel {
+    background: #1f2937;
+    border-color: #374151;
+    color: white;
+  }
+  
+  .advanced-image-wrapper .dimension-input label {
+    color: #9ca3af;
+  }
+  
+  .advanced-image-wrapper .dimension-input input {
+    background: #374151;
+    border-color: #4b5563;
+    color: white;
+  }
+  
+  .advanced-image-wrapper .dimension-input input:focus {
+    border-color: #3b82f6;
+  }
+  
+  .advanced-image-wrapper .caption-input {
+    color: #9ca3af;
+  }
+  
+  .alt-text-modal .modal-content {
+    background: #1f2937;
+    color: white;
+  }
+  
+  .alt-text-modal textarea {
+    background: #374151;
+    border-color: #4b5563;
+    color: white;
+  }
+  
+  .alt-text-modal .cancel-button {
+    color: #9ca3af;
+  }
+  
+  .alt-text-modal .cancel-button:hover {
+    background: #374151;
+  }
+}
