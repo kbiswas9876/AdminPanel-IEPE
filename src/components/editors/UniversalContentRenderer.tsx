@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { BlockMath, InlineMath } from 'react-katex'
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
@@ -6,7 +6,7 @@ import 'katex/dist/katex.min.css'
 interface UniversalContentRendererProps {
   text: string
   className?: string
-  forceRerender?: boolean // Add a prop to force re-render when needed
+  forceRerender?: boolean | number // Add a prop to force re-render when needed
 }
 
 /**
@@ -16,39 +16,66 @@ interface UniversalContentRendererProps {
  */
 export function UniversalContentRenderer({ text, className, forceRerender }: UniversalContentRendererProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const [isTransitioning, setIsTransitioning] = useState(false)
 
+  // Fixes Issue #1: Use transitionend event to gate LaTeX processing during animations
   useEffect(() => {
     if (!containerRef.current) return
 
-    // Add a delay to ensure DOM is fully rendered and force re-render if needed
-    const timer = setTimeout(() => {
-      // Find all elements with data-math attribute and render them with KaTeX
-      const mathElements = containerRef.current?.querySelectorAll('[data-math]')
+    const container = containerRef.current
+    
+    // Check if the container or any parent is transitioning
+    const checkForTransition = () => {
+      const computedStyle = window.getComputedStyle(container)
+      const transitionDuration = computedStyle.transitionDuration
+      const animationDuration = computedStyle.animationDuration
       
-      // If no math elements found, try again after a longer delay
-      if (!mathElements || mathElements.length === 0) {
-        const retryTimer = setTimeout(() => {
-          const retryElements = containerRef.current?.querySelectorAll('[data-math]')
-          retryElements?.forEach((element) => {
-            const mathContent = element.getAttribute('data-math')
-            if (mathContent) {
-              try {
-                const isBlock = element.classList.contains('katex-block')
-                const rendered = katex.renderToString(mathContent, {
-                  displayMode: isBlock,
-                  throwOnError: false,
-                })
-                element.innerHTML = rendered
-              } catch (error) {
-                console.error('KaTeX rendering error (retry):', error)
-                element.textContent = mathContent
-              }
-            }
-          })
-        }, 200)
+      // Check if there are any transitions or animations
+      const hasTransition = transitionDuration !== '0s' && transitionDuration !== ''
+      const hasAnimation = animationDuration !== '0s' && animationDuration !== ''
+      
+      if (hasTransition || hasAnimation) {
+        setIsTransitioning(true)
         
-        return () => clearTimeout(retryTimer)
+        // Listen for transitionend events
+        const handleTransitionEnd = (event: TransitionEvent) => {
+          // Only listen to transitions on the container or its children
+          if (event.target === container || container.contains(event.target as Node)) {
+            setIsTransitioning(false)
+            container.removeEventListener('transitionend', handleTransitionEnd)
+          }
+        }
+        
+        container.addEventListener('transitionend', handleTransitionEnd)
+        
+        // Fallback: clear transitioning state after max transition duration
+        const maxDuration = Math.max(
+          parseFloat(transitionDuration) * 1000 || 0,
+          parseFloat(animationDuration) * 1000 || 0
+        )
+        
+        if (maxDuration > 0) {
+          const fallbackTimer = setTimeout(() => {
+            setIsTransitioning(false)
+          }, maxDuration + 100) // Add small buffer
+          
+          return () => clearTimeout(fallbackTimer)
+        }
       }
+      
+      return undefined
+    }
+
+    const cleanup = checkForTransition()
+    return cleanup
+  }, [text, forceRerender])
+
+  useEffect(() => {
+    if (!containerRef.current || isTransitioning) return
+
+    // Process LaTeX only when not transitioning
+    const processLatex = () => {
+      const mathElements = containerRef.current?.querySelectorAll('[data-math]')
       
       mathElements?.forEach((element) => {
         const mathContent = element.getAttribute('data-math')
@@ -66,10 +93,12 @@ export function UniversalContentRenderer({ text, className, forceRerender }: Uni
           }
         }
       })
-    }, 150) // Increased delay to ensure DOM is ready
+    }
 
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(processLatex, 50)
     return () => clearTimeout(timer)
-  }, [text, forceRerender]) // Include forceRerender in dependencies to trigger re-render
+  }, [text, forceRerender, isTransitioning]) // Include isTransitioning in dependencies
 
   if (!text) return null
 

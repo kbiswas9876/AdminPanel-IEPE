@@ -79,6 +79,10 @@ export function ExpandableQuestionList({
   // Keep track of recently edited questions to preserve their expanded state
   const [recentlyEditedIds, setRecentlyEditedIds] = useState<Set<number>>(new Set())
   
+  // Dedicated renderKey state for reliably triggering forceRerender
+  // Fixes Issue #2: LaTeX disappearing when entering edit mode
+  const [renderKey, setRenderKey] = useState(0)
+  
   // When editingQuestionId changes from a value to null, preserve that question's expanded state
   useEffect(() => {
     if (editingQuestionId) {
@@ -86,6 +90,8 @@ export function ExpandableQuestionList({
       setRecentlyEditedIds(prev => new Set([...prev, editingQuestionId]))
       // Ensure it's expanded
       setExpandedQuestionIds(prev => new Set([...prev, editingQuestionId]))
+      // Increment renderKey to trigger LaTeX re-processing
+      setRenderKey(prevKey => prevKey + 1)
     }
   }, [editingQuestionId])
   
@@ -227,6 +233,8 @@ export function ExpandableQuestionList({
       }
       return newSet
     })
+    // Increment renderKey to trigger LaTeX re-processing on expand/collapse
+    setRenderKey(prevKey => prevKey + 1)
   }
 
   const totalPages = Math.ceil(totalCount / pageSize)
@@ -360,9 +368,9 @@ export function ExpandableQuestionList({
                             <div className="prose prose-lg max-w-none mb-3 sm:mb-4">
                               <div className="text-sm sm:text-base text-gray-800 leading-relaxed">
                                 <UniversalContentRenderer 
-                                  key={`collapsed-${question.id}-${isExpanded}`}
+                                  key={`collapsed-${question.id}-${isExpanded}-${renderKey}`}
                                   text={question.question_text}
-                                  forceRerender={isExpanded}
+                                  forceRerender={renderKey}
                                 />
                               </div>
                             </div>
@@ -441,6 +449,7 @@ export function ExpandableQuestionList({
                       onQuestionAction={onQuestionAction}
                       isSelected={isQuestionSelected(question)}
                       onSelectionChange={(q) => toggleQuestionSelection(q)}
+                      renderKey={renderKey}
                     />
                   )}
                 </CardContent>

@@ -31,6 +31,7 @@ interface CompactQuestionDetailsProps {
   onQuestionAction?: (question: Question, action: string) => void
   isSelected?: boolean
   onSelectionChange?: (question: Question) => void
+  renderKey?: number // Add renderKey prop for reliable LaTeX re-processing
 }
 
 export const CompactQuestionDetails = memo(function CompactQuestionDetails({
@@ -42,7 +43,8 @@ export const CompactQuestionDetails = memo(function CompactQuestionDetails({
   actionType = 'edit',
   onQuestionAction,
   isSelected = false,
-  onSelectionChange
+  onSelectionChange,
+  renderKey = 0
 }: CompactQuestionDetailsProps) {
   const [isZoomed, setIsZoomed] = useState(false)
   const [showSolution, setShowSolution] = useState(false)
@@ -173,9 +175,9 @@ export const CompactQuestionDetails = memo(function CompactQuestionDetails({
             <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
               <div className="prose prose-sm max-w-none">
                 <UniversalContentRenderer 
-                  key={`expanded-${question.id}-${isExpanded}`}
+                  key={`expanded-${question.id}-${isExpanded}-${renderKey}`}
                   text={question.question_text}
-                  forceRerender={isExpanded}
+                  forceRerender={renderKey}
                 />
               </div>
             </div>
@@ -213,7 +215,7 @@ export const CompactQuestionDetails = memo(function CompactQuestionDetails({
                         {optionText ? (
                           <UniversalContentRenderer 
                             text={String(optionText)}
-                            forceRerender={isExpanded}
+                            forceRerender={renderKey}
                           />
                         ) : (
                           <span className="text-gray-400 italic">No option text provided</span>
@@ -257,7 +259,7 @@ export const CompactQuestionDetails = memo(function CompactQuestionDetails({
                     <div className="text-sm font-medium text-slate-800 [&_*]:text-sm [&_*]:leading-relaxed [&_p]:mb-2 [&_p]:last:mb-0 [&_strong]:font-semibold [&_em]:italic">
                       <UniversalContentRenderer 
                         text={question.solution_text}
-                        forceRerender={isExpanded}
+                        forceRerender={renderKey}
                       />
                     </div>
                   </div>
