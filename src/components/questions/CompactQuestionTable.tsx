@@ -199,7 +199,10 @@ export function CompactQuestionTable({
                     onClick={() => toggleExpansion(question.id!)}
                   >
                     <div className="text-base font-medium text-slate-900 leading-relaxed group-hover/content:text-blue-700 transition-colors duration-200">
-                      <UniversalContentRenderer text={question.question_text} />
+                      <UniversalContentRenderer 
+                        text={question.question_text}
+                        forceRerender={isExpanded}
+                      />
                     </div>
                   </div>
                   

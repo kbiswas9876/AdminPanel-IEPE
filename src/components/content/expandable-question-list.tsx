@@ -359,7 +359,11 @@ export function ExpandableQuestionList({
                             {/* Question Text with Premium Styling */}
                             <div className="prose prose-lg max-w-none mb-3 sm:mb-4">
                               <div className="text-sm sm:text-base text-gray-800 leading-relaxed">
-                                <UniversalContentRenderer text={question.question_text} />
+                                <UniversalContentRenderer 
+                                  key={`collapsed-${question.id}-${isExpanded}`}
+                                  text={question.question_text}
+                                  forceRerender={isExpanded}
+                                />
                               </div>
                             </div>
                             

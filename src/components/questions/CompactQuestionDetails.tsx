@@ -172,7 +172,11 @@ export const CompactQuestionDetails = memo(function CompactQuestionDetails({
             </h3>
             <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
               <div className="prose prose-sm max-w-none">
-                <UniversalContentRenderer text={question.question_text} />
+                <UniversalContentRenderer 
+                  key={`expanded-${question.id}-${isExpanded}`}
+                  text={question.question_text}
+                  forceRerender={isExpanded}
+                />
               </div>
             </div>
           </div>
@@ -207,7 +211,10 @@ export const CompactQuestionDetails = memo(function CompactQuestionDetails({
                     <div className="flex-1 min-w-0">
                       <div className="prose prose-sm max-w-none">
                         {optionText ? (
-                          <UniversalContentRenderer text={String(optionText)} />
+                          <UniversalContentRenderer 
+                            text={String(optionText)}
+                            forceRerender={isExpanded}
+                          />
                         ) : (
                           <span className="text-gray-400 italic">No option text provided</span>
                         )}
@@ -248,7 +255,10 @@ export const CompactQuestionDetails = memo(function CompactQuestionDetails({
                 <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 animate-in slide-in-from-top-2 duration-200 ease-out">
                   <div className="prose prose-xs max-w-none text-slate-700 leading-relaxed">
                     <div className="text-sm font-medium text-slate-800 [&_*]:text-sm [&_*]:leading-relaxed [&_p]:mb-2 [&_p]:last:mb-0 [&_strong]:font-semibold [&_em]:italic">
-                      <UniversalContentRenderer text={question.solution_text} />
+                      <UniversalContentRenderer 
+                        text={question.solution_text}
+                        forceRerender={isExpanded}
+                      />
                     </div>
                   </div>
                 </div>

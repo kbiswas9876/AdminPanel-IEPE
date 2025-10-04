@@ -112,7 +112,10 @@ export function QuestionCard({ question, isSelected = false, onSelect, onQuestio
                 )}
               </div>
               <h3 className="text-lg font-semibold text-slate-900 leading-relaxed line-clamp-2 whitespace-pre-wrap">
-                <UniversalContentRenderer text={currentQuestion.question_text} />
+                <UniversalContentRenderer 
+                  text={currentQuestion.question_text}
+                  forceRerender={isExpanded}
+                />
               </h3>
             </div>
           </div>
@@ -176,7 +179,10 @@ export function QuestionCard({ question, isSelected = false, onSelect, onQuestio
                     <span className="font-medium mr-2">
                       {String.fromCharCode(65 + index)}.
                     </span>
-                    <UniversalContentRenderer text={option} />
+                    <UniversalContentRenderer 
+                      text={option}
+                      forceRerender={isExpanded}
+                    />
                   </div>
                   {key === currentQuestion.correct_option && (
                     <Badge variant="secondary" className="text-xs">
@@ -196,7 +202,10 @@ export function QuestionCard({ question, isSelected = false, onSelect, onQuestio
                 <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Solution</h4>
               </div>
               <div className="text-base text-slate-700 leading-relaxed p-4 bg-slate-50 rounded-xl font-mono border border-slate-200/60">
-                <UniversalContentRenderer text={currentQuestion.solution_text} />
+                <UniversalContentRenderer 
+                  text={currentQuestion.solution_text}
+                  forceRerender={isExpanded}
+                />
               </div>
             </div>
           )}

@@ -6,6 +6,7 @@ import 'katex/dist/katex.min.css'
 interface UniversalContentRendererProps {
   text: string
   className?: string
+  forceRerender?: boolean // Add a prop to force re-render when needed
 }
 
 /**
@@ -13,31 +14,62 @@ interface UniversalContentRendererProps {
  * Handles both inline math ($...$) and block math ($$...$$)
  * Also handles HTML content safely
  */
-export function UniversalContentRenderer({ text, className }: UniversalContentRendererProps) {
+export function UniversalContentRenderer({ text, className, forceRerender }: UniversalContentRendererProps) {
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!containerRef.current) return
 
-    // Find all elements with data-math attribute and render them with KaTeX
-    const mathElements = containerRef.current.querySelectorAll('[data-math]')
-    mathElements.forEach((element) => {
-      const mathContent = element.getAttribute('data-math')
-      if (mathContent) {
-        try {
-          const isBlock = element.classList.contains('katex-block')
-          const rendered = katex.renderToString(mathContent, {
-            displayMode: isBlock,
-            throwOnError: false,
+    // Add a delay to ensure DOM is fully rendered and force re-render if needed
+    const timer = setTimeout(() => {
+      // Find all elements with data-math attribute and render them with KaTeX
+      const mathElements = containerRef.current?.querySelectorAll('[data-math]')
+      
+      // If no math elements found, try again after a longer delay
+      if (!mathElements || mathElements.length === 0) {
+        const retryTimer = setTimeout(() => {
+          const retryElements = containerRef.current?.querySelectorAll('[data-math]')
+          retryElements?.forEach((element) => {
+            const mathContent = element.getAttribute('data-math')
+            if (mathContent) {
+              try {
+                const isBlock = element.classList.contains('katex-block')
+                const rendered = katex.renderToString(mathContent, {
+                  displayMode: isBlock,
+                  throwOnError: false,
+                })
+                element.innerHTML = rendered
+              } catch (error) {
+                console.error('KaTeX rendering error (retry):', error)
+                element.textContent = mathContent
+              }
+            }
           })
-          element.innerHTML = rendered
-        } catch (error) {
-          console.error('KaTeX rendering error:', error)
-          element.textContent = mathContent
-        }
+        }, 200)
+        
+        return () => clearTimeout(retryTimer)
       }
-    })
-  }, [text])
+      
+      mathElements?.forEach((element) => {
+        const mathContent = element.getAttribute('data-math')
+        if (mathContent) {
+          try {
+            const isBlock = element.classList.contains('katex-block')
+            const rendered = katex.renderToString(mathContent, {
+              displayMode: isBlock,
+              throwOnError: false,
+            })
+            element.innerHTML = rendered
+          } catch (error) {
+            console.error('KaTeX rendering error:', error)
+            element.textContent = mathContent
+          }
+        }
+      })
+    }, 150) // Increased delay to ensure DOM is ready
+
+    return () => clearTimeout(timer)
+  }, [text, forceRerender]) // Include forceRerender in dependencies to trigger re-render
 
   if (!text) return null
 
