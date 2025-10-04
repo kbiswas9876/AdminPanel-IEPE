@@ -71,34 +71,34 @@ export function UniversalContentRenderer({ text, className, forceRerender }: Uni
   }, [text, forceRerender])
 
   useEffect(() => {
-    if (!containerRef.current || isTransitioning) return
+    if (!containerRef.current || isTransitioning) return;
 
     // Process LaTeX only when not transitioning
     const processLatex = () => {
-      const mathElements = containerRef.current?.querySelectorAll('[data-math]')
-      
+      const mathElements = containerRef.current?.querySelectorAll('[data-math]');
+
       mathElements?.forEach((element) => {
-        const mathContent = element.getAttribute('data-math')
+        const mathContent = element.getAttribute('data-math');
         if (mathContent) {
           try {
-            const isBlock = element.classList.contains('katex-block')
+            const isBlock = element.classList.contains('katex-block');
             const rendered = katex.renderToString(mathContent, {
               displayMode: isBlock,
               throwOnError: false,
-            })
-            element.innerHTML = rendered
+            });
+            element.innerHTML = rendered;
           } catch (error) {
-            console.error('KaTeX rendering error:', error)
-            element.textContent = mathContent
+            console.error('KaTeX rendering error:', error);
+            element.textContent = mathContent;
           }
         }
-      })
-    }
+      });
+    };
 
     // Small delay to ensure DOM is ready
-    const timer = setTimeout(processLatex, 50)
-    return () => clearTimeout(timer)
-  }, [text, forceRerender, isTransitioning]) // Include isTransitioning in dependencies
+    const timer = setTimeout(processLatex, 50);
+    return () => clearTimeout(timer);
+  }); // Run after every render to ensure placeholders are processed even when text/props don't change
 
   if (!text) return null
 
