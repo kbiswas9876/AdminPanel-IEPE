@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { LogOut, User, Bell, AlertTriangle, UserPlus, BookOpen, TestTube, Loader2, Menu, X, Settings, ChevronDown } from 'lucide-react'
-import { getNotifications, markNotificationAsRead, type Notification } from '@/lib/actions/notifications'
+import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead, type Notification } from '@/lib/actions/notifications'
 import { getCurrentAdminFullProfile, type AdminProfileData } from '@/lib/actions/admin-profile'
 import { clearProfileCache } from '@/components/auth/protected-route'
 
@@ -70,19 +70,67 @@ export function Header() {
 
     fetchNotifications()
     
-    // Poll for new notifications every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000)
+    // Poll for new notifications every 10 seconds (reduced from 30s for better UX)
+    const interval = setInterval(fetchNotifications, 10000)
     
     return () => clearInterval(interval)
   }, [])
 
+  // Close notification dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setIsNotificationOpen(false)
+      }
+    }
+
+    if (isNotificationOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isNotificationOpen])
+
   const handleNotificationClick = async (notification: Notification) => {
+    // Mark as read
     if (!notification.read) {
       await markNotificationAsRead(notification.id)
       setNotifications(prev => 
         prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
       )
     }
+    
+    // Navigate based on notification type
+    switch (notification.type) {
+      case 'user_registration':
+        router.push('/students?status=pending')
+        break
+      case 'error_report':
+        if (notification.metadata?.reportId) {
+          router.push(`/reports?highlight=${notification.metadata.reportId}`)
+        } else {
+          router.push('/reports')
+        }
+        break
+      case 'question_added':
+        router.push('/content')
+        break
+      case 'test_published':
+        if (notification.metadata?.testId) {
+          router.push(`/tests?highlight=${notification.metadata.testId}`)
+        } else {
+          router.push('/tests')
+        }
+        break
+      default:
+        // No navigation for unknown types
+        break
+    }
+    
+    // Close dropdown after navigation
+    setIsNotificationOpen(false)
   }
 
   const unreadCount = notifications.filter(n => !n.read).length
@@ -97,10 +145,20 @@ export function Header() {
   //   )
   // }
 
-  const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(notification => ({ ...notification, read: true }))
-    )
+  const markAllAsRead = async () => {
+    const unreadNotifications = notifications.filter(n => !n.read)
+    
+    if (unreadNotifications.length === 0) return
+    
+    // Mark all in database
+    const result = await markAllNotificationsAsRead(unreadNotifications.map(n => n.id))
+    
+    if (result.success) {
+      // Update local state
+      setNotifications(prev => 
+        prev.map(notification => ({ ...notification, read: true }))
+      )
+    }
   }
 
   const getNotificationIcon = (type: string) => {

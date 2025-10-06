@@ -199,3 +199,37 @@ export async function markNotificationAsRead(notificationId: number): Promise<{ 
     return { success: false }
   }
 }
+
+export async function markAllNotificationsAsRead(notificationIds: number[]): Promise<{ success: boolean; message: string }> {
+  try {
+    const supabase = createAdminClient()
+    const currentUser = (await supabase.auth.getUser()).data.user
+    
+    if (!currentUser) {
+      return { success: false, message: 'Not authenticated' }
+    }
+    
+    // Batch upsert all notification read statuses
+    const readStatuses = notificationIds.map(id => ({
+      notification_id: id,
+      user_id: currentUser.id,
+      read_at: new Date().toISOString()
+    }))
+    
+    const { error } = await supabase
+      .from('notification_read_status')
+      .upsert(readStatuses, {
+        onConflict: 'notification_id,user_id'
+      })
+    
+    if (error) {
+      console.error('Error marking all notifications as read:', error)
+      return { success: false, message: 'Failed to mark notifications as read' }
+    }
+    
+    return { success: true, message: 'All notifications marked as read' }
+  } catch (error) {
+    console.error('Error marking all notifications as read:', error)
+    return { success: false, message: 'An error occurred' }
+  }
+}
