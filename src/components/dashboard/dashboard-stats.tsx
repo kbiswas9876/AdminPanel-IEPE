@@ -12,7 +12,11 @@ import {
   Clock,
   UserPlus,
   FileText,
-  AlertCircle
+  AlertCircle,
+  LogIn,
+  Edit,
+  Settings,
+  Shield
 } from 'lucide-react'
 import Link from 'next/link'
 import type { DashboardStats, RecentActivity } from '@/lib/actions/dashboard'
@@ -118,6 +122,14 @@ function ActivityItem({ activity }: { activity: RecentActivity }) {
         return <BookOpen className="h-4 w-4 text-purple-600" />
       case 'bulk_import':
         return <FileText className="h-4 w-4 text-indigo-600" />
+      case 'admin_login':
+        return <LogIn className="h-4 w-4 text-cyan-600" />
+      case 'admin_profile_update':
+        return <Edit className="h-4 w-4 text-orange-600" />
+      case 'admin_settings_change':
+        return <Settings className="h-4 w-4 text-teal-600" />
+      case 'admin_action':
+        return <Shield className="h-4 w-4 text-slate-600" />
       default:
         return <Clock className="h-4 w-4 text-gray-600" />
     }
@@ -135,6 +147,14 @@ function ActivityItem({ activity }: { activity: RecentActivity }) {
         return 'bg-purple-100'
       case 'bulk_import':
         return 'bg-indigo-100'
+      case 'admin_login':
+        return 'bg-cyan-100'
+      case 'admin_profile_update':
+        return 'bg-orange-100'
+      case 'admin_settings_change':
+        return 'bg-teal-100'
+      case 'admin_action':
+        return 'bg-slate-100'
       default:
         return 'bg-gray-100'
     }
@@ -151,21 +171,37 @@ function ActivityItem({ activity }: { activity: RecentActivity }) {
     return date.toLocaleDateString()
   }
 
+  // Check if this is an admin activity
+  const isAdminActivity = activity.type.startsWith('admin_')
+
   return (
     <div className="flex items-start space-x-4 p-6 hover:bg-white/30 transition-all duration-300 group/activity">
       <div className={`flex-shrink-0 mt-1 p-3 rounded-xl shadow-sm transition-all duration-300 group-hover/activity:scale-105 ${getActivityIconBg(activity.type)}`}>
         {getActivityIcon(activity.type)}
       </div>
       <div className="flex-1 min-w-0 space-y-2">
-        <p className="font-semibold text-slate-900 group-hover/activity:text-slate-700 transition-colors">
-          {activity.title}
-        </p>
+        <div className="flex items-center space-x-2">
+          <p className="font-semibold text-slate-900 group-hover/activity:text-slate-700 transition-colors">
+            {activity.title}
+          </p>
+          {isAdminActivity && (
+            <Badge className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 text-xs px-2 py-0">
+              Admin
+            </Badge>
+          )}
+        </div>
         <p className="text-sm text-slate-600 leading-relaxed">
           {activity.description}
         </p>
-        <p className="text-xs text-slate-500 font-medium">
-          {formatTimestamp(activity.timestamp)}
-        </p>
+        <div className="flex items-center space-x-2 text-xs text-slate-500 font-medium">
+          <span>{formatTimestamp(activity.timestamp)}</span>
+          {activity.adminEmail && (
+            <>
+              <span>•</span>
+              <span className="text-blue-600">{activity.adminEmail}</span>
+            </>
+          )}
+        </div>
       </div>
     </div>
   )

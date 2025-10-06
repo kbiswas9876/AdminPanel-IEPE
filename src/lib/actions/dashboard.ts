@@ -23,11 +23,12 @@ export interface AdminProfile {
 // Recent activity interface
 export interface RecentActivity {
   id: string
-  type: 'user_registration' | 'test_created' | 'bulk_import' | 'error_report' | 'question_added'
+  type: 'user_registration' | 'test_created' | 'bulk_import' | 'error_report' | 'question_added' | 'admin_login' | 'admin_profile_update' | 'admin_settings_change' | 'admin_action'
   title: string
   description: string
   timestamp: string
   userEmail?: string
+  adminEmail?: string
   metadata?: Record<string, unknown>
 }
 
@@ -76,8 +77,8 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   }
 }
 
-// Get recent activity feed
-export async function getRecentActivity(limit: number = 7): Promise<RecentActivity[]> {
+// Get recent activity feed (including admin activities)
+export async function getRecentActivity(limit: number = 10): Promise<RecentActivity[]> {
   try {
     const supabase = createAdminClient()
     const activities: RecentActivity[] = []
@@ -85,8 +86,8 @@ export async function getRecentActivity(limit: number = 7): Promise<RecentActivi
     // Get recent user registrations
     const { data: recentUsers } = await supabase
       .from('user_profiles')
-      .select('id, email, full_name, created_at, status')
-      .order('created_at', { ascending: false })
+      .select('id, email, full_name, updated_at, status')
+      .order('updated_at', { ascending: false })
       .limit(3)
     
     if (recentUsers) {
@@ -98,7 +99,7 @@ export async function getRecentActivity(limit: number = 7): Promise<RecentActivi
           description: user.status === 'pending' 
             ? `${user.full_name || user.email} registered and is pending approval`
             : `${user.full_name || user.email} registered and was approved`,
-          timestamp: user.created_at,
+          timestamp: user.updated_at,
           userEmail: user.email,
           metadata: { userId: user.id, status: user.status }
         })
@@ -142,6 +143,64 @@ export async function getRecentActivity(limit: number = 7): Promise<RecentActivi
           description: `Question ${question.question_id} from ${question.book_source} was added`,
           timestamp: question.created_at,
           metadata: { questionId: question.id, bookSource: question.book_source }
+        })
+      })
+    }
+    
+    // Get recent admin activities
+    const { data: adminActivities } = await supabase
+      .from('admin_activity_log')
+      .select(`
+        id,
+        action_type,
+        action_description,
+        created_at,
+        admin_id,
+        metadata
+      `)
+      .order('created_at', { ascending: false })
+      .limit(5)
+    
+    if (adminActivities) {
+      // Get admin emails for the activities
+      const adminIds = [...new Set(adminActivities.map(a => a.admin_id))]
+      const { data: adminProfiles } = await supabase
+        .from('user_profiles')
+        .select('id, email, full_name')
+        .in('id', adminIds)
+      
+      const adminEmailMap = new Map(
+        adminProfiles?.map(p => [p.id, { email: p.email, name: p.full_name }]) || []
+      )
+      
+      adminActivities.forEach(activity => {
+        const admin = adminEmailMap.get(activity.admin_id)
+        const adminName = admin?.name || admin?.email || 'Admin'
+        
+        // Map action types to user-friendly types
+        let activityType: RecentActivity['type'] = 'admin_action'
+        if (activity.action_type === 'login') {
+          activityType = 'admin_login'
+        } else if (activity.action_type === 'profile_update') {
+          activityType = 'admin_profile_update'
+        } else if (activity.action_type === 'settings_change') {
+          activityType = 'admin_settings_change'
+        }
+        
+        activities.push({
+          id: `admin_${activity.id}`,
+          type: activityType,
+          title: activity.action_type === 'login' 
+            ? 'Admin Login' 
+            : activity.action_type === 'profile_update'
+            ? 'Profile Updated'
+            : activity.action_type === 'settings_change'
+            ? 'Settings Changed'
+            : 'Admin Action',
+          description: activity.action_description || `${adminName} performed an action`,
+          timestamp: activity.created_at,
+          adminEmail: admin?.email,
+          metadata: activity.metadata as Record<string, unknown> || {}
         })
       })
     }
