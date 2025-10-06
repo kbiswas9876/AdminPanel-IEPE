@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useMobile } from '@/lib/contexts/mobile-context'
+import { useNavigationBlocker } from '@/lib/contexts/navigation-blocker-context'
 import { cn } from '@/lib/utils'
 import { ErrorReportsNavItem } from './error-reports-nav-item'
 import { useState, useCallback, useEffect } from 'react'
@@ -54,8 +55,21 @@ export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { isMobile } = useMobile()
+  const { confirmNavigation } = useNavigationBlocker()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [preloadedRoutes, setPreloadedRoutes] = useState<Set<string>>(new Set())
+
+  // Handle navigation with confirmation
+  const handleNavigation = useCallback(async (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (pathname === href) return // Already on this page
+    
+    e.preventDefault()
+    const confirmed = await confirmNavigation()
+    
+    if (confirmed) {
+      router.push(href)
+    }
+  }, [pathname, confirmNavigation, router])
 
   // Preload routes for instant navigation
   const preloadRoute = useCallback((href: string) => {
@@ -138,6 +152,7 @@ export function Sidebar() {
             <div key={item.name} className="relative group">
               <Link
                 href={item.href}
+                onClick={(e) => handleNavigation(e, item.href)}
                 onMouseEnter={() => preloadRoute(item.href)}
                         className={cn(
                           'group relative flex items-center',

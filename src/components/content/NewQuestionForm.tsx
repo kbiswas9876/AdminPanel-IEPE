@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -58,6 +58,7 @@ import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { ClientOnlyAdvancedTipTapEditor } from '@/components/editors/ClientOnlyAdvancedTipTapEditor'
 import { LivePreviewRenderer } from '@/components/editors/LivePreviewRenderer'
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 
 interface FilterOptions {
   bookSources: string[]
@@ -105,6 +106,29 @@ export function NewQuestionForm() {
   // Premium UI state
   const [showPreview, setShowPreview] = useState(true)
   const [isSolutionExpanded, setIsSolutionExpanded] = useState(false)
+
+  // Track if form has been modified
+  const hasUnsavedChanges = useMemo(() => {
+    return (
+      formData.question_text !== '' ||
+      formData.option_a !== '' ||
+      formData.option_b !== '' ||
+      formData.option_c !== '' ||
+      formData.option_d !== '' ||
+      formData.solution_text !== '' ||
+      formData.book_source !== '' ||
+      formData.chapter_name !== '' ||
+      formData.question_number_in_book !== '' ||
+      formData.exam_metadata !== '' ||
+      formData.admin_tags.length > 0 ||
+      formData.difficulty !== ''
+    )
+  }, [formData])
+
+  // Use the unsaved changes hook
+  const { confirmNavigation } = useUnsavedChanges({ 
+    hasUnsavedChanges 
+  })
 
   // Load filter options
   useEffect(() => {
@@ -407,16 +431,19 @@ export function NewQuestionForm() {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link href="/content">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="hover:bg-slate-100 transition-colors duration-200"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back
-                </Button>
-              </Link>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="hover:bg-slate-100 transition-colors duration-200"
+                onClick={async () => {
+                  if (await confirmNavigation()) {
+                    router.push('/content')
+                  }
+                }}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
                   <Sparkles className="h-5 w-5 text-white" />

@@ -4,6 +4,7 @@ import { Sidebar } from './sidebar'
 import { Header } from './header'
 import { MobileProvider, useMobile } from '@/lib/contexts/mobile-context'
 import { QuestionsProvider } from '@/lib/contexts/questions-context'
+import { NavigationBlockerProvider } from '@/lib/contexts/navigation-blocker-context'
 // import { usePerformanceMonitor } from '@/lib/utils/performance-monitor'
 import { useEffect } from 'react'
 
@@ -55,11 +56,13 @@ function MainLayoutContent({ children }: MainLayoutProps) {
 
 export function MainLayout({ children }: MainLayoutProps) {
   return (
-    <MobileProvider>
-      <QuestionsProvider>
-        <MainLayoutContent>{children}</MainLayoutContent>
-      </QuestionsProvider>
-    </MobileProvider>
+    <NavigationBlockerProvider>
+      <MobileProvider>
+        <QuestionsProvider>
+          <MainLayoutContent>{children}</MainLayoutContent>
+        </QuestionsProvider>
+      </MobileProvider>
+    </NavigationBlockerProvider>
   )
 }
 
