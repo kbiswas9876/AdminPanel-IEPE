@@ -19,7 +19,6 @@ export interface AdminProfileData {
   role: string
   status: string
   last_login_at: string | null
-  created_at: string
   updated_at: string | null
 }
 
@@ -141,7 +140,7 @@ export async function updateAdminProfile(updates: Partial<AdminProfileData>): Pr
     }
     
     // Remove fields that shouldn't be updated directly
-    const { id, created_at, role, status, ...allowedUpdates } = updates as any
+    const { id, role, status, ...allowedUpdates } = updates as any
     
     const { error } = await adminSupabase
       .from('user_profiles')
