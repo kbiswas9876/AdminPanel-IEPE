@@ -25,9 +25,9 @@ export async function getNotifications(limit: number = 10): Promise<Notification
     // Get pending user registrations
     const { data: pendingUsers, error: usersError } = await supabase
       .from('user_profiles')
-      .select('id, full_name, email, created_at')
+      .select('id, full_name, email, updated_at')
       .eq('status', 'pending')
-      .order('created_at', { ascending: false })
+      .order('updated_at', { ascending: false })
       .limit(5)
 
     if (!usersError && pendingUsers) {
@@ -47,7 +47,7 @@ export async function getNotifications(limit: number = 10): Promise<Notification
           type: 'user_registration',
           title: 'New User Registration',
           message: `${user.full_name} (${user.email}) has registered and is awaiting approval`,
-          timestamp: new Date(user.created_at),
+          timestamp: new Date(user.updated_at),
           read: !!readStatus,
           metadata: { userId: user.id }
         })
