@@ -22,6 +22,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Get initial session
+    // NOTE: Using getSession() here is acceptable for client-side UI state only
+    // All server-side actions use getUser() for secure authentication
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setUser(session?.user ?? null)
@@ -29,6 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
 
     // Listen for auth changes
+    // onAuthStateChange events are trusted as they come from the auth state manager
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {

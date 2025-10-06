@@ -163,10 +163,10 @@ export async function getCurrentAdminProfile(): Promise<AdminProfile | null> {
     const supabase = await createClient()
     const adminSupabase = createAdminClient()
     
-    // Get current session
-    const { data: { session } } = await supabase.auth.getSession()
+    // Get current user (secure method)
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
     
-    if (!session?.user) {
+    if (userError || !user) {
       return null
     }
     
@@ -174,7 +174,7 @@ export async function getCurrentAdminProfile(): Promise<AdminProfile | null> {
     const { data: profile } = await adminSupabase
       .from('user_profiles')
       .select('id, full_name, role')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single()
     
     if (!profile) {
@@ -183,10 +183,10 @@ export async function getCurrentAdminProfile(): Promise<AdminProfile | null> {
     
     return {
       id: profile.id,
-      email: session.user.email || 'Unknown',
+      email: user.email || 'Unknown',
       full_name: profile.full_name,
       role: profile.role,
-      last_login: session.user.last_sign_in_at || undefined
+      last_login: user.last_sign_in_at || undefined
     }
   } catch (error) {
     console.error('Error fetching admin profile:', error)
