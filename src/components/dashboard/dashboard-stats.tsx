@@ -19,6 +19,8 @@ import {
   Shield
 } from 'lucide-react'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
+import { StatCardV2 } from './stat-card-v2'
 import type { DashboardStats, RecentActivity } from '@/lib/actions/dashboard'
 
 interface DashboardStatsProps {
@@ -108,55 +110,55 @@ function StatCard({
   )
 }
 
-// Activity Item Component
-function ActivityItem({ activity }: { activity: RecentActivity }) {
+// Activity Item Component V2 - Enhanced with animations
+function ActivityItem({ activity, index }: { activity: RecentActivity; index: number }) {
   const getActivityIcon = (type: RecentActivity['type']) => {
     switch (type) {
       case 'user_registration':
-        return <UserPlus className="h-4 w-4 text-green-600" />
+        return <UserPlus className="h-5 w-5 text-green-600" />
       case 'error_report':
-        return <AlertCircle className="h-4 w-4 text-red-600" />
+        return <AlertCircle className="h-5 w-5 text-red-600" />
       case 'question_added':
-        return <FileText className="h-4 w-4 text-blue-600" />
+        return <FileText className="h-5 w-5 text-blue-600" />
       case 'test_created':
-        return <BookOpen className="h-4 w-4 text-purple-600" />
+        return <BookOpen className="h-5 w-5 text-purple-600" />
       case 'bulk_import':
-        return <FileText className="h-4 w-4 text-indigo-600" />
+        return <FileText className="h-5 w-5 text-indigo-600" />
       case 'admin_login':
-        return <LogIn className="h-4 w-4 text-cyan-600" />
+        return <LogIn className="h-5 w-5 text-cyan-600" />
       case 'admin_profile_update':
-        return <Edit className="h-4 w-4 text-orange-600" />
+        return <Edit className="h-5 w-5 text-orange-600" />
       case 'admin_settings_change':
-        return <Settings className="h-4 w-4 text-teal-600" />
+        return <Settings className="h-5 w-5 text-teal-600" />
       case 'admin_action':
-        return <Shield className="h-4 w-4 text-slate-600" />
+        return <Shield className="h-5 w-5 text-slate-600" />
       default:
-        return <Clock className="h-4 w-4 text-gray-600" />
+        return <Clock className="h-5 w-5 text-gray-600" />
     }
   }
 
   const getActivityIconBg = (type: RecentActivity['type']) => {
     switch (type) {
       case 'user_registration':
-        return 'bg-green-100'
+        return 'bg-gradient-to-br from-green-100 to-emerald-100'
       case 'error_report':
-        return 'bg-red-100'
+        return 'bg-gradient-to-br from-red-100 to-rose-100'
       case 'question_added':
-        return 'bg-blue-100'
+        return 'bg-gradient-to-br from-blue-100 to-cyan-100'
       case 'test_created':
-        return 'bg-purple-100'
+        return 'bg-gradient-to-br from-purple-100 to-fuchsia-100'
       case 'bulk_import':
-        return 'bg-indigo-100'
+        return 'bg-gradient-to-br from-indigo-100 to-blue-100'
       case 'admin_login':
-        return 'bg-cyan-100'
+        return 'bg-gradient-to-br from-cyan-100 to-sky-100'
       case 'admin_profile_update':
-        return 'bg-orange-100'
+        return 'bg-gradient-to-br from-orange-100 to-amber-100'
       case 'admin_settings_change':
-        return 'bg-teal-100'
+        return 'bg-gradient-to-br from-teal-100 to-cyan-100'
       case 'admin_action':
-        return 'bg-slate-100'
+        return 'bg-gradient-to-br from-slate-100 to-gray-100'
       default:
-        return 'bg-gray-100'
+        return 'bg-gradient-to-br from-gray-100 to-slate-100'
     }
   }
 
@@ -171,77 +173,166 @@ function ActivityItem({ activity }: { activity: RecentActivity }) {
     return date.toLocaleDateString()
   }
 
-  // Check if this is an admin activity
   const isAdminActivity = activity.type.startsWith('admin_')
 
   return (
-    <div className="flex items-start space-x-4 p-6 hover:bg-white/30 transition-all duration-300 group/activity">
-      <div className={`flex-shrink-0 mt-1 p-3 rounded-xl shadow-sm transition-all duration-300 group-hover/activity:scale-105 ${getActivityIconBg(activity.type)}`}>
-        {getActivityIcon(activity.type)}
-      </div>
-      <div className="flex-1 min-w-0 space-y-2">
-        <div className="flex items-center space-x-2">
-          <p className="font-semibold text-slate-900 group-hover/activity:text-slate-700 transition-colors">
-            {activity.title}
-          </p>
-          {isAdminActivity && (
-            <Badge className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 text-xs px-2 py-0">
-              Admin
-            </Badge>
-          )}
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.05 }}
+      className="group/item relative"
+    >
+      <div className="flex items-start space-x-4 p-4 hover:bg-slate-50/80 rounded-2xl transition-all duration-200 cursor-pointer">
+        {/* Enhanced Icon */}
+        <motion.div
+          whileHover={{ scale: 1.1, rotate: 5 }}
+          className={`flex-shrink-0 flex h-11 w-11 items-center justify-center rounded-xl shadow-sm transition-all duration-300 ${getActivityIconBg(activity.type)}`}
+        >
+          {getActivityIcon(activity.type)}
+        </motion.div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 flex-wrap mb-1">
+                <p className="font-bold text-slate-900 group-hover/item:text-blue-600 transition-colors">
+                  {activity.title}
+                </p>
+                {isAdminActivity && (
+                  <Badge className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-xs border-0 shadow-sm">
+                    Admin
+                  </Badge>
+                )}
+              </div>
+              
+              <p className="text-sm text-slate-600 leading-relaxed mb-2">
+                {activity.description}
+              </p>
+              
+              <div className="flex items-center gap-3 text-xs">
+                <span className="text-slate-500 font-medium flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  {formatTimestamp(activity.timestamp)}
+                </span>
+                
+                {activity.adminEmail && (
+                  <>
+                    <span className="text-slate-300">•</span>
+                    <span className="text-blue-600 font-semibold">
+                      {activity.adminEmail}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-        <p className="text-sm text-slate-600 leading-relaxed">
-          {activity.description}
-        </p>
-        <div className="flex items-center space-x-2 text-xs text-slate-500 font-medium">
-          <span>{formatTimestamp(activity.timestamp)}</span>
-          {activity.adminEmail && (
-            <>
-              <span>•</span>
-              <span className="text-blue-600">{activity.adminEmail}</span>
-            </>
-          )}
+
+        {/* Hover indicator */}
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity">
+          <ArrowRight className="h-4 w-4 text-blue-600" />
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }
 
-// Premium Dashboard Stats Component with Enhanced Layout
+// Premium Dashboard Stats Component with Enhanced Layout V2
 export function DashboardStats({ stats }: DashboardStatsProps) {
+  // Mock trend data and sparklines (in production, fetch from backend)
+  const mockTrends = {
+    pendingUsers: stats.pendingUsers > 0 ? { direction: 'up' as const, percentage: 25, label: 'vs last week' } : undefined,
+    newErrorReports: stats.newErrorReports > 0 ? { direction: 'up' as const, percentage: 15, label: 'vs last week' } : undefined,
+    activeStudents: { direction: 'up' as const, percentage: 8, label: 'vs last week' },
+    totalQuestions: { direction: 'up' as const, percentage: 12, label: 'vs last month' }
+  }
+
+  const mockSparklines = {
+    pendingUsers: [0, 1, 0, 2, 1, 2, stats.pendingUsers],
+    newErrorReports: [2, 1, 3, 2, 1, 1, stats.newErrorReports],
+    activeStudents: [1, 1, 1, 2, 2, 2, stats.activeStudents],
+    totalQuestions: [15, 16, 17, 18, 19, 19, stats.totalQuestions]
+  }
+
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  }
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
+  }
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-      <StatCard
-        title="Pending Approvals"
-        value={stats.pendingUsers}
-        icon={Users}
-        href="/students"
-        isUrgent={stats.pendingUsers > 0}
-        description="Users awaiting approval"
-      />
-      <StatCard
-        title="New Error Reports"
-        value={stats.newErrorReports}
-        icon={AlertTriangle}
-        href="/reports"
-        isUrgent={stats.newErrorReports > 0}
-        description="Unresolved error reports"
-      />
-      <StatCard
-        title="Active Students"
-        value={stats.activeStudents}
-        icon={UserCheck}
-        href="/students"
-        description="Currently active users"
-      />
-      <StatCard
-        title="Total Questions"
-        value={stats.totalQuestions}
-        icon={BookOpen}
-        href="/content"
-        description="Questions in database"
-      />
-    </div>
+    <motion.div
+      variants={container}
+      initial="hidden"
+      animate="show"
+      className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6"
+    >
+      <motion.div variants={item}>
+        <StatCardV2
+          title="Pending Approvals"
+          value={stats.pendingUsers}
+          description="Users awaiting approval"
+          trend={mockTrends.pendingUsers}
+          sparklineData={mockSparklines.pendingUsers}
+          icon={Users}
+          iconBg="bg-gradient-to-br from-orange-500 to-red-500"
+          href="/students?status=pending"
+          isUrgent={stats.pendingUsers > 0}
+          badge={stats.pendingUsers > 0 ? { text: 'Action Required', variant: 'error' } : undefined}
+        />
+      </motion.div>
+
+      <motion.div variants={item}>
+        <StatCardV2
+          title="New Error Reports"
+          value={stats.newErrorReports}
+          description="Unresolved issues"
+          trend={mockTrends.newErrorReports}
+          sparklineData={mockSparklines.newErrorReports}
+          icon={AlertTriangle}
+          iconBg="bg-gradient-to-br from-red-500 to-rose-500"
+          href="/reports?status=new"
+          isUrgent={stats.newErrorReports > 0}
+          badge={stats.newErrorReports > 0 ? { text: 'Needs Attention', variant: 'error' } : undefined}
+        />
+      </motion.div>
+
+      <motion.div variants={item}>
+        <StatCardV2
+          title="Active Students"
+          value={stats.activeStudents}
+          description="Currently active users"
+          trend={mockTrends.activeStudents}
+          sparklineData={mockSparklines.activeStudents}
+          icon={UserCheck}
+          iconBg="bg-gradient-to-br from-green-500 to-teal-500"
+          href="/students"
+        />
+      </motion.div>
+
+      <motion.div variants={item}>
+        <StatCardV2
+          title="Total Questions"
+          value={stats.totalQuestions}
+          description="Questions in database"
+          trend={mockTrends.totalQuestions}
+          sparklineData={mockSparklines.totalQuestions}
+          icon={BookOpen}
+          iconBg="bg-gradient-to-br from-blue-500 to-indigo-600"
+          href="/content"
+        />
+      </motion.div>
+    </motion.div>
   )
 }
 
@@ -285,9 +376,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
           ) : (
             <div className="divide-y divide-slate-200/30">
               {activities.map((activity, index) => (
-                <div key={activity.id} className="group/item">
-                  <ActivityItem activity={activity} />
-                </div>
+                <ActivityItem key={activity.id} activity={activity} index={index} />
               ))}
             </div>
           )}
