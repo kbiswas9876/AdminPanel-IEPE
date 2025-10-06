@@ -82,7 +82,7 @@ export function UnifiedEditor({
       }),
       ResizableImage.configure({
         HTMLAttributes: {
-          class: 'editor-image rounded-lg shadow-sm max-w-full h-auto',
+          class: 'editor-image rounded-lg shadow-sm max-w-full h-auto editor-image-align-left',
         },
       }),
       Link.configure({

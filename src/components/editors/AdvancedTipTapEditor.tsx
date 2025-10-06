@@ -107,7 +107,7 @@ export function AdvancedTipTapEditor({
       TableCell,
       Image.configure({
         HTMLAttributes: {
-          class: 'editor-image rounded-lg shadow-sm max-w-full h-auto',
+          class: 'editor-image rounded-lg shadow-sm max-w-full h-auto editor-image-align-left',
         },
       }),
       Link.configure({
@@ -131,7 +131,11 @@ export function AdvancedTipTapEditor({
         placeholder,
       }),
       LatexLineBreakInputExtension,
-      ResizableImage,
+      ResizableImage.configure({
+        HTMLAttributes: {
+          class: 'editor-image rounded-lg shadow-sm max-w-full h-auto editor-image-align-left',
+        },
+      }),
     ],
     content: processContent(value),
     onCreate: ({ editor }) => {

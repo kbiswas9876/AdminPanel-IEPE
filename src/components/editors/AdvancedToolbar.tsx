@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import { Editor } from '@tiptap/react'
 import { Button } from '@/components/ui/button'
 import {
@@ -58,6 +58,50 @@ export function AdvancedToolbar({
   const [showMathPalette, setShowMathPalette] = useState(false)
 
   if (!editor) return null
+
+  const baseImageClass = 'editor-image rounded-lg shadow-sm max-w-full h-auto'
+  const imageAlignmentClasses = {
+    left: 'editor-image-align-left',
+    center: 'editor-image-align-center',
+    right: 'editor-image-align-right',
+  }
+
+  const currentImageClasses = useMemo(() => {
+    const attrs = editor.getAttributes('image') ?? {}
+    const classAttr = (attrs.class as string) || (attrs.className as string) || ''
+    const tokens = classAttr.split(/\s+/).filter(Boolean)
+    const merged = new Set(baseImageClass.split(' '))
+    tokens.forEach(token => merged.add(token))
+    return merged
+  }, [editor.state.selection.from, editor.state.selection.to])
+
+  const setImageAlignment = useCallback((alignment: keyof typeof imageAlignmentClasses) => {
+    if (!editor.isActive('image')) return
+
+    const classes = new Set(currentImageClasses)
+    Object.values(imageAlignmentClasses).forEach(cls => classes.delete(cls))
+    classes.add(imageAlignmentClasses[alignment])
+
+    if (!classes.has('editor-image')) {
+      baseImageClass.split(' ').forEach(cls => classes.add(cls))
+    }
+
+    const classString = Array.from(classes).join(' ')
+
+    editor
+      .chain()
+      .focus()
+      .updateAttributes('image', {
+        class: classString,
+        className: classString,
+      })
+      .run()
+  }, [editor, currentImageClasses])
+
+  const isImageAligned = useCallback((alignment: keyof typeof imageAlignmentClasses) => {
+    const classes = currentImageClasses
+    return classes.has(imageAlignmentClasses[alignment])
+  }, [currentImageClasses])
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -413,6 +457,33 @@ export function AdvancedToolbar({
       ],
     },
   ]
+
+  // Add image alignment section only when an image is selected
+  if (editor.isActive('image')) {
+    toolbarSections.push({
+      title: 'Image Alignment',
+      items: [
+        {
+          icon: AlignLeft,
+          onClick: () => setImageAlignment('left'),
+          active: isImageAligned('left'),
+          title: 'Align image left',
+        },
+        {
+          icon: AlignCenter,
+          onClick: () => setImageAlignment('center'),
+          active: isImageAligned('center'),
+          title: 'Align image center',
+        },
+        {
+          icon: AlignRight,
+          onClick: () => setImageAlignment('right'),
+          active: isImageAligned('right'),
+          title: 'Align image right',
+        },
+      ],
+    })
+  }
 
   if (compact) {
     // Simplified toolbar for compact mode

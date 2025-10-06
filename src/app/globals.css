@@ -198,6 +198,25 @@
   .p-ios-xs { padding: 4px; }
   .p-ios-sm { padding: 8px; }
   .p-ios-md { padding: 16px; }
+
+  /* Image Alignment Utilities */
+  img.editor-image-align-left {
+    display: block;
+    margin-left: 0;
+    margin-right: auto;
+  }
+
+  img.editor-image-align-center {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  img.editor-image-align-right {
+    display: block;
+    margin-left: auto;
+    margin-right: 0;
+  }
   .p-ios-lg { padding: 24px; }
   .p-ios-xl { padding: 32px; }
   .p-ios-2xl { padding: 48px; }

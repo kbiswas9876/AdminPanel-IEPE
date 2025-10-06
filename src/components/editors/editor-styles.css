@@ -160,6 +160,52 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+.ProseMirror .editor-image-align-left {
+  display: block;
+  margin-left: 0;
+  margin-right: auto;
+  text-align: left;
+}
+
+.ProseMirror .editor-image-align-center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  clear: both;
+}
+
+.ProseMirror .editor-image-align-right {
+  display: block;
+  margin-left: auto;
+  margin-right: 0;
+  text-align: right;
+  clear: both;
+}
+
+.html-renderer .editor-image-align-left {
+  display: block;
+  margin-left: 0;
+  margin-right: auto;
+  text-align: left;
+}
+
+.html-renderer .editor-image-align-center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  clear: both;
+}
+
+.html-renderer .editor-image-align-right {
+  display: block;
+  margin-left: auto;
+  margin-right: 0;
+  text-align: right;
+  clear: both;
+}
+
 /* Loading state for images */
 .image-loading {
   background-color: #f0f0f0;
