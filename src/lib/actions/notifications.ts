@@ -2,14 +2,30 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 
+export type NotificationPriority = 'critical' | 'high' | 'normal' | 'low'
+export type NotificationCategory = 'user_management' | 'content' | 'testing' | 'system' | 'error'
+
+export interface NotificationAction {
+  label: string
+  action: string
+  variant: 'primary' | 'secondary' | 'destructive'
+  params?: Record<string, unknown>
+}
+
 export interface Notification {
   id: number
-  type: 'user_registration' | 'error_report' | 'question_added' | 'test_published' | 'system_alert'
+  type: 'user_registration' | 'error_report' | 'question_added' | 'test_published' | 'system_alert' | 'bulk_import' | 'admin_action'
   title: string
   message: string
   timestamp: Date
   read: boolean
+  priority: NotificationPriority
+  category: NotificationCategory
   metadata?: Record<string, unknown>
+  actionable?: boolean
+  actions?: NotificationAction[]
+  imageUrl?: string
+  groupKey?: string
 }
 
 export async function getNotifications(limit: number = 10): Promise<Notification[]> {
@@ -49,7 +65,15 @@ export async function getNotifications(limit: number = 10): Promise<Notification
           message: `${user.full_name} (${user.email}) has registered and is awaiting approval`,
           timestamp: new Date(user.updated_at),
           read: !!readStatus,
-          metadata: { userId: user.id }
+          priority: 'high',
+          category: 'user_management',
+          actionable: true,
+          actions: [
+            { label: 'Approve', action: 'approve_user', variant: 'primary', params: { userId: user.id } },
+            { label: 'Reject', action: 'reject_user', variant: 'destructive', params: { userId: user.id } }
+          ],
+          metadata: { userId: user.id },
+          groupKey: 'user_registrations'
         })
       }
     }
@@ -81,7 +105,15 @@ export async function getNotifications(limit: number = 10): Promise<Notification
           message: report.title || 'New error report submitted',
           timestamp: new Date(report.created_at),
           read: !!readStatus,
-          metadata: { reportId: report.id }
+          priority: 'critical',
+          category: 'error',
+          actionable: true,
+          actions: [
+            { label: 'View', action: 'view_error', variant: 'primary', params: { reportId: report.id } },
+            { label: 'Dismiss', action: 'dismiss_error', variant: 'secondary', params: { reportId: report.id } }
+          ],
+          metadata: { reportId: report.id },
+          groupKey: 'error_reports'
         })
       }
     }
@@ -115,7 +147,11 @@ export async function getNotifications(limit: number = 10): Promise<Notification
         message: `${recentQuestions.length} new question${recentQuestions.length > 1 ? 's' : ''} added to the question bank`,
         timestamp: new Date(recentQuestions[0].created_at),
         read: !!readStatus,
-        metadata: { questionCount: recentQuestions.length }
+        priority: 'normal',
+        category: 'content',
+        actionable: false,
+        metadata: { questionCount: recentQuestions.length },
+        groupKey: 'content_updates'
       })
     }
 
@@ -147,7 +183,14 @@ export async function getNotifications(limit: number = 10): Promise<Notification
           message: `"${test.title}" has been published and is now available`,
           timestamp: new Date(test.created_at),
           read: !!readStatus,
-          metadata: { testId: test.id }
+          priority: 'normal',
+          category: 'testing',
+          actionable: true,
+          actions: [
+            { label: 'View Test', action: 'view_test', variant: 'primary', params: { testId: test.id } }
+          ],
+          metadata: { testId: test.id },
+          groupKey: 'test_updates'
         })
       }
     }
