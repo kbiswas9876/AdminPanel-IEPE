@@ -186,61 +186,96 @@ export function Sidebar() {
       role="navigation"
       aria-label="Main navigation"
     >
-      {/* Enhanced Header - Toggle Button with Animation */}
+      {/* Ultra-Premium Header with Branding */}
       <div className={cn(
-        "sidebar-logo-top border-b backdrop-blur-sm flex items-center justify-between",
+        "sidebar-logo-top border-b backdrop-blur-xl flex items-center justify-between relative overflow-hidden",
         isMobile 
           ? "h-16 px-ios-md border-slate-200/60 bg-white/80" 
           : isCollapsed 
-            ? "h-16 px-3 border-slate-700/30 bg-gradient-to-r from-slate-800/40 to-slate-700/20"
-            : "h-16 px-6 border-slate-700/30 bg-gradient-to-r from-slate-800/40 to-slate-700/20"
+            ? "h-16 px-3 border-slate-700/30 bg-gradient-to-br from-slate-800/60 via-slate-800/40 to-slate-900/60"
+            : "h-16 px-6 border-slate-700/30 bg-gradient-to-br from-slate-800/60 via-slate-800/40 to-slate-900/60"
       )}>
-        {/* Professional State-Changing Toggle Button */}
+        {/* Subtle animated gradient overlay */}
         {!isMobile && (
-          <motion.button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className={cn(
-              "sidebar-toggle-button p-2.5 rounded-xl transition-all duration-200",
-              "hover:bg-slate-700/50 active:bg-slate-700/70",
-              "text-slate-400 hover:text-white",
-              "focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-slate-800"
-            )}
-            aria-label={isCollapsed ? "Expand sidebar (Ctrl+B)" : "Collapse sidebar (Ctrl+B)"}
-            aria-expanded={!isCollapsed}
-            title={isCollapsed ? "Expand sidebar (Ctrl+B)" : "Collapse sidebar (Ctrl+B)"}
-          >
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={isCollapsed ? 'collapsed' : 'expanded'}
-                initial={{ rotate: -90, opacity: 0 }}
-                animate={{ rotate: 0, opacity: 1 }}
-                exit={{ rotate: 90, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="w-5 h-5"
-              >
-                {isCollapsed ? (
-                  <ChevronRight className="h-5 w-5" />
-                ) : (
-                  <ChevronLeft className="h-5 w-5" />
-                )}
-              </motion.div>
-            </AnimatePresence>
-          </motion.button>
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-blue-500/5"
+            animate={{
+              x: ['-100%', '100%'],
+            }}
+            transition={{
+              duration: 8,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+          />
         )}
 
-        {/* Keyboard Shortcut Hint */}
-        {isExpanded && !isMobile && (
-          <motion.div
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-xs text-slate-500 font-medium"
-          >
-            Ctrl+B
-          </motion.div>
-        )}
+        <div className="relative z-10 flex items-center justify-between w-full">
+          {/* Logo or Branding (Collapsed State) */}
+          {!isMobile && isCollapsed && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex items-center justify-center w-full"
+            >
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 shadow-lg flex items-center justify-center">
+                <Shield className="h-4 w-4 text-white" />
+              </div>
+            </motion.div>
+          )}
+
+          {/* Expanded State - Toggle + Brand */}
+          {!isMobile && !isCollapsed && (
+            <>
+              <motion.button
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                whileHover={{ scale: 1.05, backgroundColor: 'rgba(71, 85, 105, 0.5)' }}
+                whileTap={{ scale: 0.95 }}
+                className={cn(
+                  "sidebar-toggle-button p-2.5 rounded-xl transition-all duration-200 relative group",
+                  "bg-slate-700/30 hover:bg-slate-700/50 active:bg-slate-700/70",
+                  "text-slate-400 hover:text-white border border-slate-600/30 hover:border-slate-500/50",
+                  "focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-slate-800",
+                  "shadow-lg hover:shadow-xl"
+                )}
+                aria-label="Collapse sidebar (Ctrl+B)"
+                aria-expanded={!isCollapsed}
+                title="Collapse sidebar (Ctrl+B)"
+              >
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key="expanded"
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="w-5 h-5"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </motion.div>
+                </AnimatePresence>
+                
+                {/* Tooltip on hover */}
+                <div className="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50">
+                  Ctrl+B
+                </div>
+              </motion.button>
+
+              {/* Premium Brand Badge */}
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-slate-700/40 to-slate-600/30 border border-slate-600/30 backdrop-blur-sm"
+              >
+                <div className="h-6 w-6 rounded-md bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 shadow-md flex items-center justify-center">
+                  <Shield className="h-3.5 w-3.5 text-white" />
+                </div>
+                <span className="text-xs font-bold text-slate-200 tracking-wide">ADMIN</span>
+              </motion.div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Enhanced Navigation Section with Groups and Animations */}
@@ -254,17 +289,21 @@ export function Sidebar() {
       )}>
         {navigationGroups.map((group, groupIndex) => (
           <div key={group.title} className="space-y-2">
-            {/* Group Title */}
+            {/* Premium Group Title with Divider */}
             {isExpanded && !isMobile && (
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: groupIndex * 0.05 }}
-                className="px-3 pt-2 pb-1"
+                className="px-3 pt-3 pb-2 flex items-center gap-2"
               >
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  {group.title}
-                </span>
+                <div className="flex-1 flex items-center gap-2">
+                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-700/50 to-transparent" />
+                  <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-[0.15em] px-2 py-1 rounded-md bg-slate-800/40 border border-slate-700/30">
+                    {group.title}
+                  </span>
+                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-700/50 to-transparent" />
+                </div>
               </motion.div>
             )}
 
@@ -292,23 +331,37 @@ export function Sidebar() {
                     onClick={(e) => handleNavigation(e, item.href)}
                     aria-current={isActive ? 'page' : undefined}
                     className={cn(
-                      'group relative flex items-center transition-all duration-200',
+                      'group relative flex items-center transition-all duration-300 overflow-hidden',
                       isMobile 
                         ? 'rounded-lg px-ios-md py-ios-md text-body touch-target' 
                         : isCollapsed
-                          ? 'rounded-lg px-2 py-3 justify-center w-full'
-                          : 'rounded-xl px-4 py-3.5 text-sm',
+                          ? 'rounded-xl px-2 py-3 justify-center w-full'
+                          : 'rounded-2xl px-4 py-3.5 text-sm',
                       isActive
                         ? isMobile 
                           ? 'bg-blue-500 text-white apple-shadow-sm' 
-                          : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
+                          : 'bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 text-white shadow-xl shadow-blue-500/40 scale-[1.02] border border-blue-400/30'
                         : isMobile
                           ? 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                           : isCollapsed
-                            ? 'text-slate-400 hover:bg-slate-700/50 hover:text-white hover:scale-105'
-                            : 'text-slate-300 hover:bg-slate-700/50 hover:text-white hover:scale-[1.02]'
+                            ? 'text-slate-400 bg-slate-800/30 hover:bg-slate-700/60 hover:text-white hover:scale-105 hover:shadow-lg border border-transparent hover:border-slate-600/50'
+                            : 'text-slate-300 bg-slate-800/30 hover:bg-slate-700/60 hover:text-white hover:scale-[1.02] hover:shadow-lg border border-transparent hover:border-slate-600/50'
                     )}
                   >
+                    {/* Glow effect on active item */}
+                    {isActive && !isMobile && (
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-transparent to-blue-400/20"
+                        animate={{
+                          x: ['-100%', '100%'],
+                        }}
+                        transition={{
+                          duration: 3,
+                          repeat: Infinity,
+                          ease: "linear"
+                        }}
+                      />
+                    )}
                     {/* Enhanced Icon Container */}
                     <motion.div
                       whileHover={{ scale: 1.1, rotate: 5 }}
@@ -369,16 +422,22 @@ export function Sidebar() {
                           )}
                         </div>
                         
-                        {/* Keyboard Shortcut Badge */}
+                        {/* Premium Glassmorphic Shortcut Badge */}
                         {!isMobile && item.shortcut && (
-                          <div className={cn(
-                            "ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors duration-200",
-                            isActive
-                              ? "bg-white/20 text-white"
-                              : "bg-slate-700/40 text-slate-400 group-hover:bg-slate-600/50 group-hover:text-slate-200"
-                          )}>
-                            {item.shortcut}
-                          </div>
+                          <motion.div
+                            whileHover={{ scale: 1.1, rotate: -5 }}
+                            className={cn(
+                              "ml-2 px-2 py-1 rounded-md text-[10px] font-extrabold transition-all duration-200 backdrop-blur-sm border shadow-sm relative overflow-hidden",
+                              isActive
+                                ? "bg-white/20 text-white border-white/30 shadow-white/20"
+                                : "bg-slate-700/50 text-slate-400 border-slate-600/30 group-hover:bg-slate-600/60 group-hover:text-slate-200 group-hover:border-slate-500/50 group-hover:shadow-md"
+                            )}
+                          >
+                            <span className="relative z-10">{item.shortcut}</span>
+                            {isActive && (
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                            )}
+                          </motion.div>
                         )}
                       </motion.div>
                     )}
@@ -420,10 +479,14 @@ export function Sidebar() {
           className={cn("pt-3", isMobile ? "pt-2" : "pt-3")}
         >
           {isExpanded && !isMobile && (
-            <div className="px-3 pb-1">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                Monitoring
-              </span>
+            <div className="px-3 pb-2 flex items-center gap-2">
+              <div className="flex-1 flex items-center gap-2">
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-700/50 to-transparent" />
+                <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-[0.15em] px-2 py-1 rounded-md bg-slate-800/40 border border-slate-700/30">
+                  Monitoring
+                </span>
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-700/50 to-transparent" />
+              </div>
             </div>
           )}
           <ErrorReportsNavItem />
