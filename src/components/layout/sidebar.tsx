@@ -210,16 +210,16 @@ export function Sidebar() {
           />
         )}
 
-        <div className="relative z-10 flex items-center justify-between w-full">
+        <div className="relative z-10 flex items-center justify-center w-full">
           {/* Logo or Branding (Collapsed State) */}
           {!isMobile && isCollapsed && (
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="flex items-center justify-center w-full"
+              className="flex items-center justify-center"
             >
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 shadow-lg flex items-center justify-center">
-                <Shield className="h-4 w-4 text-white" />
+              <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 shadow-lg flex items-center justify-center ring-2 ring-slate-700/50">
+                <Shield className="h-5 w-5 text-white" />
               </div>
             </motion.div>
           )}

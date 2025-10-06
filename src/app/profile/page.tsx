@@ -389,13 +389,15 @@ export default function ProfilePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div>
-                  <Label className="text-xs text-gray-500">Member Since</Label>
-                  <p className="font-medium text-gray-900 flex items-center space-x-2 mt-1">
-                    <Calendar className="h-4 w-4 text-gray-400" />
-                    <span>{new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
-                  </p>
-                </div>
+                {profile.updated_at && (
+                  <div>
+                    <Label className="text-xs text-gray-500">Profile Updated</Label>
+                    <p className="font-medium text-gray-900 flex items-center space-x-2 mt-1">
+                      <Calendar className="h-4 w-4 text-gray-400" />
+                      <span>{new Date(profile.updated_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+                    </p>
+                  </div>
+                )}
                 {profile.last_login_at && (
                   <div>
                     <Label className="text-xs text-gray-500">Last Login</Label>
@@ -403,12 +405,6 @@ export default function ProfilePage() {
                       <Clock className="h-4 w-4 text-gray-400" />
                       <span>{formatTimestamp(profile.last_login_at)}</span>
                     </p>
-                  </div>
-                )}
-                {profile.updated_at && (
-                  <div>
-                    <Label className="text-xs text-gray-500">Last Updated</Label>
-                    <p className="font-medium text-gray-900">{formatTimestamp(profile.updated_at)}</p>
                   </div>
                 )}
               </CardContent>
