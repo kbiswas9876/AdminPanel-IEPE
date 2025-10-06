@@ -43,13 +43,14 @@ export function StatCardV2({
   const chartData = sparklineData?.map(v => ({ value: v })) || []
 
   return (
-    <Link href={href} className="group block">
+    <Link href={href} className="group block h-full">
       <motion.div
         whileHover={{ y: -4, scale: 1.02 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
         className={cn(
-          "relative overflow-hidden rounded-3xl border-2 p-6",
+          "relative overflow-hidden rounded-3xl border-2 p-6 h-full min-h-[280px]",
           "bg-white backdrop-blur-xl shadow-lg transition-all duration-300",
+          "flex flex-col justify-between",
           isUrgent
             ? "border-orange-200 bg-gradient-to-br from-orange-50/50 to-red-50/30 hover:border-orange-300"
             : "border-slate-200/60 hover:border-blue-300/60",
@@ -83,68 +84,71 @@ export function StatCardV2({
           )}
         </div>
 
-        {/* Main Stat Number */}
-        <div className="mb-4">
-          <div className={cn(
-            "text-5xl font-extrabold tabular-nums tracking-tight",
-            isUrgent ? "text-orange-900" : "text-slate-900"
-          )}>
-            <AnimatedNumber value={value} />
+        {/* Content Container - flex-grow to push sparkline to bottom */}
+        <div className="flex-grow">
+          {/* Main Stat Number */}
+          <div className="mb-4">
+            <div className={cn(
+              "text-5xl font-extrabold tabular-nums tracking-tight",
+              isUrgent ? "text-orange-900" : "text-slate-900"
+            )}>
+              <AnimatedNumber value={value} />
+            </div>
+
+            {/* Trend Indicator */}
+            {trend && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex items-center space-x-2 mt-3"
+              >
+                {trend.direction === 'up' ? (
+                  <div className="flex items-center justify-center h-6 w-6 rounded-lg bg-green-100">
+                    <TrendingUp className="h-4 w-4 text-green-600" />
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-6 w-6 rounded-lg bg-red-100">
+                    <TrendingDown className="h-4 w-4 text-red-600" />
+                  </div>
+                )}
+                <span className={cn(
+                  "text-sm font-bold",
+                  trend.direction === 'up' ? "text-green-600" : "text-red-600"
+                )}>
+                  {trend.direction === 'up' ? '+' : '-'}{trend.percentage}%
+                </span>
+                <span className="text-xs text-slate-500 font-medium">
+                  {trend.label}
+                </span>
+              </motion.div>
+            )}
           </div>
 
-          {/* Trend Indicator */}
-          {trend && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="flex items-center space-x-2 mt-3"
-            >
-              {trend.direction === 'up' ? (
-                <div className="flex items-center justify-center h-6 w-6 rounded-lg bg-green-100">
-                  <TrendingUp className="h-4 w-4 text-green-600" />
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-6 w-6 rounded-lg bg-red-100">
-                  <TrendingDown className="h-4 w-4 text-red-600" />
-                </div>
-              )}
-              <span className={cn(
-                "text-sm font-bold",
-                trend.direction === 'up' ? "text-green-600" : "text-red-600"
-              )}>
-                {trend.direction === 'up' ? '+' : '-'}{trend.percentage}%
-              </span>
-              <span className="text-xs text-slate-500 font-medium">
-                {trend.label}
-              </span>
-            </motion.div>
-          )}
+          {/* Title & Description */}
+          <div className="mb-4">
+            <h3 className={cn(
+              "text-base font-bold mb-1 transition-colors",
+              isUrgent ? "text-orange-800 group-hover:text-orange-600" : "text-slate-900 group-hover:text-blue-600"
+            )}>
+              {title}
+            </h3>
+            {description && (
+              <p className="text-sm text-slate-600 font-medium">
+                {description}
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* Title & Description */}
-        <div className="mb-4">
-          <h3 className={cn(
-            "text-base font-bold mb-1 transition-colors",
-            isUrgent ? "text-orange-800 group-hover:text-orange-600" : "text-slate-900 group-hover:text-blue-600"
-          )}>
-            {title}
-          </h3>
-          {description && (
-            <p className="text-sm text-slate-600 font-medium">
-              {description}
-            </p>
-          )}
-        </div>
-
-        {/* Sparkline Chart */}
-        {sparklineData && sparklineData.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="h-12 -mx-2 mt-4 opacity-60 group-hover:opacity-100 transition-opacity"
-          >
+        {/* Sparkline Chart - Always renders to maintain consistent height */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="h-12 -mx-2 mt-4 opacity-60 group-hover:opacity-100 transition-opacity flex-shrink-0"
+        >
+          {sparklineData && sparklineData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData}>
                 <Line
@@ -157,8 +161,10 @@ export function StatCardV2({
                 />
               </LineChart>
             </ResponsiveContainer>
-          </motion.div>
-        )}
+          ) : (
+            <div className="h-full" />
+          )}
+        </motion.div>
 
         {/* Hover Arrow */}
         <motion.div
