@@ -59,15 +59,15 @@ export function TestManagement({ onCreateTest }: TestManagementProps = {}) {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'draft':
-        return <FileText className="h-3.5 w-3.5 text-gray-500" />
+        return <FileText className="h-6 w-6 text-white" />
       case 'scheduled':
-        return <Calendar className="h-3.5 w-3.5 text-blue-500" />
+        return <Calendar className="h-6 w-6 text-white" />
       case 'live':
-        return <Clock className="h-3.5 w-3.5 text-green-500" />
+        return <Clock className="h-6 w-6 text-white" />
       case 'completed':
-        return <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+        return <CheckCircle className="h-6 w-6 text-white" />
       default:
-        return <AlertCircle className="h-3.5 w-3.5 text-gray-500" />
+        return <AlertCircle className="h-6 w-6 text-white" />
     }
   }
 
@@ -146,122 +146,127 @@ export function TestManagement({ onCreateTest }: TestManagementProps = {}) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="px-6 py-6">
       {tests.length === 0 ? (
-        <div className="text-center py-12">
-          <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Mock Tests Created</h3>
-          <p className="text-gray-500 mb-4">Get started by creating your first mock test.</p>
+        <div className="text-center py-20">
+          <div className="mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mb-6">
+            <FileText className="h-10 w-10 text-gray-400" />
+          </div>
+          <h3 className="text-2xl font-bold text-gray-900 mb-3">No Mock Tests Yet</h3>
+          <p className="text-gray-600 mb-8 max-w-md mx-auto">Get started by creating your first competitive assessment and watch your students excel.</p>
           <Button 
             onClick={onCreateTest}
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group"
+            className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 text-white font-bold px-8 py-6 h-auto shadow-2xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 rounded-xl text-base"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-            <Plus className="h-4 w-4 mr-2 relative z-10" />
-            <span className="relative z-10">Create Your First Test</span>
+            <Plus className="h-5 w-5 mr-2" />
+            Create Your First Test
           </Button>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
           {tests.map((test) => (
-            <Card key={test.id} className="group border border-gray-200/50 rounded-xl overflow-hidden bg-white hover:bg-white hover:shadow-lg hover:shadow-gray-200/30 transition-all duration-200 w-full hover:-translate-y-0.5">
-              <CardContent className="p-0">
-                <div className="flex flex-col">
-                  {/* Premium Header Section */}
-                  <div className="px-5 py-4 border-b border-gray-100/60">
-                    <div className="flex items-start justify-between">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900 tracking-tight leading-tight">
-                            {test.name}
-                          </h3>
-                          {getStatusBadge(test)}
-                        </div>
-                        {test.description && (
-                          <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 font-medium">
-                            {test.description}
-                          </p>
+            <Card 
+              key={test.id} 
+              className="group relative overflow-hidden bg-white border border-gray-200/60 rounded-2xl hover:shadow-2xl hover:shadow-gray-300/30 transition-all duration-300 hover:-translate-y-2 hover:border-gray-300 flex flex-col"
+            >
+              {/* Gradient Background Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-purple-50/30 to-pink-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+              
+              <CardContent className="p-0 flex flex-col h-full relative z-10">
+                {/* Header with Status Badge */}
+                <div className="px-6 pt-6 pb-4">
+                  <div className="flex items-start justify-between mb-3">
+                    {getStatusBadge(test)}
+                    <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/25 group-hover:shadow-xl group-hover:shadow-indigo-500/40 transition-all duration-300">
+                      {getStatusIcon(test.status)}
+                    </div>
+                  </div>
+                  
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2 leading-tight group-hover:text-indigo-600 transition-colors duration-200">
+                    {test.name}
+                  </h3>
+                  
+                  {test.description && (
+                    <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+                      {test.description}
+                    </p>
+                  )}
+                </div>
+
+                {/* Stats Grid */}
+                <div className="px-6 py-4 bg-gradient-to-br from-gray-50/80 to-gray-100/40 border-y border-gray-100">
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Questions */}
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-md">
+                        <FileText className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Questions</p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {typeof test.question_count === 'number' ? test.question_count : '—'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Duration */}
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-md">
+                        <Clock className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Duration</p>
+                        <p className="text-2xl font-bold text-gray-900">{test.total_time_minutes}<span className="text-sm font-medium text-gray-500 ml-1">min</span></p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Timeline Section */}
+                <div className="px-6 py-4 flex-grow">
+                  <div className="space-y-3">
+                    {/* Start Time */}
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+                        <Calendar className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0.5">Start Time</p>
+                        <p className="text-sm font-bold text-gray-900 truncate">
+                          {test.start_time ? formatDateTime(test.start_time) : 'Not scheduled'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* End Time */}
+                    <div className="flex items-center gap-3">
+                      <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${
+                        isPerpetualTest(test) ? 'bg-green-100' : 'bg-orange-100'
+                      }`}>
+                        {isPerpetualTest(test) ? (
+                          <Clock className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <Calendar className="h-4 w-4 text-orange-600" />
                         )}
                       </div>
-                    </div>
-                  </div>
-                  
-                  {/* Premium Minimalist Meta Section */}
-                  <div className="px-5 py-4 bg-gray-50/40">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                      {/* Questions */}
-                      <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                          <FileText className="h-4 w-4 text-blue-600" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Questions</p>
-                          <p className="text-lg font-bold text-gray-900">
-                            {typeof test.question_count === 'number' ? test.question_count : '—'}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Duration */}
-                      <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
-                          <Clock className="h-4 w-4 text-green-600" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Duration</p>
-                          <p className="text-lg font-bold text-gray-900">{test.total_time_minutes}m</p>
-                        </div>
-                      </div>
-
-                      {/* Start Time */}
-                      <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
-                          <Calendar className="h-4 w-4 text-purple-600" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Start</p>
-                          <p className="text-sm font-semibold text-gray-900 truncate">
-                            {test.start_time ? formatDateTime(test.start_time) : 'Not set'}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* End Time */}
-                      <div className="flex items-center gap-3">
-                        <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${
-                          isPerpetualTest(test) 
-                            ? 'bg-green-50' 
-                            : 'bg-orange-50'
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0.5">End Time</p>
+                        <p className={`text-sm font-bold truncate ${
+                          isPerpetualTest(test) ? 'text-green-700' : 'text-gray-900'
                         }`}>
-                          {isPerpetualTest(test) ? (
-                            <Clock className="h-4 w-4 text-green-600" />
-                          ) : (
-                            <Calendar className="h-4 w-4 text-orange-600" />
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">End</p>
-                          <p className={`text-sm font-semibold truncate ${
-                            isPerpetualTest(test) 
-                              ? 'text-green-700' 
-                              : 'text-gray-900'
-                          }`}>
-                            {isPerpetualTest(test) ? 'Perpetual' : formatDateTime(test.end_time)}
-                          </p>
-                        </div>
+                          {isPerpetualTest(test) ? '∞ Perpetual' : formatDateTime(test.end_time)}
+                        </p>
                       </div>
                     </div>
                   </div>
-                  
-                  {/* Premium Actions Section */}
-                  <div className="px-5 py-3 bg-white border-t border-gray-100/60">
-                    <div className="flex items-center justify-end">
-                      <TestActions 
-                        test={test} 
-                        onAction={handleTestAction}
-                      />
-                    </div>
-                  </div>
+                </div>
+
+                {/* Actions Footer */}
+                <div className="px-6 py-4 bg-white border-t border-gray-100">
+                  <TestActions 
+                    test={test} 
+                    onAction={handleTestAction}
+                  />
                 </div>
               </CardContent>
             </Card>

@@ -1,11 +1,20 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { DashboardStats, RecentActivity } from './dashboard-stats'
-import { getDashboardStats, getRecentActivity, type DashboardStats as DashboardStatsType, type RecentActivity as RecentActivityType } from '@/lib/actions/dashboard'
+import { 
+  getDashboardStats, 
+  getRecentActivity, 
+  getCurrentAdminProfile,
+  getQuickActionBadges,
+  type DashboardStats as DashboardStatsType, 
+  type RecentActivity as RecentActivityType,
+  type AdminProfile,
+  type QuickActionBadges
+} from '@/lib/actions/dashboard'
 import { dataCache, CACHE_KEYS, CACHE_TTL, cacheUtils } from '@/lib/cache/data-cache'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { 
   Plus, 
   BookOpen, 
@@ -14,10 +23,7 @@ import {
   RefreshCw,
   LayoutDashboard,
   Zap,
-  Activity,
-  Database,
-  Globe,
-  HardDrive
+  FileText
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -29,14 +35,29 @@ export function DashboardPage() {
     totalQuestions: 0
   })
   const [activities, setActivities] = useState<RecentActivityType[]>([])
+  const [adminProfile, setAdminProfile] = useState<AdminProfile | null>(null)
+  const [quickActionBadges, setQuickActionBadges] = useState<QuickActionBadges>({
+    pendingApprovals: 0,
+    newErrors: 0,
+    draftTests: 0,
+    recentQuestions: 0
+  })
   const [loading, setLoading] = useState(true)
+
+  // Dynamic greeting based on time of day
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours()
+    if (hour < 12) return 'Good Morning'
+    if (hour < 18) return 'Good Afternoon'
+    return 'Good Evening'
+  }, [])
 
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true)
       
       // Use cached data if available, otherwise fetch
-      const [statsData, activitiesData] = await Promise.all([
+      const [statsData, activitiesData, profileData, badgesData] = await Promise.all([
         cacheUtils.getOrFetch(
           CACHE_KEYS.DASHBOARD_STATS,
           () => getDashboardStats(),
@@ -46,11 +67,15 @@ export function DashboardPage() {
           CACHE_KEYS.RECENT_ACTIVITY,
           () => getRecentActivity(7),
           CACHE_TTL.SHORT
-        )
+        ),
+        getCurrentAdminProfile(),
+        getQuickActionBadges()
       ])
       
       setStats(statsData)
       setActivities(activitiesData)
+      setAdminProfile(profileData)
+      setQuickActionBadges(badgesData)
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
     } finally {
@@ -69,8 +94,8 @@ export function DashboardPage() {
         {
           key: CACHE_KEYS.STUDENT_USERS_WITH_EMAILS,
           fetchFn: async () => {
-            // This will be implemented in the students page optimization
-            return []
+            const { getUsersByStatus } = await import('@/lib/actions/students')
+            return await getUsersByStatus()
           },
           ttl: CACHE_TTL.MEDIUM
         }
@@ -202,18 +227,28 @@ export function DashboardPage() {
           
           <div className="relative z-10 p-8 lg:p-12">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-6 lg:space-y-0">
-              {/* Streamlined Header Content */}
+              {/* Personalized Header Content */}
               <div className="flex items-start space-x-6">
                 <div className="flex h-18 w-18 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/25 ring-1 ring-white/20 group-hover:scale-105 transition-all duration-500">
                   <LayoutDashboard className="h-9 w-9 text-white" />
                 </div>
                 <div className="space-y-2">
                   <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight">
-                    Dashboard
+                    {greeting}{adminProfile?.full_name && `, ${adminProfile.full_name.split(' ')[0]}`}
                   </h1>
                   <p className="text-lg text-slate-600 font-medium">
-                    Your command center
+                    Welcome to your admin dashboard
                   </p>
+                  {adminProfile?.last_login && (
+                    <p className="text-sm text-slate-500">
+                      Last login: {new Date(adminProfile.last_login).toLocaleString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  )}
                 </div>
               </div>
               
@@ -264,49 +299,89 @@ export function DashboardPage() {
                 
                 <div className="space-y-3">
                   <Link href="/content/new" className="group/action block">
-                    <div className="flex items-center space-x-4 p-4 rounded-2xl bg-slate-50/80 border border-slate-200/50 shadow-rounded-2xl hover:shadow-rounded-xl hover:bg-white transition-all duration-300">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/20">
-                        <Plus className="h-5 w-5 text-blue-600" />
+                    <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/80 border border-slate-200/50 shadow-rounded-2xl hover:shadow-rounded-xl hover:bg-white transition-all duration-300">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/20">
+                          <Plus className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-slate-900 group-hover/action:text-blue-600 transition-colors">Add New Question</div>
+                          <div className="text-sm text-slate-600">Create content</div>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <div className="font-semibold text-slate-900 group-hover/action:text-blue-600 transition-colors">Add New Question</div>
-                        <div className="text-sm text-slate-600">Create content</div>
-                      </div>
+                      {quickActionBadges.recentQuestions > 0 && (
+                        <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-0 shadow-sm">
+                          {quickActionBadges.recentQuestions} added this week
+                        </Badge>
+                      )}
                     </div>
                   </Link>
                   
                   <Link href="/tests/new" className="group/action block">
-                    <div className="flex items-center space-x-4 p-4 rounded-2xl bg-slate-50/80 border border-slate-200/50 shadow-rounded-2xl hover:shadow-rounded-xl hover:bg-white transition-all duration-300">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500/10 to-purple-600/10 border border-purple-500/20">
-                        <BookOpen className="h-5 w-5 text-purple-600" />
+                    <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/80 border border-slate-200/50 shadow-rounded-2xl hover:shadow-rounded-xl hover:bg-white transition-all duration-300">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500/10 to-purple-600/10 border border-purple-500/20">
+                          <BookOpen className="h-5 w-5 text-purple-600" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-slate-900 group-hover/action:text-purple-600 transition-colors">Create Mock Test</div>
+                          <div className="text-sm text-slate-600">Build assessments</div>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <div className="font-semibold text-slate-900 group-hover/action:text-purple-600 transition-colors">Create Mock Test</div>
-                        <div className="text-sm text-slate-600">Build assessments</div>
-                      </div>
+                      {quickActionBadges.draftTests > 0 && (
+                        <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200 border-0 shadow-sm">
+                          {quickActionBadges.draftTests} draft{quickActionBadges.draftTests > 1 ? 's' : ''}
+                        </Badge>
+                      )}
                     </div>
                   </Link>
                   
                   <Link href="/students" className="group/action block">
-                    <div className="flex items-center space-x-4 p-4 rounded-2xl bg-slate-50/80 border border-slate-200/50 shadow-rounded-2xl hover:shadow-rounded-xl hover:bg-white transition-all duration-300">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500/10 to-green-600/10 border border-green-500/20">
-                        <Users className="h-5 w-5 text-green-600" />
+                    <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/80 border border-slate-200/50 shadow-rounded-2xl hover:shadow-rounded-xl hover:bg-white transition-all duration-300">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500/10 to-green-600/10 border border-green-500/20">
+                          <Users className="h-5 w-5 text-green-600" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-slate-900 group-hover/action:text-green-600 transition-colors">Manage Students</div>
+                          <div className="text-sm text-slate-600">User management</div>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <div className="font-semibold text-slate-900 group-hover/action:text-green-600 transition-colors">Manage Students</div>
-                        <div className="text-sm text-slate-600">User management</div>
-                      </div>
+                      {quickActionBadges.pendingApprovals > 0 && (
+                        <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-200 border-0 shadow-sm animate-pulse">
+                          {quickActionBadges.pendingApprovals} pending
+                        </Badge>
+                      )}
                     </div>
                   </Link>
                   
                   <Link href="/reports" className="group/action block">
-                    <div className="flex items-center space-x-4 p-4 rounded-2xl bg-slate-50/80 border border-slate-200/50 shadow-rounded-2xl hover:shadow-rounded-xl hover:bg-white transition-all duration-300">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-red-500/10 to-red-600/10 border border-red-500/20">
-                        <AlertTriangle className="h-5 w-5 text-red-600" />
+                    <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/80 border border-slate-200/50 shadow-rounded-2xl hover:shadow-rounded-xl hover:bg-white transition-all duration-300">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-red-500/10 to-red-600/10 border border-red-500/20">
+                          <AlertTriangle className="h-5 w-5 text-red-600" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-slate-900 group-hover/action:text-red-600 transition-colors">View Error Reports</div>
+                          <div className="text-sm text-slate-600">System monitoring</div>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <div className="font-semibold text-slate-900 group-hover/action:text-red-600 transition-colors">View Error Reports</div>
-                        <div className="text-sm text-slate-600">System monitoring</div>
+                      {quickActionBadges.newErrors > 0 && (
+                        <Badge className="bg-red-100 text-red-700 hover:bg-red-200 border-0 shadow-sm animate-pulse">
+                          {quickActionBadges.newErrors} new
+                        </Badge>
+                      )}
+                    </div>
+                  </Link>
+                  
+                  <Link href="/content" className="group/action block">
+                    <div className="flex items-center space-x-4 p-4 rounded-2xl bg-slate-50/80 border border-slate-200/50 shadow-rounded-2xl hover:shadow-rounded-xl hover:bg-white transition-all duration-300">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/10 to-indigo-600/10 border border-indigo-500/20">
+                        <FileText className="h-5 w-5 text-indigo-600" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-slate-900 group-hover/action:text-indigo-600 transition-colors">Browse Questions</div>
+                        <div className="text-sm text-slate-600">View question bank</div>
                       </div>
                     </div>
                   </Link>
@@ -314,74 +389,6 @@ export function DashboardPage() {
               </div>
             </div>
 
-            {/* Premium System Status Card */}
-            <div className="group relative overflow-visible">
-              <div className="absolute inset-0 rounded-3xl bg-white backdrop-blur-xl border border-slate-200/60 shadow-rounded-3xl" />
-              {/* Inner highlight */}
-              <div className="absolute inset-[1px] rounded-3xl bg-gradient-to-b from-white/50 to-transparent" />
-              
-              <div className="relative z-10 p-6">
-                <div className="flex items-center space-x-4 mb-6">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg shadow-green-500/25">
-                    <Activity className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900">System Status</h3>
-                    <p className="text-sm text-slate-600">All systems operational</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-green-50/80 to-emerald-50/80 border border-green-200/40">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100/80">
-                        <Database className="h-4 w-4 text-green-600" />
-                      </div>
-                      <span className="font-medium text-slate-800">Database</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="relative">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        <div className="absolute inset-0 w-2 h-2 bg-green-400/30 rounded-full animate-ping"></div>
-                      </div>
-                      <span className="text-sm font-semibold text-green-600">Online</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-green-50/80 to-emerald-50/80 border border-green-200/40">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100/80">
-                        <Globe className="h-4 w-4 text-green-600" />
-                      </div>
-                      <span className="font-medium text-slate-800">API Services</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="relative">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        <div className="absolute inset-0 w-2 h-2 bg-green-400/30 rounded-full animate-ping"></div>
-                      </div>
-                      <span className="text-sm font-semibold text-green-600">Online</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-green-50/80 to-emerald-50/80 border border-green-200/40">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100/80">
-                        <HardDrive className="h-4 w-4 text-green-600" />
-                      </div>
-                      <span className="font-medium text-slate-800">File Storage</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="relative">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        <div className="absolute inset-0 w-2 h-2 bg-green-400/30 rounded-full animate-ping"></div>
-                      </div>
-                      <span className="text-sm font-semibold text-green-600">Online</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>

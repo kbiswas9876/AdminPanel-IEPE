@@ -1,6 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 
 // Dashboard statistics interface
 export interface DashboardStats {
@@ -8,6 +9,15 @@ export interface DashboardStats {
   newErrorReports: number
   activeStudents: number
   totalQuestions: number
+}
+
+// Admin profile interface
+export interface AdminProfile {
+  id: string
+  email: string
+  full_name: string | null
+  role: string
+  last_login?: string
 }
 
 // Recent activity interface
@@ -144,6 +154,96 @@ export async function getRecentActivity(limit: number = 7): Promise<RecentActivi
   } catch (error) {
     console.error('Error fetching recent activity:', error)
     return []
+  }
+}
+
+// Get current admin profile
+export async function getCurrentAdminProfile(): Promise<AdminProfile | null> {
+  try {
+    const supabase = await createClient()
+    const adminSupabase = createAdminClient()
+    
+    // Get current session
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    if (!session?.user) {
+      return null
+    }
+    
+    // Get profile from database
+    const { data: profile } = await adminSupabase
+      .from('user_profiles')
+      .select('id, full_name, role')
+      .eq('id', session.user.id)
+      .single()
+    
+    if (!profile) {
+      return null
+    }
+    
+    return {
+      id: profile.id,
+      email: session.user.email || 'Unknown',
+      full_name: profile.full_name,
+      role: profile.role,
+      last_login: session.user.last_sign_in_at || undefined
+    }
+  } catch (error) {
+    console.error('Error fetching admin profile:', error)
+    return null
+  }
+}
+
+// Get enhanced dashboard stats with badge counts for quick actions
+export interface QuickActionBadges {
+  pendingApprovals: number
+  newErrors: number
+  draftTests: number
+  recentQuestions: number
+}
+
+export async function getQuickActionBadges(): Promise<QuickActionBadges> {
+  try {
+    const supabase = createAdminClient()
+    
+    const [
+      pendingApprovalsResult,
+      newErrorsResult,
+      draftTestsResult,
+      recentQuestionsResult
+    ] = await Promise.all([
+      supabase
+        .from('user_profiles')
+        .select('id', { count: 'exact' })
+        .eq('status', 'pending'),
+      supabase
+        .from('error_reports')
+        .select('id', { count: 'exact' })
+        .eq('status', 'new'),
+      supabase
+        .from('tests')
+        .select('id', { count: 'exact' })
+        .eq('status', 'draft'),
+      supabase
+        .from('questions')
+        .select('id', { count: 'exact' })
+        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+    ])
+    
+    return {
+      pendingApprovals: pendingApprovalsResult.count || 0,
+      newErrors: newErrorsResult.count || 0,
+      draftTests: draftTestsResult.count || 0,
+      recentQuestions: recentQuestionsResult.count || 0
+    }
+  } catch (error) {
+    console.error('Error fetching quick action badges:', error)
+    return {
+      pendingApprovals: 0,
+      newErrors: 0,
+      draftTests: 0,
+      recentQuestions: 0
+    }
   }
 }
 
