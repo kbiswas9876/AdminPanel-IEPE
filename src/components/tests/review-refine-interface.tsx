@@ -14,6 +14,7 @@ import { ClientOnlyAdvancedTipTapEditor } from '@/components/editors/ClientOnlyA
 import { LivePreviewRenderer } from '@/components/editors/LivePreviewRenderer'
 import type { Question, TestQuestionSlot } from '@/lib/types'
 import { UnifiedQuestionBankModal } from './unified-question-bank-modal'
+import { TestPreviewModal } from './test-preview-modal'
 
 interface ReviewRefineInterfaceProps {
   questions: TestQuestionSlot[]
@@ -64,6 +65,7 @@ export default function ReviewRefineInterface({
     marksPerCorrect: number
     penaltyPerIncorrect: number
   }>({ marksPerCorrect: 1, penaltyPerIncorrect: 0.25 })
+  const [showPreviewModal, setShowPreviewModal] = useState(false)
 
 
   const handleShuffleQuestions = async () => {
@@ -323,6 +325,16 @@ export default function ReviewRefineInterface({
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Question
+              </Button>
+              
+              <Button 
+                onClick={() => setShowPreviewModal(true)}
+                disabled={questions.length === 0}
+                variant="outline"
+                className="border-2 border-blue-200 hover:border-blue-300 hover:bg-blue-50 text-blue-700 hover:text-blue-800 shadow-sm hover:shadow-md transition-all duration-300 text-sm px-4 py-2.5 h-10 rounded-xl font-semibold min-w-[140px]"
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                Preview Test
               </Button>
               
               <Button 
@@ -1141,6 +1153,18 @@ export default function ReviewRefineInterface({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Test Preview Modal */}
+      <TestPreviewModal
+        open={showPreviewModal}
+        onClose={() => setShowPreviewModal(false)}
+        testName="Test Preview"
+        description="This is how your test will appear to students"
+        totalTimeMinutes={globalMarkingRules.marksPerCorrect * questions.length}
+        marksPerCorrect={globalMarkingRules.marksPerCorrect}
+        penaltyPerIncorrect={globalMarkingRules.penaltyPerIncorrect}
+        questions={questions}
+      />
     </div>
   )
 }

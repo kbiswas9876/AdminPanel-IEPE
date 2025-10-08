@@ -6,12 +6,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { ArrowLeft, Save, Calendar, FileText, BarChart3, Tag, Layers } from 'lucide-react'
+import { ArrowLeft, Save, Calendar, FileText, BarChart3, Tag, Layers, Eye } from 'lucide-react'
 import { UnifiedPublishModal, type UnifiedPublishData } from './unified-publish-modal'
 import { saveTestFromForm } from '@/lib/actions/tests'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import type { TestQuestionSlot } from '@/lib/types'
+import { TestPreviewModal } from './test-preview-modal'
 
 interface TestFinalizationStageProps {
   questions: TestQuestionSlot[]
@@ -67,6 +68,7 @@ export function TestFinalizationStage({
   const [showPublishModal, setShowPublishModal] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [showPreviewModal, setShowPreviewModal] = useState(false)
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
@@ -490,6 +492,15 @@ export function TestFinalizationStage({
               </CardHeader>
               <CardContent className="p-6 space-y-4">
             <Button
+              onClick={() => setShowPreviewModal(true)}
+              variant="outline"
+              className="w-full h-12 border-2 border-blue-200 hover:border-blue-300 hover:bg-blue-50 text-blue-700 hover:text-blue-800 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 font-medium"
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Preview Test
+            </Button>
+
+            <Button
               onClick={handleSaveAsDraft}
               disabled={isSaving}
                   className="w-full h-12 bg-gradient-to-r from-gray-600 to-slate-600 hover:from-gray-700 hover:to-slate-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
@@ -528,6 +539,18 @@ export function TestFinalizationStage({
         onConfirm={handlePublishConfirm}
         isProcessing={isSaving}
         mode="new"
+      />
+
+      {/* Test Preview Modal */}
+      <TestPreviewModal
+        open={showPreviewModal}
+        onClose={() => setShowPreviewModal(false)}
+        testName={formData.name || "Test Preview"}
+        description={formData.description}
+        totalTimeMinutes={formData.totalTimeMinutes}
+        marksPerCorrect={globalMarkingRules.marksPerCorrect}
+        penaltyPerIncorrect={globalMarkingRules.penaltyPerIncorrect}
+        questions={questions}
       />
     </div>
   )

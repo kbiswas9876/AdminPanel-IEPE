@@ -110,102 +110,124 @@ export function TestActions({ test, onAction }: TestActionsProps) {
   })()
 
   return (
-    <div className="flex items-center flex-wrap gap-2">
-      {/* Edit Button - Allowed if start_time is in the future */}
-      {canEdit && (
-        <Link href={`/tests/edit/${test.id}`}>
-          <Button variant="outline" size="sm" className="h-8 px-4 text-sm font-medium bg-white hover:bg-blue-50 border-blue-200 hover:border-blue-300 text-blue-700 hover:text-blue-800 transition-colors duration-150 shadow-sm rounded-lg">
-            <Edit className="h-4 w-4 mr-2" />
-            <span>Edit</span>
+    <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center gap-2">
+        {/* Edit Button - Allowed if start_time is in the future */}
+        {canEdit && (
+          <Link href={`/tests/edit/${test.id}`}>
+            <Button variant="ghost" size="sm" className="h-8 px-3 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-150">
+              <Edit className="h-4 w-4 mr-1.5" strokeWidth={1.5} />
+              <span>Edit</span>
+            </Button>
+          </Link>
+        )}
+
+        {/* Publish Button - Allow publishing drafts */}
+        {test.status === 'draft' && (
+          <PublishTestDialog 
+            test={test} 
+            onPublish={handlePublish}
+          />
+        )}
+
+        {/* View Results Button - Only for Completed tests */}
+        {test.status === 'completed' && (
+          <Button variant="ghost" size="sm" disabled className="h-8 px-3 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-150">
+            <BarChart3 className="h-4 w-4 mr-1.5" strokeWidth={1.5} />
+            <span>Results</span>
           </Button>
-        </Link>
-      )}
+        )}
+      </div>
 
-      {/* Publish Button - Allow publishing drafts */}
-      {test.status === 'draft' && (
-        <PublishTestDialog 
-          test={test} 
-          onPublish={handlePublish}
-        />
-      )}
+      <div className="flex items-center gap-1">
+        {/* More actions dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-150">
+              <MoreHorizontal className="h-4 w-4" strokeWidth={1.5} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={handleOpenPremiumExporter}>
+              <FileDown className="h-4 w-4 mr-2" strokeWidth={1.5} />
+              Export PDF
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleClone}>
+              <Copy className="h-4 w-4 mr-2" strokeWidth={1.5} />
+              Clone Test
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-      {/* View Results Button - Only for Completed tests */}
-      {test.status === 'completed' && (
-        <Button variant="outline" size="sm" disabled className="h-8 px-4 text-sm font-medium bg-white hover:bg-green-50 border-green-200 hover:border-green-300 text-green-700 hover:text-green-800 transition-colors duration-150 shadow-sm rounded-lg">
-          <BarChart3 className="h-4 w-4 mr-2" />
-          <span>Results</span>
-        </Button>
-      )}
-
-      {/* Delete Button - For all tests */}
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="h-8 px-4 text-sm font-medium bg-white text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 hover:text-red-700 transition-colors duration-150 shadow-sm rounded-lg"
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            <span>Delete</span>
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Mock Test</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this mock test?
-              <br />
-              <br />
-              <strong>Test:</strong> {test.name}
-              <br />
-              <strong>Status:</strong> {test.status}
-              <br />
-              <br />
-              <span className="text-red-600 font-medium">
-                ⚠️ This action cannot be undone. All test data and question mappings will be permanently deleted.
-              </span>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        {/* Delete Button - Icon only, in dropdown-style */}
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-150"
             >
-              {isDeleting ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                'Delete Test'
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              <Trash2 className="h-4 w-4" strokeWidth={1.5} />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent className="sm:max-w-md rounded-2xl border-gray-200 shadow-xl">
+            <AlertDialogHeader className="space-y-4">
+              {/* Warning Icon */}
+              <div className="mx-auto flex items-center justify-center w-14 h-14 rounded-full bg-red-100">
+                <Trash2 className="h-7 w-7 text-red-600" strokeWidth={1.5} />
+              </div>
+              
+              <AlertDialogTitle className="text-center text-xl font-semibold text-gray-900">
+                Delete Mock Test?
+              </AlertDialogTitle>
+              
+              <AlertDialogDescription className="text-center space-y-4">
+                <p className="text-sm text-gray-600">
+                  This will permanently delete the mock test and all associated data.
+                </p>
+                
+                {/* Test Info Display */}
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 text-left">
+                  <p className="text-xs text-gray-500 mb-1">Test Name</p>
+                  <p className="text-sm font-semibold text-gray-900">{test.name}</p>
+                  <p className="text-xs text-gray-500 mt-2 mb-1">Status</p>
+                  <p className="text-sm text-gray-700">{test.status}</p>
+                </div>
 
-      {/* More actions dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-gray-100 transition-colors duration-150 rounded-lg">
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem 
-            onClick={handleOpenPremiumExporter}
-          >
-            <FileDown className="h-4 w-4 mr-2" />
-            Export PDF
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleClone}>
-            <Copy className="h-4 w-4 mr-2" />
-            Clone Test
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+                {/* Warning Message */}
+                <div className="flex items-start gap-3 p-3 bg-red-50 rounded-xl border border-red-200">
+                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-red-100 flex items-center justify-center mt-0.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-red-600" />
+                  </div>
+                  <p className="text-xs text-red-900 text-left flex-1">
+                    This action cannot be undone. All test data and question mappings will be permanently deleted.
+                  </p>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            
+            <AlertDialogFooter className="flex-col sm:flex-col gap-2 sm:gap-2">
+              <AlertDialogAction
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="w-full h-11 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-all duration-200 shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete Test'
+                )}
+              </AlertDialogAction>
+              <AlertDialogCancel className="w-full h-11 mt-0 bg-gray-100 hover:bg-gray-200 text-gray-900 border-0 rounded-xl font-medium transition-all duration-200">
+                Cancel
+              </AlertDialogCancel>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
 
 
       {/* Premium PDF Exporter */}

@@ -4,15 +4,11 @@ import { useState, useEffect } from 'react'
 import { getAllTestsWithCounts } from '@/lib/actions/tests'
 import type { Test } from '@/lib/supabase/admin'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { 
   Plus, 
   FileText, 
   Calendar, 
-  Clock, 
-  CheckCircle, 
-  AlertCircle
+  Clock
 } from 'lucide-react'
 import { TestActions } from './test-actions'
 
@@ -56,60 +52,51 @@ export function TestManagement({ onCreateTest }: TestManagementProps = {}) {
     fetchTests()
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'draft':
-        return <FileText className="h-6 w-6 text-white" />
-      case 'scheduled':
-        return <Calendar className="h-6 w-6 text-white" />
-      case 'live':
-        return <Clock className="h-6 w-6 text-white" />
-      case 'completed':
-        return <CheckCircle className="h-6 w-6 text-white" />
-      default:
-        return <AlertCircle className="h-6 w-6 text-white" />
-    }
-  }
-
   const getStatusBadge = (test: Test) => {
     if (isPerpetualTest(test)) {
       return (
-        <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-200 text-xs px-3 py-1 rounded-full font-medium border-0 shadow-sm transition-colors duration-150">
-          Perpetual
-        </Badge>
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 rounded-lg border border-emerald-100 flex-shrink-0">
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+          <span className="text-xs font-medium text-emerald-700">Perpetual</span>
+        </span>
       )
     }
     
     switch (test.status) {
       case 'draft':
         return (
-          <Badge variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs px-3 py-1 rounded-full font-medium border-0 shadow-sm transition-colors duration-150">
-            Draft
-          </Badge>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 rounded-lg border border-gray-200 flex-shrink-0">
+            <div className="w-1.5 h-1.5 rounded-full bg-gray-600" />
+            <span className="text-xs font-medium text-gray-700">Draft</span>
+          </span>
         )
       case 'scheduled':
         return (
-          <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs px-3 py-1 rounded-full font-medium border-0 shadow-sm transition-colors duration-150">
-            Scheduled
-          </Badge>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 rounded-lg border border-blue-100 flex-shrink-0">
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+            <span className="text-xs font-medium text-blue-700">Scheduled</span>
+          </span>
         )
       case 'live':
         return (
-          <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-200 text-xs px-3 py-1 rounded-full font-medium border-0 shadow-sm transition-colors duration-150">
-            Live
-          </Badge>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 rounded-lg border border-emerald-100 flex-shrink-0">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+            <span className="text-xs font-medium text-emerald-700">Live</span>
+          </span>
         )
       case 'completed':
         return (
-          <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-200 text-xs px-3 py-1 rounded-full font-medium border-0 shadow-sm transition-colors duration-150">
-            Completed
-          </Badge>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 rounded-lg border border-gray-200 flex-shrink-0">
+            <div className="w-1.5 h-1.5 rounded-full bg-gray-600" />
+            <span className="text-xs font-medium text-gray-700">Completed</span>
+          </span>
         )
       default:
         return (
-          <Badge variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs px-3 py-1 rounded-full font-medium border-0 shadow-sm transition-colors duration-150">
-            Unknown
-          </Badge>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 rounded-lg border border-gray-200 flex-shrink-0">
+            <div className="w-1.5 h-1.5 rounded-full bg-gray-600" />
+            <span className="text-xs font-medium text-gray-700">Unknown</span>
+          </span>
         )
     }
   }
@@ -131,145 +118,123 @@ export function TestManagement({ onCreateTest }: TestManagementProps = {}) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      <div className="flex items-center justify-center h-80">
+        <div className="relative">
+          <div className="w-10 h-10 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin"></div>
+        </div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-md p-4">
-        <p className="text-red-800">Error: {error}</p>
+      <div className="flex items-start gap-3 p-4 rounded-xl bg-red-50 border border-red-100">
+        <div className="flex-shrink-0 w-5 h-5 rounded-full bg-red-100 flex items-center justify-center mt-0.5">
+          <div className="w-1.5 h-1.5 rounded-full bg-red-600" />
+        </div>
+        <p className="text-sm text-red-900 flex-1">{error}</p>
       </div>
     )
   }
 
   return (
-    <div className="px-6 py-6">
+    <div>
       {tests.length === 0 ? (
-        <div className="text-center py-20">
-          <div className="mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mb-6">
-            <FileText className="h-10 w-10 text-gray-400" />
+        <div className="text-center py-16">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white border border-gray-200 shadow-sm mb-4">
+            <FileText className="h-8 w-8 text-gray-400" strokeWidth={1.5} />
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-3">No Mock Tests Yet</h3>
-          <p className="text-gray-600 mb-8 max-w-md mx-auto">Get started by creating your first competitive assessment and watch your students excel.</p>
+          <h3 className="text-base font-medium text-gray-900 mb-1">No mock tests yet</h3>
+          <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">Get started by creating your first competitive assessment</p>
           <Button 
             onClick={onCreateTest}
-            className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 text-white font-bold px-8 py-6 h-auto shadow-2xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 rounded-xl text-base"
+            className="h-11 px-6 bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-medium transition-all duration-200 shadow-sm hover:shadow"
           >
-            <Plus className="h-5 w-5 mr-2" />
+            <Plus className="h-4 w-4 mr-2" strokeWidth={2} />
             Create Your First Test
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {tests.map((test) => (
-            <Card 
-              key={test.id} 
-              className="group relative overflow-hidden bg-white border border-gray-200/60 rounded-2xl hover:shadow-2xl hover:shadow-gray-300/30 transition-all duration-300 hover:-translate-y-2 hover:border-gray-300 flex flex-col"
+            <div
+              key={test.id}
+              className="group relative bg-white rounded-xl border border-gray-200 p-5 transition-all duration-200 hover:shadow-md hover:border-gray-300"
             >
-              {/* Gradient Background Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-purple-50/30 to-pink-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-              
-              <CardContent className="p-0 flex flex-col h-full relative z-10">
-                {/* Header with Status Badge */}
-                <div className="px-6 pt-6 pb-4">
-                  <div className="flex items-start justify-between mb-3">
-                    {getStatusBadge(test)}
-                    <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/25 group-hover:shadow-xl group-hover:shadow-indigo-500/40 transition-all duration-300">
-                      {getStatusIcon(test.status)}
-                    </div>
-                  </div>
-                  
-                  <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2 leading-tight group-hover:text-indigo-600 transition-colors duration-200">
+              {/* Header */}
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-semibold text-gray-900 mb-1 line-clamp-2">
                     {test.name}
                   </h3>
-                  
                   {test.description && (
-                    <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+                    <p className="text-sm text-gray-500 line-clamp-2">
                       {test.description}
                     </p>
                   )}
                 </div>
+                {getStatusBadge(test)}
+              </div>
 
-                {/* Stats Grid */}
-                <div className="px-6 py-4 bg-gradient-to-br from-gray-50/80 to-gray-100/40 border-y border-gray-100">
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Questions */}
-                    <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-md">
-                        <FileText className="h-5 w-5 text-white" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Questions</p>
-                        <p className="text-2xl font-bold text-gray-900">
-                          {typeof test.question_count === 'number' ? test.question_count : '—'}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Duration */}
-                    <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-md">
-                        <Clock className="h-5 w-5 text-white" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Duration</p>
-                        <p className="text-2xl font-bold text-gray-900">{test.total_time_minutes}<span className="text-sm font-medium text-gray-500 ml-1">min</span></p>
-                      </div>
-                    </div>
+              {/* Stats */}
+              <div className="flex items-center gap-6 py-4 border-y border-gray-100">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-gray-400" strokeWidth={1.5} />
+                  <div>
+                    <p className="text-xs text-gray-500">Questions</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {typeof test.question_count === 'number' ? test.question_count : '—'}
+                    </p>
                   </div>
                 </div>
 
-                {/* Timeline Section */}
-                <div className="px-6 py-4 flex-grow">
-                  <div className="space-y-3">
-                    {/* Start Time */}
-                    <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
-                        <Calendar className="h-4 w-4 text-purple-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0.5">Start Time</p>
-                        <p className="text-sm font-bold text-gray-900 truncate">
-                          {test.start_time ? formatDateTime(test.start_time) : 'Not scheduled'}
-                        </p>
-                      </div>
-                    </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-gray-400" strokeWidth={1.5} />
+                  <div>
+                    <p className="text-xs text-gray-500">Duration</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {test.total_time_minutes}<span className="text-xs text-gray-500 ml-0.5">min</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-                    {/* End Time */}
-                    <div className="flex items-center gap-3">
-                      <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${
-                        isPerpetualTest(test) ? 'bg-green-100' : 'bg-orange-100'
-                      }`}>
-                        {isPerpetualTest(test) ? (
-                          <Clock className="h-4 w-4 text-green-600" />
-                        ) : (
-                          <Calendar className="h-4 w-4 text-orange-600" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0.5">End Time</p>
-                        <p className={`text-sm font-bold truncate ${
-                          isPerpetualTest(test) ? 'text-green-700' : 'text-gray-900'
-                        }`}>
-                          {isPerpetualTest(test) ? '∞ Perpetual' : formatDateTime(test.end_time)}
-                        </p>
-                      </div>
-                    </div>
+              {/* Timeline */}
+              <div className="py-4 space-y-3">
+                <div className="flex items-center gap-2 text-sm">
+                  <Calendar className="h-4 w-4 text-gray-400 flex-shrink-0" strokeWidth={1.5} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-500">Start</p>
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {test.start_time ? formatDateTime(test.start_time) : 'Not scheduled'}
+                    </p>
                   </div>
                 </div>
 
-                {/* Actions Footer */}
-                <div className="px-6 py-4 bg-white border-t border-gray-100">
-                  <TestActions 
-                    test={test} 
-                    onAction={handleTestAction}
-                  />
+                <div className="flex items-center gap-2 text-sm">
+                  <Clock className="h-4 w-4 text-gray-400 flex-shrink-0" strokeWidth={1.5} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-500">End</p>
+                    <p className={`text-sm font-medium truncate ${
+                      isPerpetualTest(test) ? 'text-emerald-700' : 'text-gray-900'
+                    }`}>
+                      {isPerpetualTest(test) ? '∞ Perpetual' : formatDateTime(test.end_time)}
+                    </p>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+
+              {/* Actions */}
+              <div className="pt-4 border-t border-gray-100">
+                <TestActions 
+                  test={test} 
+                  onAction={handleTestAction}
+                />
+              </div>
+
+              {/* Hover effect overlay */}
+              <div className="absolute inset-0 rounded-xl ring-1 ring-inset ring-black/0 group-hover:ring-black/5 transition-all duration-200 pointer-events-none" />
+            </div>
           ))}
         </div>
       )}
