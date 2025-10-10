@@ -130,12 +130,14 @@ export function TestActions({ test, onAction }: TestActionsProps) {
           />
         )}
 
-        {/* View Results Button - Only for Completed tests */}
-        {test.status === 'completed' && (
-          <Button variant="ghost" size="sm" disabled className="h-8 px-3 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-150">
-            <BarChart3 className="h-4 w-4 mr-1.5" strokeWidth={1.5} />
-            <span>Results</span>
-          </Button>
+        {/* View Report Button - For Live and Completed tests */}
+        {(test.status === 'live' || test.status === 'completed') && (
+          <Link href={`/tests/${test.id}/report`}>
+            <Button variant="ghost" size="sm" className="h-8 px-3 text-sm font-medium text-blue-700 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors duration-150">
+              <BarChart3 className="h-4 w-4 mr-1.5" strokeWidth={1.5} />
+              <span>View Report</span>
+            </Button>
+          </Link>
         )}
       </div>
 
