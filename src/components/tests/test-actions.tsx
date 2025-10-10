@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import { deleteTest, cloneTest } from '@/lib/actions/tests'
 import { PremiumPDFExporter } from './premium-pdf-exporter'
+import { TestPreviewModal } from './test-preview-modal'
 import type { Question as AdminQuestion } from '@/lib/supabase/admin'
+import type { TestQuestionSlot } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -23,7 +25,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { PublishTestDialog } from './publish-test-dialog'
-import { Edit, Trash2, BarChart3, MoreHorizontal, FileDown, Copy, Loader2 } from 'lucide-react'
+import { Edit, Trash2, BarChart3, MoreHorizontal, FileDown, Copy, Loader2, Eye } from 'lucide-react'
 import Link from 'next/link'
 import type { Test } from '@/lib/supabase/admin'
 
@@ -35,7 +37,9 @@ interface TestActionsProps {
 export function TestActions({ test, onAction }: TestActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [showPremiumExporter, setShowPremiumExporter] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
   const [testData, setTestData] = useState<{ test: Test; questions: AdminQuestion[] } | null>(null)
+  const [previewData, setPreviewData] = useState<{ test: Test; questions: TestQuestionSlot[] } | null>(null)
 
   const handleDelete = async () => {
     setIsDeleting(true)
@@ -102,6 +106,24 @@ export function TestActions({ test, onAction }: TestActionsProps) {
     }
   }
 
+  const handleOpenPreview = async () => {
+    try {
+      // Fetch test and questions data
+      const { getTestDetailsForEdit } = await import('@/lib/actions/tests')
+      const testDetails = await getTestDetailsForEdit(test.id)
+      
+      if (testDetails && testDetails.test && testDetails.questions) {
+        // Keep the full TestQuestionSlot[] structure for preview
+        setPreviewData({ test: testDetails.test, questions: testDetails.questions })
+        setShowPreview(true)
+      } else {
+        console.error('Failed to fetch test data for preview:', testDetails)
+      }
+    } catch (error) {
+      console.error('Error opening test preview:', error)
+    }
+  }
+
 
   const canEdit = (() => {
     const now = new Date()
@@ -138,12 +160,23 @@ export function TestActions({ test, onAction }: TestActionsProps) {
 
         {/* View Report Button - For tests that have started (live, completed, or perpetual tests that started) */}
         {(test.status === 'live' || test.status === 'completed' || (test.status === 'scheduled' && hasStarted)) && (
-          <Link href={`/tests/${test.id}/report`}>
-            <Button variant="ghost" size="sm" className="h-8 px-3 text-sm font-medium text-blue-700 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors duration-150">
-              <BarChart3 className="h-4 w-4 mr-1.5" strokeWidth={1.5} />
-              <span>View Report</span>
+          <>
+            <Link href={`/tests/${test.id}/report`}>
+              <Button variant="ghost" size="sm" className="h-8 px-3 text-sm font-medium text-blue-700 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors duration-150">
+                <BarChart3 className="h-4 w-4 mr-1.5" strokeWidth={1.5} />
+                <span>View Report</span>
+              </Button>
+            </Link>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleOpenPreview}
+              className="h-8 px-3 text-sm font-medium text-purple-700 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors duration-150"
+            >
+              <Eye className="h-4 w-4 mr-1.5" strokeWidth={1.5} />
+              <span>Preview Test</span>
             </Button>
-          </Link>
+          </>
         )}
       </div>
 
@@ -246,6 +279,23 @@ export function TestActions({ test, onAction }: TestActionsProps) {
             setShowPremiumExporter(false)
             setTestData(null)
           }}
+        />
+      )}
+
+      {/* Test Preview Modal */}
+      {previewData && (
+        <TestPreviewModal
+          open={showPreview}
+          onClose={() => {
+            setShowPreview(false)
+            setPreviewData(null)
+          }}
+          testName={previewData.test.name}
+          description={previewData.test.description || ''}
+          totalTimeMinutes={previewData.test.total_time_minutes}
+          marksPerCorrect={previewData.test.marks_per_correct}
+          penaltyPerIncorrect={previewData.test.negative_marks_per_incorrect}
+          questions={previewData.questions}
         />
       )}
     </div>

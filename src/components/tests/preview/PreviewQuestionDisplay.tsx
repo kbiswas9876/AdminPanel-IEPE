@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { UniversalContentRenderer } from '@/components/editors/UniversalContentRenderer'
 
 interface Question {
-  id: number
+  id?: number
   question_text: string
   options: Record<string, string>
   correct_option?: string

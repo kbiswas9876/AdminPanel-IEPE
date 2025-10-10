@@ -323,7 +323,7 @@ export async function getQuestionAnalytics(testId: number): Promise<QuestionAnal
         .from('test_attempt_answers')
         .select('is_correct, time_spent_seconds')
         .eq('question_id', questionId)
-        .in('attempt_id', attempts.map(a => a.id))
+        .in('attempt_id', (attempts ?? []).map(a => a.id))
       
       const correctCount = answers?.filter(a => a.is_correct).length || 0
       const incorrectCount = answers?.filter(a => !a.is_correct && a.is_correct !== null).length || 0
