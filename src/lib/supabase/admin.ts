@@ -113,6 +113,20 @@ export interface TestAttempt {
   completed_at: string
 }
 
+// Types for test_attempt_answers table
+export interface TestAttemptAnswer {
+  id: number
+  attempt_id: number
+  question_id: number
+  question_number: number
+  selected_option: string | null
+  correct_option: string
+  is_correct: boolean
+  marks_awarded: number
+  time_spent_seconds: number
+  created_at: string
+}
+
 // Types for student analytics
 export interface StudentAnalytics {
   totalTests: number

@@ -1,9 +1,11 @@
 'use client'
 
+import { useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Trophy, Medal, Award, Clock, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { StudentRanking } from '@/lib/actions/test-reports'
+import { StudentReportModal } from './StudentReportModal'
 
 interface StudentRankingsTabProps {
   testId: number
@@ -11,6 +13,13 @@ interface StudentRankingsTabProps {
 }
 
 export function StudentRankingsTab({ testId, rankings }: StudentRankingsTabProps) {
+  const [selectedAttemptId, setSelectedAttemptId] = useState<number | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+
+  const handleViewDetails = (attemptId: number) => {
+    setSelectedAttemptId(attemptId)
+    setModalOpen(true)
+  }
   const getRankIcon = (rank: number) => {
     if (rank === 1) return <Trophy className="h-5 w-5 text-yellow-500" />
     if (rank === 2) return <Medal className="h-5 w-5 text-slate-400" />
@@ -126,8 +135,8 @@ export function StudentRankingsTab({ testId, rankings }: StudentRankingsTabProps
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        disabled
-                        className="h-8 gap-1.5"
+                        onClick={() => handleViewDetails(student.attemptId)}
+                        className="h-8 gap-1.5 hover:bg-blue-50 hover:text-blue-700"
                       >
                         <Eye className="h-4 w-4" />
                         View Details
@@ -141,26 +150,15 @@ export function StudentRankingsTab({ testId, rankings }: StudentRankingsTabProps
         )}
       </Card>
 
-      {/* Coming Soon Notice */}
-      {rankings.length > 0 && (
-        <Card className="p-6 border-blue-200 bg-blue-50/50 backdrop-blur-sm">
-          <div className="flex items-start gap-4">
-            <div className="p-2 rounded-lg bg-blue-100 border border-blue-200">
-              <Eye className="h-5 w-5 text-blue-600" />
-            </div>
-            <div className="flex-1">
-              <h4 className="text-sm font-semibold text-blue-900 mb-1">
-                Detailed Student Reports Coming Soon
-              </h4>
-              <p className="text-sm text-blue-700">
-                Click "View Details" to see each student's complete answer sheet with question-by-question breakdown, 
-                correct/incorrect answers, and time spent on each question. This feature will be available once 
-                detailed answer tracking is implemented.
-              </p>
-            </div>
-          </div>
-        </Card>
-      )}
+      {/* Student Report Modal */}
+      <StudentReportModal
+        attemptId={selectedAttemptId}
+        open={modalOpen}
+        onClose={() => {
+          setModalOpen(false)
+          setSelectedAttemptId(null)
+        }}
+      />
     </div>
   )
 }

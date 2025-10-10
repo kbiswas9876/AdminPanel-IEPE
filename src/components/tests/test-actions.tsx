@@ -109,6 +109,12 @@ export function TestActions({ test, onAction }: TestActionsProps) {
     return !startsAt || startsAt > now
   })()
 
+  const hasStarted = (() => {
+    const now = new Date()
+    const startsAt = test.start_time ? new Date(test.start_time) : null
+    return startsAt && startsAt <= now
+  })()
+
   return (
     <div className="flex items-center justify-between gap-2">
       <div className="flex items-center gap-2">
@@ -130,8 +136,8 @@ export function TestActions({ test, onAction }: TestActionsProps) {
           />
         )}
 
-        {/* View Report Button - For Live and Completed tests */}
-        {(test.status === 'live' || test.status === 'completed') && (
+        {/* View Report Button - For tests that have started (live, completed, or perpetual tests that started) */}
+        {(test.status === 'live' || test.status === 'completed' || (test.status === 'scheduled' && hasStarted)) && (
           <Link href={`/tests/${test.id}/report`}>
             <Button variant="ghost" size="sm" className="h-8 px-3 text-sm font-medium text-blue-700 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors duration-150">
               <BarChart3 className="h-4 w-4 mr-1.5" strokeWidth={1.5} />

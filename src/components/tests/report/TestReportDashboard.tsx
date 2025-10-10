@@ -7,6 +7,7 @@ import { BarChart3, Trophy, Clock, Users, TrendingUp, ArrowLeft } from 'lucide-r
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { OverallAnalyticsTab } from './OverallAnalyticsTab'
+import { PopulatedOverallAnalyticsTab } from './PopulatedOverallAnalyticsTab'
 import { StudentRankingsTab } from './StudentRankingsTab'
 import type { Test } from '@/lib/supabase/admin'
 import type { TestOverviewStats, StudentRanking } from '@/lib/actions/test-reports'
@@ -138,7 +139,7 @@ export function TestReportDashboard({ test, stats, rankings }: TestReportDashboa
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
-              <OverallAnalyticsTab testId={test.id} stats={stats} />
+              <PopulatedOverallAnalyticsTab testId={test.id} />
             </TabsContent>
 
             <TabsContent value="rankings" className="space-y-6">
