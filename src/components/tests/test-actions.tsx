@@ -181,29 +181,27 @@ export function TestActions({ test, onAction }: TestActionsProps) {
                 Delete Mock Test?
               </AlertDialogTitle>
               
-              <AlertDialogDescription className="text-center space-y-4">
-                <p className="text-sm text-gray-600">
-                  This will permanently delete the mock test and all associated data.
-                </p>
-                
-                {/* Test Info Display */}
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 text-left">
-                  <p className="text-xs text-gray-500 mb-1">Test Name</p>
-                  <p className="text-sm font-semibold text-gray-900">{test.name}</p>
-                  <p className="text-xs text-gray-500 mt-2 mb-1">Status</p>
-                  <p className="text-sm text-gray-700">{test.status}</p>
-                </div>
-
-                {/* Warning Message */}
-                <div className="flex items-start gap-3 p-3 bg-red-50 rounded-xl border border-red-200">
-                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-red-100 flex items-center justify-center mt-0.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-red-600" />
-                  </div>
-                  <p className="text-xs text-red-900 text-left flex-1">
-                    This action cannot be undone. All test data and question mappings will be permanently deleted.
-                  </p>
-                </div>
+              <AlertDialogDescription className="text-center text-sm text-gray-600">
+                This will permanently delete the mock test and all associated data.
               </AlertDialogDescription>
+              
+              {/* Test Info Display */}
+              <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 text-left">
+                <div className="text-xs text-gray-500 mb-1">Test Name</div>
+                <div className="text-sm font-semibold text-gray-900">{test.name}</div>
+                <div className="text-xs text-gray-500 mt-2 mb-1">Status</div>
+                <div className="text-sm text-gray-700">{test.status}</div>
+              </div>
+
+              {/* Warning Message */}
+              <div className="flex items-start gap-3 p-3 bg-red-50 rounded-xl border border-red-200">
+                <div className="flex-shrink-0 w-5 h-5 rounded-full bg-red-100 flex items-center justify-center mt-0.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-600" />
+                </div>
+                <div className="text-xs text-red-900 text-left flex-1">
+                  This action cannot be undone. All test data and question mappings will be permanently deleted.
+                </div>
+              </div>
             </AlertDialogHeader>
             
             <AlertDialogFooter className="flex-col sm:flex-col gap-2 sm:gap-2">
