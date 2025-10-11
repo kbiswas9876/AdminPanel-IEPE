@@ -42,7 +42,11 @@ import {
   Palette,
   Layout,
   ToggleLeft,
-  ToggleRight
+  ToggleRight,
+  Type,
+  AlignLeft,
+  AlignCenter,
+  AlignRight
 } from 'lucide-react'
 import type { Test } from '@/lib/supabase/admin'
 import type { Question as AdminQuestion } from '@/lib/supabase/admin'
@@ -63,6 +67,13 @@ interface PDFConfig {
   // Layout & Spacing
   margins: number
   
+  // Header Customization
+  headerText: string
+  headerFontFamily: string
+  headerFontSize: number
+  headerColor: string
+  headerAlignment: 'left' | 'center' | 'right'
+  
   // Content Options
   showHeader: boolean
   showTotalQuestions: boolean
@@ -80,6 +91,11 @@ const defaultConfig: PDFConfig = {
   fontSize: 12,
   lineHeight: 1.5,
   margins: 15,
+  headerText: '',
+  headerFontFamily: 'Georgia',
+  headerFontSize: 24,
+  headerColor: '#1f2937',
+  headerAlignment: 'center',
   showHeader: true,
   showTotalQuestions: true,
   showFullMarks: true,
@@ -99,8 +115,21 @@ const fontOptions = [
   { value: 'Roboto', label: 'Roboto' },
 ]
 
+const headerFontOptions = [
+  { value: 'Georgia', label: 'Georgia (Elegant)' },
+  { value: 'Times New Roman', label: 'Times New Roman' },
+  { value: 'Inter', label: 'Inter (Modern)' },
+  { value: 'Lato', label: 'Lato' },
+  { value: 'Roboto', label: 'Roboto' },
+  { value: 'Verdana', label: 'Verdana' },
+  { value: 'Arial', label: 'Arial' },
+]
+
 export function PremiumPDFExporter({ test, questions, isOpen, onClose }: PremiumPDFExporterProps) {
-  const [config, setConfig] = useState<PDFConfig>(defaultConfig)
+  const [config, setConfig] = useState<PDFConfig>({
+    ...defaultConfig,
+    headerText: test?.name || ''
+  })
   const [isGenerating, setIsGenerating] = useState(false)
   const [previewContent, setPreviewContent] = useState('')
   
@@ -135,11 +164,52 @@ export function PremiumPDFExporter({ test, questions, isOpen, onClose }: Premium
         padding: 0;
       }
       
-      /* Automatic content flow - intelligent page breaks */
+      /* COMPACT PRINT LAYOUT - Optimized for space efficiency */
       .question-container {
         page-break-inside: avoid; /* Prevent splitting questions across pages */
         break-inside: avoid;
-        margin-bottom: 35px;
+        margin-bottom: 8mm !important; /* Drastically reduced from 35px */
+        margin-top: 0 !important;
+        padding: 8px 12px !important; /* Reduced padding */
+        border: none !important; /* Remove heavy borders */
+        border-bottom: 1px solid #e5e7eb !important; /* Simple separator */
+        border-radius: 0 !important; /* Remove rounded corners */
+        background: transparent !important; /* Remove background gradient */
+        box-shadow: none !important; /* Remove shadows */
+      }
+      
+      /* First question doesn't need top border */
+      .question-container:first-of-type {
+        border-top: none !important;
+      }
+      
+      /* Last question styling */
+      .question-container:last-of-type {
+        border-bottom: 2px solid #e5e7eb !important;
+      }
+      
+      /* Compact font sizes for print */
+      .question-container {
+        font-size: ${Math.max(config.fontSize - 1, 10)}px !important;
+      }
+      
+      /* Reduce spacing in options grid */
+      .options-grid {
+        margin-top: 8px !important;
+        margin-bottom: 4px !important;
+        padding: 6px !important;
+      }
+      
+      /* Compact header section */
+      .header-section {
+        margin-bottom: 20px !important;
+        padding-bottom: 15px !important;
+      }
+      
+      /* Compact instructions and marking scheme */
+      .instruction-box, .marking-scheme-box {
+        margin-bottom: 15px !important;
+        padding: 12px !important;
       }
       
       /* Allow natural page breaks between questions */
@@ -149,8 +219,8 @@ export function PremiumPDFExporter({ test, questions, isOpen, onClose }: Premium
       
       /* Ensure proper spacing at page breaks */
       .question-container {
-        orphans: 3; /* Minimum lines at bottom of page */
-        widows: 3;  /* Minimum lines at top of page */
+        orphans: 2; /* Minimum lines at bottom of page */
+        widows: 2;  /* Minimum lines at top of page */
       }
     }
   `
@@ -362,6 +432,120 @@ export function PremiumPDFExporter({ test, questions, isOpen, onClose }: Premium
                 </CardContent>
               </Card>
 
+              {/* Header Customization */}
+              <Card className="border border-slate-200/60 shadow-lg shadow-slate-200/50 bg-white/80 backdrop-blur-sm hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 overflow-hidden">
+                <CardHeader className="pb-3 bg-gradient-to-br from-amber-50/50 to-transparent">
+                  <CardTitle className="text-sm font-bold flex items-center gap-2.5 text-slate-900">
+                    <div className="p-1.5 rounded-lg bg-amber-100 border border-amber-200">
+                      <Type className="h-4 w-4 text-amber-600" strokeWidth={2.5} />
+                    </div>
+                    <span>Header Customization</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Header Text */}
+                  <div className="space-y-2">
+                    <Label htmlFor="header-text" className="text-sm font-medium text-slate-700">Header Text</Label>
+                    <Input
+                      id="header-text"
+                      value={config.headerText}
+                      onChange={(e) => updateConfig('headerText', e.target.value)}
+                      placeholder="Enter custom header text"
+                      className="bg-white border-slate-300 hover:border-amber-500 focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                    />
+                  </div>
+
+                  {/* Header Font Family */}
+                  <div className="space-y-2">
+                    <Label htmlFor="header-font-family" className="text-sm font-medium text-slate-700">Header Font</Label>
+                    <Select value={config.headerFontFamily} onValueChange={(value) => updateConfig('headerFontFamily', value)}>
+                      <SelectTrigger className="bg-white border border-slate-300 hover:border-amber-500 focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
+                        <SelectValue placeholder="Select font" />
+                      </SelectTrigger>
+                      <SelectContent className="z-[10000] max-h-60 overflow-y-auto bg-white border border-gray-200 shadow-lg">
+                        {headerFontOptions.map((font) => (
+                          <SelectItem 
+                            key={font.value} 
+                            value={font.value}
+                            className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100 px-3 py-2"
+                          >
+                            {font.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Header Font Size */}
+                  <div className="space-y-2">
+                    <Label htmlFor="header-font-size" className="text-sm font-medium text-slate-700">Header Size: {config.headerFontSize}pt</Label>
+                    <Slider
+                      value={[config.headerFontSize]}
+                      onValueChange={([value]) => updateConfig('headerFontSize', value)}
+                      min={14}
+                      max={36}
+                      step={2}
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Header Color */}
+                  <div className="space-y-2">
+                    <Label htmlFor="header-color" className="text-sm font-medium text-slate-700">Header Color</Label>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        id="header-color"
+                        type="color"
+                        value={config.headerColor}
+                        onChange={(e) => updateConfig('headerColor', e.target.value)}
+                        className="w-16 h-10 p-1 cursor-pointer"
+                      />
+                      <Input
+                        type="text"
+                        value={config.headerColor}
+                        onChange={(e) => updateConfig('headerColor', e.target.value)}
+                        placeholder="#1f2937"
+                        className="flex-1 bg-white border-slate-300 hover:border-amber-500 focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Text Alignment */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-slate-700">Text Alignment</Label>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant={config.headerAlignment === 'left' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => updateConfig('headerAlignment', 'left')}
+                        className={`flex-1 ${config.headerAlignment === 'left' ? 'bg-amber-600 hover:bg-amber-700' : 'hover:bg-amber-50'}`}
+                      >
+                        <AlignLeft className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={config.headerAlignment === 'center' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => updateConfig('headerAlignment', 'center')}
+                        className={`flex-1 ${config.headerAlignment === 'center' ? 'bg-amber-600 hover:bg-amber-700' : 'hover:bg-amber-50'}`}
+                      >
+                        <AlignCenter className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={config.headerAlignment === 'right' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => updateConfig('headerAlignment', 'right')}
+                        className={`flex-1 ${config.headerAlignment === 'right' ? 'bg-amber-600 hover:bg-amber-700' : 'hover:bg-amber-50'}`}
+                      >
+                        <AlignRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Content Options */}
               <Card className="border border-slate-200/60 shadow-lg shadow-slate-200/50 bg-white/80 backdrop-blur-sm hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 overflow-hidden">
                 <CardHeader className="pb-3 bg-gradient-to-br from-emerald-50/50 to-transparent">
@@ -504,11 +688,14 @@ function generatePreviewHTML(test: Test, questions: AdminQuestion[], config: PDF
     return '<div style="color: red; padding: 20px;">Error: No questions available</div>'
   }
   
-  // Header
+  // Header with customization
   if (config.showHeader) {
+    const headerTextAlign = config.headerAlignment;
+    const displayHeaderText = config.headerText || test.name;
+    
     content += `
-      <div style="text-align: center; margin-bottom: 40px; padding-bottom: 25px; border-bottom: 3px solid #e5e7eb;">
-        <h1 style="font-size: 28px; font-weight: bold; color: #1f2937; margin-bottom: 15px; letter-spacing: -0.5px;">${test.name}</h1>
+      <div class="header-section" style="text-align: center; margin-bottom: 40px; padding-bottom: 25px; border-bottom: 3px solid #e5e7eb;">
+        <h1 style="font-family: ${config.headerFontFamily}, serif; font-size: ${config.headerFontSize}px; font-weight: bold; color: ${config.headerColor}; margin-bottom: 15px; letter-spacing: -0.5px; text-align: ${headerTextAlign};">${displayHeaderText}</h1>
         ${test.description ? `<p style="font-size: 18px; color: #6b7280; margin-bottom: 20px; font-weight: 500;">${test.description}</p>` : ''}
         <div style="display: flex; justify-content: space-between; margin-top: 20px; font-size: 16px; color: #6b7280; font-weight: 500;">
           ${config.showTotalQuestions ? `<div style="background: #f3f4f6; padding: 8px 16px; border-radius: 6px;">Total Questions: ${questions.length}</div>` : ''}
@@ -522,7 +709,7 @@ function generatePreviewHTML(test: Test, questions: AdminQuestion[], config: PDF
   // Instructions
   if (config.showInstructions) {
     content += `
-      <div style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); padding: 20px; border-radius: 12px; margin-bottom: 35px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+      <div class="instruction-box" style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); padding: 20px; border-radius: 12px; margin-bottom: 35px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
         <h3 style="margin-bottom: 15px; font-size: 18px; font-weight: bold; color: #1f2937;">📋 Instructions:</h3>
         <ul style="margin-left: 25px; line-height: 1.8;">
           <li style="margin-bottom: 8px; font-weight: 500;">Read all questions carefully before answering</li>
@@ -537,7 +724,7 @@ function generatePreviewHTML(test: Test, questions: AdminQuestion[], config: PDF
   // Marking Scheme
   if (config.showMarkingScheme) {
     content += `
-      <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 20px; border-radius: 12px; margin-bottom: 35px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+      <div class="marking-scheme-box" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 20px; border-radius: 12px; margin-bottom: 35px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
         <h3 style="margin-bottom: 15px; font-size: 18px; font-weight: bold; color: #1f2937;">📊 Marking Scheme:</h3>
         <ul style="margin-left: 25px; line-height: 1.8;">
           <li style="margin-bottom: 8px; font-weight: 500;">Each question carries equal marks</li>
@@ -620,7 +807,7 @@ function renderOptionsGrid(options: any, questionIndex: number): string {
     console.log(`❌ No options for question ${questionIndex + 1}`);
     // Return sample options for testing
     return `
-      <div style="margin: 15px 0; padding: 12px; background: #f8f9fa; border-radius: 6px; ">
+      <div class="options-grid" style="margin: 15px 0; padding: 12px; background: #f8f9fa; border-radius: 6px; ">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start;">
           <div style="display: flex; align-items: flex-start; padding: 6px; background: white; border-radius: 4px; border: 1px solid #e2e8f0;">
             <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: #e5e7eb; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(a)</span>
@@ -660,7 +847,7 @@ function renderOptionsGrid(options: any, questionIndex: number): string {
     const optionD = opts.d || opts.D;
     
     optionsHtml = `
-      <div style="margin: 15px 0; padding: 12px; background: #f8f9fa; border-radius: 6px; ">
+      <div class="options-grid" style="margin: 15px 0; padding: 12px; background: #f8f9fa; border-radius: 6px; ">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start;">
           ${optionA ? `
             <div style="display: flex; align-items: flex-start; padding: 6px; background: white; border-radius: 4px; border: 1px solid #e2e8f0;">
@@ -692,7 +879,7 @@ function renderOptionsGrid(options: any, questionIndex: number): string {
   } else if (Array.isArray(opts) && opts.length > 0) {
     // Handle array structure
     optionsHtml = `
-      <div style="margin: 15px 0; padding: 12px; background: #f8f9fa; border-radius: 6px; ">
+      <div class="options-grid" style="margin: 15px 0; padding: 12px; background: #f8f9fa; border-radius: 6px; ">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start;">
           ${opts.map((option, optIndex) => `
             <div style="display: flex; align-items: flex-start; padding: 6px; background: white; border-radius: 4px; border: 1px solid #e2e8f0;">
