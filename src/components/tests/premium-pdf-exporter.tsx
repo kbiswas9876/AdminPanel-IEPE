@@ -246,31 +246,47 @@ export function PremiumPDFExporter({ test, questions, isOpen, onClose }: Premium
             Configure and preview your PDF export settings with live preview
           </DialogDescription>
         </DialogHeader>
-        <div className="flex h-screen w-screen bg-gray-50">
+        <div className="flex h-screen w-screen bg-gradient-to-br from-slate-50 via-white to-slate-100/50">
           {/* Configuration Panel - Left Side */}
-          <div className="w-[400px] min-w-[400px] max-w-[400px] border-r border-gray-200 bg-white flex flex-col h-full shadow-lg flex-shrink-0">
-            <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-indigo-600">
-              {/* Header */}
-              <div className="flex items-center justify-between">
+          <div className="w-[400px] min-w-[400px] max-w-[400px] border-r border-slate-200/60 bg-white/95 backdrop-blur-xl flex flex-col h-full shadow-2xl flex-shrink-0">
+            {/* Premium Header */}
+            <div className="relative px-6 py-5 border-b border-slate-200/60 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
+              {/* Decorative gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/5 to-transparent"></div>
+              
+              {/* Header Content */}
+              <div className="relative flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Settings className="h-6 w-6 text-white" />
-                  <h2 className="text-xl font-bold text-white">PDF Export Configuration</h2>
+                  <div className="p-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 shadow-lg">
+                    <Settings className="h-5 w-5 text-white" strokeWidth={2} />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-white tracking-tight">PDF Export</h2>
+                    <p className="text-xs text-slate-300 mt-0.5">Configure your document</p>
+                  </div>
                 </div>
-                <Button variant="ghost" size="sm" onClick={onClose} className="hover:bg-white/20 rounded-full text-white hover:text-white">
-                  <X className="h-6 w-6" />
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={onClose} 
+                  className="h-9 w-9 p-0 hover:bg-white/10 rounded-xl text-white hover:text-white transition-all duration-200 border border-transparent hover:border-white/20"
+                >
+                  <X className="h-5 w-5" />
                 </Button>
               </div>
             </div>
             
-            <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-500 min-h-0">
-              <div className="p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent hover:scrollbar-thumb-slate-400 min-h-0">
+              <div className="p-5 space-y-4">
 
               {/* Design & Typography */}
-              <Card className="border border-gray-200 shadow-sm bg-white">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-base font-semibold flex items-center gap-2 text-gray-800">
-                    <Palette className="h-5 w-5 text-purple-600" />
-                    Design & Typography
+              <Card className="border border-slate-200/60 shadow-lg shadow-slate-200/50 bg-white/80 backdrop-blur-sm hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 overflow-hidden">
+                <CardHeader className="pb-3 bg-gradient-to-br from-purple-50/50 to-transparent">
+                  <CardTitle className="text-sm font-bold flex items-center gap-2.5 text-slate-900">
+                    <div className="p-1.5 rounded-lg bg-purple-100 border border-purple-200">
+                      <Palette className="h-4 w-4 text-purple-600" strokeWidth={2.5} />
+                    </div>
+                    <span>Design & Typography</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -321,11 +337,13 @@ export function PremiumPDFExporter({ test, questions, isOpen, onClose }: Premium
               </Card>
 
               {/* Layout & Spacing */}
-              <Card className="border-0 shadow-sm bg-white">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-base font-semibold flex items-center gap-2 text-gray-800">
-                    <Layout className="h-5 w-5 text-blue-600" />
-                    Layout & Spacing
+              <Card className="border border-slate-200/60 shadow-lg shadow-slate-200/50 bg-white/80 backdrop-blur-sm hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 overflow-hidden">
+                <CardHeader className="pb-3 bg-gradient-to-br from-blue-50/50 to-transparent">
+                  <CardTitle className="text-sm font-bold flex items-center gap-2.5 text-slate-900">
+                    <div className="p-1.5 rounded-lg bg-blue-100 border border-blue-200">
+                      <Layout className="h-4 w-4 text-blue-600" strokeWidth={2.5} />
+                    </div>
+                    <span>Layout & Spacing</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -345,15 +363,17 @@ export function PremiumPDFExporter({ test, questions, isOpen, onClose }: Premium
               </Card>
 
               {/* Content Options */}
-              <Card className="border-0 shadow-sm bg-white">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-base font-semibold flex items-center gap-2 text-gray-800">
-                    <ToggleLeft className="h-5 w-5 text-green-600" />
-                    Content Options
+              <Card className="border border-slate-200/60 shadow-lg shadow-slate-200/50 bg-white/80 backdrop-blur-sm hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 overflow-hidden">
+                <CardHeader className="pb-3 bg-gradient-to-br from-emerald-50/50 to-transparent">
+                  <CardTitle className="text-sm font-bold flex items-center gap-2.5 text-slate-900">
+                    <div className="p-1.5 rounded-lg bg-emerald-100 border border-emerald-200">
+                      <ToggleLeft className="h-4 w-4 text-emerald-600" strokeWidth={2.5} />
+                    </div>
+                    <span>Content Options</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 gap-4">
+                <CardContent className="space-y-3">
+                  <div className="grid grid-cols-1 gap-2.5">
                     {[
                       { key: 'showHeader', label: 'Show Header', icon: FileText },
                       { key: 'showTotalQuestions', label: 'Show Total Questions', icon: CheckCircle },
@@ -365,10 +385,10 @@ export function PremiumPDFExporter({ test, questions, isOpen, onClose }: Premium
                       { key: 'showAnswerKey', label: 'Show Answer Key', icon: CheckCircle },
                       { key: 'showSolutions', label: 'Show Solutions', icon: CheckCircle },
                     ].map(({ key, label, icon: Icon }) => (
-                      <div key={key} className="flex items-center justify-between p-3 rounded-lg bg-gray-50/50 hover:bg-gray-100/50 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <Icon className="h-4 w-4 text-gray-600" />
-                          <Label htmlFor={key} className="text-sm font-medium text-gray-700 cursor-pointer">{label}</Label>
+                      <div key={key} className="flex items-center justify-between p-3 rounded-xl bg-slate-50/80 hover:bg-slate-100/80 border border-slate-200/50 hover:border-slate-300/50 transition-all duration-200 group">
+                        <div className="flex items-center gap-2.5">
+                          <Icon className="h-3.5 w-3.5 text-slate-500 group-hover:text-slate-700 transition-colors" strokeWidth={2} />
+                          <Label htmlFor={key} className="text-xs font-medium text-slate-700 cursor-pointer group-hover:text-slate-900 transition-colors">{label}</Label>
                         </div>
                         <Switch
                           id={key}
@@ -385,51 +405,73 @@ export function PremiumPDFExporter({ test, questions, isOpen, onClose }: Premium
             </div>
             
             {/* Generate Button - Fixed at bottom */}
-            <div className="p-4 border-t border-gray-200 bg-gradient-to-r from-blue-600 to-indigo-600 flex-shrink-0">
-              <Button 
-                onClick={handlePrint}
-                disabled={isGenerating}
-                className="w-full bg-white text-blue-600 hover:bg-blue-50 hover:text-blue-700 font-bold py-3 text-base shadow-lg hover:shadow-xl transition-all duration-200 border border-blue-200"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="h-5 w-5 mr-3 animate-spin" />
-                    Generating PDF...
-                  </>
-                ) : (
-                  <>
-                    <Download className="h-5 w-5 mr-3" />
-                    Generate & Download PDF
-                  </>
-                )}
-              </Button>
+            <div className="relative px-5 py-4 border-t border-slate-200/60 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex-shrink-0 overflow-hidden">
+              {/* Decorative gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/10 via-blue-600/5 to-transparent"></div>
+              
+              <div className="relative">
+                <Button 
+                  onClick={handlePrint}
+                  disabled={isGenerating}
+                  className="w-full h-12 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 hover:from-emerald-600 hover:via-emerald-700 hover:to-teal-700 text-white font-bold text-sm shadow-2xl hover:shadow-emerald-500/50 transition-all duration-300 border-0 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
+                >
+                  {/* Shine effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
+                  
+                  {isGenerating ? (
+                    <span className="relative flex items-center justify-center">
+                      <Loader2 className="h-5 w-5 mr-2.5 animate-spin" strokeWidth={2.5} />
+                      <span>Generating PDF...</span>
+                    </span>
+                  ) : (
+                    <span className="relative flex items-center justify-center">
+                      <Download className="h-5 w-5 mr-2.5 group-hover:scale-110 transition-transform duration-200" strokeWidth={2.5} />
+                      <span>Generate & Download PDF</span>
+                    </span>
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
 
           {/* Live Preview Panel - Right Side */}
-          <div className="flex-1 bg-gray-100 flex flex-col h-full overflow-hidden min-w-0">
+          <div className="flex-1 bg-gradient-to-br from-slate-100 via-white to-slate-50 flex flex-col h-full overflow-hidden min-w-0">
             <div className="h-full flex flex-col">
-              {/* Preview Header */}
-              <div className="border-b border-gray-200 p-4 bg-gradient-to-r from-green-600 to-teal-600 flex-shrink-0">
-                <div className="flex items-center gap-3">
-                  <Eye className="h-6 w-6 text-white" />
-                  <h3 className="text-xl font-bold text-white">Live Preview</h3>
-                  <Badge variant="secondary" className="ml-auto bg-white/20 text-white border-white/30">
-                    Real-time Preview
+              {/* Premium Preview Header */}
+              <div className="relative px-6 py-5 border-b border-slate-200/60 bg-gradient-to-br from-emerald-600 via-teal-600 to-teal-700 flex-shrink-0 overflow-hidden">
+                {/* Decorative gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent"></div>
+                
+                <div className="relative flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 shadow-lg">
+                      <Eye className="h-5 w-5 text-white" strokeWidth={2} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white tracking-tight">Live Preview</h3>
+                      <p className="text-xs text-white/80 mt-0.5">Updates automatically as you configure</p>
+                    </div>
+                  </div>
+                  <Badge variant="secondary" className="bg-white/10 backdrop-blur-sm text-white border-white/20 px-3 py-1 text-xs font-medium">
+                    <span className="relative flex h-2 w-2 mr-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                    </span>
+                    Real-time
                   </Badge>
                 </div>
-                <p className="text-sm text-white/80 mt-1">Preview updates automatically as you change settings</p>
               </div>
 
               {/* Preview Content */}
-              <div className="flex-1 overflow-y-auto p-4 bg-gray-100 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 min-h-0">
+              <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-br from-slate-100/50 via-white/50 to-slate-100/50 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent hover:scrollbar-thumb-slate-400 min-h-0">
                 <div className="max-w-4xl mx-auto">
                   <div 
-                    className="bg-white shadow-2xl border border-gray-300 rounded-lg p-6 min-h-[80vh]"
+                    className="bg-white shadow-2xl shadow-slate-300/50 border border-slate-200/60 rounded-2xl min-h-[80vh] transition-all duration-300"
                     style={{
                       fontFamily: config.fontFamily,
                       fontSize: `${config.fontSize}px`,
                       lineHeight: config.lineHeight,
+                      padding: `${config.margins}mm`,
                     }}
                   >
                     <div 
