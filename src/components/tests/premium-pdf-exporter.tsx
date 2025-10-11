@@ -152,9 +152,46 @@ export function PremiumPDFExporter({ test, questions, isOpen, onClose }: Premium
         line-height: ${config.lineHeight};
       }
       
-      /* Ensure proper spacing and layout in print */
+      /* HIGH-FIDELITY PRINT QUALITY */
+      @page {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      
+      /* Ensure sharp, high-quality text rendering */
       * {
         box-sizing: border-box;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+      }
+      
+      /* Professional KaTeX/LaTeX styling - transparent backgrounds */
+      .katex,
+      .katex-display,
+      .katex-html,
+      span.katex,
+      span.katex-html {
+        background: transparent !important;
+        background-color: transparent !important;
+      }
+      
+      /* Remove any default KaTeX backgrounds */
+      .katex .mord,
+      .katex .mop,
+      .katex .mbin,
+      .katex .mrel,
+      .katex .minner,
+      .katex .mopen,
+      .katex .mclose,
+      .katex .mpunct {
+        background: transparent !important;
+      }
+      
+      /* Ensure mathematical symbols are crisp */
+      .katex {
+        font-size: 1em;
+        text-rendering: geometricPrecision;
       }
       
       /* Maintain the professional spacing from live preview */
@@ -679,6 +716,46 @@ export function PremiumPDFExporter({ test, questions, isOpen, onClose }: Premium
 function generatePreviewHTML(test: Test, questions: AdminQuestion[], config: PDFConfig) {
   let content = ''
   
+  // Add CSS for transparent KaTeX backgrounds and high-quality rendering
+  content += `
+    <style>
+      /* Professional KaTeX/LaTeX styling - transparent backgrounds */
+      .katex,
+      .katex-display,
+      .katex-html,
+      span.katex,
+      span.katex-html {
+        background: transparent !important;
+        background-color: transparent !important;
+      }
+      
+      /* Remove any default KaTeX backgrounds */
+      .katex .mord,
+      .katex .mop,
+      .katex .mbin,
+      .katex .mrel,
+      .katex .minner,
+      .katex .mopen,
+      .katex .mclose,
+      .katex .mpunct {
+        background: transparent !important;
+      }
+      
+      /* High-quality text rendering */
+      * {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+      }
+      
+      /* Ensure mathematical symbols are crisp */
+      .katex {
+        font-size: 1em;
+        text-rendering: geometricPrecision;
+      }
+    </style>
+  `
+  
   // Error handling for malformed data
   if (!test) {
     return '<div style="color: red; padding: 20px;">Error: Test data is missing</div>'
@@ -807,22 +884,22 @@ function renderOptionsGrid(options: any, questionIndex: number): string {
     console.log(`❌ No options for question ${questionIndex + 1}`);
     // Return sample options for testing
     return `
-      <div class="options-grid" style="margin: 15px 0; padding: 12px; background: #f8f9fa; border-radius: 6px; ">
+      <div class="options-grid" style="margin: 15px 0; padding: 8px 0; background: transparent; border-radius: 0; ">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start;">
           <div style="display: flex; align-items: flex-start; padding: 6px; background: white; border-radius: 4px; border: 1px solid #e2e8f0;">
-            <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: #e5e7eb; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(a)</span>
+            <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: transparent; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(a)</span>
             <span style="flex: 1; line-height: 1.4; font-size: 14px;">Sample option A</span>
           </div>
           <div style="display: flex; align-items: flex-start; padding: 6px; background: white; border-radius: 4px; border: 1px solid #e2e8f0;">
-            <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: #e5e7eb; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(b)</span>
+            <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: transparent; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(b)</span>
             <span style="flex: 1; line-height: 1.4; font-size: 14px;">Sample option B</span>
           </div>
           <div style="display: flex; align-items: flex-start; padding: 6px; background: white; border-radius: 4px; border: 1px solid #e2e8f0;">
-            <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: #e5e7eb; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(c)</span>
+            <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: transparent; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(c)</span>
             <span style="flex: 1; line-height: 1.4; font-size: 14px;">Sample option C</span>
           </div>
           <div style="display: flex; align-items: flex-start; padding: 6px; background: white; border-radius: 4px; border: 1px solid #e2e8f0;">
-            <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: #e5e7eb; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(d)</span>
+            <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: transparent; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(d)</span>
             <span style="flex: 1; line-height: 1.4; font-size: 14px;">Sample option D</span>
           </div>
         </div>
@@ -847,29 +924,29 @@ function renderOptionsGrid(options: any, questionIndex: number): string {
     const optionD = opts.d || opts.D;
     
     optionsHtml = `
-      <div class="options-grid" style="margin: 15px 0; padding: 12px; background: #f8f9fa; border-radius: 6px; ">
+      <div class="options-grid" style="margin: 15px 0; padding: 8px 0; background: transparent; border-radius: 0; ">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start;">
           ${optionA ? `
             <div style="display: flex; align-items: flex-start; padding: 6px; background: white; border-radius: 4px; border: 1px solid #e2e8f0;">
-              <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: #e5e7eb; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(a)</span>
+              <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: transparent; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(a)</span>
               <span style="flex: 1; line-height: 1.4; font-size: 14px;">${renderLatex(optionA)}</span>
             </div>
           ` : '<div></div>'}
           ${optionB ? `
             <div style="display: flex; align-items: flex-start; padding: 6px; background: white; border-radius: 4px; border: 1px solid #e2e8f0;">
-              <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: #e5e7eb; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(b)</span>
+              <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: transparent; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(b)</span>
               <span style="flex: 1; line-height: 1.4; font-size: 14px;">${renderLatex(optionB)}</span>
             </div>
           ` : '<div></div>'}
           ${optionC ? `
             <div style="display: flex; align-items: flex-start; padding: 6px; background: white; border-radius: 4px; border: 1px solid #e2e8f0;">
-              <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: #e5e7eb; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(c)</span>
+              <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: transparent; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(c)</span>
               <span style="flex: 1; line-height: 1.4; font-size: 14px;">${renderLatex(optionC)}</span>
             </div>
           ` : '<div></div>'}
           ${optionD ? `
             <div style="display: flex; align-items: flex-start; padding: 6px; background: white; border-radius: 4px; border: 1px solid #e2e8f0;">
-              <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: #e5e7eb; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(d)</span>
+              <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: transparent; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(d)</span>
               <span style="flex: 1; line-height: 1.4; font-size: 14px;">${renderLatex(optionD)}</span>
             </div>
           ` : '<div></div>'}
@@ -879,11 +956,11 @@ function renderOptionsGrid(options: any, questionIndex: number): string {
   } else if (Array.isArray(opts) && opts.length > 0) {
     // Handle array structure
     optionsHtml = `
-      <div class="options-grid" style="margin: 15px 0; padding: 12px; background: #f8f9fa; border-radius: 6px; ">
+      <div class="options-grid" style="margin: 15px 0; padding: 8px 0; background: transparent; border-radius: 0; ">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start;">
           ${opts.map((option, optIndex) => `
             <div style="display: flex; align-items: flex-start; padding: 6px; background: white; border-radius: 4px; border: 1px solid #e2e8f0;">
-              <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: #e5e7eb; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(${String.fromCharCode(97 + optIndex)})</span>
+              <span style="font-weight: bold; margin-right: 8px; color: #1f2937; background: transparent; padding: 2px 6px; border-radius: 3px; min-width: 24px; text-align: center; flex-shrink: 0;">(${String.fromCharCode(97 + optIndex)})</span>
               <span style="flex: 1; line-height: 1.4; font-size: 14px;">${renderLatex(option)}</span>
             </div>
           `).join('')}
@@ -908,12 +985,14 @@ function renderLatex(text: string): string {
         const html = katex.renderToString(latex.trim(), {
           displayMode: true,
           throwOnError: false,
-          strict: false
+          strict: false,
+          output: 'html'
         })
-        return `<div style="text-align: center; margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 4px;">${html}</div>`
+        // Transparent background, clean professional styling
+        return `<div style="text-align: center; margin: 15px 0; padding: 8px 0; background: transparent;">${html}</div>`
       } catch (error) {
         console.warn('KaTeX display math error:', error)
-        return `<div style="text-align: center; margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 4px; color: #dc3545;">Math Error: ${latex}</div>`
+        return `<div style="text-align: center; margin: 15px 0; padding: 8px 0; background: transparent; color: #dc3545;">Math Error: ${latex}</div>`
       }
     })
     
@@ -923,12 +1002,14 @@ function renderLatex(text: string): string {
         const html = katex.renderToString(latex.trim(), {
           displayMode: false,
           throwOnError: false,
-          strict: false
+          strict: false,
+          output: 'html'
         })
-        return `<span style="background: #f8f9fa; padding: 2px 4px; border-radius: 2px;">${html}</span>`
+        // Transparent background for seamless inline integration
+        return `<span style="background: transparent; padding: 0; margin: 0;">${html}</span>`
       } catch (error) {
         console.warn('KaTeX inline math error:', error)
-        return `<span style="background: #f8f9fa; padding: 2px 4px; border-radius: 2px; color: #dc3545;">Math Error: ${latex}</span>`
+        return `<span style="background: transparent; padding: 0; margin: 0; color: #dc3545;">Math Error: ${latex}</span>`
       }
     })
     
