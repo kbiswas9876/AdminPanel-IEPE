@@ -71,15 +71,29 @@ export function AdvancedTipTapEditor({
   }
 
 
-  // Process content to handle LaTeX line breaks before passing to editor
+  // Process content to handle LaTeX commands and preserve backslashes
   const processContent = (content: string) => {
     if (!content) return content
     
-    // Process inline math $...$ to handle line breaks properly
-    const processedContent = content.replace(/\$([^$]+)\$/g, (match, formula) => {
-      // The formula already has proper LaTeX syntax with \\ for line breaks
-      // We need to ensure KaTeX processes them correctly
-      return `$${formula}$`
+    // CRITICAL FIX: When HTML containing LaTeX is parsed by the browser/Tiptap,
+    // certain backslash sequences like \t (tab), \n (newline), \r (carriage return)
+    // can be misinterpreted. We need to temporarily protect all LaTeX content
+    // by HTML-entity encoding backslashes within math delimiters.
+    
+    let processedContent = content
+    
+    // First, protect backslashes in display math $$...$$ 
+    processedContent = processedContent.replace(/\$\$([^$]+?)\$\$/g, (match, formula) => {
+      // HTML-entity encode backslashes to prevent corruption during HTML parsing
+      const protectedFormula = formula.replace(/\\/g, '&#92;')
+      return `$$${protectedFormula}$$`
+    })
+    
+    // Then, protect backslashes in inline math $...$
+    processedContent = processedContent.replace(/\$([^$]+?)\$/g, (match, formula) => {
+      // HTML-entity encode backslashes to prevent corruption during HTML parsing
+      const protectedFormula = formula.replace(/\\/g, '&#92;')
+      return `$${protectedFormula}$`
     })
     
     return processedContent
@@ -156,6 +170,18 @@ export function AdvancedTipTapEditor({
     autofocus: autoFocus,
   })
 
+  // Update editor content when value prop changes (e.g., switching between questions)
+  useEffect(() => {
+    if (editor && value !== undefined) {
+      const currentContent = editor.getHTML()
+      const processedValue = processContent(value)
+      
+      // Only update if content has actually changed to avoid unnecessary re-renders
+      if (currentContent !== processedValue) {
+        editor.commands.setContent(processedValue)
+      }
+    }
+  }, [editor, value])
 
   if (!editor) {
     return null

@@ -74,6 +74,29 @@ export function UnifiedEditor({
     }
   }, [])
 
+  // Process content to protect LaTeX backslashes from corruption
+  const processContent = (content: string) => {
+    if (!content) return content
+    
+    // Protect backslashes in LaTeX expressions from being misinterpreted
+    // as escape sequences during HTML parsing
+    let processedContent = content
+    
+    // Protect display math $$...$$
+    processedContent = processedContent.replace(/\$\$([^$]+?)\$\$/g, (match, formula) => {
+      const protectedFormula = formula.replace(/\\/g, '&#92;')
+      return `$$${protectedFormula}$$`
+    })
+    
+    // Protect inline math $...$
+    processedContent = processedContent.replace(/\$([^$]+?)\$/g, (match, formula) => {
+      const protectedFormula = formula.replace(/\\/g, '&#92;')
+      return `$${protectedFormula}$`
+    })
+    
+    return processedContent
+  }
+
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -120,7 +143,7 @@ export function UnifiedEditor({
         allowedFileTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'],
       }),
     ],
-    content: value,
+    content: processContent(value),
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML())
     },
@@ -135,6 +158,18 @@ export function UnifiedEditor({
     autofocus: autoFocus,
   })
 
+  // Update editor content when value prop changes
+  useEffect(() => {
+    if (editor && value !== undefined) {
+      const currentContent = editor.getHTML()
+      const processedValue = processContent(value)
+      
+      // Only update if content has actually changed
+      if (currentContent !== processedValue) {
+        editor.commands.setContent(processedValue)
+      }
+    }
+  }, [editor, value])
 
   if (!editor) {
     return null
