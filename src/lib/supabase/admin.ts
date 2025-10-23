@@ -72,6 +72,9 @@ export interface Test {
   status: 'draft' | 'scheduled' | 'live' | 'completed'
   start_time?: string
   end_time?: string
+  result_policy?: 'instant' | 'scheduled' | 'perpetual'
+  result_release_at?: string | null
+  total_questions?: number
   created_at: string
   updated_at?: string
 }

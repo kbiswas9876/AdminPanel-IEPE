@@ -40,6 +40,10 @@ export interface TestFormData {
   name: string
   description: string
   totalTimeMinutes: number
+  marksPerCorrect: number
+  negativeMarksPerIncorrect: number
+  resultPolicy: 'instant' | 'scheduled' | 'perpetual'
+  resultReleaseAt?: string | null
 }
 
 // Legacy interface - keeping for backward compatibility
@@ -62,7 +66,11 @@ export function TestFinalizationStage({
   const [formData, setFormData] = useState<TestFormData>({
     name: initialTestData?.name || '',
     description: initialTestData?.description || '',
-    totalTimeMinutes: initialTestData?.total_time_minutes || 120
+    totalTimeMinutes: initialTestData?.total_time_minutes || 120,
+    marksPerCorrect: initialTestData?.marks_per_correct || globalMarkingRules.marksPerCorrect,
+    negativeMarksPerIncorrect: initialTestData?.negative_marks_per_incorrect || -Math.abs(globalMarkingRules.penaltyPerIncorrect),
+    resultPolicy: initialTestData?.result_policy || 'instant',
+    resultReleaseAt: initialTestData?.result_release_at || null
   })
   
   const [showPublishModal, setShowPublishModal] = useState(false)
@@ -81,6 +89,20 @@ export function TestFinalizationStage({
       newErrors.totalTimeMinutes = 'Total time must be greater than 0'
     }
     
+    if (formData.marksPerCorrect <= 0) {
+      newErrors.marksPerCorrect = 'Marks per correct must be greater than 0'
+    }
+    
+    // Validate negative marks (must be 0 or negative)
+    if (formData.negativeMarksPerIncorrect > 0) {
+      newErrors.negativeMarksPerIncorrect = 'Negative marks must be 0 or negative'
+    }
+    
+    // Validate result policy requirements
+    if (formData.resultPolicy === 'scheduled' && !formData.resultReleaseAt) {
+      newErrors.resultReleaseAt = 'Result release time is required for scheduled policy'
+    }
+    
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -95,10 +117,10 @@ export function TestFinalizationStage({
     fd.append('name', formData.name)
     fd.append('description', formData.description)
     fd.append('total_time_minutes', String(formData.totalTimeMinutes))
-    fd.append('marks_per_correct', String(1)) // Default values - will be overridden by global rules
-    fd.append('negative_marks_per_incorrect', String(0.25))
-    fd.append('result_policy', 'instant')
-    fd.append('result_release_at', '')
+    fd.append('marks_per_correct', String(formData.marksPerCorrect))
+    fd.append('negative_marks_per_incorrect', String(formData.negativeMarksPerIncorrect))
+    fd.append('result_policy', formData.resultPolicy)
+    fd.append('result_release_at', formData.resultReleaseAt || '')
     fd.append('status', 'draft')
     const questionsPayload = questions.map((slot) => {
       const q = slot.question
@@ -158,8 +180,8 @@ export function TestFinalizationStage({
     fd.append('name', formData.name)
     fd.append('description', formData.description)
     fd.append('total_time_minutes', String(formData.totalTimeMinutes))
-    fd.append('marks_per_correct', String(1)) // Default values - will be overridden by global rules
-    fd.append('negative_marks_per_incorrect', String(0.25))
+    fd.append('marks_per_correct', String(formData.marksPerCorrect))
+    fd.append('negative_marks_per_incorrect', String(formData.negativeMarksPerIncorrect))
     fd.append('result_policy', publishData.resultPolicy)
     fd.append('result_release_at', publishData.resultPolicy === 'scheduled' ? (publishData.resultReleaseAt || '') : '')
     fd.append('status', 'scheduled')
@@ -460,6 +482,178 @@ export function TestFinalizationStage({
                   {errors.totalTimeMinutes && (
                     <p className="text-sm text-red-600 font-medium">{errors.totalTimeMinutes}</p>
                   )}
+                </div>
+
+                {/* Scoring Configuration Section */}
+                <div className="pt-4 border-t border-gray-200">
+                  <h4 className="text-base font-bold text-gray-900 mb-4">Scoring Configuration</h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Marks per Correct */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold text-gray-700">
+                        Marks per Correct
+                      </Label>
+                      <Input
+                        type="number"
+                        step="0.25"
+                        min="0"
+                        value={formData.marksPerCorrect}
+                        onChange={(e) => updateFormData('marksPerCorrect', Number(e.target.value))}
+                        placeholder="1"
+                        className="h-12 border-gray-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 rounded-xl text-base transition-all duration-200"
+                      />
+                      {errors.marksPerCorrect && (
+                        <p className="text-sm text-red-600 font-medium">{errors.marksPerCorrect}</p>
+                      )}
+                      <p className="text-xs text-gray-500">Points awarded for each correct answer</p>
+                    </div>
+
+                    {/* Negative Marks per Incorrect */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold text-gray-700">
+                        Negative Marks per Incorrect
+                      </Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={Math.abs(formData.negativeMarksPerIncorrect)}
+                        onChange={(e) => {
+                          const positive = Number(e.target.value)
+                          // Convert to negative for storage
+                          updateFormData('negativeMarksPerIncorrect', positive > 0 ? -positive : 0)
+                        }}
+                        placeholder="0.25"
+                        className="h-12 border-gray-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 rounded-xl text-base transition-all duration-200"
+                      />
+                      {errors.negativeMarksPerIncorrect && (
+                        <p className="text-sm text-red-600 font-medium">{errors.negativeMarksPerIncorrect}</p>
+                      )}
+                      <p className="text-xs text-gray-500">
+                        Enter as positive (e.g., 0.25). Will be stored as negative.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Marking Scheme Display */}
+                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-blue-900">Marking Scheme:</span>
+                      <span className="text-base font-bold text-blue-900">
+                        +{formData.marksPerCorrect} / {formData.negativeMarksPerIncorrect}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Result Policy Section */}
+                <div className="pt-4 border-t border-gray-200">
+                  <h4 className="text-base font-bold text-gray-900 mb-4">Result Policy</h4>
+                  
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold text-gray-700">
+                      When will students see results?
+                    </Label>
+                    
+                    <div className="space-y-2">
+                      {/* Instant Results Option */}
+                      <label className={`flex items-start space-x-3 p-3 border rounded-xl cursor-pointer transition-all ${
+                        formData.resultPolicy === 'instant' 
+                          ? 'border-blue-400 bg-blue-50' 
+                          : 'border-gray-200 hover:bg-gray-50'
+                      }`}>
+                        <input
+                          type="radio"
+                          name="resultPolicy"
+                          value="instant"
+                          checked={formData.resultPolicy === 'instant'}
+                          onChange={(e) => updateFormData('resultPolicy', e.target.value as any)}
+                          className="mt-1 w-4 h-4 text-blue-600"
+                        />
+                        <div className="flex-1">
+                          <div className="text-sm font-semibold text-gray-900">
+                            Instant (Immediately after submission)
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Students see their results as soon as they submit the test
+                          </p>
+                        </div>
+                      </label>
+
+                      {/* Scheduled Results Option */}
+                      <label className={`flex items-start space-x-3 p-3 border rounded-xl cursor-pointer transition-all ${
+                        formData.resultPolicy === 'scheduled' 
+                          ? 'border-blue-400 bg-blue-50' 
+                          : 'border-gray-200 hover:bg-gray-50'
+                      }`}>
+                        <input
+                          type="radio"
+                          name="resultPolicy"
+                          value="scheduled"
+                          checked={formData.resultPolicy === 'scheduled'}
+                          onChange={(e) => updateFormData('resultPolicy', e.target.value as any)}
+                          className="mt-1 w-4 h-4 text-blue-600"
+                        />
+                        <div className="flex-1">
+                          <div className="text-sm font-semibold text-gray-900">
+                            Scheduled (Release at specific time)
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Results will be released at a specific date and time
+                          </p>
+                        </div>
+                      </label>
+
+                      {/* Perpetual/Manual Results Option */}
+                      <label className={`flex items-start space-x-3 p-3 border rounded-xl cursor-pointer transition-all ${
+                        formData.resultPolicy === 'perpetual' 
+                          ? 'border-blue-400 bg-blue-50' 
+                          : 'border-gray-200 hover:bg-gray-50'
+                      }`}>
+                        <input
+                          type="radio"
+                          name="resultPolicy"
+                          value="perpetual"
+                          checked={formData.resultPolicy === 'perpetual'}
+                          onChange={(e) => updateFormData('resultPolicy', e.target.value as any)}
+                          className="mt-1 w-4 h-4 text-blue-600"
+                        />
+                        <div className="flex-1">
+                          <div className="text-sm font-semibold text-gray-900">
+                            Manual (Admin releases results)
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Results will be manually released by administrator
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+
+                    {/* Result Release Time - Only show for scheduled policy */}
+                    {formData.resultPolicy === 'scheduled' && (
+                      <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-xl">
+                        <Label className="text-sm font-semibold text-gray-700 mb-2 block">
+                          Result Release Time *
+                        </Label>
+                        <Input
+                          type="datetime-local"
+                          value={formData.resultReleaseAt ? new Date(formData.resultReleaseAt).toISOString().slice(0, 16) : ''}
+                          onChange={(e) => {
+                            const dateValue = e.target.value ? new Date(e.target.value).toISOString() : null
+                            updateFormData('resultReleaseAt', dateValue)
+                          }}
+                          className="h-12 border-gray-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-100 rounded-xl text-base transition-all duration-200"
+                        />
+                        {errors.resultReleaseAt && (
+                          <p className="text-sm text-red-600 font-medium mt-2">{errors.resultReleaseAt}</p>
+                        )}
+                        <p className="text-xs text-gray-600 mt-2">
+                          Results will be automatically released at this time
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-2">

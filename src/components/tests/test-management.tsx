@@ -8,7 +8,9 @@ import {
   Plus, 
   FileText, 
   Calendar, 
-  Clock
+  Clock,
+  Award,
+  Eye
 } from 'lucide-react'
 import { TestActions } from './test-actions'
 
@@ -177,7 +179,7 @@ export function TestManagement({ onCreateTest }: TestManagementProps = {}) {
               </div>
 
               {/* Stats */}
-              <div className="flex items-center gap-6 py-4 border-y border-gray-100">
+              <div className="flex items-center gap-4 py-4 border-y border-gray-100 flex-wrap">
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4 text-gray-400" strokeWidth={1.5} />
                   <div>
@@ -194,6 +196,16 @@ export function TestManagement({ onCreateTest }: TestManagementProps = {}) {
                     <p className="text-xs text-gray-500">Duration</p>
                     <p className="text-lg font-semibold text-gray-900">
                       {test.total_time_minutes}<span className="text-xs text-gray-500 ml-0.5">min</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Award className="h-4 w-4 text-gray-400" strokeWidth={1.5} />
+                  <div>
+                    <p className="text-xs text-gray-500">Marking</p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      +{test.marks_per_correct} / {test.negative_marks_per_incorrect}
                     </p>
                   </div>
                 </div>
@@ -222,6 +234,23 @@ export function TestManagement({ onCreateTest }: TestManagementProps = {}) {
                     </p>
                   </div>
                 </div>
+
+                {/* Result Policy Display - Only show if not instant */}
+                {test.result_policy && test.result_policy !== 'instant' && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Eye className="h-4 w-4 text-gray-400 flex-shrink-0" strokeWidth={1.5} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-gray-500">Results</p>
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {test.result_policy === 'scheduled' && test.result_release_at
+                          ? formatDateTime(test.result_release_at)
+                          : test.result_policy === 'perpetual'
+                          ? 'Manual Release'
+                          : 'Instant'}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Actions */}
