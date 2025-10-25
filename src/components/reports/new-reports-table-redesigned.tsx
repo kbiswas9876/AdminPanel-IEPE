@@ -205,7 +205,7 @@ export function NewReportsTableRedesigned() {
                           <div className="flex-1">
                             <p className="text-slate-700 leading-relaxed">
                               {isExpanded ? report.report_description : 
-                               report.report_description?.length > 150 
+                               (report.report_description && report.report_description.length > 150)
                                  ? `${report.report_description.substring(0, 150)}...` 
                                  : report.report_description}
                             </p>

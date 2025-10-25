@@ -153,7 +153,7 @@ export async function getNewErrorReportsCount(): Promise<number> {
 // Update error report status
 export async function updateErrorReportStatus(
   reportId: number,
-  newStatus: 'new' | 'reviewed' | 'resolved'
+  newStatus: 'new' | 'reviewed' | 'resolved' | 'in_review'
 ): Promise<{ success: boolean; message: string }> {
   try {
     const supabase = createAdminClient()
