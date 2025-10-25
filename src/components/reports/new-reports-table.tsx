@@ -36,7 +36,7 @@ export function NewReportsTable() {
   const handleMarkAsInReview = async (reportId: number) => {
     try {
       setUpdating(reportId)
-      const result = await updateErrorReportStatus(reportId, 'in_review')
+      const result = await updateErrorReportStatus(reportId, 'reviewed')
       
       if (result.success) {
         toast.success('Report marked as in review')

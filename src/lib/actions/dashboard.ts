@@ -109,7 +109,7 @@ export async function getRecentActivity(limit: number = 10): Promise<RecentActiv
     // Get recent error reports
     const { data: recentErrors } = await supabase
       .from('error_reports')
-      .select('id, created_at, status, profiles(email)')
+      .select('id, created_at, status, reported_by_user_id')
       .order('created_at', { ascending: false })
       .limit(2)
     
@@ -119,9 +119,9 @@ export async function getRecentActivity(limit: number = 10): Promise<RecentActiv
           id: `error_${error.id}`,
           type: 'error_report',
           title: 'New Error Report',
-          description: `Error report submitted by ${error.profiles?.[0]?.email || 'Unknown user'}`,
+          description: `Error report submitted by user ${error.reported_by_user_id}`,
           timestamp: error.created_at,
-          userEmail: error.profiles?.[0]?.email,
+          userEmail: undefined,
           metadata: { errorId: error.id, status: error.status }
         })
       })

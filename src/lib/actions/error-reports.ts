@@ -7,15 +7,12 @@ import { revalidatePath } from 'next/cache'
 interface RawErrorReport {
   id: number
   question_id: string
-  user_id: string
+  reported_by_user_id: string
   report_description: string
-  status: 'new' | 'in_review' | 'resolved'
+  status: 'new' | 'reviewed' | 'resolved' | 'dismissed'
+  admin_notes?: string
   created_at: string
   updated_at?: string
-  profiles: {
-    email: string
-    full_name?: string
-  }[] | null
   questions: {
     question_text: string
     book_source: string
@@ -33,15 +30,12 @@ export async function getErrorReports(): Promise<ErrorReportWithDetails[]> {
       .select(`
         id,
         question_id,
-        user_id,
+        reported_by_user_id,
         report_description,
         status,
+        admin_notes,
         created_at,
         updated_at,
-        profiles (
-          email,
-          full_name
-        ),
         questions (
           question_text,
           book_source,
@@ -59,13 +53,14 @@ export async function getErrorReports(): Promise<ErrorReportWithDetails[]> {
     return data.map((report: RawErrorReport) => ({
       id: report.id,
       question_id: report.question_id,
-      user_id: report.user_id,
+      user_id: report.reported_by_user_id,
       report_description: report.report_description,
       status: report.status,
+      admin_notes: report.admin_notes,
       created_at: report.created_at,
       updated_at: report.updated_at,
-      user_email: report.profiles?.[0]?.email || 'Unknown',
-      user_full_name: report.profiles?.[0]?.full_name,
+      user_email: 'Unknown',
+      user_full_name: undefined,
       question_text: report.questions?.[0]?.question_text,
       book_source: report.questions?.[0]?.book_source,
       chapter_name: report.questions?.[0]?.chapter_name
@@ -77,7 +72,7 @@ export async function getErrorReports(): Promise<ErrorReportWithDetails[]> {
 }
 
 // Get error reports by status
-export async function getErrorReportsByStatus(status: 'new' | 'in_review' | 'resolved'): Promise<ErrorReportWithDetails[]> {
+export async function getErrorReportsByStatus(status: 'new' | 'reviewed' | 'resolved' | 'dismissed'): Promise<ErrorReportWithDetails[]> {
   try {
     const supabase = createAdminClient()
 
@@ -86,15 +81,12 @@ export async function getErrorReportsByStatus(status: 'new' | 'in_review' | 'res
       .select(`
         id,
         question_id,
-        user_id,
+        reported_by_user_id,
         report_description,
         status,
+        admin_notes,
         created_at,
         updated_at,
-        profiles (
-          email,
-          full_name
-        ),
         questions (
           question_text,
           book_source,
@@ -113,13 +105,14 @@ export async function getErrorReportsByStatus(status: 'new' | 'in_review' | 'res
     return data.map((report: RawErrorReport) => ({
       id: report.id,
       question_id: report.question_id,
-      user_id: report.user_id,
+      user_id: report.reported_by_user_id,
       report_description: report.report_description,
       status: report.status,
+      admin_notes: report.admin_notes,
       created_at: report.created_at,
       updated_at: report.updated_at,
-      user_email: report.profiles?.[0]?.email || 'Unknown',
-      user_full_name: report.profiles?.[0]?.full_name,
+      user_email: 'Unknown',
+      user_full_name: undefined,
       question_text: report.questions?.[0]?.question_text,
       book_source: report.questions?.[0]?.book_source,
       chapter_name: report.questions?.[0]?.chapter_name
@@ -155,15 +148,21 @@ export async function getNewErrorReportsCount(): Promise<number> {
 // Update error report status
 export async function updateErrorReportStatus(
   reportId: number,
-  newStatus: 'new' | 'in_review' | 'resolved'
+  newStatus: 'new' | 'reviewed' | 'resolved'
 ): Promise<{ success: boolean; message: string }> {
   try {
     const supabase = createAdminClient()
 
+    // CRITICAL FIX: Map 'in_review' to 'reviewed' to match database constraint
+    let finalStatus = newStatus
+    if (newStatus === 'in_review') {
+      finalStatus = 'reviewed'
+    }
+
     const { error } = await supabase
       .from('error_reports')
       .update({ 
-        status: newStatus,
+        status: finalStatus,
         updated_at: new Date().toISOString()
       })
       .eq('id', reportId)
