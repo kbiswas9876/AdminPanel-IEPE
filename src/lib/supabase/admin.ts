@@ -74,6 +74,8 @@ export interface Test {
   end_time?: string
   created_at: string
   updated_at?: string
+  allow_pausing?: boolean
+  show_in_question_timer?: boolean
 }
 
 // Types for test_questions table
@@ -97,6 +99,8 @@ export interface TestCreationData {
   total_time_minutes: number
   marks_per_correct: number
   negative_marks_per_incorrect: number
+  allow_pausing?: boolean
+  show_in_question_timer?: boolean
   blueprint: TestBlueprint[]
 }
 

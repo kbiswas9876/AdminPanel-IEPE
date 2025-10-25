@@ -11,6 +11,7 @@ import {
   Clock
 } from 'lucide-react'
 import { TestActions } from './test-actions'
+import { TestControlToggles } from './test-control-toggles'
 
 interface TestManagementProps {
   onCreateTest?: () => void
@@ -222,6 +223,14 @@ export function TestManagement({ onCreateTest }: TestManagementProps = {}) {
                     </p>
                   </div>
                 </div>
+              </div>
+
+              {/* Test Control Settings */}
+              <div className="py-4 border-t border-gray-100">
+                <TestControlToggles 
+                  test={test} 
+                  onUpdate={handleTestAction}
+                />
               </div>
 
               {/* Actions */}

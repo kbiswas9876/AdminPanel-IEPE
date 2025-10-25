@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ArrowLeft, Save, Calendar, FileText, BarChart3, Tag, Layers, Eye } from 'lucide-react'
 import { UnifiedPublishModal, type UnifiedPublishData } from './unified-publish-modal'
@@ -40,6 +41,8 @@ export interface TestFormData {
   name: string
   description: string
   totalTimeMinutes: number
+  allowPausing: boolean
+  showInQuestionTimer: boolean
 }
 
 // Legacy interface - keeping for backward compatibility
@@ -62,7 +65,9 @@ export function TestFinalizationStage({
   const [formData, setFormData] = useState<TestFormData>({
     name: initialTestData?.name || '',
     description: initialTestData?.description || '',
-    totalTimeMinutes: initialTestData?.total_time_minutes || 120
+    totalTimeMinutes: initialTestData?.total_time_minutes || 120,
+    allowPausing: false, // Default to strict mode for new tests
+    showInQuestionTimer: false // Default to strict mode for new tests
   })
   
   const [showPublishModal, setShowPublishModal] = useState(false)
@@ -98,6 +103,8 @@ export function TestFinalizationStage({
     fd.append('marks_per_correct', String(1)) // Default values - will be overridden by global rules
     fd.append('negative_marks_per_incorrect', String(0.25))
     fd.append('result_policy', 'instant')
+    fd.append('allow_pausing', String(formData.allowPausing))
+    fd.append('show_in_question_timer', String(formData.showInQuestionTimer))
     fd.append('result_release_at', '')
     fd.append('status', 'draft')
     const questionsPayload = questions.map((slot) => {
@@ -166,6 +173,8 @@ export function TestFinalizationStage({
     fd.append('start_time', publishData.startTime)
     fd.append('end_time', publishData.schedulingMode === 'perpetual' ? '' : publishData.endTime)
     fd.append('is_perpetual', String(publishData.schedulingMode === 'perpetual'))
+    fd.append('allow_pausing', String(formData.allowPausing))
+    fd.append('show_in_question_timer', String(formData.showInQuestionTimer))
     const questionsPayload = questions.map((slot) => {
       const q = slot.question
       const normalizedOptions = Object.fromEntries(Object.entries(q.options || {}).map(([k, v]) => [String(k).toUpperCase(), v]))
@@ -211,7 +220,7 @@ export function TestFinalizationStage({
     setTimeout(() => router.push('/tests'), 1500)
   }
 
-  const updateFormData = (field: keyof TestFormData, value: string | number) => {
+  const updateFormData = (field: keyof TestFormData, value: string | number | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }))
     // Clear error when user starts typing
     if (errors[field]) {
@@ -460,6 +469,47 @@ export function TestFinalizationStage({
                   {errors.totalTimeMinutes && (
                     <p className="text-sm text-red-600 font-medium">{errors.totalTimeMinutes}</p>
                   )}
+                </div>
+
+                {/* Test Experience Settings */}
+                <div className="space-y-4 rounded-lg border border-gray-200 p-4 bg-gray-50/50">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                      <Layers className="h-3 w-3 text-white" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900">Test Experience Settings</h3>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Configure the interface and rules students will experience during the test.
+                  </p>
+
+                  {/* Allow Pausing Toggle */}
+                  <div className="flex items-center justify-between rounded-lg border border-gray-200 p-3 bg-white shadow-sm">
+                    <div className="space-y-0.5">
+                      <Label className="text-sm font-semibold text-gray-900">Allow Pausing</Label>
+                      <p className="text-xs text-gray-600">
+                        If enabled, students will see a pause button and can resume the test later.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={formData.allowPausing}
+                      onCheckedChange={(checked) => updateFormData('allowPausing', checked)}
+                    />
+                  </div>
+
+                  {/* Show In-Question Timer Toggle */}
+                  <div className="flex items-center justify-between rounded-lg border border-gray-200 p-3 bg-white shadow-sm">
+                    <div className="space-y-0.5">
+                      <Label className="text-sm font-semibold text-gray-900">Show In-Question Timer</Label>
+                      <p className="text-xs text-gray-600">
+                        If enabled, a separate timer for each question will be displayed.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={formData.showInQuestionTimer}
+                      onCheckedChange={(checked) => updateFormData('showInQuestionTimer', checked)}
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">

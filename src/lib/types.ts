@@ -94,6 +94,8 @@ export type Test = {
   published?: boolean;
   publish_start_time?: string | null;
   publish_end_time?: string | null;
+  allow_pausing?: boolean;
+  show_in_question_timer?: boolean;
 };
 
 // Type for UI question (with additional UI-specific properties)

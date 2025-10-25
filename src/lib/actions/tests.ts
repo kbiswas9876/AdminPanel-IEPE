@@ -509,6 +509,8 @@ export async function saveTest(args: {
   result_policy: 'instant' | 'scheduled' | 'perpetual'
   result_release_at?: string | null
   question_ids: number[]
+  allow_pausing?: boolean
+  show_in_question_timer?: boolean
   publish?: {
     start_time: string
     end_time?: string | null
@@ -528,18 +530,25 @@ export async function saveTest(args: {
     // Determine status based on publish payload
     const status = args.publish ? 'scheduled' : 'draft'
 
+    // Ensure negative marks is always <= 0 (enforce CHECK constraint)
+    const correctedNegativeMarks = args.negative_marks_per_incorrect > 0 
+      ? -args.negative_marks_per_incorrect 
+      : args.negative_marks_per_incorrect;
+
     // Base payload for tests table
     const baseData = {
       name: args.name,
       description: args.description,
       total_time_minutes: args.total_time_minutes,
       marks_per_correct: args.marks_per_correct,
-      negative_marks_per_incorrect: args.negative_marks_per_incorrect,
+      negative_marks_per_incorrect: correctedNegativeMarks,
       result_policy: args.result_policy,
       result_release_at: args.result_policy === 'scheduled' ? (args.result_release_at || null) : null,
       status,
       start_time: args.publish?.start_time || null,
       end_time: args.publish?.is_perpetual ? null : (args.publish?.end_time || null),
+      allow_pausing: args.allow_pausing ?? false,
+      show_in_question_timer: args.show_in_question_timer ?? false,
       updated_at: new Date().toISOString()
     }
 
@@ -619,15 +628,21 @@ export async function saveTest(args: {
 // FormData-compatible server action for robust client submissions
 export async function saveTestFromForm(formData: FormData): Promise<{ success: boolean; message: string; testId?: number }> {
   try {
+    // Ensure negative marks is always <= 0 (enforce CHECK constraint)
+    const rawNegativeMarks = Number(formData.get('negative_marks_per_incorrect') || 0);
+    const correctedNegativeMarks = rawNegativeMarks > 0 ? -rawNegativeMarks : rawNegativeMarks;
+
     const payload = {
       testId: formData.get('testId') ? Number(formData.get('testId')) : undefined,
       name: String(formData.get('name') || ''),
       description: formData.get('description') ? String(formData.get('description')) : undefined,
       total_time_minutes: Number(formData.get('total_time_minutes') || 0),
       marks_per_correct: Number(formData.get('marks_per_correct') || 0),
-      negative_marks_per_incorrect: Number(formData.get('negative_marks_per_incorrect') || 0),
+      negative_marks_per_incorrect: correctedNegativeMarks,
       result_policy: (String(formData.get('result_policy') || 'instant') as 'instant' | 'scheduled'),
       result_release_at: formData.get('result_release_at') ? String(formData.get('result_release_at')) : null,
+      allow_pausing: String(formData.get('allow_pausing') || 'false') === 'true',
+      show_in_question_timer: String(formData.get('show_in_question_timer') || 'false') === 'true',
       question_ids: (() => { try { return JSON.parse(String(formData.get('question_ids') || '[]')) as number[] } catch { return [] } })(),
       publish: ((): { start_time: string; end_time?: string | null; is_perpetual?: boolean } | null => {
         const status = String(formData.get('status') || 'draft')
@@ -656,6 +671,8 @@ export async function saveTestFromForm(formData: FormData): Promise<{ success: b
       status,
       start_time: payload.publish?.start_time || null,
       end_time: payload.publish?.end_time || null,
+      allow_pausing: payload.allow_pausing,
+      show_in_question_timer: payload.show_in_question_timer,
       updated_at: new Date().toISOString()
     }
 
@@ -876,6 +893,11 @@ export async function createTest(testData: TestCreationData): Promise<{ success:
   try {
     const supabase = createAdminClient()
     
+    // Ensure negative marks is always <= 0 (enforce CHECK constraint)
+    const correctedNegativeMarks = testData.negative_marks_per_incorrect > 0 
+      ? -testData.negative_marks_per_incorrect 
+      : testData.negative_marks_per_incorrect;
+
     // First, create the test record
     const { data: testResult, error: testError } = await supabase
       .from('tests')
@@ -884,7 +906,9 @@ export async function createTest(testData: TestCreationData): Promise<{ success:
         description: testData.description,
         total_time_minutes: testData.total_time_minutes,
         marks_per_correct: testData.marks_per_correct,
-        negative_marks_per_incorrect: testData.negative_marks_per_incorrect,
+        negative_marks_per_incorrect: correctedNegativeMarks,
+        allow_pausing: false, // Default to strict mode for new tests
+        show_in_question_timer: false, // Default to strict mode for new tests
         status: 'draft'
       }])
       .select()
@@ -978,17 +1002,54 @@ export async function createTest(testData: TestCreationData): Promise<{ success:
   }
 }
 
+// Update test control settings (allow_pausing, show_in_question_timer)
+export async function updateTestControlSettings(
+  testId: number, 
+  settings: { allow_pausing?: boolean; show_in_question_timer?: boolean }
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const supabase = createAdminClient()
+    
+    const updateData: Record<string, unknown> = {}
+    if (settings.allow_pausing !== undefined) updateData.allow_pausing = settings.allow_pausing
+    if (settings.show_in_question_timer !== undefined) updateData.show_in_question_timer = settings.show_in_question_timer
+    updateData.updated_at = new Date().toISOString()
+    
+    const { error } = await supabase
+      .from('tests')
+      .update(updateData)
+      .eq('id', testId)
+    
+    if (error) {
+      console.error('Error updating test control settings:', error)
+      return { success: false, message: 'Failed to update test settings' }
+    }
+    
+    return { success: true, message: 'Test settings updated successfully' }
+  } catch (error) {
+    console.error('Error updating test control settings:', error)
+    return { success: false, message: 'An error occurred while updating test settings' }
+  }
+}
+
 // Update test (for editing draft tests)
 export async function updateTest(testId: number, testData: Partial<TestCreationData>): Promise<{ success: boolean; message: string }> {
   try {
     const supabase = createAdminClient()
     
+    // Ensure negative marks is always <= 0 (enforce CHECK constraint)
+    const correctedNegativeMarks = testData.negative_marks_per_incorrect !== undefined && testData.negative_marks_per_incorrect > 0 
+      ? -testData.negative_marks_per_incorrect 
+      : testData.negative_marks_per_incorrect;
+
     const updateData: Record<string, unknown> = {}
     if (testData.name) updateData.name = testData.name
     if (testData.description !== undefined) updateData.description = testData.description
     if (testData.total_time_minutes) updateData.total_time_minutes = testData.total_time_minutes
     if (testData.marks_per_correct) updateData.marks_per_correct = testData.marks_per_correct
-    if (testData.negative_marks_per_incorrect) updateData.negative_marks_per_incorrect = testData.negative_marks_per_incorrect
+    if (testData.negative_marks_per_incorrect !== undefined) updateData.negative_marks_per_incorrect = correctedNegativeMarks
+    if (testData.allow_pausing !== undefined) updateData.allow_pausing = testData.allow_pausing
+    if (testData.show_in_question_timer !== undefined) updateData.show_in_question_timer = testData.show_in_question_timer
     updateData.updated_at = new Date().toISOString()
     
     const { error } = await supabase
@@ -1275,6 +1336,11 @@ export async function cloneTest(testId: number): Promise<{ success: boolean; mes
       return { success: false, message: 'Failed to read original questions' }
     }
 
+    // Ensure negative marks is always <= 0 (enforce CHECK constraint)
+    const correctedNegativeMarks = original.negative_marks_per_incorrect > 0 
+      ? -original.negative_marks_per_incorrect 
+      : original.negative_marks_per_incorrect;
+
     // Create new test
     const { data: created, error: createErr } = await supabase
       .from('tests')
@@ -1283,7 +1349,9 @@ export async function cloneTest(testId: number): Promise<{ success: boolean; mes
         description: original.description,
         total_time_minutes: original.total_time_minutes,
         marks_per_correct: original.marks_per_correct,
-        negative_marks_per_incorrect: original.negative_marks_per_incorrect,
+        negative_marks_per_incorrect: correctedNegativeMarks,
+        allow_pausing: original.allow_pausing ?? false,
+        show_in_question_timer: original.show_in_question_timer ?? false,
         result_policy: 'instant',
         result_release_at: null,
         status: 'draft',
