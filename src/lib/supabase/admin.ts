@@ -62,6 +62,103 @@ export interface UserProfile {
   email?: string
 }
 
+// Enhanced Analytics Types
+export interface TestResult {
+  id: number
+  user_id: string
+  test_type: 'practice' | 'mock_test'
+  session_type: string
+  mock_test_id?: number
+  score: number
+  score_percentage: number
+  accuracy: number
+  total_questions: number
+  total_correct: number
+  total_incorrect: number
+  total_skipped: number
+  total_time_taken: number
+  submitted_at: string
+  created_at: string
+}
+
+export interface AnswerLog {
+  id: number
+  result_id: number
+  question_id: number
+  user_id: string
+  user_answer: string | null
+  status: 'correct' | 'incorrect' | 'skipped'
+  time_taken: number
+  created_at: string
+}
+
+export interface EnhancedStudentAnalytics {
+  // Overview
+  totalTests: number
+  practiceTests: number
+  mockTests: number
+  
+  // Performance
+  overallScore: number
+  practiceScore: number
+  mockScore: number
+  overallAccuracy: number
+  
+  // Time
+  totalTimeSpent: number
+  averageTimePerQuestion: number
+  
+  // Question Stats
+  totalQuestionsAttempted: number
+  totalCorrect: number
+  totalIncorrect: number
+  totalSkipped: number
+  
+  // Trends
+  recentPerformance: PerformanceTrend[]
+}
+
+export interface PerformanceTrend {
+  date: string
+  score: number
+  testType: 'practice' | 'mock_test'
+}
+
+export interface QuestionPerformanceDetail {
+  questionId: number
+  questionText: string
+  book_source: string
+  chapter_name: string
+  difficulty: string
+  attempts: number
+  correctAttempts: number
+  averageTime: number
+  lastAttempted: string
+  recentStatus: 'correct' | 'incorrect' | 'skipped'
+}
+
+export interface SessionDetail {
+  id: number
+  sessionType: 'practice' | 'mock_test'
+  testName?: string
+  score: number
+  accuracy: number
+  totalQuestions: number
+  correct: number
+  incorrect: number
+  skipped: number
+  timeSpent: number
+  submittedAt: string
+  answerLog: AnswerLog[]
+}
+
+export interface QuestionFilters {
+  subject?: string
+  chapter?: string
+  difficulty?: string
+  status?: 'correct' | 'incorrect' | 'skipped'
+}
+
 // Types for user groups and tags
 export interface UserGroup {
   id: string
