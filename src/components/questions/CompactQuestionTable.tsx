@@ -5,16 +5,24 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { 
   ChevronDown,
   ChevronRight,
   Edit,
   BookOpen,
+  ChevronDown as ChevronDownIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { UIQuestion } from '@/lib/types'
 import { UniversalContentRenderer } from '@/components/editors/UniversalContentRenderer'
 import { QuestionEditForm } from './QuestionEditForm'
 import { CompactQuestionDetails } from './CompactQuestionDetails'
+import { updateQuestionInPlace } from '@/lib/actions/questions'
+import { toast } from 'sonner'
 
 interface CompactQuestionTableProps {
   questions: UIQuestion[]
@@ -43,6 +51,55 @@ export function CompactQuestionTable({
   const [editingQuestion, setEditingQuestion] = useState<number | null>(null)
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set())
   const [animatingQuestions, setAnimatingQuestions] = useState<Set<number>>(new Set())
+  const [openPopoverId, setOpenPopoverId] = useState<number | null>(null)
+
+  // Difficulty options for quick edit
+  const DIFFICULTY_OPTIONS = [
+    { value: 'Easy', label: 'Easy' },
+    { value: 'Easy-Moderate', label: 'Easy-Moderate' },
+    { value: 'Moderate', label: 'Moderate' },
+    { value: 'Moderate-Hard', label: 'Moderate-Hard' },
+    { value: 'Hard', label: 'Hard' }
+  ] as const
+
+  // Handle quick difficulty update with optimistic UI
+  const handleQuickDifficultyUpdate = async (question: UIQuestion, newDifficulty: string) => {
+    if (!question.id) return
+
+    // Close the popover immediately
+    setOpenPopoverId(null)
+
+    // Store original difficulty for rollback
+    const originalDifficulty = question.difficulty
+
+    try {
+      // Optimistic update - immediately update the UI
+      const updatedQuestion = { ...question, difficulty: newDifficulty as any }
+      onQuestionUpdate(updatedQuestion)
+
+      // Call API to update in database
+      const result = await updateQuestionInPlace({
+        ...question,
+        difficulty: newDifficulty as any
+      })
+
+      if (result.success) {
+        // Show subtle success toast
+        toast.success(`Difficulty updated to ${newDifficulty}`, { duration: 1500 })
+      } else {
+        // Rollback on API failure
+        const rollbackQuestion = { ...question, difficulty: originalDifficulty }
+        onQuestionUpdate(rollbackQuestion)
+        toast.error(result.message || 'Failed to update difficulty', { duration: 3000 })
+      }
+    } catch (error) {
+      // Rollback on unexpected error
+      const rollbackQuestion = { ...question, difficulty: originalDifficulty }
+      onQuestionUpdate(rollbackQuestion)
+      console.error('Error updating difficulty:', error)
+      toast.error('Failed to update difficulty. Please try again.', { duration: 3000 })
+    }
+  }
 
   // Auto-expand edited question when context should be preserved
   useEffect(() => {
@@ -149,14 +206,49 @@ export function CompactQuestionTable({
                         </div>
                       </div>
                       
-                      {/* Difficulty Badge */}
+                      {/* Interactive Difficulty Badge */}
                       {question.difficulty && (
-                        <Badge 
-                          variant="outline" 
-                          className={cn("text-xs px-3 py-1.5 rounded-xl font-medium shadow-sm", getDifficultyColor(question.difficulty))}
+                        <Popover 
+                          open={openPopoverId === question.id} 
+                          onOpenChange={(open) => setOpenPopoverId(open ? question.id! : null)}
                         >
-                          {question.difficulty}
-                        </Badge>
+                          <PopoverTrigger asChild>
+                            <Badge 
+                              variant="outline" 
+                              className={cn(
+                                "text-xs px-3 py-1.5 rounded-xl font-medium shadow-sm cursor-pointer transition-all duration-200 hover:ring-2 hover:ring-offset-1 hover:ring-blue-300",
+                                getDifficultyColor(question.difficulty)
+                              )}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div className="flex items-center gap-1">
+                                {question.difficulty}
+                                <ChevronDownIcon className="h-3 w-3 opacity-60" />
+                              </div>
+                            </Badge>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-48 p-1" align="start">
+                            <div className="space-y-1">
+                              {DIFFICULTY_OPTIONS.map((option) => (
+                                <button
+                                  key={option.value}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleQuickDifficultyUpdate(question, option.value)
+                                  }}
+                                  className={cn(
+                                    "w-full text-left px-3 py-2 text-sm rounded-md transition-colors duration-150",
+                                    question.difficulty === option.value
+                                      ? "bg-blue-50 text-blue-700 font-medium"
+                                      : "hover:bg-gray-50 text-gray-700"
+                                  )}
+                                >
+                                  {option.label}
+                                </button>
+                              ))}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       )}
                     </div>
                     

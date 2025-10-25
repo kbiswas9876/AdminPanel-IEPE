@@ -24,9 +24,11 @@ import {
   X,
   Plus,
   Upload,
-  Settings
+  Settings,
+  Tag
 } from 'lucide-react'
 import { SafeDeletionModal } from '@/components/ui/safe-deletion-modal'
+import { BulkDifficultyModal } from '@/components/ui/bulk-difficulty-modal'
 import type { UIQuestion, Question } from '@/lib/types'
 import { toast } from 'sonner'
 
@@ -80,6 +82,7 @@ export function QuestionExplorer({
   const [internalSelectedQuestions, setInternalSelectedQuestions] = useState<Set<number>>(new Set())
   const [isDeleting, setIsDeleting] = useState(false)
   const [showSafeDeletionModal, setShowSafeDeletionModal] = useState(false)
+  const [showBulkDifficultyModal, setShowBulkDifficultyModal] = useState(false)
   
   const selectedQuestions = externalSelectedQuestions || internalSelectedQuestions
   const setSelectedQuestions = externalOnSelectQuestion ? 
@@ -136,6 +139,20 @@ export function QuestionExplorer({
   }
 
   const handleSafeDeletionComplete = () => {
+    setSelectedQuestions(new Set())
+    refetch() // Refresh the questions list
+  }
+
+  const handleBulkDifficultyUpdate = () => {
+    if (selectedQuestions.size === 0) {
+      toast.error('No questions selected for difficulty update')
+      return
+    }
+
+    setShowBulkDifficultyModal(true)
+  }
+
+  const handleBulkDifficultyComplete = () => {
     setSelectedQuestions(new Set())
     refetch() // Refresh the questions list
   }
@@ -264,16 +281,29 @@ export function QuestionExplorer({
                   </Button>
                   
                   {selectedQuestions.size > 0 && (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={handleDeleteSelected}
-                      className="h-8 px-4 text-xs font-medium bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all duration-200 shadow-sm hover:shadow-md whitespace-nowrap"
-                    >
-                      <Trash2 className="h-3.5 w-3.5 mr-2" />
-                      <span className="hidden xs:inline">Delete {selectedQuestions.size}</span>
-                      <span className="xs:hidden">{selectedQuestions.size}</span>
-                    </Button>
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleBulkDifficultyUpdate}
+                        className="h-8 px-4 text-xs font-medium bg-orange-50 hover:bg-orange-100 border-orange-200 hover:border-orange-300 text-orange-700 hover:text-orange-800 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md whitespace-nowrap"
+                      >
+                        <Tag className="h-3.5 w-3.5 mr-2" />
+                        <span className="hidden xs:inline">Change Difficulty</span>
+                        <span className="xs:hidden">Difficulty</span>
+                      </Button>
+                      
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={handleDeleteSelected}
+                        className="h-8 px-4 text-xs font-medium bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all duration-200 shadow-sm hover:shadow-md whitespace-nowrap"
+                      >
+                        <Trash2 className="h-3.5 w-3.5 mr-2" />
+                        <span className="hidden xs:inline">Delete {selectedQuestions.size}</span>
+                        <span className="xs:hidden">{selectedQuestions.size}</span>
+                      </Button>
+                    </>
                   )}
                 </>
               )}
@@ -560,6 +590,15 @@ export function QuestionExplorer({
           </div>
         </div>
       )}
+
+      {/* Bulk Difficulty Update Modal */}
+      <BulkDifficultyModal
+        open={showBulkDifficultyModal}
+        onOpenChange={setShowBulkDifficultyModal}
+        selectedCount={selectedQuestions.size}
+        selectedQuestionIds={Array.from(selectedQuestions)}
+        onUpdated={handleBulkDifficultyComplete}
+      />
 
       {/* Safe Deletion Modal */}
       <SafeDeletionModal

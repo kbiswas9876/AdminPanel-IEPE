@@ -445,6 +445,74 @@ export async function deleteQuestionsDirectly(questionIds: number[]): Promise<{
   }
 }
 
+// Bulk update difficulty for multiple questions
+export async function bulkUpdateDifficulty(
+  questionIds: number[], 
+  newDifficulty: 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard'
+): Promise<{ success: boolean; message: string; updatedCount?: number }> {
+  try {
+    console.log('🔄 Bulk difficulty update called for questions:', questionIds)
+    console.log('📊 New difficulty:', newDifficulty)
+    
+    if (!questionIds || questionIds.length === 0) {
+      console.log('❌ No question IDs provided for difficulty update')
+      return {
+        success: false,
+        message: 'No questions selected for difficulty update'
+      }
+    }
+
+    const supabase = createAdminClient()
+    
+    // Validate difficulty value
+    const validDifficulties = ['Easy', 'Easy-Moderate', 'Moderate', 'Moderate-Hard', 'Hard']
+    if (!validDifficulties.includes(newDifficulty)) {
+      return {
+        success: false,
+        message: 'Invalid difficulty level provided'
+      }
+    }
+    
+    // Execute bulk update query
+    console.log('🚀 Attempting bulk difficulty update...')
+    const { data, error: updateError } = await supabase
+      .from('questions')
+      .update({ difficulty: newDifficulty })
+      .in('id', questionIds)
+      .select('id')
+    
+    if (updateError) {
+      console.error('❌ Error updating question difficulties:', updateError)
+      return {
+        success: false,
+        message: 'Failed to update question difficulties. Please try again.'
+      }
+    }
+    
+    const updatedCount = data?.length || 0
+    console.log('✅ Difficulty update successful, updated count:', updatedCount)
+    
+    // Revalidate the content page to refresh the UI
+    revalidatePath('/content')
+    
+    const result = {
+      success: true,
+      message: `Successfully updated ${updatedCount} question${updatedCount !== 1 ? 's' : ''} to ${newDifficulty}`,
+      updatedCount
+    }
+    
+    console.log('🎉 Difficulty update result:', result)
+    return result
+    
+  } catch (error) {
+    console.error('❌ Unexpected error in bulk difficulty update:', error)
+    return {
+      success: false,
+      message: 'An unexpected error occurred while updating question difficulties'
+    }
+  }
+}
+
 // Bulk delete multiple questions with data integrity checks (legacy function)
 export async function deleteMultipleQuestions(questionIds: number[]): Promise<{ 
   success: boolean; 
@@ -580,7 +648,8 @@ export async function updateQuestionInPlace(question: Question): Promise<{
       correct_option: sanitizedQuestion.correct_option as string | undefined,
       solution_text: sanitizedQuestion.solution_text as string | undefined,
       exam_metadata: sanitizedQuestion.exam_metadata as string | undefined,
-      admin_tags: sanitizedQuestion.admin_tags as string[] | undefined
+      admin_tags: sanitizedQuestion.admin_tags as string[] | undefined,
+      difficulty: sanitizedQuestion.difficulty as 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard' | undefined
     }
     
     const { error } = await supabase

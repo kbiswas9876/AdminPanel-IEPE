@@ -33,6 +33,7 @@ export interface Question {
   solution_text?: string
   exam_metadata?: string
   admin_tags?: string[]
+  difficulty?: 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard' | null
   created_at: string
 }
 
