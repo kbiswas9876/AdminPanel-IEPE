@@ -60,7 +60,7 @@ export async function getStudentTestAttempts(userId: string): Promise<TestAttemp
     const supabase = createAdminClient()
     
     const { data, error } = await supabase
-      .from('test_attempts')
+      .from('test_results')
       .select(`
         *,
         tests!inner(
@@ -72,7 +72,7 @@ export async function getStudentTestAttempts(userId: string): Promise<TestAttemp
         )
       `)
       .eq('user_id', userId)
-      .order('completed_at', { ascending: false })
+      .order('submitted_at', { ascending: false })
     
     if (error) {
       console.error('Error fetching test attempts:', error)
@@ -80,16 +80,16 @@ export async function getStudentTestAttempts(userId: string): Promise<TestAttemp
     }
     
     // Transform the data to match our interface
-    return data.map((attempt: RawTestAttempt) => ({
+    return data.map((attempt: any) => ({
       id: attempt.id,
       user_id: attempt.user_id,
-      test_id: attempt.test_id,
+      test_id: attempt.mock_test_id,
       score: attempt.score,
       total_correct: attempt.total_correct,
       total_incorrect: attempt.total_incorrect,
       total_skipped: attempt.total_skipped,
-      time_taken_seconds: attempt.time_taken_seconds,
-      completed_at: attempt.completed_at,
+      time_taken_seconds: attempt.total_time_taken,
+      completed_at: attempt.submitted_at,
       test_name: attempt.tests.name,
       test_description: attempt.tests.description,
       test_total_time_minutes: attempt.tests.total_time_minutes,
@@ -108,8 +108,8 @@ export async function getStudentAnalytics(userId: string): Promise<StudentAnalyt
     const supabase = createAdminClient()
     
     const { data, error } = await supabase
-      .from('test_attempts')
-      .select('score, total_correct, total_incorrect, total_skipped, time_taken_seconds')
+      .from('test_results')
+      .select('score, total_correct, total_incorrect, total_skipped, total_time_taken')
       .eq('user_id', userId)
     
     if (error) {
@@ -142,12 +142,12 @@ export async function getStudentAnalytics(userId: string): Promise<StudentAnalyt
     }
     
     const totalTests = data.length
-    const totalCorrect = data.reduce((sum, attempt) => sum + attempt.total_correct, 0)
-    const totalIncorrect = data.reduce((sum, attempt) => sum + attempt.total_incorrect, 0)
-    const totalSkipped = data.reduce((sum, attempt) => sum + attempt.total_skipped, 0)
-    const totalTimeSpent = data.reduce((sum, attempt) => sum + attempt.time_taken_seconds, 0)
+    const totalCorrect = data.reduce((sum, attempt) => sum + (attempt.total_correct || 0), 0)
+    const totalIncorrect = data.reduce((sum, attempt) => sum + (attempt.total_incorrect || 0), 0)
+    const totalSkipped = data.reduce((sum, attempt) => sum + (attempt.total_skipped || 0), 0)
+    const totalTimeSpent = data.reduce((sum, attempt) => sum + (attempt.total_time_taken || 0), 0)
     
-    const scores = data.map(attempt => attempt.score)
+    const scores = data.map(attempt => attempt.score || 0)
     const averageScore = scores.reduce((sum, score) => sum + score, 0) / totalTests
     const bestScore = Math.max(...scores)
     const worstScore = Math.min(...scores)

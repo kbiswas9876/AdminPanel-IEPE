@@ -6,7 +6,8 @@ interface StudentProfilePageProps {
   }
 }
 
-export default function StudentProfilePage({ params }: StudentProfilePageProps) {
-  return <StudentProfile userId={params.userID} />
+export default async function StudentProfilePage({ params }: StudentProfilePageProps) {
+  const { userID } = await params
+  return <StudentProfile userId={userID} />
 }
 

@@ -10,15 +10,18 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { User, Mail, Calendar } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
 import { ApproveUserDialog } from './approve-user-dialog'
 import { RejectUserDialog } from './reject-user-dialog'
 
 interface PendingApprovalTableProps {
   users: UserProfile[]
   onUserAction: () => void
+  selectedUsers?: string[]
+  onUserSelect?: (userId: string, selected: boolean) => void
 }
 
-export function PendingApprovalTable({ users, onUserAction }: PendingApprovalTableProps) {
+export function PendingApprovalTable({ users, onUserAction, selectedUsers = [], onUserSelect }: PendingApprovalTableProps) {
 
   const handleUserAction = () => {
     onUserAction() // Notify parent component to refresh data
@@ -41,6 +44,16 @@ export function PendingApprovalTable({ users, onUserAction }: PendingApprovalTab
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-12">
+              <Checkbox 
+                checked={selectedUsers.length === users.length && users.length > 0}
+                onCheckedChange={(checked) => {
+                  if (onUserSelect) {
+                    users.forEach(user => onUserSelect(user.id, !!checked))
+                  }
+                }}
+              />
+            </TableHead>
             <TableHead>Student</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Registration Date</TableHead>
@@ -51,6 +64,12 @@ export function PendingApprovalTable({ users, onUserAction }: PendingApprovalTab
         <TableBody>
           {users.map((user) => (
             <TableRow key={user.id}>
+              <TableCell>
+                <Checkbox 
+                  checked={selectedUsers.includes(user.id)}
+                  onCheckedChange={(checked) => onUserSelect?.(user.id, !!checked)}
+                />
+              </TableCell>
               <TableCell>
                 <div className="flex items-center space-x-3">
                   <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">

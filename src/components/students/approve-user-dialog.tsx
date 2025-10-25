@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { approveUser } from '@/lib/actions/students'
+import { useOptimisticUserApproval } from '@/hooks/use-optimistic-user-action'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -23,24 +24,11 @@ interface ApproveUserDialogProps {
 }
 
 export function ApproveUserDialog({ user, onApprove }: ApproveUserDialogProps) {
-  const [isApproving, setIsApproving] = useState(false)
+  const { approveUser: optimisticApprove, isProcessing } = useOptimisticUserApproval()
 
   const handleApprove = async () => {
-    setIsApproving(true)
-    try {
-      const result = await approveUser(user.id)
-      
-      if (result.success) {
-        onApprove()
-      } else {
-        console.error('Approval failed:', result.message)
-        // You could add a toast notification here
-      }
-    } catch (error) {
-      console.error('Error approving user:', error)
-    } finally {
-      setIsApproving(false)
-    }
+    await optimisticApprove(user.id, user, approveUser)
+    onApprove()
   }
 
   return (
@@ -70,10 +58,10 @@ export function ApproveUserDialog({ user, onApprove }: ApproveUserDialogProps) {
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleApprove}
-            disabled={isApproving}
+            disabled={isProcessing}
             className="bg-green-600 hover:bg-green-700"
           >
-            {isApproving ? 'Approving...' : 'Approve Access'}
+            {isProcessing ? 'Approving...' : 'Approve Access'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

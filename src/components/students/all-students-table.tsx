@@ -10,13 +10,16 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { User, Mail, Calendar, Shield, CheckCircle, Clock } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
 import Link from 'next/link'
 
 interface AllStudentsTableProps {
   users: UserProfile[]
+  selectedUsers?: string[]
+  onUserSelect?: (userId: string, selected: boolean) => void
 }
 
-export function AllStudentsTable({ users }: AllStudentsTableProps) {
+export function AllStudentsTable({ users, selectedUsers = [], onUserSelect }: AllStudentsTableProps) {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -77,6 +80,16 @@ export function AllStudentsTable({ users }: AllStudentsTableProps) {
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-12">
+              <Checkbox 
+                checked={selectedUsers.length === users.length && users.length > 0}
+                onCheckedChange={(checked) => {
+                  if (onUserSelect) {
+                    users.forEach(user => onUserSelect(user.id, !!checked))
+                  }
+                }}
+              />
+            </TableHead>
             <TableHead>Student</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Registration Date</TableHead>
@@ -87,6 +100,12 @@ export function AllStudentsTable({ users }: AllStudentsTableProps) {
         <TableBody>
           {users.map((user) => (
             <TableRow key={user.id}>
+              <TableCell>
+                <Checkbox 
+                  checked={selectedUsers.includes(user.id)}
+                  onCheckedChange={(checked) => onUserSelect?.(user.id, !!checked)}
+                />
+              </TableCell>
               <TableCell>
                 <Link href={`/students/${user.id}`} className="hover:bg-gray-50 rounded-md p-2 -m-2 block">
                   <div className="flex items-center space-x-3">
