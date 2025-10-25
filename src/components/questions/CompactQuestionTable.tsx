@@ -21,8 +21,7 @@ import type { UIQuestion } from '@/lib/types'
 import { UniversalContentRenderer } from '@/components/editors/UniversalContentRenderer'
 import { QuestionEditForm } from './QuestionEditForm'
 import { CompactQuestionDetails } from './CompactQuestionDetails'
-import { updateQuestionInPlace } from '@/lib/actions/questions'
-import { toast } from 'sonner'
+import { useUpdateQuestionDifficulty } from '@/lib/hooks/useQuestionMutations'
 
 interface CompactQuestionTableProps {
   questions: UIQuestion[]
@@ -62,43 +61,25 @@ export function CompactQuestionTable({
     { value: 'Hard', label: 'Hard' }
   ] as const
 
-  // Handle quick difficulty update with optimistic UI
-  const handleQuickDifficultyUpdate = async (question: UIQuestion, newDifficulty: string) => {
+  // Initialize the mutation hook
+  const updateDifficultyMutation = useUpdateQuestionDifficulty()
+
+  // Handle quick difficulty update with proper event handling and mutation
+  const handleQuickDifficultyUpdate = (event: React.MouseEvent, question: UIQuestion, newDifficulty: string) => {
     if (!question.id) return
+
+    // CRITICAL: Stop event propagation to prevent card expansion
+    event.stopPropagation()
+    event.preventDefault()
 
     // Close the popover immediately
     setOpenPopoverId(null)
 
-    // Store original difficulty for rollback
-    const originalDifficulty = question.difficulty
-
-    try {
-      // Optimistic update - immediately update the UI
-      const updatedQuestion = { ...question, difficulty: newDifficulty as any }
-      onQuestionUpdate(updatedQuestion)
-
-      // Call API to update in database
-      const result = await updateQuestionInPlace({
-        ...question,
-        difficulty: newDifficulty as any
-      })
-
-      if (result.success) {
-        // Show subtle success toast
-        toast.success(`Difficulty updated to ${newDifficulty}`, { duration: 1500 })
-      } else {
-        // Rollback on API failure
-        const rollbackQuestion = { ...question, difficulty: originalDifficulty }
-        onQuestionUpdate(rollbackQuestion)
-        toast.error(result.message || 'Failed to update difficulty', { duration: 3000 })
-      }
-    } catch (error) {
-      // Rollback on unexpected error
-      const rollbackQuestion = { ...question, difficulty: originalDifficulty }
-      onQuestionUpdate(rollbackQuestion)
-      console.error('Error updating difficulty:', error)
-      toast.error('Failed to update difficulty. Please try again.', { duration: 3000 })
-    }
+    // Call the mutation - React Query handles all the state management
+    updateDifficultyMutation.mutate({
+      id: question.id,
+      difficulty: newDifficulty
+    })
   }
 
   // Auto-expand edited question when context should be preserved
@@ -227,15 +208,24 @@ export function CompactQuestionTable({
                               </div>
                             </Badge>
                           </PopoverTrigger>
-                          <PopoverContent className="w-48 p-1" align="start">
-                            <div className="space-y-1">
+                          <PopoverContent 
+                            className="w-48 p-1" 
+                            align="start"
+                            onClick={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
+                          >
+                            <div 
+                              className="space-y-1"
+                              onClick={(e) => e.stopPropagation()}
+                              onMouseDown={(e) => e.stopPropagation()}
+                            >
                               {DIFFICULTY_OPTIONS.map((option) => (
                                 <button
                                   key={option.value}
                                   onClick={(e) => {
-                                    e.stopPropagation()
-                                    handleQuickDifficultyUpdate(question, option.value)
+                                    handleQuickDifficultyUpdate(e, question, option.value)
                                   }}
+                                  onMouseDown={(e) => e.stopPropagation()}
                                   className={cn(
                                     "w-full text-left px-3 py-2 text-sm rounded-md transition-colors duration-150",
                                     question.difficulty === option.value
