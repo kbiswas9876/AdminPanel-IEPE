@@ -222,19 +222,19 @@ const ErrorReportsDashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
       {/* Material Design 3 Header */}
-      <div className="bg-surface-container-low shadow-elevation-1 border-b border-outline-variant">
+      <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                  <Activity className="w-5 h-5 text-on-primary" />
+                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center shadow-sm">
+                  <Activity className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-headline-small font-medium text-on-surface tracking-tight">
+                  <h1 className="text-xl font-semibold text-gray-900 tracking-tight">
                     Error Reports Management
                   </h1>
-                  <p className="text-body-medium text-on-surface-variant mt-0.5">
+                  <p className="text-sm text-gray-600 mt-0.5">
                     Monitor and resolve user-reported content issues
                   </p>
                 </div>
