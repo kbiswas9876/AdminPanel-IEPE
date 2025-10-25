@@ -15,11 +15,15 @@ import { VirtualUserTable } from './virtual-user-table'
 import { AnalyticsOverview } from './analytics-overview'
 import { ActivityTimeline } from './activity-timeline'
 import { ReportBuilder } from './report-builder'
+import { GroupsManagement } from './groups-management'
+import { TagsManagement } from './tags-management'
+import { PermissionsManagement } from './permissions-management'
+import { AuditLogManagement } from './audit-log-management'
 import { usePagination } from '@/hooks/use-pagination'
 import { useRealtimeUsers, useRealtimeNotifications } from '@/hooks/use-realtime-users'
 import { usePerformanceMonitor } from '@/hooks/use-performance-monitor'
 import { Badge } from '@/components/ui/badge'
-import { Wifi, WifiOff, Activity, BarChart3, Clock, FileText } from 'lucide-react'
+import { Wifi, WifiOff, Activity, BarChart3, Clock, FileText, Users, Tag, Shield, FileText as AuditIcon } from 'lucide-react'
 import type { UserProfile } from '@/lib/supabase/admin'
 
 interface StudentManagementClientUIProps {
@@ -38,6 +42,8 @@ export function StudentManagementClientUI({ users }: StudentManagementClientUIPr
   }
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('connecting')
   const { unreadCount, addNotification, markAsRead } = useRealtimeNotifications()
+  const [showGroupsManagement, setShowGroupsManagement] = useState(false)
+  const [showTagsManagement, setShowTagsManagement] = useState(false)
   
   // Performance monitoring
   const { 
@@ -220,7 +226,7 @@ export function StudentManagementClientUI({ users }: StudentManagementClientUIPr
       
           <SmoothTabs defaultValue="pending" className="w-full">
             <div className="border-b border-gray-100/50 bg-gradient-to-r from-gray-50/50 to-white/50">
-              <SmoothTabsList className="grid w-full grid-cols-2 sm:grid-cols-5 bg-transparent h-auto p-0">
+              <SmoothTabsList className="grid w-full grid-cols-2 sm:grid-cols-9 bg-transparent h-auto p-0">
           <SmoothTabsTrigger 
             value="pending" 
             className="flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-red-500 relative"
@@ -276,6 +282,38 @@ export function StudentManagementClientUI({ users }: StudentManagementClientUIPr
                 <BarChart3 className="h-4 w-4" />
                 <span className="hidden sm:inline">Analytics</span>
                 <span className="sm:hidden">Stats</span>
+              </SmoothTabsTrigger>
+              <SmoothTabsTrigger 
+                value="groups"
+                className="flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-purple-500"
+              >
+                <Users className="h-4 w-4" />
+                <span className="hidden sm:inline">Groups</span>
+                <span className="sm:hidden">Groups</span>
+              </SmoothTabsTrigger>
+              <SmoothTabsTrigger 
+                value="tags"
+                className="flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-green-500"
+              >
+                <Tag className="h-4 w-4" />
+                <span className="hidden sm:inline">Tags</span>
+                <span className="sm:hidden">Tags</span>
+              </SmoothTabsTrigger>
+              <SmoothTabsTrigger 
+                value="permissions"
+                className="flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-blue-500"
+              >
+                <Shield className="h-4 w-4" />
+                <span className="hidden sm:inline">Permissions</span>
+                <span className="sm:hidden">Perms</span>
+              </SmoothTabsTrigger>
+              <SmoothTabsTrigger 
+                value="audit"
+                className="flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-gray-500"
+              >
+                <AuditIcon className="h-4 w-4" />
+                <span className="hidden sm:inline">Audit Logs</span>
+                <span className="sm:hidden">Audit</span>
               </SmoothTabsTrigger>
         </SmoothTabsList>
       </div>
@@ -487,6 +525,34 @@ export function StudentManagementClientUI({ users }: StudentManagementClientUIPr
                   </div>
                 </div>
               </div>
+            </SmoothTabsContent>
+
+            <SmoothTabsContent value="groups" className="space-y-4 sm:space-y-6 m-0 p-4 sm:p-6">
+              <GroupsManagement 
+                selectedUsers={selectedUsers}
+                onClose={() => setShowGroupsManagement(false)}
+              />
+            </SmoothTabsContent>
+
+            <SmoothTabsContent value="tags" className="space-y-4 sm:space-y-6 m-0 p-4 sm:p-6">
+              <TagsManagement 
+                selectedUsers={selectedUsers}
+                onClose={() => setShowTagsManagement(false)}
+              />
+            </SmoothTabsContent>
+
+            <SmoothTabsContent value="permissions" className="space-y-4 sm:space-y-6 m-0 p-4 sm:p-6">
+              <PermissionsManagement 
+                selectedUsers={selectedUsers}
+                onClose={() => setShowGroupsManagement(false)}
+              />
+            </SmoothTabsContent>
+
+            <SmoothTabsContent value="audit" className="space-y-4 sm:space-y-6 m-0 p-4 sm:p-6">
+              <AuditLogManagement 
+                selectedUsers={selectedUsers}
+                onClose={() => setShowGroupsManagement(false)}
+              />
             </SmoothTabsContent>
           </SmoothTabs>
         </div>

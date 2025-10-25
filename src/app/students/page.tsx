@@ -1,4 +1,4 @@
-import { StudentManagementClientUI } from '@/components/students/student-management-client-ui'
+import { ReorganizedStudentManagement } from '@/components/students/reorganized-student-management'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { Users } from 'lucide-react'
 
@@ -60,7 +60,7 @@ export default async function StudentsPage() {
       
       {/* Main Content */}
       <div className="bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200/50 shadow-gray-200/50 overflow-hidden">
-        <StudentManagementClientUI users={usersWithEmails} />
+        <ReorganizedStudentManagement users={usersWithEmails} />
       </div>
     </div>
   )

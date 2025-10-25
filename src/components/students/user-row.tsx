@@ -12,9 +12,12 @@ import {
   UserX, 
   Shield, 
   UserCheck,
-  MoreHorizontal 
+  MoreHorizontal,
+  Settings
 } from 'lucide-react'
 import type { UserProfile } from '@/lib/supabase/admin'
+import { AdvancedUserActions } from './advanced-user-actions'
+import { useState } from 'react'
 
 interface UserRowProps {
   user: UserProfile
@@ -39,6 +42,7 @@ const UserRow = memo(function UserRow({
   showActions = true,
   showCheckbox = true
 }: UserRowProps) {
+  const [showAdvancedActions, setShowAdvancedActions] = useState(false)
   const handleSelect = (checked: boolean) => {
     onSelect?.(user.id, checked)
   }
@@ -171,10 +175,26 @@ const UserRow = memo(function UserRow({
             </Button>
           )}
           
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => setShowAdvancedActions(true)}
+            className="bg-purple-50 text-purple-700 hover:bg-purple-100"
+          >
+            <Settings className="h-4 w-4 mr-1" />
+            Advanced
+          </Button>
           <Button size="sm" variant="ghost">
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </div>
+      )}
+      
+      {showAdvancedActions && (
+        <AdvancedUserActions
+          user={user}
+          onClose={() => setShowAdvancedActions(false)}
+        />
       )}
     </div>
   )

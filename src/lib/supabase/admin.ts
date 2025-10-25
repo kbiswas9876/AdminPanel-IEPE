@@ -62,6 +62,155 @@ export interface UserProfile {
   email?: string
 }
 
+// Types for user groups and tags
+export interface UserGroup {
+  id: string
+  name: string
+  description?: string
+  color: string
+  is_system: boolean
+  created_by?: string
+  created_at: string
+  updated_at?: string
+  member_count?: number
+}
+
+export interface Tag {
+  id: string
+  name: string
+  description?: string
+  color: string
+  category: string
+  created_by?: string
+  created_at: string
+  updated_at?: string
+  usage_count?: number
+}
+
+export interface UserGroupMember {
+  id: string
+  user_id: string
+  group_id: string
+  role: 'admin' | 'moderator' | 'member'
+  joined_at: string
+  added_by?: string
+  user?: UserProfile
+  group?: UserGroup
+}
+
+export interface UserTag {
+  id: string
+  user_id: string
+  tag_id: string
+  added_at: string
+  added_by?: string
+  user?: UserProfile
+  tag?: Tag
+}
+
+// Types for permissions system
+export interface Permission {
+  id: string
+  name: string
+  description?: string
+  category: string
+  resource: string
+  action: string
+  created_at: string
+  updated_at?: string
+}
+
+export interface AdminRole {
+  id: string
+  name: string
+  description?: string
+  is_system: boolean
+  created_by?: string
+  created_at: string
+  updated_at?: string
+  permission_count?: number
+}
+
+export interface RolePermission {
+  id: string
+  role_id: string
+  permission_id: string
+  granted_at: string
+  granted_by?: string
+  role?: AdminRole
+  permission?: Permission
+}
+
+export interface UserPermission {
+  id: string
+  user_id: string
+  permission_id: string
+  granted_at: string
+  granted_by?: string
+  expires_at?: string
+  user?: UserProfile
+  permission?: Permission
+}
+
+export interface UserRole {
+  id: string
+  user_id: string
+  role_id: string
+  assigned_at: string
+  assigned_by?: string
+  expires_at?: string
+  user?: UserProfile
+  role?: AdminRole
+}
+
+// Types for audit log system
+export interface AuditLog {
+  id: string
+  admin_id: string
+  action_type: string
+  resource_type: string
+  resource_id?: string
+  description: string
+  old_values?: Record<string, any>
+  new_values?: Record<string, any>
+  metadata?: Record<string, any>
+  ip_address?: string
+  user_agent?: string
+  session_id?: string
+  created_at: string
+  admin?: UserProfile
+}
+
+export interface AuditLogFilter {
+  id: string
+  name: string
+  description?: string
+  filters: Record<string, any>
+  created_by?: string
+  created_at: string
+  updated_at?: string
+}
+
+export interface AuditLogStats {
+  total_actions: number
+  unique_admins: number
+  most_common_action: string
+  action_count: number
+  most_active_admin: string
+  admin_action_count: number
+}
+
+export interface AuditLogSearchParams {
+  search_term?: string
+  action_types?: string[]
+  resource_types?: string[]
+  admin_ids?: string[]
+  start_date?: string
+  end_date?: string
+  limit?: number
+  offset?: number
+}
+
 // Types for tests table
 export interface Test {
   id: number
