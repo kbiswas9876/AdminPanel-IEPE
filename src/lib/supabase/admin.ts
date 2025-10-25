@@ -158,7 +158,8 @@ export interface ErrorReport {
   id: number
   question_id: string
   user_id: string
-  report_description: string
+  report_tag: string
+  report_description: string | null
   status: 'new' | 'reviewed' | 'resolved' | 'dismissed'
   admin_notes?: string
   created_at: string

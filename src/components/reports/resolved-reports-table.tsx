@@ -10,11 +10,24 @@ import { getErrorReportsByStatus, updateErrorReportStatus } from '@/lib/actions/
 import type { ErrorReportWithDetails } from '@/lib/supabase/admin'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import { REPORT_OPTIONS } from '@/lib/constants'
 
 export function ResolvedReportsTable() {
   const [reports, setReports] = useState<ErrorReportWithDetails[]>([])
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState<number | null>(null)
+
+  // Add this function to render the category badge
+  const renderCategoryBadge = (reportTag: string) => {
+    const option = REPORT_OPTIONS.find(opt => opt.tag === reportTag)
+    const label = option ? option.label : reportTag?.replace('_', ' ') || 'N/A'
+    
+    if (reportTag === 'legacy_report') {
+      return <Badge variant="outline">Legacy</Badge>
+    }
+
+    return <Badge variant="secondary">{label}</Badge>
+  }
 
   useEffect(() => {
     loadReports()
@@ -102,6 +115,7 @@ export function ResolvedReportsTable() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Question ID</TableHead>
+                  <TableHead>Category</TableHead>
                   <TableHead>Report Description</TableHead>
                   <TableHead>Reported By</TableHead>
                   <TableHead>Date Submitted</TableHead>
@@ -121,6 +135,9 @@ export function ResolvedReportsTable() {
                         {report.question_id}
                         <ExternalLink className="h-3 w-3" />
                       </Link>
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {renderCategoryBadge(report.report_tag)}
                     </TableCell>
                     <TableCell>
                       <div className="max-w-xs">
