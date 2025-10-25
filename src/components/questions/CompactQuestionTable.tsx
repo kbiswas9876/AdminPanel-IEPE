@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
@@ -219,22 +220,36 @@ export function CompactQuestionTable({
                               onClick={(e) => e.stopPropagation()}
                               onMouseDown={(e) => e.stopPropagation()}
                             >
-                              {DIFFICULTY_OPTIONS.map((option) => (
-                                <button
+                              {DIFFICULTY_OPTIONS.map((option, index) => (
+                                <motion.button
                                   key={option.value}
+                                  initial={{ opacity: 0, y: -5 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ 
+                                    duration: 0.05, 
+                                    delay: index * 0.01,
+                                    ease: [0.25, 0.46, 0.45, 0.94]
+                                  }}
+                                  whileHover={{ 
+                                    scale: 1.01,
+                                    backgroundColor: question.difficulty === option.value 
+                                      ? "rgb(239 246 255)" 
+                                      : "rgb(249 250 251)"
+                                  }}
+                                  whileTap={{ scale: 0.99 }}
                                   onClick={(e) => {
                                     handleQuickDifficultyUpdate(e, question, option.value)
                                   }}
                                   onMouseDown={(e) => e.stopPropagation()}
                                   className={cn(
-                                    "w-full text-left px-3 py-2 text-sm rounded-md transition-colors duration-150",
+                                    "w-full text-left px-3 py-2 text-sm rounded-md transition-all duration-100 cursor-pointer",
                                     question.difficulty === option.value
                                       ? "bg-blue-50 text-blue-700 font-medium"
                                       : "hover:bg-gray-50 text-gray-700"
                                   )}
                                 >
                                   {option.label}
-                                </button>
+                                </motion.button>
                               ))}
                             </div>
                           </PopoverContent>
