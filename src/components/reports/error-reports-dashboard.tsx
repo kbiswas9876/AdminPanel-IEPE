@@ -1,10 +1,12 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { AlertCircle, CheckCircle, Clock, Search, Filter, ChevronDown, ChevronUp, ExternalLink, User, TrendingUp, Activity } from 'lucide-react'
+import { AlertCircle, CheckCircle, Clock, Search, Filter, ChevronDown, ChevronUp, ExternalLink, User, TrendingUp, Activity, X, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { getErrorReportsByStatus, updateErrorReportStatus, getNewErrorReportsCount } from '@/lib/actions/error-reports'
 import type { ErrorReportWithDetails } from '@/lib/supabase/admin'
 import { toast } from 'sonner'
@@ -35,6 +37,14 @@ const ErrorReportsDashboard = () => {
     resolvedPercentage: 0,
     weeklyTrend: '+0%'
   })
+  
+  // Filter state
+  const [filters, setFilters] = useState({
+    category: 'all',
+    dateRange: 'all',
+    sortBy: 'newest'
+  })
+  const [showFilters, setShowFilters] = useState(false)
 
   // Load all reports data
   const loadReports = async () => {
@@ -150,36 +160,83 @@ const ErrorReportsDashboard = () => {
     }
   }
 
-  const filteredReports = reports[activeTab as keyof typeof reports].filter(report => {
-    if (!searchQuery) return true
-    const query = searchQuery.toLowerCase()
-    return (
-      report.question_id.toLowerCase().includes(query) ||
-      report.report_description?.toLowerCase().includes(query) ||
-      report.user_full_name?.toLowerCase().includes(query) ||
-      report.user_email.toLowerCase().includes(query) ||
-      getCategoryLabel(report.report_tag).toLowerCase().includes(query)
-    )
-  })
+  const filteredReports = reports[activeTab as keyof typeof reports]
+    .filter(report => {
+      // Search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase()
+        const matchesSearch = (
+          String(report.question_id).toLowerCase().includes(query) ||
+          report.report_description?.toLowerCase().includes(query) ||
+          report.user_full_name?.toLowerCase().includes(query) ||
+          report.user_email.toLowerCase().includes(query) ||
+          getCategoryLabel(report.report_tag).toLowerCase().includes(query)
+        )
+        if (!matchesSearch) return false
+      }
+
+      // Category filter
+      if (filters.category !== 'all' && report.report_tag !== filters.category) {
+        return false
+      }
+
+      // Date range filter
+      if (filters.dateRange !== 'all') {
+        const reportDate = new Date(report.created_at)
+        const now = new Date()
+        const daysDiff = Math.floor((now.getTime() - reportDate.getTime()) / (1000 * 60 * 60 * 24))
+        
+        switch (filters.dateRange) {
+          case 'today':
+            if (daysDiff > 0) return false
+            break
+          case 'week':
+            if (daysDiff > 7) return false
+            break
+          case 'month':
+            if (daysDiff > 30) return false
+            break
+        }
+      }
+
+      return true
+    })
+    .sort((a, b) => {
+      // Sort filter
+      switch (filters.sortBy) {
+        case 'newest':
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        case 'oldest':
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        case 'category':
+          return getCategoryLabel(a.report_tag).localeCompare(getCategoryLabel(b.report_tag))
+        case 'reporter':
+          return (a.user_full_name || '').localeCompare(b.user_full_name || '')
+        default:
+          return 0
+      }
+    })
 
   const currentReports = filteredReports
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
-      {/* Professional Header */}
-      <div className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-8 py-6">
+      {/* Material Design 3 Header */}
+      <div className="bg-surface-container-low shadow-elevation-1 border-b border-outline-variant">
+        <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Error Reports Management</h1>
-              <p className="text-sm text-slate-600 mt-1">Monitor and resolve user-reported content issues</p>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="text-right">
-                <div className="text-xs text-slate-500 uppercase tracking-wide">System Status</div>
-                <div className="flex items-center space-x-2 mt-1">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm font-medium text-slate-700">Operational</span>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                  <Activity className="w-5 h-5 text-on-primary" />
+                </div>
+                <div>
+                  <h1 className="text-headline-small font-medium text-on-surface tracking-tight">
+                    Error Reports Management
+                  </h1>
+                  <p className="text-body-medium text-on-surface-variant mt-0.5">
+                    Monitor and resolve user-reported content issues
+                  </p>
                 </div>
               </div>
             </div>
@@ -327,9 +384,145 @@ const ErrorReportsDashboard = () => {
                     className="pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                   />
                 </div>
-                <button className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-                  <Filter className="w-4 h-4 text-slate-600" />
-                </button>
+                
+                {/* Functional Filter Button */}
+                <Popover open={showFilters} onOpenChange={setShowFilters}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={`h-9 px-3 border-slate-200 hover:bg-slate-50 ${
+                        (filters.category !== 'all' || filters.dateRange !== 'all' || filters.sortBy !== 'newest') 
+                          ? 'bg-blue-50 border-blue-200 text-blue-700' 
+                          : ''
+                      }`}
+                    >
+                      <Filter className="w-4 h-4 mr-2" />
+                      Filter
+                      {((filters.category !== 'all' || filters.dateRange !== 'all' || filters.sortBy !== 'newest')) && (
+                        <Badge variant="secondary" className="ml-2 h-4 px-1 text-xs">
+                          {(filters.category !== 'all' ? 1 : 0) + (filters.dateRange !== 'all' ? 1 : 0) + (filters.sortBy !== 'newest' ? 1 : 0)}
+                        </Badge>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 p-4" align="end">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold text-slate-900">Filter Reports</h3>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setFilters({ category: 'all', dateRange: 'all', sortBy: 'newest' })
+                            setShowFilters(false)
+                          }}
+                          className="h-6 px-2 text-xs text-slate-500 hover:text-slate-700"
+                        >
+                          Clear All
+                        </Button>
+                      </div>
+                      
+                      {/* Category Filter */}
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-slate-700">Category</label>
+                        <Select
+                          value={filters.category}
+                          onValueChange={(value) => setFilters(prev => ({ ...prev, category: value }))}
+                        >
+                          <SelectTrigger className="h-8">
+                            <SelectValue placeholder="All Categories" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Categories</SelectItem>
+                            {REPORT_OPTIONS.map((option) => (
+                              <SelectItem key={option.tag} value={option.tag}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Date Range Filter */}
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-slate-700">Date Range</label>
+                        <Select
+                          value={filters.dateRange}
+                          onValueChange={(value) => setFilters(prev => ({ ...prev, dateRange: value }))}
+                        >
+                          <SelectTrigger className="h-8">
+                            <SelectValue placeholder="All Time" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Time</SelectItem>
+                            <SelectItem value="today">Today</SelectItem>
+                            <SelectItem value="week">Last 7 Days</SelectItem>
+                            <SelectItem value="month">Last 30 Days</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Sort Filter */}
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-slate-700">Sort By</label>
+                        <Select
+                          value={filters.sortBy}
+                          onValueChange={(value) => setFilters(prev => ({ ...prev, sortBy: value }))}
+                        >
+                          <SelectTrigger className="h-8">
+                            <SelectValue placeholder="Sort by" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="newest">Newest First</SelectItem>
+                            <SelectItem value="oldest">Oldest First</SelectItem>
+                            <SelectItem value="category">Category</SelectItem>
+                            <SelectItem value="reporter">Reporter Name</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Active Filters Summary */}
+                      {((filters.category !== 'all' || filters.dateRange !== 'all' || filters.sortBy !== 'newest')) && (
+                        <div className="pt-2 border-t border-slate-200">
+                          <div className="flex flex-wrap gap-1">
+                            {filters.category !== 'all' && (
+                              <Badge variant="secondary" className="text-xs">
+                                {getCategoryLabel(filters.category)}
+                                <X 
+                                  className="w-3 h-3 ml-1 cursor-pointer" 
+                                  onClick={() => setFilters(prev => ({ ...prev, category: 'all' }))}
+                                />
+                              </Badge>
+                            )}
+                            {filters.dateRange !== 'all' && (
+                              <Badge variant="secondary" className="text-xs">
+                                {filters.dateRange === 'today' ? 'Today' : 
+                                 filters.dateRange === 'week' ? 'Last 7 Days' : 
+                                 filters.dateRange === 'month' ? 'Last 30 Days' : filters.dateRange}
+                                <X 
+                                  className="w-3 h-3 ml-1 cursor-pointer" 
+                                  onClick={() => setFilters(prev => ({ ...prev, dateRange: 'all' }))}
+                                />
+                              </Badge>
+                            )}
+                            {filters.sortBy !== 'newest' && (
+                              <Badge variant="secondary" className="text-xs">
+                                {filters.sortBy === 'oldest' ? 'Oldest First' :
+                                 filters.sortBy === 'category' ? 'By Category' :
+                                 filters.sortBy === 'reporter' ? 'By Reporter' : filters.sortBy}
+                                <X 
+                                  className="w-3 h-3 ml-1 cursor-pointer" 
+                                  onClick={() => setFilters(prev => ({ ...prev, sortBy: 'newest' }))}
+                                />
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           </div>
