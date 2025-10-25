@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -81,61 +82,148 @@ export function BulkDifficultyModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Tag className="h-5 w-5 text-orange-600" />
-            Bulk Update Difficulty
-          </DialogTitle>
-          <DialogDescription className="text-base">
-            You have selected <strong>{selectedCount}</strong> question{selectedCount !== 1 ? 's' : ''}. 
-            Choose a new difficulty level to apply to all selected questions.
-          </DialogDescription>
-        </DialogHeader>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          transition={{ 
+            duration: 0.15, 
+            ease: [0.25, 0.46, 0.45, 0.94]
+          }}
+        >
+          <DialogHeader>
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05, duration: 0.1 }}
+            >
+              <DialogTitle className="flex items-center gap-2">
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ delay: 0.1, duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+                >
+                  <Tag className="h-5 w-5 text-orange-600" />
+                </motion.div>
+                <motion.span
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.15, duration: 0.1 }}
+                >
+                  Bulk Update Difficulty
+                </motion.span>
+              </DialogTitle>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.1 }}
+            >
+              <DialogDescription className="text-base">
+                You have selected <strong>{selectedCount}</strong> question{selectedCount !== 1 ? 's' : ''}. 
+                Choose a new difficulty level to apply to all selected questions.
+              </DialogDescription>
+            </motion.div>
+          </DialogHeader>
 
-        <div className="py-4">
-          <div className="space-y-2">
-            <label htmlFor="difficulty-select" className="text-sm font-medium text-gray-700">
-              New Difficulty Level
-            </label>
-            <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
-              <SelectTrigger id="difficulty-select" className="w-full">
-                <SelectValue placeholder="Select difficulty level" />
-              </SelectTrigger>
-              <SelectContent>
-                {DIFFICULTY_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+          <motion.div 
+            className="py-4"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15, duration: 0.1 }}
+          >
+            <div className="space-y-2">
+              <motion.label 
+                htmlFor="difficulty-select" 
+                className="text-sm font-medium text-gray-700"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2, duration: 0.1 }}
+              >
+                New Difficulty Level
+              </motion.label>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25, duration: 0.1 }}
+              >
+                <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
+                  <SelectTrigger id="difficulty-select" className="w-full">
+                    <SelectValue placeholder="Select difficulty level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <AnimatePresence mode="wait">
+                      {DIFFICULTY_OPTIONS.map((option, index) => (
+                        <motion.div
+                          key={option.value}
+                          initial={{ opacity: 0, y: -5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 5 }}
+                          transition={{ 
+                            duration: 0.05, 
+                            delay: index * 0.01,
+                            ease: [0.25, 0.46, 0.45, 0.94]
+                          }}
+                        >
+                          <SelectItem value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </SelectContent>
+                </Select>
+              </motion.div>
+            </div>
+          </motion.div>
 
-        <DialogFooter className="gap-2">
-          <Button
-            variant="outline"
-            onClick={handleCancel}
-            disabled={isUpdating}
-            className="flex-1"
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.1 }}
           >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleApplyChanges}
-            disabled={!selectedDifficulty || isUpdating}
-            className="flex-1 bg-orange-600 hover:bg-orange-700 text-white"
-          >
-            {isUpdating ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Updating...
-              </>
-            ) : (
-              'Apply Changes'
-            )}
-          </Button>
-        </DialogFooter>
+            <DialogFooter className="gap-2">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.35, duration: 0.1 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Button
+                  variant="outline"
+                  onClick={handleCancel}
+                  disabled={isUpdating}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4, duration: 0.1 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Button
+                  onClick={handleApplyChanges}
+                  disabled={!selectedDifficulty || isUpdating}
+                  className="flex-1 bg-orange-600 hover:bg-orange-700 text-white"
+                >
+                  {isUpdating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    'Apply Changes'
+                  )}
+                </Button>
+              </motion.div>
+            </DialogFooter>
+          </motion.div>
+        </motion.div>
       </DialogContent>
     </Dialog>
   )

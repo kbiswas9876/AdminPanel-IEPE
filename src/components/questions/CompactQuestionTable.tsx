@@ -214,6 +214,8 @@ export function CompactQuestionTable({
                             align="start"
                             onClick={(e) => e.stopPropagation()}
                             onMouseDown={(e) => e.stopPropagation()}
+                            sideOffset={4}
+                            avoidCollisions={true}
                           >
                             <div 
                               className="space-y-1"
