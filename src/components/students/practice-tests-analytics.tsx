@@ -317,6 +317,8 @@ export function PracticeTestsAnalytics({ userId, onRefresh }: PracticeTestsAnaly
       {selectedSession && (
         <DetailedSessionView
           sessionId={selectedSession}
+          isOpen={true}
+          userId={userId}
           onClose={() => setSelectedSession(null)}
         />
       )}

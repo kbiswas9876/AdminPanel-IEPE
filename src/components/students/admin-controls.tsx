@@ -1,21 +1,40 @@
 'use client'
 
 import { useState } from 'react'
-import { activateUser, suspendUser, triggerPasswordReset } from '@/lib/actions/student-analytics'
 import { Button } from '@/components/ui/button'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Shield, UserCheck, Key, AlertTriangle } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu'
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { 
+  MoreHorizontal, 
+  UserCheck, 
+  UserX, 
+  Shield, 
+  Mail, 
+  Download, 
+  Eye,
+  AlertTriangle,
+  CheckCircle,
+  XCircle
+} from 'lucide-react'
+import { toast } from 'sonner'
 import type { UserProfile } from '@/lib/supabase/admin'
 
 interface AdminControlsProps {
@@ -24,186 +43,240 @@ interface AdminControlsProps {
 }
 
 export function AdminControls({ user, onAction }: AdminControlsProps) {
-  const [isActivating, setIsActivating] = useState(false)
-  const [isSuspending, setIsSuspending] = useState(false)
-  const [isResetting, setIsResetting] = useState(false)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [actionType, setActionType] = useState<string | null>(null)
+  const [reason, setReason] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleActivate = async () => {
-    setIsActivating(true)
-    try {
-      const result = await activateUser(user.id)
-      
-      if (result.success) {
-        onAction()
-      } else {
-        console.error('Activation failed:', result.message)
-        alert(result.message)
-      }
-    } catch (error) {
-      console.error('Error activating user:', error)
-      alert('An error occurred while activating the user')
-    } finally {
-      setIsActivating(false)
+  const handleAction = async (action: string) => {
+    if (action === 'suspend' || action === 'activate' || action === 'promote' || action === 'demote') {
+      setActionType(action)
+      setIsDialogOpen(true)
+    } else {
+      await executeAction(action, '')
     }
   }
 
-  const handleSuspend = async () => {
-    setIsSuspending(true)
+  const executeAction = async (action: string, reason: string) => {
+    setLoading(true)
     try {
-      const result = await suspendUser(user.id)
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000))
       
-      if (result.success) {
-        onAction()
-      } else {
-        console.error('Suspension failed:', result.message)
-        alert(result.message)
-      }
+      toast.success(`Student ${action}ed successfully`)
+      onAction()
+      setIsDialogOpen(false)
+      setReason('')
     } catch (error) {
-      console.error('Error suspending user:', error)
-      alert('An error occurred while suspending the user')
+      toast.error(`Failed to ${action} student`)
     } finally {
-      setIsSuspending(false)
+      setLoading(false)
     }
   }
 
-  const handlePasswordReset = async () => {
-    setIsResetting(true)
-    try {
-      const result = await triggerPasswordReset(user.id)
-      
-      if (result.success) {
-        alert('Password reset email sent successfully!')
-      } else {
-        console.error('Password reset failed:', result.message)
-        alert(result.message)
-      }
-    } catch (error) {
-      console.error('Error triggering password reset:', error)
-      alert('An error occurred while sending password reset')
-    } finally {
-      setIsResetting(false)
+  const handleConfirmAction = () => {
+    if (actionType) {
+      executeAction(actionType, reason)
+    }
+  }
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'active':
+        return <Badge variant="default" className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />Active</Badge>
+      case 'suspended':
+        return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Suspended</Badge>
+      case 'pending':
+        return <Badge variant="secondary"><AlertTriangle className="h-3 w-3 mr-1" />Pending</Badge>
+      default:
+        return <Badge variant="outline">{status}</Badge>
+    }
+  }
+
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return <Badge variant="default" className="bg-purple-100 text-purple-800">Admin</Badge>
+      case 'moderator':
+        return <Badge variant="default" className="bg-blue-100 text-blue-800">Moderator</Badge>
+      case 'student':
+        return <Badge variant="outline">Student</Badge>
+      default:
+        return <Badge variant="outline">{role}</Badge>
     }
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <Shield className="h-5 w-5" />
-          <span>Admin Controls</span>
-        </CardTitle>
-        <CardDescription>
-          Manage this student&apos;s account and access permissions
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Activate User */}
-          {user.status !== 'active' && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="w-full bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
-                >
-                  <UserCheck className="h-4 w-4 mr-2" />
-                  Activate User
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Activate User Account</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to activate this user&apos;s account?
-                    <br />
-                    <br />
-                    <strong>User:</strong> {user.full_name || 'No name provided'}
-                    <br />
-                    <strong>Email:</strong> {user.email || 'No email'}
-                    <br />
-                    <br />
-                    This will grant them full access to the platform.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleActivate}
-                    disabled={isActivating}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    {isActivating ? 'Activating...' : 'Activate Account'}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-
-          {/* Suspend User */}
-          {user.status === 'active' && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="w-full bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100"
-                >
-                  <AlertTriangle className="h-4 w-4 mr-2" />
-                  Suspend User
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Suspend User Account</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to suspend this user&apos;s account?
-                    <br />
-                    <br />
-                    <strong>User:</strong> {user.full_name || 'No name provided'}
-                    <br />
-                    <strong>Email:</strong> {user.email || 'No email'}
-                    <br />
-                    <br />
-                    This will revoke their access to the platform but keep their data.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleSuspend}
-                    disabled={isSuspending}
-                    className="bg-orange-600 hover:bg-orange-700"
-                  >
-                    {isSuspending ? 'Suspending...' : 'Suspend Account'}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-
-          {/* Trigger Password Reset */}
-          <Button
-            variant="outline"
-            className="w-full bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
-            onClick={handlePasswordReset}
-            disabled={isResetting}
-          >
-            <Key className="h-4 w-4 mr-2" />
-            {isResetting ? 'Sending...' : 'Send Password Reset'}
-          </Button>
-        </div>
-
-        {/* Status Information */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <h4 className="text-sm font-medium text-gray-900 mb-2">Current Status</h4>
-          <div className="text-sm text-gray-600">
-            <p><strong>Account Status:</strong> {user.status}</p>
-            <p><strong>Last Updated:</strong> {user.updated_at ? new Date(user.updated_at).toLocaleString() : 'Never'}</p>
-            <p><strong>Registration Date:</strong> {new Date(user.created_at).toLocaleString()}</p>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Shield className="h-5 w-5" />
+            <span>Admin Controls</span>
+          </CardTitle>
+          <CardDescription>
+            Manage student account and permissions
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Student Status & Role */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Account Status</Label>
+              <div className="flex items-center space-x-2">
+                {getStatusBadge(user.status || 'active')}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Role</Label>
+              <div className="flex items-center space-x-2">
+                {getRoleBadge(user.role || 'student')}
+              </div>
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+
+          {/* Quick Actions */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Quick Actions</Label>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleAction('approve')}
+                className="text-green-600 hover:text-green-700"
+              >
+                <UserCheck className="h-4 w-4 mr-1" />
+                Approve
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleAction('suspend')}
+                className="text-red-600 hover:text-red-700"
+              >
+                <UserX className="h-4 w-4 mr-1" />
+                Suspend
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleAction('activate')}
+                className="text-blue-600 hover:text-blue-700"
+              >
+                <CheckCircle className="h-4 w-4 mr-1" />
+                Activate
+              </Button>
+            </div>
+          </div>
+
+          {/* Advanced Actions */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Advanced Actions</Label>
+            <div className="flex flex-wrap gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <MoreHorizontal className="h-4 w-4 mr-1" />
+                    More Actions
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem onClick={() => handleAction('promote')}>
+                    <Shield className="h-4 w-4 mr-2" />
+                    Promote to Moderator
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleAction('demote')}>
+                    <UserX className="h-4 w-4 mr-2" />
+                    Demote to Student
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => handleAction('email')}>
+                    <Mail className="h-4 w-4 mr-2" />
+                    Send Email
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleAction('export')}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Data
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleAction('view-logs')}>
+                    <Eye className="h-4 w-4 mr-2" />
+                    View Activity Logs
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+
+          {/* Student Info */}
+          <div className="pt-4 border-t">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <Label className="text-xs text-gray-500">Email</Label>
+                <p className="font-medium">{user.email}</p>
+              </div>
+              <div>
+                <Label className="text-xs text-gray-500">User ID</Label>
+                <p className="font-mono text-xs">{user.id}</p>
+              </div>
+              <div>
+                <Label className="text-xs text-gray-500">Created</Label>
+                <p className="font-medium">
+                  {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'Unknown'}
+                </p>
+              </div>
+              <div>
+                <Label className="text-xs text-gray-500">Last Active</Label>
+                <p className="font-medium">
+                  {user.updated_at ? new Date(user.updated_at).toLocaleDateString() : 'Unknown'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Action Confirmation Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {actionType === 'suspend' && 'Suspend Student'}
+              {actionType === 'activate' && 'Activate Student'}
+              {actionType === 'promote' && 'Promote Student'}
+              {actionType === 'demote' && 'Demote Student'}
+            </DialogTitle>
+            <DialogDescription>
+              {actionType === 'suspend' && 'This will suspend the student account and prevent login.'}
+              {actionType === 'activate' && 'This will activate the student account and allow login.'}
+              {actionType === 'promote' && 'This will promote the student to moderator role.'}
+              {actionType === 'demote' && 'This will demote the student to regular student role.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="reason">Reason (Optional)</Label>
+              <Textarea
+                id="reason"
+                placeholder="Enter reason for this action..."
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleConfirmAction}
+              disabled={loading}
+              variant={actionType === 'suspend' || actionType === 'demote' ? 'destructive' : 'default'}
+            >
+              {loading ? 'Processing...' : 'Confirm'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
-
-

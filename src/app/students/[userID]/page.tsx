@@ -1,4 +1,4 @@
-import { EnhancedStudentProfile } from '@/components/students/enhanced-student-profile'
+import { ResponsiveStudentProfile } from '@/components/students/responsive-student-profile'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 interface StudentProfilePageProps {
@@ -29,6 +29,6 @@ export default async function StudentProfilePage({ params }: StudentProfilePageP
     )
   }
 
-  return <EnhancedStudentProfile userId={userID} user={user} />
+      return <ResponsiveStudentProfile userId={userID} user={user} />
 }
 

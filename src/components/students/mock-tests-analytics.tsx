@@ -353,6 +353,8 @@ export function MockTestsAnalytics({ userId, onRefresh }: MockTestsAnalyticsProp
       {selectedSession && (
         <DetailedSessionView
           sessionId={selectedSession}
+          isOpen={true}
+          userId={userId}
           onClose={() => setSelectedSession(null)}
         />
       )}

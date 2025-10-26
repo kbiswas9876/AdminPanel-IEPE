@@ -15,6 +15,9 @@ import { QuestionPerformanceGrid } from './question-performance-grid'
 import { TimeAnalyticsChart } from './time-analytics-chart'
 import { SubjectAnalysisGrid } from './subject-analysis-grid'
 import { AdminControls } from './admin-controls'
+import { ErrorBoundary } from './error-boundary'
+import { AnalyticsSkeleton } from './skeleton-loaders'
+import { ExportFunctionality } from './export-functionality'
 
 interface EnhancedStudentProfileProps {
   userId: string
@@ -71,9 +74,7 @@ export function EnhancedStudentProfile({ userId, user }: EnhancedStudentProfileP
           </div>
         </div>
         
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-        </div>
+        <AnalyticsSkeleton />
       </div>
     )
   }
@@ -100,26 +101,40 @@ export function EnhancedStudentProfile({ userId, user }: EnhancedStudentProfileP
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Link href="/students">
-            <Button variant="outline">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Students
+    <ErrorBoundary>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Link href="/students">
+              <Button variant="outline">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Students
+              </Button>
+            </Link>
+          </div>
+          <div className="flex items-center space-x-2">
+            <ExportFunctionality 
+              data={[analytics]} 
+              columns={[
+                { key: 'totalTests', label: 'Total Tests' },
+                { key: 'practiceTests', label: 'Practice Tests' },
+                { key: 'mockTests', label: 'Mock Tests' },
+                { key: 'overallScore', label: 'Overall Score' },
+                { key: 'overallAccuracy', label: 'Overall Accuracy' }
+              ]}
+              filename={`student-${user.full_name || user.email}-analytics`}
+            />
+            <Button 
+              variant="outline" 
+              onClick={handleRefresh}
+              disabled={refreshing}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+              Refresh Data
             </Button>
-          </Link>
+          </div>
         </div>
-        <Button 
-          variant="outline" 
-          onClick={handleRefresh}
-          disabled={refreshing}
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-          Refresh Data
-        </Button>
-      </div>
 
       {/* Student Profile Header */}
       <Card>
@@ -217,11 +232,12 @@ export function EnhancedStudentProfile({ userId, user }: EnhancedStudentProfileP
         </TabsContent>
       </Tabs>
 
-      {/* Admin Controls */}
-      <AdminControls 
-        user={user} 
-        onAction={handleAdminAction}
-      />
-    </div>
+        {/* Admin Controls */}
+        <AdminControls 
+          user={user} 
+          onAction={handleAdminAction}
+        />
+      </div>
+    </ErrorBoundary>
   )
 }
