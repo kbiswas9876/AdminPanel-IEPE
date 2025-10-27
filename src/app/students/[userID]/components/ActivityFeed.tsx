@@ -546,19 +546,19 @@ export function ActivityFeed({ userId, initialData }: ActivityFeedProps) {
                               <div className="space-y-2">
                                 {/* Attempt Breakdown */}
                                 <div className="flex items-center gap-3 flex-wrap text-sm">
-                                  <div className="flex items-center gap-1.5 text-gray-700">
-                                    <Icon icon="mdi:check-circle" className="h-4 w-4 text-green-600" />
-                                    <span className="font-semibold">{formatted.stats.correct}</span>
+                                  <div className="flex items-center gap-1.5">
+                                    <Icon icon="mdi:check-circle" className="h-5 w-5 text-green-600" />
+                                    <span className="font-semibold text-green-600">{formatted.stats.correct}</span>
                                     <span className="text-gray-400">correct</span>
                                   </div>
-                                  <div className="flex items-center gap-1.5 text-gray-700">
-                                    <Icon icon="mdi:close-circle" className="h-4 w-4 text-red-600" />
-                                    <span className="font-semibold">{formatted.stats.incorrect}</span>
+                                  <div className="flex items-center gap-1.5">
+                                    <Icon icon="mdi:close-circle" className="h-5 w-5 text-red-600" />
+                                    <span className="font-semibold text-red-600">{formatted.stats.incorrect}</span>
                                     <span className="text-gray-400">incorrect</span>
                                   </div>
                                   {formatted.stats.skipped > 0 && (
                                     <div className="flex items-center gap-1.5 text-gray-600">
-                                      <Icon icon="mdi:skip-forward" className="h-4 w-4" />
+                                      <Icon icon="mdi:skip-forward-circle" className="h-5 w-5" />
                                       <span className="font-medium">{formatted.stats.skipped}</span>
                                       <span className="text-gray-400">skipped</span>
                                     </div>
@@ -623,17 +623,17 @@ export function ActivityFeed({ userId, initialData }: ActivityFeedProps) {
                                 {/* Attempt Breakdown and Timing */}
                                 <div className="flex items-center gap-3 flex-wrap text-xs text-gray-600">
                                   <div className="flex items-center gap-1">
-                                    <Icon icon="mdi:check-circle" className="h-3.5 w-3.5 text-green-600" />
-                                    <span>{formatted.stats.correct}</span>
+                                    <Icon icon="mdi:check-circle" className="h-4 w-4 text-green-600" />
+                                    <span className="font-semibold text-green-600">{formatted.stats.correct}</span>
                             </div>
                                   <div className="flex items-center gap-1">
-                                    <Icon icon="mdi:close-circle" className="h-3.5 w-3.5 text-red-600" />
-                                    <span>{formatted.stats.incorrect}</span>
+                                    <Icon icon="mdi:close-circle" className="h-4 w-4 text-red-600" />
+                                    <span className="font-semibold text-red-600">{formatted.stats.incorrect}</span>
                                   </div>
                                   {formatted.stats.skipped > 0 && (
-                                    <div className="flex items-center gap-1">
-                                      <Icon icon="mdi:skip-forward" className="h-3.5 w-3.5" />
-                                      <span>{formatted.stats.skipped}</span>
+                                    <div className="flex items-center gap-1 text-gray-600">
+                                      <Icon icon="mdi:skip-forward-circle" className="h-4 w-4" />
+                                      <span className="font-medium">{formatted.stats.skipped}</span>
                                     </div>
                                   )}
                                   {formatted.stats.formattedDuration && (
