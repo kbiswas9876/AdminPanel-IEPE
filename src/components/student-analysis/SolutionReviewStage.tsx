@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft } from 'lucide-react'
 import SolutionQuestionDisplayWindow from './SolutionQuestionDisplayWindow'
 import ReviewPremiumStatusPanel from './ReviewPremiumStatusPanel'
 import { 
@@ -74,19 +73,8 @@ export default function SolutionReviewStage({
       transition={{ duration: 0.3 }}
       className="h-full flex flex-col"
     >
-      {/* Back to Analytics Button */}
-      <div className="px-6 py-3 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
-        <button
-          onClick={onBackToAnalytics}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          <span>Back to Analytics</span>
-        </button>
-      </div>
-
       {/* Main Content Area - Two Column Layout */}
-      <div className="flex-1 flex gap-0 overflow-hidden">
+      <div className="flex-1 flex gap-0 overflow-hidden h-full">
         {/* Left Column: Question Display */}
         <div className={`transition-all duration-300 ${isRightPanelCollapsed ? 'w-full' : 'w-3/4'} h-full`}>
           <SolutionQuestionDisplayWindow

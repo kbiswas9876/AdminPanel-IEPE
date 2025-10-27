@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Loader2, XCircle, Award, ChevronRight } from 'lucide-react'
+import { X, Loader2, XCircle } from 'lucide-react'
 import { getDetailedTestResult } from '@/lib/actions/studentAnalyticsActions'
 import type { EnrichedTestResult } from '@/lib/types/analytics'
 import { Button } from '@/components/ui/button'
@@ -105,19 +106,30 @@ export function DetailedSessionModal({ resultId, isOpen, onClose }: DetailedSess
 
   if (!isOpen) return null
 
+  if (typeof window === 'undefined') return null
+
   return (
+    createPortal(
     <AnimatePresence mode="wait">
       {isOpen && (
-        <div className="fixed inset-0 z-[9999]">
-          {/* Modal Container */}
-          <div className="fixed inset-0 flex items-center justify-center p-4">
+          <>
+            {/* Fullscreen Modal - covers everything including header/sidebar */}
             <motion.div
-              className="bg-white rounded-2xl shadow-2xl max-w-[95vw] w-full max-h-[95vh] overflow-hidden border border-gray-200 pointer-events-auto"
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed inset-0 w-screen h-screen overflow-hidden bg-white flex flex-col"
+              style={{ 
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: '100vw',
+                height: '100vh',
+                zIndex: 99999
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              onClick={(e) => e.stopPropagation()}
             >
               {loading && (
                 <div className="flex items-center justify-center min-h-[400px] p-8">
@@ -178,48 +190,19 @@ export function DetailedSessionModal({ resultId, isOpen, onClose }: DetailedSess
 
               {data && !loading && !error && (
                 <>
-                  {/* Header with Breadcrumb */}
-                  <div className="sticky top-0 bg-gradient-to-br from-blue-50 to-blue-100/50 border-b border-gray-200 px-6 py-4 z-10">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                          <Award className="h-6 w-6 text-white" />
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-bold text-gray-900">Test Analysis</h3>
-                          {/* Breadcrumb */}
-                          <div className="flex items-center gap-2 mt-1 text-sm">
-                            <button
-                              onClick={() => setCurrentStage('analytics')}
-                              className={`transition-colors ${
-                                currentStage === 'analytics'
-                                  ? 'text-blue-600 font-semibold'
-                                  : 'text-gray-500 hover:text-blue-600'
-                              }`}
-                            >
-                              Analytics
-                            </button>
-                            {currentStage === 'solutions' && (
-                              <>
-                                <ChevronRight className="h-4 w-4 text-gray-400" />
-                                <span className="text-blue-600 font-semibold">Solutions</span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <button
-                        onClick={onClose}
-                        className="rounded-full p-2 hover:bg-gray-100 transition-colors"
-                        aria-label="Close modal"
-                      >
-                        <X className="h-5 w-5 text-gray-500" />
-                      </button>
-                    </div>
-                  </div>
+                  {/* Close Button - positioned absolutely in top-right */}
+                  <div className="absolute top-4 right-4 z-50">
+          <button
+            onClick={onClose}
+                      className="rounded-full p-2 hover:bg-gray-100 transition-colors bg-white shadow-lg"
+            aria-label="Close modal"
+          >
+            <X className="h-5 w-5 text-gray-500" />
+          </button>
+      </div>
 
                   {/* Stage Content */}
-                  <div className="overflow-y-auto h-[calc(95vh-88px)]">
+                  <div className="flex-1 overflow-y-auto">
                     <AnimatePresence mode="wait">
                       {currentStage === 'analytics' && (
                         <PerformanceAnalyticsStage
@@ -240,10 +223,11 @@ export function DetailedSessionModal({ resultId, isOpen, onClose }: DetailedSess
                   </div>
                 </>
               )}
-            </motion.div>
-          </div>
-        </div>
-      )}
-    </AnimatePresence>
+              </motion.div>
+          </>
+        )}
+      </AnimatePresence>,
+      document.body
+    )
   )
 }
