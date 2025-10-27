@@ -68,8 +68,8 @@ export default function ReviewPremiumStatusPanel({
           className="bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 shadow-xl h-full flex flex-col relative overflow-y-auto"
         >
           {/* Header */}
-          <div className="sticky top-0 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 py-4 z-10">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-3">
+          <div className="sticky top-0 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 py-3 z-10 shadow-sm">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">
               Question Navigator
             </h3>
             <ReviewStatusLegend
@@ -81,41 +81,48 @@ export default function ReviewPremiumStatusPanel({
 
           {/* Question Grid */}
           <div className="flex-1 p-4 overflow-y-auto">
-            <div className="grid grid-cols-5 gap-2">
-              {questions.map((question, index) => (
-                <motion.button
-                  key={index}
-                  onClick={() => onQuestionSelect(index)}
-                  className={`
-                    relative w-full aspect-square rounded-lg border-2 font-bold text-sm transition-all
-                    ${getQuestionColor(index)}
-                    ${currentIndex === index 
-                      ? 'ring-4 ring-blue-400 dark:ring-blue-500 ring-offset-2 dark:ring-offset-slate-900 scale-110' 
-                      : 'hover:scale-105'
-                    }
-                  `}
-                  whileHover={{ scale: currentIndex === index ? 1.1 : 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  title={`Question ${index + 1}: ${reviewStates[index]?.status || 'unknown'}`}
-                >
-                  {index + 1}
-                  {currentIndex === index && (
-                    <motion.div
-                      className="absolute inset-0 rounded-lg border-2 border-blue-400 dark:border-blue-500"
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ duration: 0.2 }}
-                    />
-                  )}
-                </motion.button>
-              ))}
+            <div className="grid grid-cols-8 gap-2">
+              {questions.map((question, index) => {
+                const time = timePerQuestion?.[question.id] ?? 0
+                return (
+                  <motion.button
+                    key={index}
+                    onClick={() => onQuestionSelect(index)}
+                    className={`
+                      relative w-full aspect-square rounded-md border-2 font-bold text-xs transition-all flex items-center justify-center
+                      ${getQuestionColor(index)}
+                      ${currentIndex === index 
+                        ? 'ring-2 ring-blue-500 dark:ring-blue-400 scale-105' 
+                        : 'hover:scale-105 hover:shadow-md'
+                      }
+                    `}
+                    whileHover={{ scale: currentIndex === index ? 1.05 : 1.08 }}
+                    whileTap={{ scale: 0.95 }}
+                    title={`Question ${index + 1}: ${reviewStates[index]?.status || 'unknown'}${time ? ` (${time}s)` : ''}`}
+                  >
+                    <span className="relative z-10">{index + 1}</span>
+                    {currentIndex === index && (
+                      <motion.div
+                        className="absolute inset-0 rounded-md border-2 border-blue-500 dark:border-blue-400"
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.2 }}
+                      />
+                    )}
+                    {/* Subtle time indicator */}
+                    {time > 0 && (
+                      <div className="absolute bottom-0.5 right-0.5 w-1 h-1 rounded-full bg-white/40"></div>
+                    )}
+                  </motion.button>
+                )
+              })}
             </div>
           </div>
 
           {/* Footer Summary */}
-          <div className="sticky bottom-0 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 px-4 py-3">
-            <div className="text-xs text-slate-600 dark:text-slate-400 text-center">
-              Viewing {currentIndex + 1} of {questions.length}
+          <div className="sticky bottom-0 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border-t border-slate-200 dark:border-slate-700 px-4 py-2 shadow-sm">
+            <div className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
+              {currentIndex + 1} / {questions.length}
             </div>
           </div>
         </motion.div>
