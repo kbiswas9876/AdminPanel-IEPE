@@ -346,7 +346,80 @@ export async function getDetailedTestResult(resultId: number): Promise<EnrichedT
 }
 
 // ============================================================================
-// 4. GET REVISION HUB MIRROR DATA
+// 4. GET MOCK TEST LEADERBOARD DATA (RANK & PERCENTILE)
+// ============================================================================
+
+/**
+ * Fetches rank and percentile for a student's mock test result
+ * Calculated by comparing against all participants for that specific test
+ */
+export async function getMockTestLeaderboardData(
+  testResultId: number,
+  userId: string
+): Promise<{ rank: number | null; percentile: number | null; totalParticipants: number } | null> {
+  try {
+    const supabase = createAdminClient()
+    
+    // Fetch the test result to get mock_test_id and score_percentage
+    const { data: testResult, error: testError } = await supabase
+      .from('test_results')
+      .select('mock_test_id, score_percentage, session_type')
+      .eq('id', testResultId)
+      .single()
+    
+    if (testError || !testResult || testResult.session_type !== 'mock_test' || !testResult.mock_test_id) {
+      console.warn('⚠️ Not a valid mock test or test result not found')
+      return null
+    }
+    
+    const mockTestId = testResult.mock_test_id
+    const userScore = testResult.score_percentage || 0
+    
+    // Fetch all test results for this mock test, ordered by score
+    const { data: allTestResults, error: rankError } = await supabase
+      .from('test_results')
+      .select('user_id, score_percentage')
+      .eq('mock_test_id', mockTestId)
+      .eq('session_type', 'mock_test')
+      .order('score_percentage', { ascending: false })
+    
+    if (rankError) {
+      console.error('Error fetching rank data:', rankError)
+      return null
+    }
+    
+    if (!allTestResults || allTestResults.length === 0) {
+      console.warn('No test results found for mock test:', mockTestId)
+      return null
+    }
+    
+    const totalParticipants = allTestResults.length
+    
+    // Calculate rank: find index of current user + 1
+    const userRank = allTestResults.findIndex((result: any) => result.user_id === userId) + 1
+    
+    // Calculate percentile: (users with lower score / total participants) * 100
+    const usersWithLowerScore = allTestResults.filter((result: any) => 
+      result.score_percentage < userScore
+    ).length
+    
+    const percentile = totalParticipants > 1 
+      ? Math.round((usersWithLowerScore / totalParticipants) * 100) 
+      : 100
+    
+    return {
+      rank: userRank > 0 ? userRank : null,
+      percentile,
+      totalParticipants
+    }
+  } catch (error) {
+    console.error('Error in getMockTestLeaderboardData:', error)
+    return null
+  }
+}
+
+// ============================================================================
+// 5. GET REVISION HUB MIRROR DATA
 // ============================================================================
 
 /**

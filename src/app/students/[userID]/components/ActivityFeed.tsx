@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Icon } from '@iconify/react'
-import { getStudentActivityFeed } from '@/lib/actions/studentAnalyticsActions'
+import { getStudentActivityFeed, getMockTestLeaderboardData } from '@/lib/actions/studentAnalyticsActions'
 import type { ActivityLogEntry, ActivityFeedResponse, ActivityType } from '@/lib/types/analytics'
 import { DetailedSessionModal } from './DetailedSessionModal'
 import { ActivityFeedSkeleton } from './ActivityFeedSkeleton'
@@ -15,6 +15,12 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatTimestamp, formatDateHeader } from '@/lib/utils/activity-utils'
+
+interface LeaderboardData {
+  rank: number | null
+  percentile: number | null
+  totalParticipants: number
+}
 
 interface ActivityFeedProps {
   userId: string
@@ -29,6 +35,7 @@ export function ActivityFeed({ userId, initialData }: ActivityFeedProps) {
   const [selectedResultId, setSelectedResultId] = useState<number | null>(null)
   const [selectedFilter, setSelectedFilter] = useState<'all' | ActivityType>('all')
   const [searchTerm, setSearchTerm] = useState('')
+  const [leaderboardData, setLeaderboardData] = useState<Map<number, LeaderboardData>>(new Map())
 
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return
@@ -43,6 +50,35 @@ export function ActivityFeed({ userId, initialData }: ActivityFeedProps) {
     setHasMore(data.current_page < data.total_pages)
     setLoading(false)
   }, [loading, hasMore, page, userId])
+
+  // Fetch leaderboard data for mock tests
+  useEffect(() => {
+    const fetchLeaderboardData = async () => {
+      const mockTestActivities = activities.filter(a => a.activity_type === 'MOCK_TEST_COMPLETED')
+      
+      for (const activity of mockTestActivities) {
+        const resultId = activity.related_entity_id
+        if (resultId) {
+          // Check if we already have this data
+          setLeaderboardData(prev => {
+            if (prev.has(Number(resultId))) {
+              return prev
+            }
+            // Fetch the data
+            getMockTestLeaderboardData(Number(resultId), userId).then(data => {
+              if (data) {
+                setLeaderboardData(current => new Map(current.set(Number(resultId), data)))
+              }
+            })
+            return prev
+          })
+        }
+      }
+    }
+    
+    fetchLeaderboardData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activities, userId])
 
   // Format activity display
   const formatActivity = (activity: ActivityLogEntry) => {
@@ -152,11 +188,10 @@ export function ActivityFeed({ userId, initialData }: ActivityFeedProps) {
           year: 'numeric'
         })
         
-        // For mock tests, need to calculate percentile and rank
-        // These would be fetched from the database or calculated
-        // For now, setting to null to be populated later
+        // Get leaderboard data if available
         const finalScore = mockMeta.total_correct || 0
         const totalMarks = totalMockQuestions // Assuming 1 mark per question
+        const lbData = mockResultId ? leaderboardData.get(Number(mockResultId)) : null
         
         return {
           type: 'Mock Test',
@@ -178,9 +213,9 @@ export function ActivityFeed({ userId, initialData }: ActivityFeedProps) {
             finalScore: finalScore,
             totalMarks: totalMarks,
             dateTime: testDate,
-            percentile: null, // To be fetched from database
-            rank: null, // To be fetched from database
-            totalParticipants: null // To be fetched from database
+            percentile: lbData?.percentile ?? null,
+            rank: lbData?.rank ?? null,
+            totalParticipants: lbData?.totalParticipants ?? null
           },
           action: 'View Details',
           resultId: mockResultId
@@ -553,36 +588,44 @@ export function ActivityFeed({ userId, initialData }: ActivityFeedProps) {
                             ) : (
                               /* Mock Test Layout - Information Dense */
                               <div className="space-y-2">
-                                {/* Performance Metrics */}
+                                {/* Top Row: Performance Metrics */}
                                 <div className="flex items-center gap-3 flex-wrap text-sm">
                                   <div className="flex items-center gap-1.5 text-gray-700">
                                     <Icon icon="mdi:trophy-outline" className="h-4 w-4 text-purple-600" />
-                                    <span className="font-bold text-purple-600">Score: {formatted.stats.finalScore}/{formatted.stats.totalMarks}</span>
+                                    <span className="font-bold text-purple-600">{formatted.stats.scorePercentage}%</span>
                                   </div>
                                   <div className="flex items-center gap-1.5 text-gray-700">
-                                    <Icon icon="mdi:chart-line" className="h-4 w-4 text-blue-600" />
-                                    <span className="font-semibold">{formatted.stats.scorePercentage}%</span>
+                                    <span className="font-semibold">{formatted.stats.finalScore}/{formatted.stats.totalMarks} marks</span>
                                   </div>
-                                  {formatted.stats.percentile !== null && (
-                                    <div className="flex items-center gap-1.5 text-gray-600">
-                                      <Icon icon="mdi:percent-circle" className="h-4 w-4" />
-                                      <span>{formatted.stats.percentile} percentile</span>
-                                    </div>
-                                  )}
-                                  {formatted.stats.rank !== null && (
-                                    <div className="flex items-center gap-1.5 text-gray-600">
+                                  {(() => {
+                                    const stats = formatted.stats as any
+                                    return stats.rank && stats.rank > 0
+                                  })() && (
+                                    <div className="flex items-center gap-1.5 text-orange-600 font-semibold">
                                       <Icon icon="mdi:podium" className="h-4 w-4" />
-                                      <span>Rank #{formatted.stats.rank}</span>
+                                      <span>#{formatted.stats.rank as any}</span>
+                                      {(formatted.stats as any).totalParticipants && (
+                                        <span className="text-gray-500 text-xs">/ {(formatted.stats as any).totalParticipants}</span>
+                                      )}
                                     </div>
                                   )}
-                                </div>
+                                  {(() => {
+                                    const stats = formatted.stats as any
+                                    return stats.percentile !== null && stats.percentile !== undefined
+                                  })() && (
+                                    <div className="flex items-center gap-1.5 text-blue-600 font-semibold">
+                                      <Icon icon="mdi:percent-circle" className="h-4 w-4" />
+                                      <span>{(formatted.stats as any).percentile}%ile</span>
+                            </div>
+                                  )}
+                              </div>
                                 
                                 {/* Attempt Breakdown and Timing */}
                                 <div className="flex items-center gap-3 flex-wrap text-xs text-gray-600">
                                   <div className="flex items-center gap-1">
                                     <Icon icon="mdi:check-circle" className="h-3.5 w-3.5 text-green-600" />
                                     <span>{formatted.stats.correct}</span>
-                                  </div>
+                            </div>
                                   <div className="flex items-center gap-1">
                                     <Icon icon="mdi:close-circle" className="h-3.5 w-3.5 text-red-600" />
                                     <span>{formatted.stats.incorrect}</span>
