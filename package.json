@@ -138,8 +138,10 @@
     "tiptap-extension-resizable-image": "^2.0.0",
     "uuid": "^13.0.0",
     "xlsx": "^0.18.5",
+    "xlx": "^1.0.0",
     "zod": "^4.1.5",
-    "zustand": "^5.0.8"
+    "zustand": "^5.0.8",
+    "simple-statistics": "^7.8.8"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

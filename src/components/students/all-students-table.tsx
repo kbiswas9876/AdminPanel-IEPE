@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/table'
 import { User, Mail, Calendar, Shield, CheckCircle, Clock } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 
 interface AllStudentsTableProps {
@@ -93,6 +94,7 @@ export function AllStudentsTable({ users, selectedUsers = [], onUserSelect }: Al
             <TableHead>Student</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Registration Date</TableHead>
+            <TableHead>Flags</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Last Updated</TableHead>
           </TableRow>
@@ -146,6 +148,23 @@ export function AllStudentsTable({ users, selectedUsers = [], onUserSelect }: Al
                       minute: '2-digit'
                     })}
                   </span>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="flex gap-1 flex-wrap">
+                  {user.active_flags?.map(flag => (
+                    <Badge
+                      key={flag}
+                      variant={
+                        flag === 'PERFORMANCE_DECLINE' ? 'destructive' :
+                        flag === 'HIGH_ACHIEVER' ? 'default' :
+                        'secondary'
+                      }
+                      className="text-xs"
+                    >
+                      {flag.replace(/_/g, ' ')}
+                    </Badge>
+                  ))}
                 </div>
               </TableCell>
               <TableCell>

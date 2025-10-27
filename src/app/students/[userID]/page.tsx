@@ -1,34 +1,40 @@
-import { ResponsiveStudentProfile } from '@/components/students/responsive-student-profile'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { ActivityFeed } from './components/ActivityFeed'
+import { ActivitySummaryStats } from './components/ActivitySummaryStats'
+import { getStudentActivityFeed } from '@/lib/actions/studentAnalyticsActions'
+import { AISummaryCard } from '@/components/students/AISummaryCard'
 
-interface StudentProfilePageProps {
-  params: {
-    userID: string
-  }
+interface StudentPageProps {
+  params: Promise<{ userID: string }>
 }
 
-export default async function StudentProfilePage({ params }: StudentProfilePageProps) {
-  const { userID } = await params
+export default async function StudentPage({ params }: StudentPageProps) {
+  const { userID: userId } = await params
   
-  // Fetch user profile data
-  const supabase = createAdminClient()
-  const { data: user, error } = await supabase
-    .from('user_profiles')
-    .select('*')
-    .eq('id', userID)
-    .single()
-
-  if (error || !user) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">User Not Found</h2>
-          <p className="text-gray-600">The requested student profile could not be found.</p>
+  // Fetch initial activity feed
+  const initialData = await getStudentActivityFeed(userId, {}, { page: 1, limit: 20 })
+  
+  return (
+    <div className="h-full overflow-y-auto bg-gray-50">
+      <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+        {/* Summary Statistics */}
+        <ActivitySummaryStats userId={userId} />
+        
+        {/* AI Insights Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              📊 Performance Trajectory feature requires additional setup. It will calculate performance trends based on test results.
+            </p>
+          </div>
+          <AISummaryCard userId={userId} />
         </div>
+        
+        {/* Activity Feed */}
+        <ActivityFeed
+          userId={userId}
+          initialData={initialData}
+        />
       </div>
-    )
-  }
-
-      return <ResponsiveStudentProfile userId={userID} user={user} />
+    </div>
+  )
 }
-
