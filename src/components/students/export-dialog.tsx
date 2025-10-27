@@ -77,8 +77,13 @@ export function ExportDialog({ isOpen, onClose, users, allUsers }: ExportDialogP
             case 'updated_at':
               row[columnKey] = user.updated_at ? new Date(user.updated_at).toLocaleString() : 'Never'
               break
+            case 'active_flags':
+              row[columnKey] = Array.isArray(user.active_flags) ? user.active_flags.join(', ') : ''
+              break
             default:
-              row[columnKey] = user[columnKey as keyof UserProfile] || ''
+              row[columnKey] = typeof user[columnKey as keyof UserProfile] === 'object' 
+                ? JSON.stringify(user[columnKey as keyof UserProfile])
+                : (user[columnKey as keyof UserProfile]?.toString() || '')
           }
         })
         return row

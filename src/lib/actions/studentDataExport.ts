@@ -101,14 +101,14 @@ export async function exportStudentData(
       },
       testAttempts: testAttempts.map(attempt => ({
         id: attempt.id,
-        test_name: attempt.tests.name,
+        test_name: attempt.test_name,
         score: attempt.score,
         total_correct: attempt.total_correct,
         total_incorrect: attempt.total_incorrect,
         total_skipped: attempt.total_skipped,
         time_taken_seconds: attempt.time_taken_seconds,
         completed_at: attempt.completed_at,
-        test_type: attempt.tests.description
+        test_type: attempt.test_description
       })),
       revisionHub: revisionHubData,
       activityTimeline: activities?.map(a => ({
@@ -116,7 +116,13 @@ export async function exportStudentData(
         created_at: a.created_at,
         metadata: a.metadata || {}
       })) || [],
-      adminNotes: notes
+      adminNotes: notes.map(note => ({
+        id: note.id,
+        student_id: userId,
+        admin_id: note.admin_id,
+        note: note.note,
+        created_at: note.created_at
+      }))
     }
     
     // Format data based on export format

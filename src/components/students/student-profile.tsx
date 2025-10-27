@@ -18,7 +18,7 @@ import Link from 'next/link'
 import { AdminControls } from './admin-controls'
 import { exportStudentData } from '@/lib/actions/studentDataExport'
 import { toast } from 'sonner'
-import { useAuth } from '@/lib/contexts/auth-context'
+import { useAuth } from '@/lib/auth'
 import {
   DropdownMenu,
   DropdownMenuContent,

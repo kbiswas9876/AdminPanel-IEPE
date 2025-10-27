@@ -94,6 +94,8 @@ export interface EnrichedAnswer {
   timingCategory: TimingCategory
   isCorrect: boolean
   time_taken_seconds: number
+  performanceFeedback?: 'Slow' | 'Superfast' | 'OnTime' | 'OnTimeButNotCorrect'
+  targetTime?: number
 }
 
 export interface AnswerLog {

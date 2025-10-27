@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, TrendingUp, CheckCircle2, XCircle, Clock, Award, Target, BookOpen, Loader2 } from 'lucide-react'
 import { getDetailedTestResult } from '@/lib/actions/studentAnalyticsActions'
 import type { EnrichedTestResult } from '@/lib/types/analytics'
+import { getPerformanceChipStyle } from '@/lib/utils/speed-calculator'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -276,7 +277,11 @@ function SessionDetails({ data, onClose }: { data: EnrichedTestResult; onClose: 
             <h4 className="text-base font-bold text-gray-900">Question Analysis</h4>
           </div>
           <div className="space-y-3">
-            {enrichedAnswers.map(({ answer_log, question, timingCategory, isCorrect }, index) => (
+            {enrichedAnswers.map(({ answer_log, question, timingCategory, isCorrect, performanceFeedback, targetTime }, index) => {
+              // Get performance chip style
+              const performanceChip = performanceFeedback ? getPerformanceChipStyle(performanceFeedback) : null
+              
+              return (
               <motion.div
                 key={answer_log.id}
                 initial={{ opacity: 0, y: 10 }}
@@ -295,21 +300,21 @@ function SessionDetails({ data, onClose }: { data: EnrichedTestResult; onClose: 
                   
                   <div className="flex-1 min-w-0 space-y-2">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <Badge 
-                        variant="secondary"
-                        className={`text-xs ${
-                          timingCategory.category === 'fast'
-                            ? 'bg-blue-100 text-blue-700'
-                            : timingCategory.category === 'optimal'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-yellow-100 text-yellow-700'
-                        }`}
-                      >
-                        {timingCategory.label}
-                      </Badge>
+                      {/* Performance Feedback Badge (mirrors Student Portal) */}
+                      {performanceChip && (
+                        <Badge className={performanceChip.containerClass}>
+                          <span className="mr-1">{performanceChip.icon}</span>
+                          <span className="text-xs font-bold uppercase">{performanceChip.label}</span>
+                        </Badge>
+                      )}
+                      
+                      {/* Time Taken */}
                       <div className="flex items-center gap-1 text-xs text-gray-600">
                         <Clock className="h-3.5 w-3.5" />
-                        {Math.floor(answer_log.time_taken / 60)}m {answer_log.time_taken % 60}s
+                        <span>{Math.floor(answer_log.time_taken / 60)}m {answer_log.time_taken % 60}s</span>
+                        {targetTime && (
+                          <span className="text-gray-400"> / Target: {targetTime}s</span>
+                        )}
                       </div>
                     </div>
                     
@@ -339,7 +344,8 @@ function SessionDetails({ data, onClose }: { data: EnrichedTestResult; onClose: 
                   </div>
                 </div>
               </motion.div>
-            ))}
+            )
+            })}
           </div>
         </div>
       </div>

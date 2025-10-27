@@ -60,6 +60,8 @@ export interface UserProfile {
   created_at: string
   updated_at?: string
   email?: string
+  active_flags?: string[]
+  profile_picture_url?: string
 }
 
 // Enhanced Analytics Types

@@ -20,6 +20,7 @@ import type {
   TimingCategory
 } from '@/lib/types/analytics'
 import { getTimingCategory } from '@/lib/types/analytics'
+import { getNuancedPerformanceState, getTargetTime, type PerformanceState } from '@/lib/utils/speed-calculator'
 
 /**
  * Server Actions for Student Analytics
@@ -142,8 +143,22 @@ export async function getStudentActivityFeed(
     }
     
     // Get total count for pagination
-    const { count: totalCount } = await query
+    let countQuery = supabase
+      .from('student_activity_log')
       .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+    
+    if (filters.activity_type) {
+      countQuery = countQuery.eq('activity_type', filters.activity_type)
+    }
+    
+    if (filters.date_range) {
+      countQuery = countQuery
+        .gte('created_at', filters.date_range.start)
+        .lte('created_at', filters.date_range.end)
+    }
+    
+    const { count: totalCount } = await countQuery
     
     // Apply pagination and sorting
     const { page, limit } = pagination
@@ -283,7 +298,7 @@ export async function getDetailedTestResult(resultId: number): Promise<EnrichedT
     // Create question lookup map
     const questionMap = new Map(questions.map(q => [q.id, q]))
     
-    // Enrich answers with question data and timing categories
+    // Enrich answers with question data, timing categories, and performance feedback
     const enrichedAnswers: EnrichedAnswer[] = answerLogs.map(log => {
       const question = questionMap.get(log.question_id)
       if (!question) {
@@ -293,12 +308,23 @@ export async function getDetailedTestResult(resultId: number): Promise<EnrichedT
       // Calculate timing category
       const timingCategory = getTimingCategory(log.time_taken)
       
+      // Calculate performance feedback (mirrors Student Portal)
+      const difficulty = question.difficulty as 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard' | null | undefined
+      const performanceState = getNuancedPerformanceState(
+        log.time_taken,
+        difficulty,
+        log.status as 'correct' | 'incorrect' | 'skipped'
+      )
+      const targetTime = getTargetTime(difficulty)
+      
       return {
         answer_log: log,
         question: question,
         timingCategory: timingCategory,
         isCorrect: log.status === 'correct',
-        time_taken_seconds: log.time_taken
+        time_taken_seconds: log.time_taken,
+        performanceFeedback: performanceState,
+        targetTime: targetTime
       }
     })
     
@@ -548,11 +574,13 @@ export async function getStudentRevisionHubMirrorData(
           correct_attempts: correctAttempts,
           success_rate: Math.round(successRate * 100) / 100,
           recent_trend: recentTrend,
-          attempts: attempts.map(a => ({
-            date: a.created_at,
-            result: a.status,
-            time_taken: a.time_taken
-          })),
+          attempts: attempts
+            .filter(a => a.status !== 'skipped')
+            .map(a => ({
+              date: a.created_at,
+              result: a.status as 'correct' | 'incorrect',
+              time_taken: a.time_taken
+            })),
           average_time: Math.round(avgTime)
         }
         
