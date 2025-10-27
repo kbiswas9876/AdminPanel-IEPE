@@ -16,6 +16,10 @@ interface SolutionUnifiedHeaderProps {
   onReport?: () => void
   onToggleBookmark?: () => void
   showBookmark?: boolean
+  markingScheme?: {
+    marksPerCorrect: number
+    negativeMarksPerIncorrect: number
+  }
 }
 
 const SolutionUnifiedHeader: React.FC<SolutionUnifiedHeaderProps> = ({
@@ -28,7 +32,8 @@ const SolutionUnifiedHeader: React.FC<SolutionUnifiedHeaderProps> = ({
   onBack,
   onReport,
   onToggleBookmark,
-  showBookmark = false  // Disabled by default for admin panel
+  showBookmark = false,  // Disabled by default for admin panel
+  markingScheme
 }) => {
   const getStatusPillClasses = (s: 'correct' | 'incorrect' | 'skipped') => {
     switch (s) {
@@ -177,8 +182,22 @@ const SolutionUnifiedHeader: React.FC<SolutionUnifiedHeaderProps> = ({
             </>
           </div>
 
-          {/* Right Zone - Disabled for admin panel */}
+          {/* Right Zone - Marking Scheme Display (for Mock Tests) */}
           <div className="flex items-center gap-2">
+            {markingScheme && (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center px-3 py-1.5 bg-green-600 rounded-lg">
+                  <span className="text-white font-bold text-sm">
+                    +{markingScheme.marksPerCorrect}
+                  </span>
+                </div>
+                <div className="flex items-center justify-center px-3 py-1.5 bg-red-600 rounded-lg">
+                  <span className="text-white font-bold text-sm">
+                    −{Math.abs(markingScheme.negativeMarksPerIncorrect)}
+                  </span>
+                </div>
+              </div>
+            )}
             {showBookmark && onToggleBookmark && (
               <motion.button
                 onClick={onToggleBookmark}

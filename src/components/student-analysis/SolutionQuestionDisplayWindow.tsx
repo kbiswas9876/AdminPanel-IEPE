@@ -26,6 +26,11 @@ interface SolutionQuestionDisplayWindowProps {
   filteredTotal?: number
   onBack?: () => void
   children?: React.ReactNode
+  markingScheme?: {
+    marksPerCorrect: number
+    negativeMarksPerIncorrect: number
+  }
+  testName?: string
 }
 
 const SolutionQuestionDisplayWindow: React.FC<SolutionQuestionDisplayWindowProps> = ({
@@ -38,7 +43,9 @@ const SolutionQuestionDisplayWindow: React.FC<SolutionQuestionDisplayWindowProps
   filteredPosition,
   filteredTotal,
   onBack,
-  children
+  children,
+  markingScheme,
+  testName
 }) => {
   const [isLoaded, setIsLoaded] = useState(false)
   const [showSolution, setShowSolution] = useState(true)
@@ -73,6 +80,7 @@ const SolutionQuestionDisplayWindow: React.FC<SolutionQuestionDisplayWindowProps
           isBookmarked={false}
           onBack={onBack}
           showBookmark={false}
+          markingScheme={markingScheme}
         />
         <main className="flex-1 p-8">
           <div className="text-slate-600 dark:text-slate-300">No question available.</div>
@@ -93,6 +101,7 @@ const SolutionQuestionDisplayWindow: React.FC<SolutionQuestionDisplayWindowProps
         isBookmarked={false}
         onBack={onBack}
         showBookmark={false}
+        markingScheme={markingScheme}
       />
 
       {/* Main Content Area - Scrollable */}
@@ -248,6 +257,7 @@ const SolutionQuestionDisplayWindow: React.FC<SolutionQuestionDisplayWindowProps
         totalQuestions={totalQuestions}
         filteredPosition={filteredPosition}
         filteredTotal={filteredTotal}
+        testName={testName}
       />
     </div>
   )

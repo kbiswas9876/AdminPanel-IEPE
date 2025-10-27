@@ -372,6 +372,149 @@ export async function getDetailedTestResult(resultId: number): Promise<EnrichedT
 }
 
 // ============================================================================
+// 4. GET MOCK TEST COMPETITIVE METRICS (MARKS, RANK, PERCENTILE)
+// ============================================================================
+
+/**
+ * Enhanced function to calculate ALL mock test competitive metrics
+ * Follows the exact on-demand calculation logic from Student Portal
+ */
+export async function getMockTestCompetitiveMetrics(
+  testResultId: number,
+  userId: string
+): Promise<{
+  marksObtained: number
+  totalMarks: number
+  rank: number | null
+  percentile: number
+  totalTestTakers: number
+} | null> {
+  try {
+    const supabase = createAdminClient()
+    
+    // Step 1: Fetch test result to get basic data
+    const { data: testResult, error: testError } = await supabase
+      .from('test_results')
+      .select('mock_test_id, score_percentage, total_correct, total_incorrect, total_questions, session_type')
+      .eq('id', testResultId)
+      .single()
+    
+    if (testError || !testResult || testResult.session_type !== 'mock_test' || !testResult.mock_test_id) {
+      console.warn('⚠️ Not a valid mock test or test result not found')
+      return null
+    }
+    
+    const mockTestId = testResult.mock_test_id
+    const userScore = testResult.score_percentage || 0
+    
+    // Step 2: Fetch marking scheme from tests table
+    const { data: test, error: testMetadataError } = await supabase
+      .from('tests')
+      .select('marks_per_correct, negative_marks_per_incorrect')
+      .eq('id', mockTestId)
+      .single()
+    
+    if (testMetadataError || !test) {
+      console.error('Error fetching test metadata:', testMetadataError)
+      return null
+    }
+    
+    // Step 3: Calculate marks using the exact formula from Student Portal
+    const marksObtained = (testResult.total_correct * test.marks_per_correct) - 
+                          (testResult.total_incorrect * Math.abs(test.negative_marks_per_incorrect))
+    const totalMarks = testResult.total_questions * test.marks_per_correct
+    
+    console.log('📊 Calculated marks:', { marksObtained, totalMarks })
+    
+    // Step 4: Fetch all results for rank and percentile calculation
+    const { data: allTestResults, error: rankError } = await supabase
+      .from('test_results')
+      .select('user_id, score_percentage')
+      .eq('mock_test_id', mockTestId)
+      .eq('session_type', 'mock_test')
+      .order('score_percentage', { ascending: false })
+    
+    if (rankError) {
+      console.error('Error fetching rank data:', rankError)
+      return null
+    }
+    
+    if (!allTestResults || allTestResults.length === 0) {
+      console.warn('No test results found for mock test:', mockTestId)
+      return null
+    }
+    
+    const totalTestTakers = allTestResults.length
+    
+    // Step 5: Calculate rank (findIndex + 1)
+    const userRank = allTestResults.findIndex((result: any) => result.user_id === userId) + 1
+    
+    // Step 6: Calculate percentile using exact Student Portal formula
+    const usersWithLowerScore = allTestResults.filter((result: any) => 
+      result.score_percentage < userScore
+    ).length
+    
+    const percentile = totalTestTakers > 1 
+      ? Math.round((usersWithLowerScore / totalTestTakers) * 100)
+      : 100
+    
+    console.log(`📈 User ${userId} metrics:`, {
+      marksObtained,
+      totalMarks,
+      rank: userRank > 0 ? userRank : null,
+      percentile,
+      totalTestTakers
+    })
+    
+    return {
+      marksObtained,
+      totalMarks,
+      rank: userRank > 0 ? userRank : null,
+      percentile,
+      totalTestTakers
+    }
+  } catch (error) {
+    console.error('Error in getMockTestCompetitiveMetrics:', error)
+    return null
+  }
+}
+
+/**
+ * Fetches marking scheme for a mock test
+ * Server action for use in client components
+ */
+export async function fetchMockTestMarkingScheme(mockTestId: number): Promise<{
+  marksPerCorrect: number
+  negativeMarksPerIncorrect: number
+  testName?: string
+} | null> {
+  try {
+    const supabase = createAdminClient()
+    
+    const { data: testData, error } = await supabase
+      .from('tests')
+      .select('marks_per_correct, negative_marks_per_incorrect, name')
+      .eq('id', mockTestId)
+      .single()
+    
+    if (error || !testData) {
+      console.error('Error fetching marking scheme:', error)
+      return null
+    }
+    
+    return {
+      marksPerCorrect: testData.marks_per_correct,
+      negativeMarksPerIncorrect: testData.negative_marks_per_incorrect,
+      testName: testData.name
+    }
+  } catch (error) {
+    console.error('Error in fetchMockTestMarkingScheme:', error)
+    return null
+  }
+}
+
+// Legacy function - kept for backward compatibility but now uses new function
+// ============================================================================
 // 4. GET MOCK TEST LEADERBOARD DATA (RANK & PERCENTILE)
 // ============================================================================
 

@@ -8,6 +8,7 @@ import { getDetailedTestResult } from '@/lib/actions/studentAnalyticsActions'
 import type { EnrichedTestResult } from '@/lib/types/analytics'
 import { Button } from '@/components/ui/button'
 import PerformanceAnalyticsStage from '@/components/student-analysis/PerformanceAnalyticsStage'
+import MockTestPerformanceAnalyticsStage from '@/components/student-analysis/MockTestPerformanceAnalyticsStage'
 import SolutionReviewStage from '@/components/student-analysis/SolutionReviewStage'
 
 type ModalStage = 'analytics' | 'solutions'
@@ -233,11 +234,21 @@ export function DetailedSessionModal({ resultId, isOpen, onClose }: DetailedSess
                   <div className="flex-1 overflow-y-auto">
                     <AnimatePresence mode="wait">
                       {currentStage === 'analytics' && (
-                        <PerformanceAnalyticsStage
-                          key="analytics"
-                          data={data}
-                          onNavigateToSolutions={() => setCurrentStage('solutions')}
-                        />
+                        // Conditionally render based on session type
+                        data.testResult.session_type === 'mock_test' ? (
+                          <MockTestPerformanceAnalyticsStage
+                            key="mock-test-analytics"
+                            data={data}
+                            onNavigateToSolutions={() => setCurrentStage('solutions')}
+                            userId={data.testResult.user_id}
+                          />
+                        ) : (
+                          <PerformanceAnalyticsStage
+                            key="analytics"
+                            data={data}
+                            onNavigateToSolutions={() => setCurrentStage('solutions')}
+                          />
+                        )
                       )}
                       
                       {currentStage === 'solutions' && (
@@ -245,6 +256,7 @@ export function DetailedSessionModal({ resultId, isOpen, onClose }: DetailedSess
                           key="solutions"
                           data={data}
                           onBackToAnalytics={() => setCurrentStage('analytics')}
+                          isMockTest={data.testResult.session_type === 'mock_test'}
                         />
                       )}
                     </AnimatePresence>

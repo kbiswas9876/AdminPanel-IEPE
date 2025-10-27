@@ -12,6 +12,7 @@ interface SolutionNavigationFooterProps {
   totalQuestions: number
   filteredPosition?: number
   filteredTotal?: number
+  testName?: string
 }
 
 const SolutionNavigationFooter: React.FC<SolutionNavigationFooterProps> = ({
@@ -22,7 +23,8 @@ const SolutionNavigationFooter: React.FC<SolutionNavigationFooterProps> = ({
   currentIndex,
   totalQuestions,
   filteredPosition,
-  filteredTotal
+  filteredTotal,
+  testName
 }) => {
   const displayPosition = filteredPosition ?? (currentIndex + 1)
   const displayTotal = filteredTotal ?? totalQuestions
@@ -31,6 +33,13 @@ const SolutionNavigationFooter: React.FC<SolutionNavigationFooterProps> = ({
   return (
     <div className="sticky bottom-0 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 px-6 py-4 shadow-lg">
       <div className="max-w-7xl mx-auto">
+        {testName && (
+          <div className="mb-3 pb-2 text-center border-b border-slate-200 dark:border-slate-700">
+            <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
+              {testName}
+            </span>
+          </div>
+        )}
         <div className="flex items-center justify-between gap-2">
           {/* Left: Previous Button */}
           <div className="flex-shrink-0">

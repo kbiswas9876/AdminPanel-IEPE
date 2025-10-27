@@ -16,6 +16,8 @@ interface ReviewPremiumStatusPanelProps {
   onQuestionSelect: (index: number) => void
   hideInternalToggle?: boolean
   timePerQuestion?: Record<string, number>
+  statusFilter?: 'all' | 'correct' | 'incorrect' | 'skipped'
+  onStatusFilterChange?: (filter: 'all' | 'correct' | 'incorrect' | 'skipped') => void
 }
 
 export default function ReviewPremiumStatusPanel({
@@ -24,7 +26,9 @@ export default function ReviewPremiumStatusPanel({
   currentIndex,
   onQuestionSelect,
   hideInternalToggle = false,
-  timePerQuestion = {}
+  timePerQuestion = {},
+  statusFilter = 'all',
+  onStatusFilterChange
 }: ReviewPremiumStatusPanelProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   
@@ -51,6 +55,16 @@ export default function ReviewPremiumStatusPanel({
   const incorrectCount = reviewStates.filter(s => s.status === 'incorrect').length
   const skippedCount = reviewStates.filter(s => s.status === 'skipped').length
 
+  // Filter questions based on status filter
+  const filteredIndices = useMemo(() => {
+    return questions
+      .map((_, index) => index)
+      .filter(index => {
+        if (statusFilter === 'all') return true
+        return reviewStates[index]?.status === statusFilter
+      })
+  }, [questions, reviewStates, statusFilter])
+
   return (
     <AnimatePresence>
       {!showCollapsed ? (
@@ -72,6 +86,26 @@ export default function ReviewPremiumStatusPanel({
             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">
               Question Navigator
             </h3>
+            
+            {/* Filter Buttons */}
+            {onStatusFilterChange && (
+              <div className="flex gap-1 mb-2">
+                {(['all', 'correct', 'incorrect', 'skipped'] as const).map((filter) => (
+                  <button
+                    key={filter}
+                    onClick={() => onStatusFilterChange(filter)}
+                    className={`px-2 py-1 text-xs font-medium rounded transition-all ${
+                      statusFilter === filter
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
+                    }`}
+                  >
+                    {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                  </button>
+                ))}
+              </div>
+            )}
+            
             <ReviewStatusLegend
               correctCount={correctCount}
               incorrectCount={incorrectCount}
@@ -82,7 +116,9 @@ export default function ReviewPremiumStatusPanel({
           {/* Question Grid */}
           <div className="flex-1 p-4 overflow-y-auto">
             <div className="grid grid-cols-8 gap-2">
-              {questions.map((question, index) => {
+              {filteredIndices.map((originalIndex) => {
+                const question = questions[originalIndex]
+                const index = originalIndex
                 const time = timePerQuestion?.[question.id] ?? 0
                 return (
                   <motion.button
@@ -122,7 +158,15 @@ export default function ReviewPremiumStatusPanel({
           {/* Footer Summary */}
           <div className="sticky bottom-0 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border-t border-slate-200 dark:border-slate-700 px-4 py-2 shadow-sm">
             <div className="text-xs font-medium text-slate-700 dark:text-slate-300 text-center">
-              {currentIndex + 1} / {questions.length}
+              {filteredIndices.length > 0 ? (
+                <>
+                  {filteredIndices.indexOf(currentIndex) !== -1 
+                    ? filteredIndices.indexOf(currentIndex) + 1 
+                    : 0} / {filteredIndices.length}
+                </>
+              ) : (
+                <>0 / 0</>
+              )}
             </div>
           </div>
         </motion.div>

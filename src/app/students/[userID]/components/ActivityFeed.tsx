@@ -60,18 +60,23 @@ export function ActivityFeed({ userId, initialData }: ActivityFeedProps) {
         const resultId = activity.related_entity_id
         if (resultId) {
           // Check if we already have this data
-          setLeaderboardData(prev => {
-            if (prev.has(Number(resultId))) {
-              return prev
+          if (leaderboardData.has(Number(resultId))) {
+            continue
+          }
+          
+          // Fetch the data
+          try {
+            const data = await getMockTestLeaderboardData(Number(resultId), userId)
+            if (data) {
+              setLeaderboardData(prev => {
+                const newMap = new Map(prev)
+                newMap.set(Number(resultId), data)
+                return newMap
+              })
             }
-            // Fetch the data
-            getMockTestLeaderboardData(Number(resultId), userId).then(data => {
-              if (data) {
-                setLeaderboardData(current => new Map(current.set(Number(resultId), data)))
-              }
-            })
-            return prev
-          })
+          } catch (error) {
+            console.error('Error fetching leaderboard data:', error)
+          }
         }
       }
     }

@@ -14,6 +14,7 @@ import type { EnrichedTestResult } from '@/lib/types/analytics'
 interface SolutionReviewStageProps {
   data: EnrichedTestResult
   onBackToAnalytics: () => void
+  isMockTest?: boolean
 }
 
 /**
@@ -25,11 +26,15 @@ interface SolutionReviewStageProps {
  */
 export default function SolutionReviewStage({
   data,
-  onBackToAnalytics
+  onBackToAnalytics,
+  isMockTest = false
 }: SolutionReviewStageProps) {
   // Current question index state
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false)
+  const [markingScheme, setMarkingScheme] = useState<{ marksPerCorrect: number; negativeMarksPerIncorrect: number } | null>(null)
+  const [testName, setTestName] = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState<'all' | 'correct' | 'incorrect' | 'skipped'>('all')
 
   // Transform data for solution review components
   const sessionData = useMemo(() => {
@@ -44,21 +49,71 @@ export default function SolutionReviewStage({
     return buildReviewStates(data)
   }, [data])
 
+  // Fetch marking scheme and test name for mock tests using server action
+  useEffect(() => {
+    async function fetchMarkingScheme() {
+      if (isMockTest && data.testResult.mock_test_id) {
+        try {
+          // Use server action instead of direct client fetch
+          const { fetchMockTestMarkingScheme } = await import('@/lib/actions/studentAnalyticsActions')
+          const scheme = await fetchMockTestMarkingScheme(data.testResult.mock_test_id)
+          
+          if (scheme) {
+            setMarkingScheme({
+              marksPerCorrect: scheme.marksPerCorrect,
+              negativeMarksPerIncorrect: scheme.negativeMarksPerIncorrect
+            })
+            // Also fetch test name if available
+            if (scheme.testName) {
+              setTestName(scheme.testName)
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching marking scheme:', error)
+        }
+      }
+    }
+    
+    fetchMarkingScheme()
+  }, [isMockTest, data.testResult.mock_test_id])
+
   // Reset to first question when data changes
   useEffect(() => {
     setCurrentQuestionIndex(0)
   }, [data])
 
+  // Calculate filtered indices based on status filter
+  const filteredIndices = useMemo(() => {
+    return sessionData.questions
+      .map((_, index) => index)
+      .filter(index => {
+        if (statusFilter === 'all') return true
+        return reviewStates[index]?.status === statusFilter
+      })
+  }, [sessionData.questions, reviewStates, statusFilter])
+
+  // Ensure current index stays within filtered set
+  useEffect(() => {
+    if (filteredIndices.length === 0) return
+    
+    // If current index is not in filtered set, jump to first filtered index
+    if (!filteredIndices.includes(currentQuestionIndex)) {
+      setCurrentQuestionIndex(filteredIndices[0])
+    }
+  }, [filteredIndices, currentQuestionIndex])
+
   // Navigation handlers
   const handlePrev = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1)
+    const currentFilteredIndex = filteredIndices.indexOf(currentQuestionIndex)
+    if (currentFilteredIndex > 0) {
+      setCurrentQuestionIndex(filteredIndices[currentFilteredIndex - 1])
     }
   }
 
   const handleNext = () => {
-    if (currentQuestionIndex < sessionData.questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1)
+    const currentFilteredIndex = filteredIndices.indexOf(currentQuestionIndex)
+    if (currentFilteredIndex < filteredIndices.length - 1) {
+      setCurrentQuestionIndex(filteredIndices[currentFilteredIndex + 1])
     }
   }
 
@@ -82,11 +137,13 @@ export default function SolutionReviewStage({
             currentIndex={currentQuestionIndex}
             onPrev={handlePrev}
             onNext={handleNext}
-            canPrev={currentQuestionIndex > 0}
-            canNext={currentQuestionIndex < totalQuestions - 1}
-            filteredPosition={currentQuestionIndex + 1}
-            filteredTotal={totalQuestions}
+            canPrev={filteredIndices.indexOf(currentQuestionIndex) > 0}
+            canNext={filteredIndices.indexOf(currentQuestionIndex) < filteredIndices.length - 1}
+            filteredPosition={filteredIndices.indexOf(currentQuestionIndex) + 1}
+            filteredTotal={filteredIndices.length}
             onBack={onBackToAnalytics}
+            markingScheme={markingScheme || undefined}
+            testName={testName || undefined}
           />
         </div>
 
@@ -107,6 +164,11 @@ export default function SolutionReviewStage({
                 onQuestionSelect={(index: number) => setCurrentQuestionIndex(index)}
                 hideInternalToggle={false}
                 timePerQuestion={timePerQuestion}
+                statusFilter={statusFilter}
+                onStatusFilterChange={(filter) => {
+                  setStatusFilter(filter)
+                  setCurrentQuestionIndex(0)
+                }}
               />
             </motion.div>
           )}
