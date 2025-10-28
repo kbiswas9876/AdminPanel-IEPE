@@ -66,3 +66,4 @@ COMMENT ON COLUMN test_attempts.total_correct IS 'Number of correct answers';
 COMMENT ON COLUMN test_attempts.total_incorrect IS 'Number of incorrect answers';
 COMMENT ON COLUMN test_attempts.total_skipped IS 'Number of skipped questions';
 COMMENT ON COLUMN test_attempts.time_taken_seconds IS 'Total time taken to complete the test in seconds';
+
