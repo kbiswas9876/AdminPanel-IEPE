@@ -9,7 +9,10 @@ export type TestOverviewStats = {
   averagePercentage: number
   averageTimeSeconds: number
   highestScore: number
+  highestPercentage: number
   lowestScore: number
+  lowestPercentage: number
+  medianScore: number
   totalMarks: number
 }
 
@@ -71,6 +74,41 @@ export type ScoreDistribution = {
   percentage: number
 }
 
+// Enhanced analytics types
+export type EnhancedQuestionAnalytics = {
+  questionId: number
+  questionNumber: number
+  questionText: string
+  topic: string
+  difficulty: string | null
+  correctCount: number
+  incorrectCount: number
+  unattemptedCount: number
+  correctnessPercentage: number
+  averageTimeSeconds: number
+  averageTimeCorrect: number
+  averageTimeIncorrect: number
+  // Phase 2: Discrimination Index will be added here
+}
+
+export type TopicPerformance = {
+  topicName: string
+  questionCount: number
+  averageAccuracy: number
+}
+
+export type DifficultyPerformance = {
+  difficulty: string
+  questionCount: number
+  averageAccuracy: number
+}
+
+export type TimeVsScoreDataPoint = {
+  studentName: string
+  timeSeconds: number
+  percentage: number
+}
+
 // Get test overview statistics
 export async function getTestOverviewStats(testId: number): Promise<TestOverviewStats | null> {
   try {
@@ -88,11 +126,11 @@ export async function getTestOverviewStats(testId: number): Promise<TestOverview
       return null
     }
     
-    // Get all test attempts for this test
+    // Get all test attempts for this test (use test_results for mock tests)
     const { data: attempts, error: attemptsError } = await supabase
-      .from('test_attempts')
-      .select('score, time_taken_seconds')
-      .eq('test_id', testId)
+      .from('test_results')
+      .select('score, score_percentage, total_time_taken')
+      .eq('mock_test_id', testId)
     
     if (attemptsError) {
       console.error('Error fetching attempts:', attemptsError)
@@ -106,19 +144,31 @@ export async function getTestOverviewStats(testId: number): Promise<TestOverview
         averagePercentage: 0,
         averageTimeSeconds: 0,
         highestScore: 0,
+        highestPercentage: 0,
         lowestScore: 0,
+        lowestPercentage: 0,
+        medianScore: 0,
         totalMarks: 0
       }
     }
     
-    const scores = attempts.map(a => a.score)
-    const times = attempts.map(a => a.time_taken_seconds)
+    // score_percentage is already calculated in test_results
+    const percentages = attempts.map((a: any) => a.score_percentage || 0)
+    const scores = attempts.map((a: any) => a.score || 0)
+    const times = attempts.map((a: any) => a.total_time_taken || 0)
     
     const totalParticipants = attempts.length
     const averageScore = scores.reduce((sum, s) => sum + s, 0) / totalParticipants
+    const averagePercentage = percentages.reduce((sum, p) => sum + p, 0) / totalParticipants
     const highestScore = Math.max(...scores)
     const lowestScore = Math.min(...scores)
     const averageTimeSeconds = times.reduce((sum, t) => sum + t, 0) / totalParticipants
+    
+    // Calculate median score
+    const sortedScores = [...scores].sort((a, b) => a - b)
+    const medianScore = totalParticipants % 2 === 0
+      ? (sortedScores[totalParticipants / 2 - 1] + sortedScores[totalParticipants / 2]) / 2
+      : sortedScores[Math.floor(totalParticipants / 2)]
     
     // Get total questions to calculate total marks
     const { count: totalQuestions } = await supabase
@@ -127,7 +177,10 @@ export async function getTestOverviewStats(testId: number): Promise<TestOverview
       .eq('test_id', testId)
     
     const totalMarks = (totalQuestions || 0) * test.marks_per_correct
-    const averagePercentage = totalMarks > 0 ? (averageScore / totalMarks) * 100 : 0
+    
+    // Calculate highest and lowest percentages
+    const highestPercentage = Math.max(...percentages)
+    const lowestPercentage = Math.min(...percentages)
     
     return {
       totalParticipants,
@@ -135,7 +188,10 @@ export async function getTestOverviewStats(testId: number): Promise<TestOverview
       averagePercentage: Math.round(averagePercentage * 100) / 100,
       averageTimeSeconds: Math.round(averageTimeSeconds),
       highestScore: Math.round(highestScore * 100) / 100,
+      highestPercentage: Math.round(highestPercentage * 100) / 100,
       lowestScore: Math.round(lowestScore * 100) / 100,
+      lowestPercentage: Math.round(lowestPercentage * 100) / 100,
+      medianScore: Math.round(medianScore * 100) / 100,
       totalMarks
     }
   } catch (error) {
@@ -149,51 +205,32 @@ export async function getTestRankings(testId: number): Promise<StudentRanking[]>
   try {
     const supabase = createAdminClient()
     
-    // Get all attempts with user info
+    // Get all attempts with user info (use test_results for mock tests)
     const { data: attempts, error } = await supabase
-      .from('test_attempts')
-      .select(`
-        id,
-        user_id,
-        score,
-        time_taken_seconds
-      `)
-      .eq('test_id', testId)
+      .from('test_results')
+      .select('id, user_id, score, score_percentage, total_time_taken')
+      .eq('mock_test_id', testId)
       .order('score', { ascending: false })
-      .order('time_taken_seconds', { ascending: true })
+      .order('total_time_taken', { ascending: true })
     
     if (error || !attempts) {
       console.error('Error fetching rankings:', error)
       return []
     }
     
-    // Get total marks for percentage calculation
-    const { data: test } = await supabase
-      .from('tests')
-      .select('marks_per_correct')
-      .eq('id', testId)
-      .single()
-    
-    const { count: totalQuestions } = await supabase
-      .from('test_questions')
-      .select('*', { count: 'exact', head: true })
-      .eq('test_id', testId)
-    
-    const totalMarks = (totalQuestions || 0) * (test?.marks_per_correct || 1)
-    
     // Get user details
-    const userIds = attempts.map(a => a.user_id)
+    const userIds = attempts.map((a: any) => a.user_id)
     const { data: profiles } = await supabase
       .from('user_profiles')
       .select('id, full_name, email')
       .in('id', userIds)
     
-    const profileMap = new Map(profiles?.map(p => [p.id, p]) || [])
+    const profileMap = new Map(profiles?.map((p: any) => [p.id, p]) || [])
     
-    // Build rankings
-    return attempts.map((attempt, index) => {
+    // Build rankings (score_percentage is already calculated in the database)
+    return attempts.map((attempt: any, index: number) => {
       const profile = profileMap.get(attempt.user_id)
-      const percentage = totalMarks > 0 ? (attempt.score / totalMarks) * 100 : 0
+      const percentage = attempt.score_percentage || 0
       
       return {
         rank: index + 1,
@@ -202,7 +239,7 @@ export async function getTestRankings(testId: number): Promise<StudentRanking[]>
         studentEmail: profile?.email || 'No email',
         score: Math.round(attempt.score * 100) / 100,
         percentage: Math.round(percentage * 100) / 100,
-        timeSeconds: attempt.time_taken_seconds,
+        timeSeconds: attempt.total_time_taken || 0,
         attemptId: attempt.id
       }
     })
@@ -217,33 +254,19 @@ export async function getScoreDistribution(testId: number): Promise<ScoreDistrib
   try {
     const supabase = createAdminClient()
     
-    // Get all attempts
+    // Get all attempts (use test_results for mock tests)
     const { data: attempts, error } = await supabase
-      .from('test_attempts')
-      .select('score')
-      .eq('test_id', testId)
+      .from('test_results')
+      .select('score_percentage')
+      .eq('mock_test_id', testId)
     
     if (error || !attempts) {
       console.error('Error fetching attempts:', error)
       return []
     }
     
-    // Get total marks
-    const { data: test } = await supabase
-      .from('tests')
-      .select('marks_per_correct')
-      .eq('id', testId)
-      .single()
-    
-    const { count: totalQuestions } = await supabase
-      .from('test_questions')
-      .select('*', { count: 'exact', head: true })
-      .eq('test_id', testId)
-    
-    const totalMarks = (totalQuestions || 0) * (test?.marks_per_correct || 1)
-    
-    // Calculate percentages for each attempt
-    const percentages = attempts.map(a => totalMarks > 0 ? (a.score / totalMarks) * 100 : 0)
+    // Use score_percentage which is already calculated in test_results
+    const percentages = attempts.map((a: any) => a.score_percentage || 0)
     
     // Define ranges
     const ranges = [
@@ -445,6 +468,316 @@ export async function getStudentAttemptDetails(attemptId: number): Promise<Stude
   } catch (error) {
     console.error('Error getting student attempt details:', error)
     return null
+  }
+}
+
+// Get enhanced question analytics with topic and difficulty data
+export async function getEnhancedQuestionAnalytics(testId: number): Promise<EnhancedQuestionAnalytics[]> {
+  try {
+    const supabase = createAdminClient()
+    
+    // Get all test questions with question details
+    const { data: testQuestions, error: questionsError } = await supabase
+      .from('test_questions')
+      .select(`
+        question_id,
+        questions (
+          id,
+          question_text,
+          chapter_name,
+          book_source,
+          difficulty
+        )
+      `)
+      .eq('test_id', testId)
+      .order('id')
+    
+    if (questionsError || !testQuestions) {
+      console.error('Error fetching test questions:', questionsError)
+      return []
+    }
+    
+    // Get all attempts for this test (use test_results for mock tests)
+    const { data: attempts } = await supabase
+      .from('test_results')
+      .select('id')
+      .eq('mock_test_id', testId)
+    
+    if (!attempts || attempts.length === 0) {
+      return []
+    }
+    
+    const attemptIds = attempts.map(a => a.id)
+    const totalParticipants = attempts.length
+    
+    // Get all answers from answer_log for these attempts
+    const { data: allAnswers, error: answersError } = await supabase
+      .from('answer_log')
+      .select('question_id, status, time_taken')
+      .in('user_id', attempts.map((a: any) => a.user_id))
+      .eq('test_id', testId)
+    
+    if (answersError || !allAnswers) {
+      console.error('Error fetching answers:', answersError)
+      return []
+    }
+    
+    // Group answers by question_id
+    const answersByQuestion = new Map<number, typeof allAnswers>()
+    for (const answer of allAnswers) {
+      if (!answersByQuestion.has(answer.question_id)) {
+        answersByQuestion.set(answer.question_id, [])
+      }
+      answersByQuestion.get(answer.question_id)!.push(answer)
+    }
+    
+    // Calculate analytics for each question
+    const analytics: EnhancedQuestionAnalytics[] = []
+    
+    for (let i = 0; i < testQuestions.length; i++) {
+      const testQuestion = testQuestions[i]
+      const question = Array.isArray(testQuestion.questions) 
+        ? testQuestion.questions[0] 
+        : testQuestion.questions
+      
+      if (!question) continue
+      
+      const questionId = question.id
+      const answers = answersByQuestion.get(questionId) || []
+      
+      const correctAnswers = answers.filter((a: any) => a.status === 'correct')
+      const incorrectAnswers = answers.filter((a: any) => a.status === 'incorrect')
+      const unattempted = totalParticipants - answers.length
+      
+      const correctCount = correctAnswers.length
+      const incorrectCount = incorrectAnswers.length
+      
+      const correctnessPercentage = totalParticipants > 0 
+        ? (correctCount / totalParticipants) * 100 
+        : 0
+      
+      const averageTimeSeconds = answers.length > 0
+        ? Math.round(answers.reduce((sum: number, a: any) => sum + (a.time_taken || 0), 0) / answers.length)
+        : 0
+      
+      const averageTimeCorrect = correctAnswers.length > 0
+        ? Math.round(correctAnswers.reduce((sum: number, a: any) => sum + (a.time_taken || 0), 0) / correctAnswers.length)
+        : 0
+      
+      const averageTimeIncorrect = incorrectAnswers.length > 0
+        ? Math.round(incorrectAnswers.reduce((sum: number, a: any) => sum + (a.time_taken || 0), 0) / incorrectAnswers.length)
+        : 0
+      
+      analytics.push({
+        questionId,
+        questionNumber: i + 1,
+        questionText: question.question_text || '',
+        topic: question.chapter_name || question.book_source || 'Unknown',
+        difficulty: question.difficulty,
+        correctCount,
+        incorrectCount,
+        unattemptedCount: unattempted,
+        correctnessPercentage: Math.round(correctnessPercentage * 10) / 10,
+        averageTimeSeconds,
+        averageTimeCorrect,
+        averageTimeIncorrect
+      })
+    }
+    
+    return analytics
+  } catch (error) {
+    console.error('Error getting enhanced question analytics:', error)
+    return []
+  }
+}
+
+// Get topic performance analysis
+export async function getTopicAnalysis(testId: number): Promise<TopicPerformance[]> {
+  try {
+    const questionAnalytics = await getEnhancedQuestionAnalytics(testId)
+    
+    if (questionAnalytics.length === 0) {
+      return []
+    }
+    
+    // Group by topic
+    const topicMap = new Map<string, { totalAccuracy: number; count: number }>()
+    
+    for (const question of questionAnalytics) {
+      const topic = question.topic
+      if (!topicMap.has(topic)) {
+        topicMap.set(topic, { totalAccuracy: 0, count: 0 })
+      }
+      
+      const topicData = topicMap.get(topic)!
+      topicData.totalAccuracy += question.correctnessPercentage
+      topicData.count += 1
+    }
+    
+    // Calculate averages and create result array
+    const topicPerformance: TopicPerformance[] = []
+    
+    for (const [topicName, data] of topicMap.entries()) {
+      topicPerformance.push({
+        topicName,
+        questionCount: data.count,
+        averageAccuracy: Math.round((data.totalAccuracy / data.count) * 10) / 10
+      })
+    }
+    
+    // Sort by average accuracy (ascending) to show weakest topics first
+    topicPerformance.sort((a, b) => a.averageAccuracy - b.averageAccuracy)
+    
+    return topicPerformance
+  } catch (error) {
+    console.error('Error getting topic analysis:', error)
+    return []
+  }
+}
+
+// Get difficulty performance analysis
+export async function getDifficultyAnalysis(testId: number): Promise<DifficultyPerformance[]> {
+  try {
+    const questionAnalytics = await getEnhancedQuestionAnalytics(testId)
+    
+    if (questionAnalytics.length === 0) {
+      return []
+    }
+    
+    // Group by difficulty
+    const difficultyMap = new Map<string, { totalAccuracy: number; count: number }>()
+    
+    for (const question of questionAnalytics) {
+      const difficulty = question.difficulty || 'Not Specified'
+      if (!difficultyMap.has(difficulty)) {
+        difficultyMap.set(difficulty, { totalAccuracy: 0, count: 0 })
+      }
+      
+      const diffData = difficultyMap.get(difficulty)!
+      diffData.totalAccuracy += question.correctnessPercentage
+      diffData.count += 1
+    }
+    
+    // Calculate averages and create result array
+    const difficultyPerformance: DifficultyPerformance[] = []
+    
+    for (const [difficulty, data] of difficultyMap.entries()) {
+      difficultyPerformance.push({
+        difficulty,
+        questionCount: data.count,
+        averageAccuracy: Math.round((data.totalAccuracy / data.count) * 10) / 10
+      })
+    }
+    
+    // Sort by difficulty order
+    const difficultyOrder = ['Easy', 'Easy-Moderate', 'Moderate', 'Moderate-Hard', 'Hard', 'Not Specified']
+    difficultyPerformance.sort((a, b) => {
+      const aIndex = difficultyOrder.indexOf(a.difficulty)
+      const bIndex = difficultyOrder.indexOf(b.difficulty)
+      return aIndex - bIndex
+    })
+    
+    return difficultyPerformance
+  } catch (error) {
+    console.error('Error getting difficulty analysis:', error)
+    return []
+  }
+}
+
+// Get time vs score data for scatter plot
+export async function getTimeVsScoreData(testId: number): Promise<TimeVsScoreDataPoint[]> {
+  try {
+    const supabase = createAdminClient()
+    
+    // Get all attempts with user information (use test_results for mock tests)
+    const { data: attempts, error } = await supabase
+      .from('test_results')
+      .select('score_percentage, total_time_taken, user_id')
+      .eq('mock_test_id', testId)
+    
+    if (error || !attempts) {
+      console.error('Error fetching attempts for scatter plot:', error)
+      return []
+    }
+    
+    // Get user names separately
+    const userIds = attempts.map((a: any) => a.user_id)
+    const { data: profiles } = await supabase
+      .from('user_profiles')
+      .select('id, full_name')
+      .in('id', userIds)
+    
+    const profileMap = new Map(profiles?.map((p: any) => [p.id, p]) || [])
+    
+    // Use score_percentage which is already calculated in test_results
+    return attempts.map((attempt: any) => {
+      const profile = profileMap.get(attempt.user_id)
+      return {
+        studentName: profile?.full_name || 'Unknown',
+        timeSeconds: attempt.total_time_taken || 0,
+        percentage: attempt.score_percentage || 0
+      }
+    })
+  } catch (error) {
+    console.error('Error getting time vs score data:', error)
+    return []
+  }
+}
+
+// Get performance funnel metrics
+export async function getPerformanceFunnelMetrics(testId: number): Promise<{
+  totalQuestions: number
+  averageAttempted: number
+  averageAccuracy: number
+}> {
+  try {
+    const supabase = createAdminClient()
+    
+    // Get total questions
+    const { count: totalQuestions } = await supabase
+      .from('test_questions')
+      .select('*', { count: 'exact', head: true })
+      .eq('test_id', testId)
+    
+    // Get all attempts (use test_results for mock tests)
+    const { data: attempts } = await supabase
+      .from('test_results')
+      .select('total_correct, total_incorrect, total_skipped')
+      .eq('mock_test_id', testId)
+    
+    if (!attempts || attempts.length === 0) {
+      return {
+        totalQuestions: totalQuestions || 0,
+        averageAttempted: 0,
+        averageAccuracy: 0
+      }
+    }
+    
+    // Calculate average attempted (total - skipped)
+    const averageAttempted = attempts.reduce((sum, attempt) => {
+      const attempted = (totalQuestions || 0) - attempt.total_skipped
+      return sum + attempted
+    }, 0) / attempts.length
+    
+    // Calculate average accuracy on attempted questions
+    const averageAccuracy = attempts.reduce((sum, attempt) => {
+      const attempted = attempt.total_correct + attempt.total_incorrect
+      const accuracy = attempted > 0 ? (attempt.total_correct / attempted) * 100 : 0
+      return sum + accuracy
+    }, 0) / attempts.length
+    
+    return {
+      totalQuestions: totalQuestions || 0,
+      averageAttempted: Math.round(averageAttempted * 10) / 10,
+      averageAccuracy: Math.round(averageAccuracy * 10) / 10
+    }
+  } catch (error) {
+    console.error('Error getting performance funnel metrics:', error)
+    return {
+      totalQuestions: 0,
+      averageAttempted: 0,
+      averageAccuracy: 0
+    }
   }
 }
 

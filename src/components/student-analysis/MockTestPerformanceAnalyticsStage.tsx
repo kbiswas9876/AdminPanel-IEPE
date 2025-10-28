@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo, useEffect } from 'react'
+import React, { useMemo, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import MockTestKPICards from './MockTestKPICards'
 import ChapterWisePerformanceTable, { type ChapterPerformance } from './ChapterWisePerformanceTable'
@@ -30,10 +30,15 @@ export default function MockTestPerformanceAnalyticsStage({
   const [competitiveMetrics, setCompetitiveMetrics] = React.useState<any>(null)
   const [loadingMetrics, setLoadingMetrics] = React.useState(true)
   const [testName, setTestName] = React.useState<string | null>(null)
+  const hasFetchedRef = useRef(false) // Track if we've already fetched
 
-  // Fetch competitive metrics and test name on mount
+  // Fetch competitive metrics and test name on mount (only once)
   useEffect(() => {
+    // Skip if we've already fetched
+    if (hasFetchedRef.current) return
+    
     async function fetchMetrics() {
+      hasFetchedRef.current = true
       setLoadingMetrics(true)
       try {
         const metrics = await getMockTestCompetitiveMetrics(data.testResult.id, userId)

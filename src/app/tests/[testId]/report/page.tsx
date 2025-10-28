@@ -10,7 +10,8 @@ interface PageProps {
 }
 
 export default async function TestReportPage({ params }: PageProps) {
-  const testId = parseInt(params.testId)
+  const resolvedParams = await params
+  const testId = parseInt(resolvedParams.testId)
   
   if (isNaN(testId)) {
     notFound()
