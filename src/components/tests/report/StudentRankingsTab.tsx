@@ -6,7 +6,7 @@ import { Trophy, Medal, Award, Clock, Eye, Search, Filter } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import type { StudentRanking } from '@/lib/actions/test-reports'
-import { StudentReportModal } from './StudentReportModal'
+import { DetailedSessionModal } from '@/app/students/[userID]/components/DetailedSessionModal'
 
 interface StudentRankingsTabProps {
   testId: number
@@ -15,12 +15,14 @@ interface StudentRankingsTabProps {
 
 export function StudentRankingsTab({ testId, rankings }: StudentRankingsTabProps) {
   const [selectedAttemptId, setSelectedAttemptId] = useState<number | null>(null)
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [rankFilter, setRankFilter] = useState<'all' | 'top10' | 'top25' | 'bottom25'>('all')
 
-  const handleViewDetails = (attemptId: number) => {
+  const handleViewDetails = (attemptId: number, userId: string) => {
     setSelectedAttemptId(attemptId)
+    setSelectedUserId(userId)
     setModalOpen(true)
   }
 
@@ -207,7 +209,7 @@ export function StudentRankingsTab({ testId, rankings }: StudentRankingsTabProps
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        onClick={() => handleViewDetails(student.attemptId)}
+                        onClick={() => handleViewDetails(student.attemptId, student.userId)}
                         className="h-8 gap-1.5 hover:bg-blue-50 hover:text-blue-700"
                       >
                         <Eye className="h-4 w-4" />
@@ -223,14 +225,17 @@ export function StudentRankingsTab({ testId, rankings }: StudentRankingsTabProps
       </Card>
 
       {/* Student Report Modal */}
-      <StudentReportModal
-        attemptId={selectedAttemptId}
-        open={modalOpen}
-        onClose={() => {
-          setModalOpen(false)
-          setSelectedAttemptId(null)
-        }}
-      />
+      {selectedAttemptId && (
+        <DetailedSessionModal
+          resultId={selectedAttemptId}
+          isOpen={modalOpen}
+          onClose={() => {
+            setModalOpen(false)
+            setSelectedAttemptId(null)
+            setSelectedUserId(null)
+          }}
+        />
+      )}
     </div>
   )
 }

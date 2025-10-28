@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { X, Trophy, Clock, Target, CheckCircle2, XCircle, Circle } from 'lucide-react'
@@ -51,6 +51,7 @@ export function StudentReportModal({ attemptId, open, onClose }: StudentReportMo
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-5xl h-[90vh] p-0 gap-0 overflow-hidden">
+        <DialogTitle className="sr-only">Student Test Report Details</DialogTitle>
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="w-8 h-8 border-2 border-slate-200 border-t-slate-900 rounded-full animate-spin" />

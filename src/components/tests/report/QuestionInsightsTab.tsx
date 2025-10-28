@@ -41,7 +41,7 @@ export function QuestionInsightsTab({ testId }: QuestionInsightsTabProps) {
 
   // Get unique topics and difficulties for filters
   const uniqueTopics = Array.from(new Set(analytics.map(q => q.topic)))
-  const uniqueDifficulties = Array.from(new Set(analytics.map(q => q.difficulty).filter(Boolean)))
+  const uniqueDifficulties = Array.from(new Set(analytics.map(q => q.difficulty).filter((d): d is string => d !== null)))
 
   // Filter and sort questions
   const filteredAndSortedQuestions = analytics

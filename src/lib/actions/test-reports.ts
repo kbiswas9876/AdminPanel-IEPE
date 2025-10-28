@@ -379,13 +379,10 @@ export async function getStudentAttemptDetails(attemptId: number): Promise<Stude
   try {
     const supabase = createAdminClient()
     
-    // Get attempt with student info
+    // Get attempt with student info (use test_results for mock tests)
     const { data: attempt, error: attemptError } = await supabase
-      .from('test_attempts')
-      .select(`
-        *,
-        user:user_profiles!test_attempts_user_id_fkey(full_name, email)
-      `)
+      .from('test_results')
+      .select('*, user_id, mock_test_id, score, score_percentage, total_correct, total_incorrect, total_skipped, total_time_taken')
       .eq('id', attemptId)
       .single()
     
@@ -394,11 +391,18 @@ export async function getStudentAttemptDetails(attemptId: number): Promise<Stude
       return null
     }
     
+    // Get user profile separately
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('full_name, email')
+      .eq('id', attempt.user_id)
+      .single()
+    
     // Get all rankings to calculate rank and percentile
     const { data: allAttempts } = await supabase
-      .from('test_attempts')
+      .from('test_results')
       .select('id, score')
-      .eq('test_id', attempt.test_id)
+      .eq('mock_test_id', attempt.mock_test_id)
       .order('score', { ascending: false })
     
     const rank = (allAttempts?.findIndex(a => a.id === attemptId) || 0) + 1
@@ -410,55 +414,104 @@ export async function getStudentAttemptDetails(attemptId: number): Promise<Stude
     const { data: test } = await supabase
       .from('tests')
       .select('marks_per_correct')
-      .eq('id', attempt.test_id)
+      .eq('id', attempt.mock_test_id)
       .single()
     
     const { count: totalQuestions } = await supabase
       .from('test_questions')
       .select('*', { count: 'exact', head: true })
-      .eq('test_id', attempt.test_id)
+      .eq('test_id', attempt.mock_test_id)
     
-    const totalMarks = (totalQuestions || 0) * (test?.marks_per_correct || 1)
-    const percentage = totalMarks > 0 ? (attempt.score / totalMarks) * 100 : 0
+    // Use score_percentage from database instead of recalculating
+    const percentage = attempt.score_percentage || 0
     const accuracy = attempt.total_correct + attempt.total_incorrect > 0
       ? (attempt.total_correct / (attempt.total_correct + attempt.total_incorrect)) * 100
       : 0
     
-    // Get detailed answers
-    const { data: detailedAnswers } = await supabase
-      .from('test_attempt_answers')
-      .select(`
-        *,
-        question:questions!test_attempt_answers_question_id_fkey(
-          question_text,
-          options,
-          correct_option
-        )
-      `)
-      .eq('attempt_id', attemptId)
-      .order('question_number')
+    // Get detailed answers from answer_log using result_id
+    const { data: detailedAnswers, error: answersError } = await supabase
+      .from('answer_log')
+      .select('question_id, status, time_taken, user_answer')
+      .eq('result_id', attemptId)
     
-    const answers: StudentAnswer[] = detailedAnswers?.map(answer => ({
-      questionId: answer.question_id,
-      questionNumber: answer.question_number,
-      questionText: answer.question?.question_text || '',
-      options: answer.question?.options || {},
-      userAnswer: answer.selected_option,
-      correctAnswer: answer.correct_option,
-      isCorrect: answer.is_correct,
-      timeSpent: answer.time_spent_seconds,
-      marks: answer.marks_awarded
-    })) || []
+    console.log('Answer log error:', answersError)
+    console.log('Detailed answers:', detailedAnswers)
+    
+    if (!detailedAnswers || detailedAnswers.length === 0) {
+      return {
+        attemptId,
+        studentName: profile?.full_name || 'Unknown Student',
+        studentEmail: profile?.email || 'No email',
+        score: Math.round(attempt.score * 100) / 100,
+        percentage: Math.round(percentage * 100) / 100,
+        rank,
+        percentile: Math.round(percentile * 100) / 100,
+        totalTime: attempt.total_time_taken || 0,
+        accuracy: Math.round(accuracy * 100) / 100,
+        totalCorrect: attempt.total_correct,
+        totalIncorrect: attempt.total_incorrect,
+        totalSkipped: attempt.total_skipped,
+        answers: []
+      }
+    }
+    
+    // Get all questions for this test in the order they appear in the test
+    const { data: testQuestions, error: testQuestionsError } = await supabase
+      .from('test_questions')
+      .select('question_id')
+      .eq('test_id', attempt.mock_test_id)
+      .order('id', { ascending: true })
+    
+    console.log('Test questions fetched:', testQuestions?.length)
+    console.log('Test questions error:', testQuestionsError)
+    
+    if (!testQuestions || testQuestions.length === 0) {
+      console.error('No test questions found for test:', attempt.mock_test_id)
+    }
+    
+    // Fetch all question details for the test
+    const testQuestionIds = testQuestions?.map(tq => tq.question_id) || []
+    const { data: questions, error: questionsError } = await supabase
+      .from('questions')
+      .select('id, question_text, options, correct_option, chapter_name, difficulty')
+      .in('id', testQuestionIds)
+    
+    console.log('Questions fetched:', questions?.length)
+    console.log('Questions error:', questionsError)
+    
+    // Create a map of question_id to question data
+    const questionMap = new Map(questions?.map((q: any) => [q.id, q]) || [])
+    
+    // Map answers based on position in test_questions order
+    const answers: StudentAnswer[] = testQuestions?.map((tq, index) => {
+      // Find the answer for this question
+      const answer = detailedAnswers?.find((a: any) => a.question_id === tq.question_id)
+      const question = questionMap.get(tq.question_id)
+      
+      return {
+        questionId: tq.question_id,
+        questionNumber: index + 1,
+        questionText: question?.question_text || '',
+        options: question?.options || {},
+        userAnswer: answer?.user_answer || null,
+        correctAnswer: question?.correct_option || '',
+        isCorrect: answer?.status === 'correct',
+        timeSpent: answer?.time_taken || 0,
+        marks: 0
+      }
+    }) || []
+    
+    console.log('Total answers mapped:', answers.length)
     
     return {
       attemptId,
-      studentName: attempt.user?.full_name || 'Unknown Student',
-      studentEmail: attempt.user?.email || 'No email',
+      studentName: profile?.full_name || 'Unknown Student',
+      studentEmail: profile?.email || 'No email',
       score: Math.round(attempt.score * 100) / 100,
       percentage: Math.round(percentage * 100) / 100,
       rank,
       percentile: Math.round(percentile * 100) / 100,
-      totalTime: attempt.time_taken_seconds,
+      totalTime: attempt.total_time_taken || 0,
       accuracy: Math.round(accuracy * 100) / 100,
       totalCorrect: attempt.total_correct,
       totalIncorrect: attempt.total_incorrect,
@@ -500,22 +553,21 @@ export async function getEnhancedQuestionAnalytics(testId: number): Promise<Enha
     // Get all attempts for this test (use test_results for mock tests)
     const { data: attempts } = await supabase
       .from('test_results')
-      .select('id')
+      .select('id, user_id')
       .eq('mock_test_id', testId)
     
     if (!attempts || attempts.length === 0) {
       return []
     }
     
-    const attemptIds = attempts.map(a => a.id)
+    const resultIds = attempts.map((a: any) => a.id)
     const totalParticipants = attempts.length
     
-    // Get all answers from answer_log for these attempts
+    // Get all answers from answer_log using result_id
     const { data: allAnswers, error: answersError } = await supabase
       .from('answer_log')
       .select('question_id, status, time_taken')
-      .in('user_id', attempts.map((a: any) => a.user_id))
-      .eq('test_id', testId)
+      .in('result_id', resultIds)
     
     if (answersError || !allAnswers) {
       console.error('Error fetching answers:', answersError)
