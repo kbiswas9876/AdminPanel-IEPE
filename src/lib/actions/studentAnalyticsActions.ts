@@ -297,17 +297,109 @@ export async function getDetailedTestResult(resultId: number): Promise<EnrichedT
     
     // Create question lookup map
     const questionMap = new Map(questions.map(q => [q.id, q]))
-    
+
+    // For mock tests, fetch per-question marking scheme
+    let markingMap = new Map<number, { marksPerCorrect: number; penaltyPerIncorrect: number }>()
+    if (testResult.session_type === 'mock_test' && testResult.mock_test_id) {
+      try {
+        console.log('🔍 getDetailedTestResult: Fetching per-question marking for mock test:', testResult.mock_test_id)
+
+        // Fetch test-level marking for fallbacks
+        const { data: testMeta, error: testMetaError } = await supabase
+          .from('tests')
+          .select('marks_per_correct, negative_marks_per_incorrect')
+          .eq('id', testResult.mock_test_id)
+          .single()
+
+        if (testMetaError) {
+          console.error('❌ getDetailedTestResult: Error fetching test metadata:', testMetaError)
+          throw testMetaError
+        }
+
+        console.log('🔍 getDetailedTestResult: Raw testMeta:', JSON.stringify(testMeta))
+
+        // Safely extract global marking values
+        const rawMpc = (testMeta as any)?.marks_per_correct
+        const rawPpi = (testMeta as any)?.negative_marks_per_incorrect
+
+        const globalMpc = (rawMpc !== null && rawMpc !== undefined) ? Number(rawMpc) : 0
+        const globalPpi = (rawPpi !== null && rawPpi !== undefined) ? Math.abs(Number(rawPpi)) : 0
+
+        console.log('🔍 getDetailedTestResult: Global marking - MPC:', globalMpc, 'PPI:', globalPpi)
+
+        // Fetch per-question marking
+        const { data: tqRows, error: tqError } = await supabase
+          .from('test_questions')
+          .select('question_id, marks_per_correct, penalty_per_incorrect')
+          .eq('test_id', testResult.mock_test_id)
+
+        if (tqError) {
+          console.error('❌ getDetailedTestResult: Error fetching test_questions:', tqError)
+          throw tqError
+        }
+
+        console.log('🔍 getDetailedTestResult: Raw tqRows:', JSON.stringify(tqRows?.slice(0, 3), null, 2))
+
+        // Build marking map with per-question values or global fallbacks
+        if (tqRows && Array.isArray(tqRows)) {
+          tqRows.forEach((row: any, index: number) => {
+            try {
+              if (!row || typeof row !== 'object') {
+                console.warn(`⚠️ getDetailedTestResult: Invalid row at index ${index}:`, row)
+                return
+              }
+
+              const qid = row.question_id ? Number(row.question_id) : null
+              if (!qid || isNaN(qid)) {
+                console.warn(`⚠️ getDetailedTestResult: Invalid question_id at index ${index}:`, row.question_id)
+                return
+              }
+
+              const rawMpc = row.marks_per_correct
+              const rawPpi = row.penalty_per_incorrect
+
+              const mpc = (rawMpc !== null && rawMpc !== undefined) ? Number(rawMpc) : globalMpc
+              const ppi = (rawPpi !== null && rawPpi !== undefined) ? Math.abs(Number(rawPpi)) : globalPpi
+
+              markingMap.set(qid, {
+                marksPerCorrect: mpc,
+                penaltyPerIncorrect: ppi
+              })
+
+              if (index < 3) { // Log first 3 for debugging
+                console.log(`🔍 getDetailedTestResult: Question ${qid} - MPC: ${mpc}, PPI: ${ppi}`)
+              }
+            } catch (rowError) {
+              console.error(`❌ getDetailedTestResult: Error processing row at index ${index}:`, rowError, row)
+            }
+          })
+        } else {
+          console.warn('⚠️ getDetailedTestResult: tqRows is not an array:', typeof tqRows)
+        }
+
+        console.log('✅ getDetailedTestResult: Built marking map for', markingMap.size, 'questions')
+      } catch (e) {
+        const err = e as any
+        console.error('❌ getDetailedTestResult: Failed to build marking map, falling back to defaults:', {
+          error: err?.message,
+          stack: err?.stack,
+          testId: testResult.mock_test_id,
+          errorType: err?.constructor?.name
+        })
+        // Continue with empty markingMap - will use global defaults from SolutionQuestionDisplayWindow
+      }
+    }
+
     // Enrich answers with question data, timing categories, and performance feedback
     const enrichedAnswers: EnrichedAnswer[] = answerLogs.map(log => {
       const question = questionMap.get(log.question_id)
       if (!question) {
         throw new Error(`Question ${log.question_id} not found`)
       }
-      
+
       // Calculate timing category
       const timingCategory = getTimingCategory(log.time_taken)
-      
+
       // Calculate performance feedback (mirrors Student Portal)
       const difficulty = question.difficulty as 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard' | null | undefined
       const performanceState = getNuancedPerformanceState(
@@ -316,7 +408,10 @@ export async function getDetailedTestResult(resultId: number): Promise<EnrichedT
         log.status as 'correct' | 'incorrect' | 'skipped'
       )
       const targetTime = getTargetTime(difficulty)
-      
+
+      // Get per-question marking (defaults to undefined for non-mock tests)
+      const marking = markingMap.get(log.question_id)
+
       return {
         answer_log: log,
         question: question,
@@ -324,7 +419,9 @@ export async function getDetailedTestResult(resultId: number): Promise<EnrichedT
         isCorrect: log.status === 'correct',
         time_taken_seconds: log.time_taken,
         performanceFeedback: performanceState,
-        targetTime: targetTime
+        targetTime: targetTime,
+        marksPerCorrect: marking?.marksPerCorrect,
+        penaltyPerIncorrect: marking?.penaltyPerIncorrect
       }
     })
     

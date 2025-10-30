@@ -40,6 +40,7 @@ export function enrichedTestResultToAnalysisData(
   testResult: TestResult
   answerLog: AnswerLog[]
   questions: Question[]
+  enrichedAnswers: EnrichedTestResult['enrichedAnswers']
   peerAverages?: Record<number, number>
 } {
   // Extract answerLog and questions from enrichedAnswers
@@ -50,6 +51,7 @@ export function enrichedTestResultToAnalysisData(
     testResult: enriched.testResult,
     answerLog,
     questions,
+    enrichedAnswers: enriched.enrichedAnswers,  // Include enriched answers with per-question marking
     peerAverages: {}  // Empty for now as we don't have peer data in admin panel
   }
 }

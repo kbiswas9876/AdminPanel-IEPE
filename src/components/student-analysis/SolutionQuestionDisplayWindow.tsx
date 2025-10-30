@@ -13,6 +13,13 @@ interface SessionDataInput {
   testResult?: TestResult
   answerLog: AnswerLog[]
   questions: Question[]
+  enrichedAnswers?: Array<{
+    answer_log: AnswerLog
+    question: Question
+    marksPerCorrect?: number
+    penaltyPerIncorrect?: number
+    // ... other fields
+  }>
 }
 
 interface SolutionQuestionDisplayWindowProps {
@@ -47,6 +54,14 @@ const SolutionQuestionDisplayWindow: React.FC<SolutionQuestionDisplayWindowProps
   markingScheme,
   testName
 }) => {
+  // Derive per-question marking scheme from enriched answers if available
+  const currentEnrichedAnswer = session.enrichedAnswers?.[currentIndex]
+  const questionMarkingScheme = currentEnrichedAnswer?.marksPerCorrect !== undefined && currentEnrichedAnswer?.penaltyPerIncorrect !== undefined
+    ? {
+        marksPerCorrect: currentEnrichedAnswer.marksPerCorrect!,
+        negativeMarksPerIncorrect: currentEnrichedAnswer.penaltyPerIncorrect!
+      }
+    : markingScheme // Fall back to global marking scheme
   const [isLoaded, setIsLoaded] = useState(false)
   const [showSolution, setShowSolution] = useState(true)
 
@@ -71,7 +86,7 @@ const SolutionQuestionDisplayWindow: React.FC<SolutionQuestionDisplayWindowProps
   if (!question) {
     return (
       <div className="flex flex-col h-full">
-        <SolutionUnifiedHeader 
+        <SolutionUnifiedHeader
           currentQuestion={currentIndex + 1}
           totalQuestions={totalQuestions}
           timeTakenSeconds={0}
@@ -80,7 +95,7 @@ const SolutionQuestionDisplayWindow: React.FC<SolutionQuestionDisplayWindowProps
           isBookmarked={false}
           onBack={onBack}
           showBookmark={false}
-          markingScheme={markingScheme}
+          markingScheme={questionMarkingScheme}
         />
         <main className="flex-1 p-8">
           <div className="text-slate-600 dark:text-slate-300">No question available.</div>
@@ -92,7 +107,7 @@ const SolutionQuestionDisplayWindow: React.FC<SolutionQuestionDisplayWindowProps
   return (
     <div className="flex flex-col h-full">
       {/* Fixed Header */}
-      <SolutionUnifiedHeader 
+      <SolutionUnifiedHeader
         currentQuestion={displayPosition}
         totalQuestions={displayTotal}
         timeTakenSeconds={timeTakenSeconds}
@@ -101,7 +116,7 @@ const SolutionQuestionDisplayWindow: React.FC<SolutionQuestionDisplayWindowProps
         isBookmarked={false}
         onBack={onBack}
         showBookmark={false}
-        markingScheme={markingScheme}
+        markingScheme={questionMarkingScheme}
       />
 
       {/* Main Content Area - Scrollable */}

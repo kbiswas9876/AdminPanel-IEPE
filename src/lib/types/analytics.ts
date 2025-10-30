@@ -96,6 +96,8 @@ export interface EnrichedAnswer {
   time_taken_seconds: number
   performanceFeedback?: 'Slow' | 'Superfast' | 'OnTime' | 'OnTimeButNotCorrect'
   targetTime?: number
+  marksPerCorrect?: number
+  penaltyPerIncorrect?: number
 }
 
 export interface AnswerLog {
