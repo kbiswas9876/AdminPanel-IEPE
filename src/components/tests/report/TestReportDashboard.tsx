@@ -9,6 +9,11 @@ import Link from 'next/link'
 import { PopulatedOverallAnalyticsTab } from './PopulatedOverallAnalyticsTab'
 import { StudentRankingsTab } from './StudentRankingsTab'
 import { QuestionInsightsTab } from './QuestionInsightsTab'
+import dynamic from 'next/dynamic'
+
+const QuestionInsightsPage = dynamic(() => import('../question-insights/QuestionInsightsPage'), { ssr: false })
+
+const USE_NEW_QUESTION_INSIGHTS = true
 import { TopicDifficultyTab } from './TopicDifficultyTab'
 import type { Test } from '@/lib/supabase/admin'
 import type { TestOverviewStats, StudentRanking } from '@/lib/actions/test-reports'
@@ -183,7 +188,11 @@ export function TestReportDashboard({ test, stats, rankings }: TestReportDashboa
             </TabsContent>
 
             <TabsContent value="questions" className="space-y-6">
-              <QuestionInsightsTab testId={test.id} />
+              {USE_NEW_QUESTION_INSIGHTS ? (
+                <QuestionInsightsPage testId={test.id} />
+              ) : (
+                <QuestionInsightsTab testId={test.id} />
+              )}
             </TabsContent>
 
             <TabsContent value="topics" className="space-y-6">
