@@ -125,11 +125,8 @@ export function TestReportDashboard({ test, stats, rankings }: TestReportDashboa
                 <Clock className="h-5 w-5 text-purple-500" />
               </div>
               <div className="text-3xl font-bold text-slate-900">
-                {Math.floor(stats.averageTimeSeconds / 60)}m
+                {Math.floor(stats.averageTimeSeconds / 60)}m {stats.averageTimeSeconds % 60}s
               </div>
-              <p className="text-xs text-slate-500 mt-1">
-                {stats.averageTimeSeconds % 60}s
-              </p>
             </Card>
           </div>
         )}
