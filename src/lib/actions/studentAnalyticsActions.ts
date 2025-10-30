@@ -376,8 +376,103 @@ export async function getDetailedTestResult(resultId: number): Promise<EnrichedT
 // ============================================================================
 
 /**
+ * Calculate score using per-question marking scheme from test_questions table.
+ * This matches the logic from Student Portal's calculateActualScore function.
+ */
+async function calculatePerQuestionScore(
+  supabase: ReturnType<typeof createAdminClient>,
+  resultId: number,
+  testId: number
+): Promise<number> {
+  // Fetch test-level marking for fallbacks
+  let testMarksPerCorrect = 0
+  let testPenaltyPerIncorrect = 0
+  try {
+    const { data: test } = await supabase
+      .from('tests')
+      .select('marks_per_correct, negative_marks_per_incorrect')
+      .eq('id', testId)
+      .single()
+    testMarksPerCorrect = Number((test as any)?.marks_per_correct) || 0
+    testPenaltyPerIncorrect = Math.abs(Number((test as any)?.negative_marks_per_incorrect) || 0)
+  } catch {}
+
+  // Per-question marking using answer_log + test_questions
+  try {
+    const [{ data: answers }, { data: tqRows }] = await Promise.all([
+      supabase
+        .from('answer_log')
+        .select('question_id, status')
+        .eq('result_id', resultId),
+      supabase
+        .from('test_questions')
+        .select('question_id, marks_per_correct, penalty_per_incorrect')
+        .eq('test_id', testId)
+    ])
+
+    if (answers && answers.length > 0) {
+      const markingMap = new Map<number, { mpc: number; ppi: number }>()
+      for (const row of (tqRows || [])) {
+        const mpc = (row as any)?.marks_per_correct
+        const ppi = (row as any)?.penalty_per_incorrect
+        markingMap.set(Number((row as any).question_id), {
+          mpc: (mpc === null || mpc === undefined) ? testMarksPerCorrect : Number(mpc),
+          ppi: (ppi === null || ppi === undefined) ? testPenaltyPerIncorrect : Math.abs(Number(ppi))
+        })
+      }
+
+      let total = 0
+      for (const a of answers) {
+        const mm = markingMap.get(Number((a as any).question_id)) || { mpc: testMarksPerCorrect, ppi: testPenaltyPerIncorrect }
+        if ((a as any).status === 'correct') total += mm.mpc
+        else if ((a as any).status === 'incorrect') total -= mm.ppi
+      }
+      return Math.round(total * 100) / 100
+    }
+  } catch (err) {
+    console.error('Error calculating per-question score:', err)
+  }
+
+  return 0
+}
+
+/**
+ * Calculate total marks using per-question marking scheme.
+ * This matches the logic from Student Portal's calculateTotalMarks function.
+ */
+async function calculatePerQuestionTotalMarks(
+  supabase: ReturnType<typeof createAdminClient>,
+  testId: number
+): Promise<number> {
+  try {
+    const [{ data: tq }, { data: test }] = await Promise.all([
+      supabase
+        .from('test_questions')
+        .select('marks_per_correct')
+        .eq('test_id', testId),
+      supabase
+        .from('tests')
+        .select('marks_per_correct')
+        .eq('id', testId)
+        .single()
+    ])
+
+    const globalMpc = Number((test as any)?.marks_per_correct) || 0
+    if (!tq || tq.length === 0) return 0
+    const haveAnyPerQuestion = tq.some((r: any) => r.marks_per_correct !== null && r.marks_per_correct !== undefined)
+    if (haveAnyPerQuestion) {
+      const sum = tq.reduce((s: number, r: any) => s + (Number(r.marks_per_correct ?? globalMpc) || 0), 0)
+      return Math.round(sum * 100) / 100
+    }
+    return Math.round((tq.length * globalMpc) * 100) / 100
+  } catch {
+    return 0
+  }
+}
+
+/**
  * Enhanced function to calculate ALL mock test competitive metrics
- * Follows the exact on-demand calculation logic from Student Portal
+ * Now uses per-question marking scheme and reads from test_results.score when available
  */
 export async function getMockTestCompetitiveMetrics(
   testResultId: number,
@@ -407,24 +502,54 @@ export async function getMockTestCompetitiveMetrics(
     const mockTestId = testResult.mock_test_id
     const userScore = testResult.score_percentage || 0
     
-    // Step 2: Fetch marking scheme from tests table
-    const { data: test, error: testMetadataError } = await supabase
-      .from('tests')
-      .select('marks_per_correct, negative_marks_per_incorrect')
-      .eq('id', mockTestId)
+    // Step 2: Use stored score from test_results if available (accurate per-question calculated score)
+    // Otherwise, calculate using per-question marking scheme
+    let marksObtained: number
+    let totalMarks: number
+
+    // First, try to get the stored score (if it was calculated correctly on submission)
+    const { data: storedResult } = await supabase
+      .from('test_results')
+      .select('score')
+      .eq('id', testResultId)
       .single()
-    
-    if (testMetadataError || !test) {
-      console.error('Error fetching test metadata:', testMetadataError)
-      return null
+
+    if (storedResult && storedResult.score !== null && storedResult.score !== undefined) {
+      // Use stored score - it was calculated using per-question marking on submission
+      marksObtained = Number(storedResult.score) || 0
+      
+      // Calculate total marks using per-question scheme
+      const { data: testQuestionRows } = await supabase
+        .from('test_questions')
+        .select('marks_per_correct')
+        .eq('test_id', mockTestId)
+      
+      const { data: testMeta } = await supabase
+        .from('tests')
+        .select('marks_per_correct')
+        .eq('id', mockTestId)
+        .single()
+      
+      const globalMpc = Number((testMeta as any)?.marks_per_correct) || 0
+      if (testQuestionRows && testQuestionRows.length > 0) {
+        const haveAnyPerQuestion = testQuestionRows.some((r: any) => r.marks_per_correct !== null && r.marks_per_correct !== undefined)
+        if (haveAnyPerQuestion) {
+          totalMarks = testQuestionRows.reduce((s: number, r: any) => s + (Number(r.marks_per_correct ?? globalMpc) || 0), 0)
+        } else {
+          totalMarks = testQuestionRows.length * globalMpc
+        }
+        totalMarks = Math.round(totalMarks * 100) / 100
+      } else {
+        totalMarks = 0
+      }
+      
+      console.log('📊 Using stored score from test_results:', { marksObtained, totalMarks })
+    } else {
+      // Calculate using per-question marking scheme (fallback for old results)
+      marksObtained = await calculatePerQuestionScore(supabase, testResultId, mockTestId)
+      totalMarks = await calculatePerQuestionTotalMarks(supabase, mockTestId)
+      console.log('📊 Calculated marks using per-question scheme:', { marksObtained, totalMarks })
     }
-    
-    // Step 3: Calculate marks using the exact formula from Student Portal
-    const marksObtained = (testResult.total_correct * test.marks_per_correct) - 
-                          (testResult.total_incorrect * Math.abs(test.negative_marks_per_incorrect))
-    const totalMarks = testResult.total_questions * test.marks_per_correct
-    
-    console.log('📊 Calculated marks:', { marksObtained, totalMarks })
     
     // Step 4: Fetch all results for rank and percentile calculation
     const { data: allTestResults, error: rankError } = await supabase

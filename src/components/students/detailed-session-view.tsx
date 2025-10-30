@@ -214,6 +214,20 @@ export function DetailedSessionView({ sessionId, isOpen, onClose, userId }: Deta
                             {getStatusBadge(answer.status)}
                           </div>
                           <div className="flex items-center space-x-4 text-sm text-gray-500">
+                            {(answer as any).marksPerCorrect !== undefined && (
+                              <div className="flex items-center space-x-1">
+                                <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold">
+                                  +{(answer as any).marksPerCorrect}
+                                </span>
+                              </div>
+                            )}
+                            {(answer as any).penaltyPerIncorrect !== undefined && (
+                              <div className="flex items-center space-x-1">
+                                <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-semibold">
+                                  -{(answer as any).penaltyPerIncorrect}
+                                </span>
+                              </div>
+                            )}
                             <div className="flex items-center space-x-1">
                               <Timer className="h-4 w-4" />
                               <span>{formatTime(answer.time_taken)}</span>

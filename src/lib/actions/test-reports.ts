@@ -48,6 +48,8 @@ export type StudentAnswer = {
   isCorrect: boolean
   timeSpent: number
   marks: number
+  marksPerCorrect?: number
+  penaltyPerIncorrect?: number
 }
 
 export type StudentAttemptDetails = {
@@ -170,13 +172,40 @@ export async function getTestOverviewStats(testId: number): Promise<TestOverview
       ? (sortedScores[totalParticipants / 2 - 1] + sortedScores[totalParticipants / 2]) / 2
       : sortedScores[Math.floor(totalParticipants / 2)]
     
-    // Get total questions to calculate total marks
-    const { count: totalQuestions } = await supabase
+    // Calculate total marks using per-question marking scheme
+    // This respects per-question marks from test_questions table
+    const { data: testQuestionRows } = await supabase
       .from('test_questions')
-      .select('*', { count: 'exact', head: true })
+      .select('marks_per_correct')
       .eq('test_id', testId)
     
-    const totalMarks = (totalQuestions || 0) * test.marks_per_correct
+    const globalMpc = Number((test as any)?.marks_per_correct) || 0
+    let totalMarks = 0
+    
+    if (testQuestionRows && testQuestionRows.length > 0) {
+      const haveAnyPerQuestion = testQuestionRows.some((r: any) => 
+        r.marks_per_correct !== null && r.marks_per_correct !== undefined
+      )
+      
+      if (haveAnyPerQuestion) {
+        // Sum all per-question marks (using global as fallback for null values)
+        totalMarks = testQuestionRows.reduce(
+          (s: number, r: any) => s + (Number(r.marks_per_correct ?? globalMpc) || 0), 
+          0
+        )
+      } else {
+        // All questions use global marking
+        totalMarks = testQuestionRows.length * globalMpc
+      }
+      totalMarks = Math.round(totalMarks * 100) / 100
+    } else {
+      // Fallback if no questions found
+      const { count: totalQuestions } = await supabase
+        .from('test_questions')
+        .select('*', { count: 'exact', head: true })
+        .eq('test_id', testId)
+      totalMarks = (totalQuestions || 0) * globalMpc
+    }
     
     // Calculate highest and lowest percentages
     const highestPercentage = Math.max(...percentages)
@@ -410,17 +439,15 @@ export async function getStudentAttemptDetails(attemptId: number): Promise<Stude
       ? ((allAttempts.length - rank) / (allAttempts.length - 1)) * 100
       : 100
     
-    // Get total marks
+    // Get test metadata for global marking scheme fallback
     const { data: test } = await supabase
       .from('tests')
-      .select('marks_per_correct')
+      .select('marks_per_correct, negative_marks_per_incorrect')
       .eq('id', attempt.mock_test_id)
       .single()
     
-    const { count: totalQuestions } = await supabase
-      .from('test_questions')
-      .select('*', { count: 'exact', head: true })
-      .eq('test_id', attempt.mock_test_id)
+    const globalMpc = Number(test?.marks_per_correct) || 0
+    const globalPpi = Math.abs(Number(test?.negative_marks_per_incorrect) || 0)
     
     // Use score_percentage from database instead of recalculating
     const percentage = attempt.score_percentage || 0
@@ -456,9 +483,10 @@ export async function getStudentAttemptDetails(attemptId: number): Promise<Stude
     }
     
     // Get all questions for this test in the order they appear in the test
+    // Include per-question marking if available
     const { data: testQuestions, error: testQuestionsError } = await supabase
       .from('test_questions')
-      .select('question_id')
+      .select('question_id, marks_per_correct, penalty_per_incorrect')
       .eq('test_id', attempt.mock_test_id)
       .order('id', { ascending: true })
     
@@ -488,6 +516,22 @@ export async function getStudentAttemptDetails(attemptId: number): Promise<Stude
       const answer = detailedAnswers?.find((a: any) => a.question_id === tq.question_id)
       const question = questionMap.get(tq.question_id)
       
+      // Get per-question marking (fallback to global)
+      const marksPerCorrect = (tq as any).marks_per_correct !== null && (tq as any).marks_per_correct !== undefined
+        ? Number((tq as any).marks_per_correct)
+        : globalMpc
+      const penaltyPerIncorrect = (tq as any).penalty_per_incorrect !== null && (tq as any).penalty_per_incorrect !== undefined
+        ? Math.abs(Number((tq as any).penalty_per_incorrect))
+        : globalPpi
+      
+      // Calculate marks for this question
+      let marks = 0
+      if (answer?.status === 'correct') {
+        marks = marksPerCorrect
+      } else if (answer?.status === 'incorrect') {
+        marks = -penaltyPerIncorrect
+      }
+      
       return {
         questionId: tq.question_id,
         questionNumber: index + 1,
@@ -497,7 +541,9 @@ export async function getStudentAttemptDetails(attemptId: number): Promise<Stude
         correctAnswer: question?.correct_option || '',
         isCorrect: answer?.status === 'correct',
         timeSpent: answer?.time_taken || 0,
-        marks: 0
+        marks,
+        marksPerCorrect,
+        penaltyPerIncorrect
       }
     }) || []
     

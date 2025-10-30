@@ -40,16 +40,58 @@ export async function GET(
       return NextResponse.json({ error: 'Answer log not found' }, { status: 404 })
     }
 
-    // Get test name if it's a mock test
+    // Get test name and marking scheme if it's a mock test
     let testName: string | undefined
+    let enrichedAnswerLog: any[] = answerLog || []
+    
     if (testResult.session_type === 'mock_test' && testResult.mock_test_id) {
       const { data: testData } = await supabase
         .from('tests')
-        .select('name')
+        .select('name, marks_per_correct, negative_marks_per_incorrect')
         .eq('id', testResult.mock_test_id)
         .single()
       
       testName = testData?.name
+      
+      // Fetch per-question marking
+      const questionIds = (answerLog || []).map(a => a.question_id)
+      if (questionIds.length > 0) {
+        const { data: testQuestions } = await supabase
+          .from('test_questions')
+          .select('question_id, marks_per_correct, penalty_per_incorrect')
+          .eq('test_id', testResult.mock_test_id)
+          .in('question_id', questionIds)
+        
+        const globalMpc = Number(testData?.marks_per_correct) || 0
+        const globalPpi = Math.abs(Number(testData?.negative_marks_per_incorrect) || 0)
+        
+        const markingMap = new Map(
+          (testQuestions || []).map((tq: any) => [
+            tq.question_id,
+            {
+              marksPerCorrect: tq.marks_per_correct !== null && tq.marks_per_correct !== undefined
+                ? Number(tq.marks_per_correct)
+                : globalMpc,
+              penaltyPerIncorrect: tq.penalty_per_incorrect !== null && tq.penalty_per_incorrect !== undefined
+                ? Math.abs(Number(tq.penalty_per_incorrect))
+                : globalPpi
+            }
+          ])
+        )
+        
+        // Enrich answer log with per-question marking
+        enrichedAnswerLog = (answerLog || []).map((answer: any) => {
+          const marking = markingMap.get(answer.question_id) || {
+            marksPerCorrect: globalMpc,
+            penaltyPerIncorrect: globalPpi
+          }
+          return {
+            ...answer,
+            marksPerCorrect: marking.marksPerCorrect,
+            penaltyPerIncorrect: marking.penaltyPerIncorrect
+          }
+        })
+      }
     }
 
     // Calculate accuracy
@@ -68,7 +110,7 @@ export async function GET(
       skipped: testResult.total_skipped || 0,
       timeSpent: testResult.total_time_taken || 0,
       submittedAt: testResult.submitted_at,
-      answerLog: (answerLog || []) as AnswerLog[]
+      answerLog: enrichedAnswerLog as AnswerLog[]
     }
 
     return NextResponse.json({ data: sessionDetail })
