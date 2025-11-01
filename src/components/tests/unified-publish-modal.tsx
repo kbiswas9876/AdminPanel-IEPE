@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Calendar, Clock, AlertCircle, Infinity, CheckCircle, XCircle } from 'lucide-react'
+import { Calendar, Clock, AlertCircle, Infinity, CheckCircle, XCircle, Zap } from 'lucide-react'
 import { 
   toUTCISOString, 
   fromUTCISOString, 
@@ -210,6 +210,81 @@ export function UnifiedPublishModal({
     if (validatePublishData()) {
       onConfirm(publishData)
     }
+  }
+
+  const handlePublishNow = () => {
+    // Get current timestamp
+    const now = new Date()
+    const startTimeNow = toUTCISOString(now)
+
+    // Determine end time based on scheduling mode
+    let endTime = ''
+    if (publishData.schedulingMode === 'fixed') {
+      // If end time is already set, use it; otherwise default to 24 hours from now
+      if (publishData.endTime) {
+        try {
+          const currentEndDate = fromUTCISOString(publishData.endTime)
+          // Only use existing end time if it's in the future relative to now
+          if (currentEndDate > now) {
+            endTime = publishData.endTime
+          } else {
+            // Default to 24 hours from now
+            const defaultEndDate = new Date(now)
+            defaultEndDate.setHours(defaultEndDate.getHours() + 24)
+            endTime = toUTCISOString(defaultEndDate)
+          }
+        } catch {
+          // If parsing fails, default to 24 hours from now
+          const defaultEndDate = new Date(now)
+          defaultEndDate.setHours(defaultEndDate.getHours() + 24)
+          endTime = toUTCISOString(defaultEndDate)
+        }
+      } else {
+        // Default to 24 hours from now
+        const defaultEndDate = new Date(now)
+        defaultEndDate.setHours(defaultEndDate.getHours() + 24)
+        endTime = toUTCISOString(defaultEndDate)
+      }
+    }
+
+    // Determine result release time
+    let resultReleaseAt = publishData.resultReleaseAt
+    if (publishData.resultPolicy === 'scheduled') {
+      if (!resultReleaseAt) {
+        // Default result release time
+        if (publishData.schedulingMode === 'fixed' && endTime) {
+          // For fixed scheduling, default to end time + 1 hour
+          try {
+            const endDate = fromUTCISOString(endTime)
+            const releaseDate = new Date(endDate)
+            releaseDate.setHours(releaseDate.getHours() + 1)
+            resultReleaseAt = toUTCISOString(releaseDate)
+          } catch {
+            // Fallback: start time + 25 hours (24 hours + 1 hour)
+            const releaseDate = new Date(now)
+            releaseDate.setHours(releaseDate.getHours() + 25)
+            resultReleaseAt = toUTCISOString(releaseDate)
+          }
+        } else {
+          // For perpetual, default to start time + 1 hour
+          const releaseDate = new Date(now)
+          releaseDate.setHours(releaseDate.getHours() + 1)
+          resultReleaseAt = toUTCISOString(releaseDate)
+        }
+      }
+    }
+
+    // Build the publish data with current timestamp
+    const publishNowData: UnifiedPublishData = {
+      startTime: startTimeNow,
+      endTime: endTime,
+      schedulingMode: publishData.schedulingMode,
+      resultPolicy: publishData.resultPolicy || 'instant',
+      resultReleaseAt: resultReleaseAt || ''
+    }
+
+    // Bypass validation and call onConfirm directly
+    onConfirm(publishNowData)
   }
 
 
@@ -615,6 +690,14 @@ export function UnifiedPublishModal({
             className="w-full sm:w-auto text-sm"
           >
             Cancel
+          </Button>
+          <Button
+            onClick={handlePublishNow}
+            disabled={isProcessing}
+            className="bg-green-600 hover:bg-green-700 w-full sm:w-auto text-sm"
+          >
+            <Zap className="h-4 w-4 mr-2" />
+            {isProcessing ? 'Publishing...' : 'Publish Now'}
           </Button>
           <Button
             onClick={handleConfirm}

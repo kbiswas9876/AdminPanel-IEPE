@@ -43,6 +43,7 @@ export interface TestFormData {
   totalTimeMinutes: number
   allowPausing: boolean
   showInQuestionTimer: boolean
+  isDynamicallyShuffled?: boolean
 }
 
 // Legacy interface - keeping for backward compatibility
@@ -107,6 +108,7 @@ export function TestFinalizationStage({
     fd.append('show_in_question_timer', String(formData.showInQuestionTimer))
     fd.append('result_release_at', '')
     fd.append('status', 'draft')
+    fd.append('is_dynamically_shuffled', String(Boolean(formData.isDynamicallyShuffled)))
     const questionsPayload = questions.map((slot) => {
       const q = slot.question
       const normalizedOptions = Object.fromEntries(Object.entries(q.options || {}).map(([k, v]) => [String(k).toUpperCase(), v]))
@@ -175,6 +177,7 @@ export function TestFinalizationStage({
     fd.append('is_perpetual', String(publishData.schedulingMode === 'perpetual'))
     fd.append('allow_pausing', String(formData.allowPausing))
     fd.append('show_in_question_timer', String(formData.showInQuestionTimer))
+    fd.append('is_dynamically_shuffled', String(Boolean(formData.isDynamicallyShuffled)))
     const questionsPayload = questions.map((slot) => {
       const q = slot.question
       const normalizedOptions = Object.fromEntries(Object.entries(q.options || {}).map(([k, v]) => [String(k).toUpperCase(), v]))
@@ -508,6 +511,20 @@ export function TestFinalizationStage({
                     <Switch
                       checked={formData.showInQuestionTimer}
                       onCheckedChange={(checked) => updateFormData('showInQuestionTimer', checked)}
+                    />
+                  </div>
+
+                  {/* Dynamic Per-User Shuffling Toggle */}
+                  <div className="flex items-center justify-between rounded-lg border border-gray-200 p-3 bg-white shadow-sm">
+                    <div className="space-y-0.5">
+                      <Label className="text-sm font-semibold text-gray-900">Enable Dynamic Per-User Shuffling</Label>
+                      <p className="text-xs text-gray-600">
+                        Each student sees a unique question and option order.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={Boolean(formData.isDynamicallyShuffled)}
+                      onCheckedChange={(checked) => updateFormData('isDynamicallyShuffled', checked)}
                     />
                   </div>
                 </div>

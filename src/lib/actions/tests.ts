@@ -511,6 +511,7 @@ export async function saveTest(args: {
   question_ids: number[]
   allow_pausing?: boolean
   show_in_question_timer?: boolean
+  is_dynamically_shuffled?: boolean
   publish?: {
     start_time: string
     end_time?: string | null
@@ -549,6 +550,7 @@ export async function saveTest(args: {
       end_time: args.publish?.is_perpetual ? null : (args.publish?.end_time || null),
       allow_pausing: args.allow_pausing ?? false,
       show_in_question_timer: args.show_in_question_timer ?? false,
+      is_dynamically_shuffled: args.is_dynamically_shuffled ?? false,
       updated_at: new Date().toISOString()
     }
 
@@ -643,6 +645,7 @@ export async function saveTestFromForm(formData: FormData): Promise<{ success: b
       result_release_at: formData.get('result_release_at') ? String(formData.get('result_release_at')) : null,
       allow_pausing: String(formData.get('allow_pausing') || 'false') === 'true',
       show_in_question_timer: String(formData.get('show_in_question_timer') || 'false') === 'true',
+      is_dynamically_shuffled: String(formData.get('is_dynamically_shuffled') || 'false') === 'true',
       question_ids: (() => { try { return JSON.parse(String(formData.get('question_ids') || '[]')) as number[] } catch { return [] } })(),
       publish: ((): { start_time: string; end_time?: string | null; is_perpetual?: boolean } | null => {
         const status = String(formData.get('status') || 'draft')
@@ -673,6 +676,7 @@ export async function saveTestFromForm(formData: FormData): Promise<{ success: b
       end_time: payload.publish?.end_time || null,
       allow_pausing: payload.allow_pausing,
       show_in_question_timer: payload.show_in_question_timer,
+      is_dynamically_shuffled: payload.is_dynamically_shuffled,
       updated_at: new Date().toISOString()
     }
 
