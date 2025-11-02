@@ -11,6 +11,7 @@ import {
   Clock
 } from 'lucide-react'
 import { TestActions } from './test-actions'
+import { TestProgressCard } from './test-progress-card'
 import { TestControlToggles } from './test-control-toggles'
 
 interface TestManagementProps {
@@ -21,6 +22,14 @@ export function TestManagement({ onCreateTest }: TestManagementProps = {}) {
   const [tests, setTests] = useState<Array<Test & { question_count?: number }>>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // Progress data state: testId -> progress stats
+  const [progressData, setProgressData] = useState<Record<string, {
+    total_taken: number
+    submitted: number
+    in_progress: number
+  }>>({})
+  const [progressLoading, setProgressLoading] = useState(false)
 
   useEffect(() => {
     const fetchTests = async () => {
@@ -37,6 +46,47 @@ export function TestManagement({ onCreateTest }: TestManagementProps = {}) {
 
     fetchTests()
   }, [])
+
+  // Fetch progress data for all tests
+  const fetchProgressData = async (testIds: number[]) => {
+    if (testIds.length === 0) return
+
+    setProgressLoading(true)
+    try {
+      const testIdsParam = testIds.join(',')
+      const response = await fetch(`/api/tests/progress?testIds=${testIdsParam}`)
+      
+      if (!response.ok) {
+        console.error('Failed to fetch progress data:', response.statusText)
+        return
+      }
+
+      const data = await response.json()
+      setProgressData(data)
+    } catch (err) {
+      console.error('Error fetching progress data:', err)
+    } finally {
+      setProgressLoading(false)
+    }
+  }
+
+  // Fetch progress when tests are loaded and poll for updates
+  useEffect(() => {
+    if (tests.length === 0) return
+
+    const testIds = tests.map(test => test.id)
+    
+    // Fetch immediately
+    fetchProgressData(testIds)
+    
+    // Poll for progress updates every 30 seconds
+    const intervalId = setInterval(() => {
+      fetchProgressData(testIds)
+    }, 30000) // Poll every 30 seconds
+
+    return () => clearInterval(intervalId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tests.length]) // Re-run when number of tests changes
 
   const handleTestAction = () => {
     // Refresh the tests list
@@ -224,6 +274,12 @@ export function TestManagement({ onCreateTest }: TestManagementProps = {}) {
                   </div>
                 </div>
               </div>
+
+              {/* Test Progress */}
+              <TestProgressCard 
+                progress={progressData[test.id.toString()]}
+                isLoading={progressLoading}
+              />
 
               {/* Test Control Settings */}
               <div className="py-4 border-t border-gray-100">
