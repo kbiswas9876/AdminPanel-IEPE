@@ -511,6 +511,7 @@ export async function saveTest(args: {
   question_ids: number[]
   allow_pausing?: boolean
   show_in_question_timer?: boolean
+  is_proctored?: boolean
   is_dynamically_shuffled?: boolean
   publish?: {
     start_time: string
@@ -550,6 +551,7 @@ export async function saveTest(args: {
       end_time: args.publish?.is_perpetual ? null : (args.publish?.end_time || null),
       allow_pausing: args.allow_pausing ?? false,
       show_in_question_timer: args.show_in_question_timer ?? false,
+      is_proctored: args.is_proctored ?? false,
       is_dynamically_shuffled: args.is_dynamically_shuffled ?? false,
       updated_at: new Date().toISOString()
     }
@@ -645,6 +647,7 @@ export async function saveTestFromForm(formData: FormData): Promise<{ success: b
       result_release_at: formData.get('result_release_at') ? String(formData.get('result_release_at')) : null,
       allow_pausing: String(formData.get('allow_pausing') || 'false') === 'true',
       show_in_question_timer: String(formData.get('show_in_question_timer') || 'false') === 'true',
+      is_proctored: String(formData.get('is_proctored') || 'false') === 'true',
       is_dynamically_shuffled: String(formData.get('is_dynamically_shuffled') || 'false') === 'true',
       question_ids: (() => { try { return JSON.parse(String(formData.get('question_ids') || '[]')) as number[] } catch { return [] } })(),
       publish: ((): { start_time: string; end_time?: string | null; is_perpetual?: boolean } | null => {
@@ -676,6 +679,7 @@ export async function saveTestFromForm(formData: FormData): Promise<{ success: b
       end_time: payload.publish?.end_time || null,
       allow_pausing: payload.allow_pausing,
       show_in_question_timer: payload.show_in_question_timer,
+      is_proctored: payload.is_proctored,
       is_dynamically_shuffled: payload.is_dynamically_shuffled,
       updated_at: new Date().toISOString()
     }
@@ -1006,10 +1010,10 @@ export async function createTest(testData: TestCreationData): Promise<{ success:
   }
 }
 
-// Update test control settings (allow_pausing, show_in_question_timer)
+// Update test control settings (allow_pausing, show_in_question_timer, is_proctored)
 export async function updateTestControlSettings(
   testId: number, 
-  settings: { allow_pausing?: boolean; show_in_question_timer?: boolean }
+  settings: { allow_pausing?: boolean; show_in_question_timer?: boolean; is_proctored?: boolean }
 ): Promise<{ success: boolean; message: string }> {
   try {
     const supabase = createAdminClient()
@@ -1017,6 +1021,7 @@ export async function updateTestControlSettings(
     const updateData: Record<string, unknown> = {}
     if (settings.allow_pausing !== undefined) updateData.allow_pausing = settings.allow_pausing
     if (settings.show_in_question_timer !== undefined) updateData.show_in_question_timer = settings.show_in_question_timer
+    if (settings.is_proctored !== undefined) updateData.is_proctored = settings.is_proctored
     updateData.updated_at = new Date().toISOString()
     
     const { error } = await supabase
@@ -1054,6 +1059,7 @@ export async function updateTest(testId: number, testData: Partial<TestCreationD
     if (testData.negative_marks_per_incorrect !== undefined) updateData.negative_marks_per_incorrect = correctedNegativeMarks
     if (testData.allow_pausing !== undefined) updateData.allow_pausing = testData.allow_pausing
     if (testData.show_in_question_timer !== undefined) updateData.show_in_question_timer = testData.show_in_question_timer
+    if (testData.is_proctored !== undefined) updateData.is_proctored = testData.is_proctored
     updateData.updated_at = new Date().toISOString()
     
     const { error } = await supabase

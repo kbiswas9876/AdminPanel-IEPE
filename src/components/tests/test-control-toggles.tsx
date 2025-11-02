@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { updateTestControlSettings } from '@/lib/actions/tests'
-import { Pause, Timer } from 'lucide-react'
+import { Pause, Timer, Shield } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import type { Test } from '@/lib/supabase/admin'
 
@@ -16,9 +16,10 @@ interface TestControlTogglesProps {
 export function TestControlToggles({ test, onUpdate }: TestControlTogglesProps) {
   const [allowPausing, setAllowPausing] = useState(test.allow_pausing ?? false)
   const [showInQuestionTimer, setShowInQuestionTimer] = useState(test.show_in_question_timer ?? false)
+  const [isProctored, setIsProctored] = useState(test.is_proctored ?? false)
   const [isUpdating, setIsUpdating] = useState(false)
 
-  const handleToggle = async (setting: 'allow_pausing' | 'show_in_question_timer', value: boolean) => {
+  const handleToggle = async (setting: 'allow_pausing' | 'show_in_question_timer' | 'is_proctored', value: boolean) => {
     setIsUpdating(true)
     try {
       const result = await updateTestControlSettings(test.id, { [setting]: value })
@@ -27,16 +28,24 @@ export function TestControlToggles({ test, onUpdate }: TestControlTogglesProps) 
         // Update local state
         if (setting === 'allow_pausing') {
           setAllowPausing(value)
-        } else {
+        } else if (setting === 'show_in_question_timer') {
           setShowInQuestionTimer(value)
+        } else if (setting === 'is_proctored') {
+          setIsProctored(value)
         }
         
         // Refresh the parent component
         onUpdate()
         
+        const settingNames = {
+          allow_pausing: 'Pause',
+          show_in_question_timer: 'Timer',
+          is_proctored: 'Proctoring'
+        }
+        
         toast({
           title: "Settings Updated",
-          description: `${setting === 'allow_pausing' ? 'Pause' : 'Timer'} setting updated successfully`,
+          description: `${settingNames[setting]} setting updated successfully`,
         })
       } else {
         toast({
@@ -89,6 +98,23 @@ export function TestControlToggles({ test, onUpdate }: TestControlTogglesProps) 
         <Switch
           checked={showInQuestionTimer}
           onCheckedChange={(checked) => handleToggle('show_in_question_timer', checked)}
+          disabled={isUpdating}
+          className="data-[state=checked]:bg-blue-600"
+        />
+      </div>
+
+      {/* Enable Proctoring Toggle */}
+      <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+        <div className="flex items-center gap-2">
+          <Shield className="h-4 w-4 text-gray-500" />
+          <div>
+            <Label className="text-sm font-medium text-gray-700">Enable Proctoring</Label>
+            <p className="text-xs text-gray-500">Secure exam mode</p>
+          </div>
+        </div>
+        <Switch
+          checked={isProctored}
+          onCheckedChange={(checked) => handleToggle('is_proctored', checked)}
           disabled={isUpdating}
           className="data-[state=checked]:bg-blue-600"
         />

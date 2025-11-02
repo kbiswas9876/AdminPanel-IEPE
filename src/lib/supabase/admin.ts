@@ -325,6 +325,7 @@ export interface Test {
   updated_at?: string
   allow_pausing?: boolean
   show_in_question_timer?: boolean
+  is_proctored?: boolean
 }
 
 // Types for test_questions table
@@ -350,6 +351,7 @@ export interface TestCreationData {
   negative_marks_per_incorrect: number
   allow_pausing?: boolean
   show_in_question_timer?: boolean
+  is_proctored?: boolean
   blueprint: TestBlueprint[]
 }
 

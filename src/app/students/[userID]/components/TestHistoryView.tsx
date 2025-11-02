@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import type { ActivityFeedResponse } from '@/lib/types/analytics'
 import { DetailedSessionModal } from './DetailedSessionModal'
+import ViolationDetailsModal from '@/components/ViolationDetailsModal'
 
 interface TestHistoryViewProps {
   userId: string
@@ -12,6 +13,46 @@ interface TestHistoryViewProps {
 
 export function TestHistoryView({ userId, initialData, testType }: TestHistoryViewProps) {
   const [selectedResultId, setSelectedResultId] = useState<number | null>(null)
+  const [selectedViolationResultId, setSelectedViolationResultId] = useState<number | null>(null)
+  const [selectedTestName, setSelectedTestName] = useState<string>('')
+  const [violationCounts, setViolationCounts] = useState<Record<number, number>>({})
+  const [loadingViolations, setLoadingViolations] = useState(false)
+  
+  // Fetch violation counts for mock tests
+  useEffect(() => {
+    if (testType === 'mock_test' && initialData.entries.length > 0) {
+      fetchViolationCounts()
+    }
+  }, [testType, initialData])
+  
+  const fetchViolationCounts = async () => {
+    try {
+      setLoadingViolations(true)
+      
+      // Get all test result IDs
+      const testResultIds = initialData.entries
+        .map(e => e.related_entity_id)
+        .filter((id): id is number => id !== null)
+      
+      // Fetch violation counts for each result
+      const counts: Record<number, number> = {}
+      
+      for (const resultId of testResultIds) {
+        const response = await fetch(`/api/security-violations?testResultId=${resultId}`)
+        const result = await response.json()
+        
+        if (response.ok && result.data) {
+          counts[resultId] = result.data.length
+        }
+      }
+      
+      setViolationCounts(counts)
+    } catch (error) {
+      console.error('Error fetching violation counts:', error)
+    } finally {
+      setLoadingViolations(false)
+    }
+  }
   
   // Calculate summary stats
   const summary = useMemo(() => {
@@ -106,24 +147,42 @@ export function TestHistoryView({ userId, initialData, testType }: TestHistoryVi
             const meta = entry.metadata as any
             const score = meta.score_percentage || 0
             const isRecent = index === 0 // Most recent
+            const resultId = entry.related_entity_id
+            const violationCount = resultId ? (violationCounts[resultId] || 0) : 0
+            const hasViolations = violationCount > 0
             
             return (
               <div
                 key={entry.id}
-                className={`bg-white rounded-lg border-2 p-5 hover:shadow-lg transition-all cursor-pointer ${
+                className={`bg-white rounded-lg border-2 p-5 hover:shadow-lg transition-all ${
                   getScoreBorderColor(score)
                 } ${isRecent ? 'ring-2 ring-blue-400' : ''}`}
-                onClick={() => setSelectedResultId(entry.related_entity_id)}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-2">
-                      <h3 className="font-semibold text-gray-900">
+                      <h3 
+                        className="font-semibold text-gray-900 cursor-pointer hover:text-blue-600"
+                        onClick={() => setSelectedResultId(entry.related_entity_id)}
+                      >
                         {meta.test_name || (testType === 'mock_test' ? 'Mock Test' : 'Practice Session')}
                       </h3>
                       {isRecent && (
                         <span className="px-2 py-0.5 text-xs font-semibold bg-blue-100 text-blue-700 rounded">
                           Latest
+                        </span>
+                      )}
+                      {testType === 'mock_test' && hasViolations && (
+                        <span 
+                          className="px-2 py-0.5 text-xs font-semibold bg-red-100 text-red-700 rounded flex items-center gap-1 cursor-pointer hover:bg-red-200"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSelectedViolationResultId(resultId)
+                            setSelectedTestName(meta.test_name || 'Mock Test')
+                          }}
+                          title="Click to view security violations"
+                        >
+                          ⚠️ {violationCount} Violation{violationCount !== 1 ? 's' : ''}
                         </span>
                       )}
                     </div>
@@ -210,6 +269,19 @@ export function TestHistoryView({ userId, initialData, testType }: TestHistoryVi
           resultId={selectedResultId}
           isOpen={!!selectedResultId}
           onClose={() => setSelectedResultId(null)}
+        />
+      )}
+
+      {/* Violation Details Modal (Mock Tests Only) */}
+      {testType === 'mock_test' && selectedViolationResultId && (
+        <ViolationDetailsModal
+          isOpen={!!selectedViolationResultId}
+          onClose={() => {
+            setSelectedViolationResultId(null)
+            setSelectedTestName('')
+          }}
+          testResultId={selectedViolationResultId}
+          testName={selectedTestName}
         />
       )}
     </div>

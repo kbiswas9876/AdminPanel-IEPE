@@ -44,6 +44,7 @@ export interface TestFormData {
   allowPausing: boolean
   showInQuestionTimer: boolean
   isDynamicallyShuffled?: boolean
+  isProctored: boolean
 }
 
 // Legacy interface - keeping for backward compatibility
@@ -68,7 +69,8 @@ export function TestFinalizationStage({
     description: initialTestData?.description || '',
     totalTimeMinutes: initialTestData?.total_time_minutes || 120,
     allowPausing: false, // Default to strict mode for new tests
-    showInQuestionTimer: false // Default to strict mode for new tests
+    showInQuestionTimer: false, // Default to strict mode for new tests
+    isProctored: false // Default to non-proctored mode
   })
   
   const [showPublishModal, setShowPublishModal] = useState(false)
@@ -106,6 +108,7 @@ export function TestFinalizationStage({
     fd.append('result_policy', 'instant')
     fd.append('allow_pausing', String(formData.allowPausing))
     fd.append('show_in_question_timer', String(formData.showInQuestionTimer))
+    fd.append('is_proctored', String(formData.isProctored))
     fd.append('result_release_at', '')
     fd.append('status', 'draft')
     fd.append('is_dynamically_shuffled', String(Boolean(formData.isDynamicallyShuffled)))
@@ -177,6 +180,7 @@ export function TestFinalizationStage({
     fd.append('is_perpetual', String(publishData.schedulingMode === 'perpetual'))
     fd.append('allow_pausing', String(formData.allowPausing))
     fd.append('show_in_question_timer', String(formData.showInQuestionTimer))
+    fd.append('is_proctored', String(formData.isProctored))
     fd.append('is_dynamically_shuffled', String(Boolean(formData.isDynamicallyShuffled)))
     const questionsPayload = questions.map((slot) => {
       const q = slot.question
@@ -525,6 +529,20 @@ export function TestFinalizationStage({
                     <Switch
                       checked={Boolean(formData.isDynamicallyShuffled)}
                       onCheckedChange={(checked) => updateFormData('isDynamicallyShuffled', checked)}
+                    />
+                  </div>
+
+                  {/* Enable Proctoring Toggle */}
+                  <div className="flex items-center justify-between rounded-lg border-2 border-blue-200 p-4 bg-blue-50/50 shadow-sm">
+                    <div className="space-y-1">
+                      <Label className="text-sm font-semibold text-gray-900">Enable Proctoring</Label>
+                      <p className="text-xs text-gray-600">
+                        When enabled, forces students into a secure, fullscreen environment with violation detection and disables the browser's back button.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={formData.isProctored}
+                      onCheckedChange={(checked) => updateFormData('isProctored', checked)}
                     />
                   </div>
                 </div>
