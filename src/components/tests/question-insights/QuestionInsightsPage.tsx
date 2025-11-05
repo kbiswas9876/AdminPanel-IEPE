@@ -108,7 +108,7 @@ export default function QuestionInsightsPage({ testId }: { testId: number }) {
       </div>
       <div className="lg:col-span-4 space-y-4">
         {filtered.map(i => (
-          <QuestionInsightCard key={i.questionId} insight={i} />
+          <QuestionInsightCard key={i.questionId} insight={i} testId={testId} />
         ))}
         {filtered.length === 0 && (
           <div className="p-8 text-slate-600 border border-slate-200 rounded-xl bg-white/70">No questions match the current filters.</div>

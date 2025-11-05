@@ -6,6 +6,7 @@ import { Icon } from '@iconify/react'
 import { getStudentActivityFeed, getMockTestLeaderboardData } from '@/lib/actions/studentAnalyticsActions'
 import type { ActivityLogEntry, ActivityFeedResponse, ActivityType } from '@/lib/types/analytics'
 import { DetailedSessionModal } from './DetailedSessionModal'
+import ViolationDetailsModal from '@/components/ViolationDetailsModal'
 import { ActivityFeedSkeleton } from './ActivityFeedSkeleton'
 import { ActivityEmptyState } from './ActivityEmptyState'
 import { ActivityFilters } from './ActivityFilters'
@@ -14,7 +15,16 @@ import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { formatTimestamp, formatDateHeader } from '@/lib/utils/activity-utils'
+import { formatTimestamp } from '@/lib/utils/activity-utils'
+import { formatSecondsToHumanReadable } from '@/lib/utils/formatTime'
+import { parseISO, isValid, format, startOfDay, isToday, isYesterday, differenceInCalendarDays } from 'date-fns'
+
+interface EnrichedTestHistoryEntry {
+  resultId: number
+  isProctored: boolean
+  violationCount: number
+  testName?: string
+}
 
 interface LeaderboardData {
   rank: number | null
@@ -22,20 +32,53 @@ interface LeaderboardData {
   totalParticipants: number
 }
 
-interface ActivityFeedProps {
-  userId: string
-  initialData: ActivityFeedResponse
+// Ground Truth: Store the full Date object from the first activity in each group
+interface GroupedActivity {
+  date: Date // This is the "Ground Truth" - a full Date object with correct timezone context
+  activities: ActivityLogEntry[]
 }
 
-export function ActivityFeed({ userId, initialData }: ActivityFeedProps) {
+export interface ActivityFeed_V2_Props {
+  userId: string
+  initialData: ActivityFeedResponse
+  enrichedHistory?: EnrichedTestHistoryEntry[] // Optional enriched history for mock tests
+}
+
+export function ActivityFeed_V2(props: ActivityFeed_V2_Props) {
+  const { userId, initialData, enrichedHistory } = props
   const [activities, setActivities] = useState<ActivityLogEntry[]>(initialData.entries)
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(initialData.current_page < initialData.total_pages)
   const [loading, setLoading] = useState(false)
   const [selectedResultId, setSelectedResultId] = useState<number | null>(null)
+  const [selectedViolationResultId, setSelectedViolationResultId] = useState<number | null>(null)
+  const [selectedTestName, setSelectedTestName] = useState<string>('')
   const [selectedFilter, setSelectedFilter] = useState<'all' | ActivityType>('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [leaderboardData, setLeaderboardData] = useState<Map<number, LeaderboardData>>(new Map())
+
+  // Create lookup map for enriched history data (mock tests)
+  // Maps resultId -> { isProctored, violationCount, testName }
+  // SINGLE SOURCE OF TRUTH: Derived exclusively from server-provided enrichedHistory prop
+  const enrichedHistoryMap = useMemo(() => {
+    // Ensure the prop exists before creating the map
+    if (!enrichedHistory) {
+      return new Map()
+    }
+    
+    const map = new Map<number, { isProctored: boolean; violationCount: number; testName: string }>()
+    enrichedHistory.forEach(entry => {
+      // Check for a valid resultId to use as the key
+      if (entry.resultId) {
+        map.set(entry.resultId, {
+          isProctored: entry.isProctored,
+          violationCount: entry.violationCount,
+          testName: entry.testName || 'Mock Test'
+        })
+      }
+    })
+    return map
+  }, [enrichedHistory]) // This dependency array is key. It only runs when the prop changes.
 
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return
@@ -87,51 +130,104 @@ export function ActivityFeed({ userId, initialData }: ActivityFeedProps) {
 
   // Format activity display
   const formatActivity = (activity: ActivityLogEntry) => {
-    const timestamp = new Date(activity.created_at)
-    const timeStr = formatTimestamp(activity.created_at)
+    // Defensive date parsing - handle invalid dates gracefully
+    let timestamp: Date
+    let timeStr: string
+    try {
+      timestamp = new Date(activity.created_at)
+      if (isNaN(timestamp.getTime())) {
+        console.warn('⚠️ ActivityFeed: Invalid date for activity:', activity.id, activity.created_at)
+        timestamp = new Date() // Fallback to current date
+        timeStr = 'Date not available'
+      } else {
+        timeStr = formatTimestamp(activity.created_at)
+      }
+    } catch (error) {
+      console.error('❌ ActivityFeed: Error parsing date:', error, activity)
+      timestamp = new Date()
+      timeStr = 'Date not available'
+    }
     
     switch (activity.activity_type) {
       case 'PRACTICE_SESSION_COMPLETED':
         const meta = activity.metadata as any
         const practiceResultId = activity.related_entity_id
         
+        // Handle orphan records: if related_entity_id is null, the test_result was deleted
         if (!practiceResultId) {
-          console.warn('⚠️ ActivityFeed: PRACTICE_SESSION_COMPLETED missing related_entity_id', {
-            activity_id: activity.id,
-            metadata: meta
-          })
+          // This is an orphan record - the test_result was deleted
+          // Format as a "Deleted Test" card with limited information from metadata
+          const fullDate = (() => {
+            try {
+              const date = new Date(activity.created_at)
+              if (isNaN(date.getTime())) {
+                return 'Date not available'
+              }
+              return date.toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })
+            } catch {
+              return 'Date not available'
+            }
+          })()
+          
+          const totalQuestions = (meta.total_correct || 0) + (meta.total_incorrect || 0) + (meta.total_skipped || 0)
+          const attempted = totalQuestions - (meta.total_skipped || 0)
+          
+          return {
+            type: 'Practice Session (Deleted)',
+            icon: 'mdi:file-document-outline',
+            iconColor: 'text-gray-400',
+            iconBg: 'bg-gray-50',
+            title: meta.test_name || 'Practice Session (Deleted)',
+            subtitle: `${totalQuestions} questions`,
+            timestamp: timeStr,
+            stats: {
+              correct: meta.total_correct || 0,
+              incorrect: meta.total_incorrect || 0,
+              skipped: meta.total_skipped || 0,
+              total: totalQuestions,
+              attempted: attempted,
+              timeSeconds: meta.total_time_taken_seconds || 0,
+              formattedDuration: formatSecondsToHumanReadable(meta.total_time_taken_seconds || 0),
+              dateTime: fullDate,
+              isDeleted: true // Flag to indicate this is a deleted test
+            },
+            action: null, // Disable "View Details" for deleted tests
+            resultId: null
+          }
         }
         
         const totalQuestions = (meta.total_correct || 0) + (meta.total_incorrect || 0) + (meta.total_skipped || 0)
         const attempted = totalQuestions - (meta.total_skipped || 0)
         const timeInSeconds = meta.total_time_taken_seconds || 0
-        const timeInMinutes = timeInSeconds ? Math.floor(timeInSeconds / 60) : 0
-        const timeInHours = timeInMinutes ? Math.floor(timeInMinutes / 60) : 0
         
-        // Format date and time
-        const fullDate = new Date(activity.created_at).toLocaleString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        })
-        
-        // Format duration properly
-        let formattedDuration = ''
-        if (timeInSeconds > 0) {
-          const hours = Math.floor(timeInSeconds / 3600)
-          const minutes = Math.floor((timeInSeconds % 3600) / 60)
-          const seconds = timeInSeconds % 60
-          
-          if (hours > 0) {
-            formattedDuration = `${hours}h ${minutes}m ${seconds}s`
-          } else if (minutes > 0) {
-            formattedDuration = `${minutes}m ${seconds}s`
+        // Format date and time with defensive parsing
+        let fullDate: string
+        try {
+          const date = new Date(activity.created_at)
+          if (isNaN(date.getTime())) {
+            fullDate = 'Date not available'
           } else {
-            formattedDuration = `${seconds}s`
+            fullDate = date.toLocaleString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })
           }
+        } catch (error) {
+          console.error('❌ ActivityFeed: Error formatting practice session date:', error)
+          fullDate = 'Date not available'
         }
+        
+        // Format duration using clear, human-readable format (e.g., "1m 30s" or "90s")
+        const formattedDuration = formatSecondsToHumanReadable(timeInSeconds)
         
         return {
           type: 'Practice Session',
@@ -159,44 +255,90 @@ export function ActivityFeed({ userId, initialData }: ActivityFeedProps) {
         const mockMeta = activity.metadata as any
         const mockResultId = activity.related_entity_id
         
+        // Handle orphan records: if related_entity_id is null, the test_result was deleted
         if (!mockResultId) {
-          console.warn('⚠️ ActivityFeed: MOCK_TEST_COMPLETED missing related_entity_id', {
-            activity_id: activity.id,
-            metadata: mockMeta
-          })
+          // This is an orphan record - the test_result was deleted
+          // Format as a "Deleted Test" card with limited information from metadata
+          const testDate = (() => {
+            try {
+              const date = new Date(activity.created_at)
+              if (isNaN(date.getTime())) {
+                return 'Date not available'
+              }
+              return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+              })
+            } catch {
+              return 'Date not available'
+            }
+          })()
+          
+          return {
+            type: 'Mock Test (Deleted)',
+            icon: 'mdi:school-outline',
+            iconColor: 'text-gray-400',
+            iconBg: 'bg-gray-50',
+            title: mockMeta.test_name || 'Mock Test (Deleted)',
+            subtitle: 'Original test data has been deleted',
+            timestamp: timeStr,
+            stats: {
+              correct: mockMeta.total_correct || 0,
+              incorrect: mockMeta.total_incorrect || 0,
+              skipped: mockMeta.total_skipped || 0,
+              total: (mockMeta.total_correct || 0) + (mockMeta.total_incorrect || 0) + (mockMeta.total_skipped || 0),
+              attempted: ((mockMeta.total_correct || 0) + (mockMeta.total_incorrect || 0)),
+              timeSeconds: mockMeta.total_time_taken_seconds || 0,
+              formattedDuration: formatSecondsToHumanReadable(mockMeta.total_time_taken_seconds || 0),
+              scorePercentage: mockMeta.score_percentage || 0,
+              finalScore: mockMeta.total_correct || 0,
+              totalMarks: (mockMeta.total_correct || 0) + (mockMeta.total_incorrect || 0) + (mockMeta.total_skipped || 0),
+              dateTime: testDate,
+              percentile: null,
+              rank: null,
+              totalParticipants: null,
+              isDeleted: true // Flag to indicate this is a deleted test
+            },
+            action: null, // Disable "View Details" for deleted tests
+            resultId: null
+          }
         }
+        
+        // Get enriched history data for this mock test (if available)
+        const enrichedData = mockResultId ? enrichedHistoryMap.get(Number(mockResultId)) : null
         
         const totalMockQuestions = (mockMeta.total_correct || 0) + (mockMeta.total_incorrect || 0) + (mockMeta.total_skipped || 0)
         const attemptedMock = totalMockQuestions - (mockMeta.total_skipped || 0)
         const timeInSecondsMock = mockMeta.total_time_taken_seconds || 0
         
-        // Format duration for mock test
-        let formattedDurationMock = ''
-        if (timeInSecondsMock > 0) {
-          const hours = Math.floor(timeInSecondsMock / 3600)
-          const minutes = Math.floor((timeInSecondsMock % 3600) / 60)
-          const seconds = timeInSecondsMock % 60
-          
-          if (hours > 0) {
-            formattedDurationMock = `${hours}h ${minutes}m`
-          } else if (minutes > 0) {
-            formattedDurationMock = `${minutes}m ${seconds}s`
-          } else {
-            formattedDurationMock = `${seconds}s`
-          }
-        }
+        // Format duration using clear, human-readable format (e.g., "1m 30s" or "90s")
+        const formattedDurationMock = formatSecondsToHumanReadable(timeInSecondsMock)
         
-        // Format date
-        const testDate = new Date(activity.created_at).toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric'
-        })
+        // Format date with defensive parsing
+        let testDate: string
+        try {
+          const date = new Date(activity.created_at)
+          if (isNaN(date.getTime())) {
+            testDate = 'Date not available'
+          } else {
+            testDate = date.toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric'
+            })
+          }
+        } catch (error) {
+          console.error('❌ ActivityFeed: Error formatting mock test date:', error)
+          testDate = 'Date not available'
+        }
         
         // Get leaderboard data if available
         const finalScore = mockMeta.total_correct || 0
         const totalMarks = totalMockQuestions // Assuming 1 mark per question
         const lbData = mockResultId ? leaderboardData.get(Number(mockResultId)) : null
+        
+        // enrichedData is already retrieved above from enrichedHistoryMap
         
         return {
           type: 'Mock Test',
@@ -220,7 +362,9 @@ export function ActivityFeed({ userId, initialData }: ActivityFeedProps) {
             dateTime: testDate,
             percentile: lbData?.percentile ?? null,
             rank: lbData?.rank ?? null,
-            totalParticipants: lbData?.totalParticipants ?? null
+            totalParticipants: lbData?.totalParticipants ?? null,
+            isProctored: enrichedData?.isProctored ?? false,
+            violationCount: enrichedData?.violationCount ?? 0
           },
           action: 'View Details',
           resultId: mockResultId
@@ -350,21 +494,31 @@ export function ActivityFeed({ userId, initialData }: ActivityFeedProps) {
     return filtered
   }, [activities, selectedFilter, searchTerm])
 
-  // Group activities by date
-  const groupedActivities = useMemo(() => 
-    filteredActivities.reduce((acc, activity) => {
-      try {
-        const date = new Date(activity.created_at).toLocaleDateString()
-        if (!acc[date]) {
-          acc[date] = []
+  // Group activities by date - Ground Truth approach: store the full Date object
+  const groupedActivities = useMemo(() => {
+    return filteredActivities.reduce((acc, activity) => {
+      if (!activity.created_at) return acc
+      
+      // Parse the full ISO string, which correctly creates a local Date object
+      const parsedDate = parseISO(activity.created_at)
+      if (!isValid(parsedDate)) return acc
+
+      // The key is only for grouping, not for display logic later
+      const dateKey = format(startOfDay(parsedDate), 'yyyy-MM-dd')
+      
+      if (!acc[dateKey]) {
+        // When a new group is created, we store the first valid Date object.
+        // This object retains the correct local time context (Ground Truth).
+        acc[dateKey] = {
+          date: startOfDay(parsedDate), // Store the normalized date as Ground Truth
+          activities: []
         }
-        acc[date].push(activity)
-      } catch (error) {
-        console.error('❌ ActivityFeed: Error grouping activity:', activity.id, error)
       }
+
+      acc[dateKey].activities.push(activity)
       return acc
-    }, {} as Record<string, ActivityLogEntry[]>)
-  , [filteredActivities])
+    }, {} as Record<string, GroupedActivity>)
+  }, [filteredActivities])
 
   const handleActivityClick = useCallback((formatted: ReturnType<typeof formatActivity>) => {
     console.log('🔍 ActivityFeed: Activity clicked:', {
@@ -444,9 +598,9 @@ export function ActivityFeed({ userId, initialData }: ActivityFeedProps) {
         )}
       </AnimatePresence>
 
-      {Object.keys(groupedActivities).map((date, dateIndex) => (
+      {Object.entries(groupedActivities).map(([dateKey, groupData], dateIndex) => (
         <motion.div 
-          key={date} 
+          key={dateKey} 
           className="relative"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -461,19 +615,45 @@ export function ActivityFeed({ userId, initialData }: ActivityFeedProps) {
               
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-medium text-gray-700">
-                  {date === new Date().toLocaleDateString() ? 'Today' : formatDateHeader(date)}
+                  {(() => {
+                    // Use the Ground Truth Date object directly - no parsing needed!
+                    const headerDate = groupData.date
+                    
+                    // Check if it's today or yesterday
+                    if (isToday(headerDate)) {
+                      return 'Today'
+                    }
+                    
+                    if (isYesterday(headerDate)) {
+                      return 'Yesterday'
+                    }
+                    
+                    // Calculate days difference for relative dates (2-5 days ago)
+                    const now = new Date()
+                    const differenceInDays = differenceInCalendarDays(now, headerDate)
+                    
+                    if (differenceInDays > 1 && differenceInDays <= 5) {
+                      return `${differenceInDays} days ago`
+                    }
+                    
+                    // Format for dates older than 5 days
+                    return format(headerDate, headerDate.getFullYear() !== now.getFullYear() 
+                      ? 'MMMM d, yyyy' 
+                      : 'MMMM d'
+                    )
+                  })()}
                 </h3>
               </div>
               
               <span className="text-xs text-gray-400">
-                {groupedActivities[date].length}
+                {groupData.activities.length}
               </span>
             </div>
           </div>
           
           {/* Timeline Container */}
           <div className="relative ml-6 border-l border-gray-100 pl-2">
-            {groupedActivities[date].map((activity, index) => {
+            {groupData.activities.map((activity, index) => {
               const formatted = formatActivity(activity)
               
               return (
@@ -502,10 +682,16 @@ export function ActivityFeed({ userId, initialData }: ActivityFeedProps) {
                     id={`activity-${activity.id}`}
                     className={cn(
                       "bg-white rounded-lg p-3.5 shadow-sm",
-                      "hover:shadow-md transition-shadow duration-150 cursor-pointer",
-                      formatted.resultId && "hover:bg-gray-50/50"
+                      "transition-shadow duration-150",
+                      formatted.resultId && !(formatted.stats as any)?.isDeleted
+                        ? "hover:shadow-md cursor-pointer hover:bg-gray-50/50"
+                        : "cursor-default"
                     )}
-                    onClick={() => formatted.resultId && handleActivityClick(formatted)}
+                    onClick={() => {
+                      if (formatted.resultId && !(formatted.stats as any)?.isDeleted) {
+                        handleActivityClick(formatted)
+                      }
+                    }}
                   >
                     <div className="flex items-start gap-3">
                       {/* Icon */}
@@ -519,29 +705,74 @@ export function ActivityFeed({ userId, initialData }: ActivityFeedProps) {
                       </div>
                       
                       {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
                           <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-semibold text-gray-900 leading-snug">
-                              {formatted.title}
-                            </h4>
-                            {formatted.subtitle && (
-                              <p className="text-xs text-gray-500 mt-0.5">{formatted.subtitle}</p>
-                            )}
-                          </div>
-                          {formatted.action && formatted.resultId && (
-                            <button
-                              className="flex items-center text-xs text-blue-600 hover:text-blue-700 transition-colors"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleActivityClick(formatted)
-                              }}
-                            >
-                              View
-                              <Icon icon="mdi:chevron-right" className="h-3 w-3 ml-0.5" />
-                            </button>
-                          )}
-                        </div>
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h4 className={cn(
+                                    "text-sm font-semibold leading-snug",
+                                    (formatted.stats as any)?.isDeleted 
+                                      ? "text-gray-500 line-through" 
+                                      : "text-gray-900"
+                                  )}>
+                                    {formatted.title}
+                                  </h4>
+                                  {(formatted.stats as any)?.isDeleted && (
+                                    <Badge variant="outline" className="text-xs border-gray-300 text-gray-500">
+                                      Deleted
+                                    </Badge>
+                                  )}
+                                  {/* Show violation flag only if test is proctored */}
+                                  {formatted.type === 'Mock Test' && (formatted.stats as any)?.isProctored && formatted.resultId && (
+                                    <div className="flex items-center gap-1.5">
+                                      {(formatted.stats as any)?.violationCount > 0 ? (
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            setSelectedViolationResultId(formatted.resultId)
+                                            setSelectedTestName(formatted.title)
+                                          }}
+                                          className="flex items-center gap-1 text-xs text-red-600 hover:text-red-700 font-semibold transition-colors"
+                                          title={`${(formatted.stats as any)?.violationCount} violation${(formatted.stats as any)?.violationCount !== 1 ? 's' : ''} detected - Click to view details`}
+                                        >
+                                          <Icon icon="mdi:flag" className="h-4 w-4" />
+                                          <span>{(formatted.stats as any)?.violationCount}</span>
+                                        </button>
+                                      ) : (
+                                        <span
+                                          title="Proctored: No violations recorded"
+                                          className="text-gray-400"
+                                        >
+                                          <Icon icon="mdi:flag-outline" className="h-4 w-4" />
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                                {formatted.subtitle && (
+                                  <p className={cn(
+                                    "text-xs mt-0.5",
+                                    (formatted.stats as any)?.isDeleted 
+                                      ? "text-gray-400" 
+                                      : "text-gray-500"
+                                  )}>
+                                    {formatted.subtitle}
+                                  </p>
+                                )}
+                              </div>
+                              {formatted.action && formatted.resultId && !(formatted.stats as any)?.isDeleted && (
+                                <button
+                                  className="flex items-center text-xs text-blue-600 hover:text-blue-700 transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleActivityClick(formatted)
+                                  }}
+                                >
+                                  View
+                                  <Icon icon="mdi:chevron-right" className="h-3 w-3 ml-0.5" />
+                                </button>
+                              )}
+                            </div>
                         
                         {/* Information-Dense Cards */}
                         {formatted.stats && (
@@ -648,9 +879,34 @@ export function ActivityFeed({ userId, initialData }: ActivityFeedProps) {
                                     </div>
                                   )}
                                   {formatted.stats.dateTime && (
-                                    <div className="flex items-center gap-1 ml-auto text-gray-500">
+                                    <div className="flex items-center gap-1 text-gray-500">
                                       <Icon icon="mdi:calendar-outline" className="h-3 w-3" />
                                       <span>{formatted.stats.dateTime}</span>
+                                    </div>
+                                  )}
+                                  {/* Violation Flag for Mock Tests - Only show if proctored */}
+                                  {formatted.type === 'Mock Test' && (formatted.stats as any)?.isProctored && formatted.resultId && (
+                                    <div className="flex items-center gap-1.5 ml-auto">
+                                      {(formatted.stats as any)?.violationCount > 0 ? (
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            setSelectedViolationResultId(Number(formatted.resultId))
+                                          }}
+                                          className="flex items-center gap-1 text-xs text-red-600 hover:text-red-700 font-semibold transition-colors"
+                                          title={`${(formatted.stats as any)?.violationCount} violation${(formatted.stats as any)?.violationCount !== 1 ? 's' : ''} detected - Click to view details`}
+                                        >
+                                          <Icon icon="mdi:flag" className="h-4 w-4" />
+                                          <span>{(formatted.stats as any)?.violationCount}</span>
+                                        </button>
+                                      ) : (
+                                        <span
+                                          title="Proctored: No violations recorded"
+                                          className="text-gray-400"
+                                        >
+                                          <Icon icon="mdi:flag-outline" className="h-4 w-4" />
+                                        </span>
+                                      )}
                                     </div>
                                   )}
                                 </div>
@@ -715,7 +971,23 @@ export function ActivityFeed({ userId, initialData }: ActivityFeedProps) {
           />
         )}
       </AnimatePresence>
+
+      {/* Violation Details Modal */}
+      {selectedViolationResultId && (
+        <ViolationDetailsModal
+          testResultId={selectedViolationResultId}
+          isOpen={!!selectedViolationResultId}
+          onClose={() => {
+            setSelectedViolationResultId(null)
+            setSelectedTestName('')
+          }}
+          testName={selectedTestName}
+        />
+      )}
     </motion.div>
   )
 }
 
+// Export as ActivityFeed for backward compatibility
+export { ActivityFeed_V2 as ActivityFeed }
+export type { ActivityFeed_V2_Props as ActivityFeedProps }

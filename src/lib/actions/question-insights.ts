@@ -64,6 +64,8 @@ export async function getQuestionInsightData(testId: number): Promise<QuestionIn
   }
 
   // 3) Fetch test questions joined with questions metadata
+  // Note: We don't order in the query since created_at may not exist in all databases
+  // Instead, we'll sort by question_id after fetching for consistent ordering
   const { data: tq, error: tqError } = await supabase
     .from('test_questions')
     .select(`
@@ -93,9 +95,18 @@ export async function getQuestionInsightData(testId: number): Promise<QuestionIn
     qidToLogs.get(qid)!.push(log)
   }
 
+  // CRITICAL FIX: Sort test questions by question_id for consistent ordering
+  // This ensures sequential numbering is consistent across page loads
+  const sortedTestQuestions = (tq || []).sort((a, b) => {
+    const aQid = Number((a as any).questions?.id || (a as any).question_id || 0)
+    const bQid = Number((b as any).questions?.id || (b as any).question_id || 0)
+    return aQid - bQid
+  })
+
   const insights: QuestionInsight[] = []
 
-  for (const row of tq || []) {
+  // CRITICAL FIX: Use forEach with index to calculate sequential question numbers
+  sortedTestQuestions.forEach((row, index) => {
     const q = (row as any).questions
     const qid = Number(q?.id)
     const logs = qidToLogs.get(qid) || []
@@ -132,7 +143,7 @@ export async function getQuestionInsightData(testId: number): Promise<QuestionIn
 
     insights.push({
       questionId: qid,
-      questionNumber: (q?.question_number_in_book as number | null) ?? null,
+      questionNumber: index + 1, // CRITICAL FIX: Use sequential position (1, 2, 3...) instead of question_number_in_book
       questionText: (q?.question_text as string) || '',
       options: (q?.options as Record<string, string> | null) ?? null,
       correctOption: (q?.correct_option as string | null) ?? null,
@@ -148,7 +159,7 @@ export async function getQuestionInsightData(testId: number): Promise<QuestionIn
       realizedDifficulty: realized,
       feedback,
     })
-  }
+  })
 
   return insights
 }

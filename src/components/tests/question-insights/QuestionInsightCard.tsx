@@ -1,8 +1,11 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import type { QuestionInsight } from '@/lib/types/question-insights'
 import KatexRenderer from '@/components/ui/KatexRenderer'
+import { getQuestionStudentDetails } from '@/lib/actions/question-student-details'
+import type { QuestionStudentDetail } from '@/lib/actions/question-student-details'
+import QuestionDetailsModal from './QuestionDetailsModal'
 
 function formatMmSs(seconds: number | null): string {
   if (seconds == null) return '—'
@@ -11,9 +14,43 @@ function formatMmSs(seconds: number | null): string {
   return `${m}m ${s}s`
 }
 
-export default function QuestionInsightCard({ insight }: { insight: QuestionInsight }) {
+interface QuestionInsightCardProps {
+  insight: QuestionInsight
+  testId: number
+}
+
+export default function QuestionInsightCard({ insight, testId }: QuestionInsightCardProps) {
   const { counts, times } = insight
   const totalAttempted = counts.correct + counts.incorrect
+
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [modalData, setModalData] = useState<QuestionStudentDetail[]>([])
+  const [modalCategory, setModalCategory] = useState<'Correct' | 'Incorrect' | 'Skipped'>('Correct')
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleStatClick = async (category: 'Correct' | 'Incorrect' | 'Skipped') => {
+    setIsLoading(true)
+    try {
+      const allStudentDetails = await getQuestionStudentDetails(testId, insight.questionId)
+      const filteredData = allStudentDetails.filter(student => {
+        if (category === 'Correct') return student.status === 'correct'
+        if (category === 'Incorrect') return student.status === 'incorrect'
+        if (category === 'Skipped') return student.status === 'skipped'
+        return false
+      })
+      setModalData(filteredData)
+      setModalCategory(category)
+      setIsModalOpen(true)
+    } catch (error) {
+      console.error('Error fetching student details:', error)
+      setModalData([])
+      setModalCategory(category)
+      setIsModalOpen(true)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <div className="p-5 rounded-xl border border-slate-200 bg-white/70 backdrop-blur-sm shadow-sm space-y-4">
@@ -53,11 +90,41 @@ export default function QuestionInsightCard({ insight }: { insight: QuestionInsi
         <span className="ml-auto px-2.5 py-1 text-xs rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">{insight.realizedDifficulty}</span>
       </div>
 
-      {/* Attempt breakdown */}
+      {/* Attempt breakdown - Clickable */}
       <div className="flex flex-wrap gap-4 text-sm text-slate-700">
-        <div>✔ Correct: <span className="font-semibold text-green-700">{counts.correct}</span></div>
-        <div>✖ Incorrect: <span className="font-semibold text-red-700">{counts.incorrect}</span></div>
-        <div>⟳ Skipped: <span className="font-semibold text-slate-700">{counts.skipped}</span></div>
+        <button
+          onClick={() => handleStatClick('Correct')}
+          disabled={isLoading || counts.correct === 0}
+          className={`flex items-center gap-1 transition-colors ${
+            counts.correct === 0
+              ? 'text-slate-400 cursor-not-allowed'
+              : 'text-slate-700 hover:text-green-700 cursor-pointer hover:underline'
+          }`}
+        >
+          ✔ Correct: <span className="font-semibold text-green-700">{counts.correct}</span>
+        </button>
+        <button
+          onClick={() => handleStatClick('Incorrect')}
+          disabled={isLoading || counts.incorrect === 0}
+          className={`flex items-center gap-1 transition-colors ${
+            counts.incorrect === 0
+              ? 'text-slate-400 cursor-not-allowed'
+              : 'text-slate-700 hover:text-red-700 cursor-pointer hover:underline'
+          }`}
+        >
+          ✖ Incorrect: <span className="font-semibold text-red-700">{counts.incorrect}</span>
+        </button>
+        <button
+          onClick={() => handleStatClick('Skipped')}
+          disabled={isLoading || counts.skipped === 0}
+          className={`flex items-center gap-1 transition-colors ${
+            counts.skipped === 0
+              ? 'text-slate-400 cursor-not-allowed'
+              : 'text-slate-700 hover:text-slate-900 cursor-pointer hover:underline'
+          }`}
+        >
+          ⟳ Skipped: <span className="font-semibold text-slate-700">{counts.skipped}</span>
+        </button>
       </div>
 
       {/* Time analysis */}
@@ -85,6 +152,16 @@ export default function QuestionInsightCard({ insight }: { insight: QuestionInsi
       <div className="text-sm text-slate-700">
         {insight.feedback}
       </div>
+
+      {/* Modal */}
+      <QuestionDetailsModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        questionText={insight.questionText}
+        questionNumber={insight.questionNumber}
+        category={modalCategory}
+        studentData={modalData}
+      />
     </div>
   )
 }
