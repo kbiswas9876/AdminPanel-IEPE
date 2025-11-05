@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { Search, ChevronDown } from 'lucide-react'
 
 interface FiltersPanelProps {
   search: string
@@ -24,60 +25,135 @@ export default function FiltersPanel(props: FiltersPanelProps) {
     sortBy, onSortBy, onQuickView,
   } = props
 
+  const sortOptions = [
+    { value: 'QuestionNumber', label: 'Question Number' },
+    { value: 'MostCorrect', label: 'Most Correct' },
+    { value: 'MostIncorrect', label: 'Most Incorrect' },
+    { value: 'SlowestAverage', label: 'Slowest Average' },
+    { value: 'FastestBest', label: 'Fastest Best' },
+  ]
+
   return (
-    <div className="space-y-4 p-4 rounded-xl border border-slate-200 bg-white/70 backdrop-blur-sm">
-      <input
-        value={search}
-        onChange={(e) => onSearch(e.target.value)}
-        placeholder="Search question text..."
-        className="w-full px-3 py-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400"
-      />
+    <div className="w-80 bg-white border-r border-slate-200 p-6 overflow-y-auto">
+      {/* Search */}
+      <div className="mb-8">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => onSearch(e.target.value)}
+            placeholder="Search question text..."
+            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+          />
+        </div>
+      </div>
 
-      <div className="space-y-2">
-        <div className="text-xs font-semibold text-slate-500">Topics</div>
-        <div className="flex flex-wrap gap-2">
-          {topics.map(t => (
-            <button
-              key={t}
-              onClick={() => onToggleTopic(t)}
-              className={`px-2 py-1 rounded-full text-xs border ${selectedTopics.includes(t) ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-700 border-slate-300'}`}
-            >{t}</button>
+      {/* Topics */}
+      <div className="mb-8">
+        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Topics</h3>
+        <div className="space-y-2">
+          {topics.map((topic) => (
+            <label key={topic} className="flex items-center group cursor-pointer">
+              <div className="relative flex items-center">
+                <input
+                  type="checkbox"
+                  checked={selectedTopics.includes(topic)}
+                  onChange={() => onToggleTopic(topic)}
+                  className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0 transition-all"
+                />
+              </div>
+              <span className="ml-3 text-sm text-slate-700 group-hover:text-slate-900 transition-colors">
+                {topic}
+              </span>
+            </label>
           ))}
         </div>
       </div>
 
-      <div className="space-y-2">
-        <div className="text-xs font-semibold text-slate-500">Difficulties</div>
-        <div className="flex flex-wrap gap-2">
-          {difficulties.map(d => (
+      {/* Difficulties */}
+      <div className="mb-8">
+        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Difficulty</h3>
+        <div className="space-y-2">
+          {difficulties.map((difficulty) => (
             <button
-              key={d}
-              onClick={() => onToggleDifficulty(d)}
-              className={`px-2 py-1 rounded-full text-xs border ${selectedDifficulties.includes(d) ? 'bg-blue-700 text-white border-blue-700' : 'bg-white text-slate-700 border-slate-300'}`}
-            >{d}</button>
+              key={difficulty}
+              onClick={() => {
+                if (selectedDifficulties.includes(difficulty)) {
+                  onToggleDifficulty(difficulty)
+                } else {
+                  // Select only this difficulty
+                  selectedDifficulties.forEach(d => {
+                    if (d !== difficulty) onToggleDifficulty(d)
+                  })
+                  if (!selectedDifficulties.includes(difficulty)) {
+                    onToggleDifficulty(difficulty)
+                  }
+                }
+              }}
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${
+                selectedDifficulties.includes(difficulty)
+                  ? 'bg-indigo-50 text-indigo-700 font-medium'
+                  : 'text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              {difficulty}
+            </button>
           ))}
         </div>
       </div>
 
-      <div className="space-y-2">
-        <div className="text-xs font-semibold text-slate-500">Sort By</div>
-        <select
-          value={sortBy}
-          onChange={(e) => onSortBy(e.target.value)}
-          className="w-full px-3 py-2 rounded-md border border-slate-300 bg-white"
-        >
-          <option value="QuestionNumber">Question Number</option>
-          <option value="MostCorrect">Most Correct</option>
-          <option value="MostIncorrect">Most Incorrect</option>
-          <option value="SlowestAverage">Slowest Average</option>
-          <option value="FastestBest">Fastest Best</option>
-        </select>
+      {/* Sort By */}
+      <div>
+        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Sort By</h3>
+        <div className="relative">
+          <select
+            value={sortBy}
+            onChange={(e) => onSortBy(e.target.value)}
+            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none cursor-pointer transition-all"
+          >
+            {sortOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
+        </div>
       </div>
 
-      <div className="flex gap-2">
-        <button onClick={() => onQuickView('all')} className="px-3 py-1.5 text-xs rounded-md border border-slate-300">All</button>
-        <button onClick={() => onQuickView('problematic')} className="px-3 py-1.5 text-xs rounded-md border border-amber-300 bg-amber-50 text-amber-800">Problematic</button>
-        <button onClick={() => onQuickView('easiest')} className="px-3 py-1.5 text-xs rounded-md border border-green-300 bg-green-50 text-green-800">Easiest</button>
+      {/* Filter Tags */}
+      <div className="mt-8 pt-6 border-t border-slate-200">
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => onQuickView('all')}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              sortBy === 'QuestionNumber' && selectedTopics.length === 0 && selectedDifficulties.length === 0
+                ? 'bg-indigo-600 text-white'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => onQuickView('problematic')}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              sortBy === 'MostIncorrect'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            Problematic
+          </button>
+          <button
+            onClick={() => onQuickView('easiest')}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              sortBy === 'MostCorrect'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            Easiest
+          </button>
+        </div>
       </div>
     </div>
   )

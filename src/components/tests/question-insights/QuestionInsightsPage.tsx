@@ -1,10 +1,12 @@
 'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { getQuestionInsightData } from '@/lib/actions/question-insights'
 import type { QuestionInsight } from '@/lib/types/question-insights'
 import FiltersPanel from './FiltersPanel'
 import QuestionInsightCard from './QuestionInsightCard'
+import QuestionInsightCardSkeleton from './QuestionInsightCardSkeleton'
 
 export default function QuestionInsightsPage({ testId }: { testId: number }) {
   const [loading, setLoading] = useState(true)
@@ -83,36 +85,68 @@ export default function QuestionInsightsPage({ testId }: { testId: number }) {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="p-8 text-slate-600">Loading question insights...</div>
-    )
-  }
-
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-      <div className="lg:col-span-1">
-        <FiltersPanel
-          search={search}
-          onSearch={setSearch}
-          topics={topics}
-          selectedTopics={selectedTopics}
-          onToggleTopic={toggleTopic}
-          difficulties={difficulties}
-          selectedDifficulties={selectedDiffs}
-          onToggleDifficulty={toggleDiff}
-          sortBy={sortBy}
-          onSortBy={setSortBy}
-          onQuickView={quickView}
-        />
-      </div>
-      <div className="lg:col-span-4 space-y-4">
-        {filtered.map(i => (
-          <QuestionInsightCard key={i.questionId} insight={i} testId={testId} />
-        ))}
-        {filtered.length === 0 && (
-          <div className="p-8 text-slate-600 border border-slate-200 rounded-xl bg-white/70">No questions match the current filters.</div>
-        )}
+    <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <FiltersPanel
+        search={search}
+        onSearch={setSearch}
+        topics={topics}
+        selectedTopics={selectedTopics}
+        onToggleTopic={toggleTopic}
+        difficulties={difficulties}
+        selectedDifficulties={selectedDiffs}
+        onToggleDifficulty={toggleDiff}
+        sortBy={sortBy}
+        onSortBy={setSortBy}
+        onQuickView={quickView}
+      />
+      <div className="flex-1 p-8">
+        <div className="max-w-5xl mx-auto space-y-6">
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-4"
+            >
+              {Array.from({ length: 3 }).map((_, i) => (
+                <QuestionInsightCardSkeleton key={i} />
+              ))}
+            </motion.div>
+          ) : filtered.length === 0 ? (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="p-12 text-center border border-slate-200 rounded-xl bg-white shadow-sm"
+            >
+              <p className="text-slate-600 font-medium">No questions match the current filters.</p>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="content"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6"
+            >
+              {filtered.map((i, index) => (
+                <QuestionInsightCard
+                  key={i.questionId}
+                  insight={i}
+                  testId={testId}
+                  index={index}
+                />
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+        </div>
       </div>
     </div>
   )

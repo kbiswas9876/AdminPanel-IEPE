@@ -45,17 +45,14 @@ export function TestReportDashboard({ test, stats, rankings }: TestReportDashboa
               </Link>
               <div className="h-8 w-px bg-slate-200" />
               <div>
-                <h1 className="text-2xl font-bold text-slate-900">{test.name}</h1>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl font-bold text-slate-900">{test.name}</h1>
+                  <div className={`h-2 w-2 rounded-full ${test.status === 'live' ? 'bg-green-500' : 'bg-blue-500'}`} />
+                </div>
                 <p className="text-sm text-slate-500 mt-0.5">
                   Test Report & Analytics
+                  {test.status === 'live' ? ' • Live' : ' • Completed'}
                 </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200">
-                <span className="text-xs font-medium text-blue-700">
-                  {test.status === 'live' ? '🟢 Live' : '✅ Completed'}
-                </span>
               </div>
             </div>
           </div>

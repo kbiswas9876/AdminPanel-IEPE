@@ -1,6 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
+import { motion } from 'framer-motion'
+import { CheckCircle2, XCircle, Clock, Target, TrendingUp, Award, Zap, Activity } from 'lucide-react'
 import type { QuestionInsight } from '@/lib/types/question-insights'
 import KatexRenderer from '@/components/ui/KatexRenderer'
 import { getQuestionStudentDetails } from '@/lib/actions/question-student-details'
@@ -17,9 +19,10 @@ function formatMmSs(seconds: number | null): string {
 interface QuestionInsightCardProps {
   insight: QuestionInsight
   testId: number
+  index?: number
 }
 
-export default function QuestionInsightCard({ insight, testId }: QuestionInsightCardProps) {
+export default function QuestionInsightCard({ insight, testId, index = 0 }: QuestionInsightCardProps) {
   const { counts, times } = insight
   const totalAttempted = counts.correct + counts.incorrect
 
@@ -52,105 +55,218 @@ export default function QuestionInsightCard({ insight, testId }: QuestionInsight
     }
   }
 
+  const getDifficultyColor = (difficulty: string) => {
+    const colors: Record<string, string> = {
+      'Easy': 'bg-green-50 text-green-700 border-green-200',
+      'Easy-Moderate': 'bg-lime-50 text-lime-700 border-lime-200',
+      'Moderate': 'bg-yellow-50 text-yellow-700 border-yellow-200',
+      'Moderate-Hard': 'bg-orange-50 text-orange-700 border-orange-200',
+      'Hard': 'bg-red-50 text-red-700 border-red-200',
+    }
+    return colors[difficulty] || 'bg-slate-50 text-slate-700 border-slate-200'
+  }
+
+  const getRealizedDifficultyColor = (difficulty: string) => {
+    const colors: Record<string, string> = {
+      'Easy': 'bg-green-500 text-white border-green-600',
+      'Easy-Moderate': 'bg-lime-500 text-white border-lime-600',
+      'Moderate': 'bg-yellow-500 text-white border-yellow-600',
+      'Moderate-Hard': 'bg-orange-500 text-white border-orange-600',
+      'Hard': 'bg-red-500 text-white border-red-600',
+    }
+    return colors[difficulty] || 'bg-slate-500 text-white border-slate-600'
+  }
+
   return (
-    <div className="p-5 rounded-xl border border-slate-200 bg-white/70 backdrop-blur-sm shadow-sm space-y-4">
-      {/* Question body */}
-      <div className="space-y-2">
-        <div className="text-xs text-slate-500">Q{insight.questionNumber ?? ''}</div>
-        <div className="prose prose-slate max-w-none">
-          <KatexRenderer content={insight.questionText} />
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: index * 0.05 }}
+      className="bg-white rounded-2xl shadow-md overflow-hidden"
+    >
+      {/* Card Header */}
+      <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-sm font-semibold text-indigo-600">Question {insight.questionNumber ?? '—'}</span>
+              {insight.topic && (
+                <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-full">
+                  {insight.topic}
+                </span>
+              )}
+              {insight.difficultyOriginal && (
+                <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${getDifficultyColor(insight.difficultyOriginal)}`}>
+                  {insight.difficultyOriginal}
+                </span>
+              )}
+            </div>
+            <div className="prose prose-slate max-w-none text-slate-900 text-base leading-relaxed min-h-[80px]">
+              <KatexRenderer content={insight.questionText} />
+            </div>
+          </div>
         </div>
+      </div>
+
+      {/* Answer Options */}
+      <div className="p-6">
         {insight.options && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
+          <div className="grid grid-cols-2 gap-3 mb-6">
             {Object.entries(insight.options).map(([key, val]) => {
               const isCorrect = insight.correctOption?.toLowerCase() === key.toLowerCase()
               return (
-                <div key={key} className={`px-3 py-2 rounded-lg border ${isCorrect ? 'border-green-300 bg-green-50' : 'border-slate-200 bg-white'}`}>
-                  <div className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                    <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md text-white text-xs ${isCorrect ? 'bg-green-600' : 'bg-slate-400'}`}>{key.toUpperCase()}</span>
-                    <span className="text-slate-800">
-                      <KatexRenderer content={val} />
-                    </span>
+                <div key={key} className="relative group">
+                  <div className={`flex items-center gap-3 rounded-xl p-4 transition-all ${
+                    isCorrect
+                      ? 'bg-emerald-50 shadow-sm'
+                      : 'bg-white shadow-sm hover:shadow-md cursor-pointer hover:scale-[1.01]'
+                  }`}>
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm ${
+                        isCorrect ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-800 border border-slate-300'
+                      }`}>
+                        {key.toUpperCase()}
+                      </div>
+                      <span className={`font-medium ${isCorrect ? 'text-slate-900' : 'text-slate-700'}`}>
+                        <KatexRenderer content={val} />
+                      </span>
+                    </div>
+                    {isCorrect && (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                    )}
                   </div>
                 </div>
               )
             })}
           </div>
         )}
-      </div>
 
-      {/* Chips and metrics */}
-      <div className="flex flex-wrap items-center gap-2">
-        {insight.topic && (
-          <span className="px-2.5 py-1 text-xs rounded-full bg-slate-100 text-slate-700 border border-slate-200">{insight.topic}</span>
-        )}
-        {insight.difficultyOriginal && (
-          <span className="px-2.5 py-1 text-xs rounded-full bg-blue-100 text-blue-700 border border-blue-200">{insight.difficultyOriginal}</span>
-        )}
-        <span className="ml-auto px-2.5 py-1 text-xs rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">{insight.realizedDifficulty}</span>
-      </div>
+        {/* Stats Row */}
+        <div className="flex items-center gap-4 mb-6 p-4 bg-slate-50 rounded-xl shadow-sm">
+          <motion.button
+            onClick={() => handleStatClick('Correct')}
+            disabled={isLoading || counts.correct === 0}
+            whileHover={counts.correct > 0 ? { scale: 1.02 } : {}}
+            whileTap={counts.correct > 0 ? { scale: 0.98 } : {}}
+            className={`flex items-center gap-2 flex-1 px-4 py-3 rounded-lg transition-all duration-200 ${
+              counts.correct === 0
+                ? 'opacity-50 cursor-not-allowed bg-white border border-slate-200'
+                : 'cursor-pointer bg-white border-2 border-emerald-200 hover:border-emerald-300 hover:bg-emerald-50 hover:shadow-md active:bg-emerald-100'
+            }`}
+          >
+            <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">Correct</p>
+              <p className="text-sm font-semibold text-slate-900">{counts.correct}</p>
+            </div>
+          </motion.button>
 
-      {/* Attempt breakdown - Clickable */}
-      <div className="flex flex-wrap gap-4 text-sm text-slate-700">
-        <button
-          onClick={() => handleStatClick('Correct')}
-          disabled={isLoading || counts.correct === 0}
-          className={`flex items-center gap-1 transition-colors ${
-            counts.correct === 0
-              ? 'text-slate-400 cursor-not-allowed'
-              : 'text-slate-700 hover:text-green-700 cursor-pointer hover:underline'
-          }`}
-        >
-          ✔ Correct: <span className="font-semibold text-green-700">{counts.correct}</span>
-        </button>
-        <button
-          onClick={() => handleStatClick('Incorrect')}
-          disabled={isLoading || counts.incorrect === 0}
-          className={`flex items-center gap-1 transition-colors ${
-            counts.incorrect === 0
-              ? 'text-slate-400 cursor-not-allowed'
-              : 'text-slate-700 hover:text-red-700 cursor-pointer hover:underline'
-          }`}
-        >
-          ✖ Incorrect: <span className="font-semibold text-red-700">{counts.incorrect}</span>
-        </button>
-        <button
-          onClick={() => handleStatClick('Skipped')}
-          disabled={isLoading || counts.skipped === 0}
-          className={`flex items-center gap-1 transition-colors ${
-            counts.skipped === 0
-              ? 'text-slate-400 cursor-not-allowed'
-              : 'text-slate-700 hover:text-slate-900 cursor-pointer hover:underline'
-          }`}
-        >
-          ⟳ Skipped: <span className="font-semibold text-slate-700">{counts.skipped}</span>
-        </button>
-      </div>
+          <div className="w-px h-8 bg-slate-200"></div>
 
-      {/* Time analysis */}
-      <div className="flex flex-wrap gap-4 text-sm text-slate-700">
-        <div>⏱ Avg (all): <span className="font-semibold">{formatMmSs(times.avgTimeAllSec)}</span></div>
-        <div>⏱ Avg (correct): <span className="font-semibold">{formatMmSs(times.avgTimeCorrectSec)}</span></div>
-        <div>⚡ Best (correct): <span className="font-semibold">{formatMmSs(times.bestTimeCorrectSec)}</span></div>
-      </div>
+          <motion.button
+            onClick={() => handleStatClick('Incorrect')}
+            disabled={isLoading || counts.incorrect === 0}
+            whileHover={counts.incorrect > 0 ? { scale: 1.02 } : {}}
+            whileTap={counts.incorrect > 0 ? { scale: 0.98 } : {}}
+            className={`flex items-center gap-2 flex-1 px-4 py-3 rounded-lg transition-all duration-200 ${
+              counts.incorrect === 0
+                ? 'opacity-50 cursor-not-allowed bg-white border border-slate-200'
+                : 'cursor-pointer bg-white border-2 border-red-200 hover:border-red-300 hover:bg-red-50 hover:shadow-md active:bg-red-100'
+            }`}
+          >
+            <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+              <XCircle className="w-4 h-4 text-red-600" />
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">Incorrect</p>
+              <p className="text-sm font-semibold text-slate-900">{counts.incorrect}</p>
+            </div>
+          </motion.button>
 
-      {/* Correctness bar */}
-      <div className="space-y-1">
-        <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200">
-          <div
-            className="h-full bg-green-500"
-            style={{ width: `${insight.correctnessPct}%` }}
-          />
+          <div className="w-px h-8 bg-slate-200"></div>
+
+          <motion.button
+            onClick={() => handleStatClick('Skipped')}
+            disabled={isLoading || counts.skipped === 0}
+            whileHover={counts.skipped > 0 ? { scale: 1.02 } : {}}
+            whileTap={counts.skipped > 0 ? { scale: 0.98 } : {}}
+            className={`flex items-center gap-2 flex-1 px-4 py-3 rounded-lg transition-all duration-200 ${
+              counts.skipped === 0
+                ? 'opacity-50 cursor-not-allowed bg-white border border-slate-200'
+                : 'cursor-pointer bg-white border-2 border-amber-200 hover:border-amber-300 hover:bg-amber-50 hover:shadow-md active:bg-amber-100'
+            }`}
+          >
+            <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+              <Activity className="w-4 h-4 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">Skipped</p>
+              <p className="text-sm font-semibold text-slate-900">{counts.skipped}</p>
+            </div>
+          </motion.button>
+
+          <div className="ml-auto flex items-center gap-2 px-3 py-2 bg-white rounded-lg shadow-sm">
+            <Award className="w-4 h-4 text-indigo-600" />
+            <span className="text-xs font-medium text-slate-700">{insight.correctnessPct}% Accuracy</span>
+          </div>
         </div>
-        <div className="flex items-center justify-between text-xs text-slate-600">
-          <span>{insight.correctnessPct}% marked correct</span>
-          <span>{totalAttempted} attempted</span>
-        </div>
-      </div>
 
-      {/* Feedback */}
-      <div className="text-sm text-slate-700">
-        {insight.feedback}
+        {/* Performance Metrics */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="bg-gradient-to-br from-violet-50 to-violet-100 rounded-xl p-3.5 shadow-sm">
+            <div className="flex items-center gap-2 mb-1">
+              <Clock className="w-3.5 h-3.5 text-violet-600" />
+              <span className="text-xs font-medium text-violet-700">Avg (all)</span>
+            </div>
+            <p className="text-xl font-bold text-violet-900">{formatMmSs(times.avgTimeAllSec)}</p>
+          </div>
+          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-3.5 shadow-sm">
+            <div className="flex items-center gap-2 mb-1">
+              <Target className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="text-xs font-medium text-emerald-700">Avg (correct)</span>
+            </div>
+            <p className="text-xl font-bold text-emerald-900">{formatMmSs(times.avgTimeCorrectSec)}</p>
+          </div>
+          <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-3.5 shadow-sm">
+            <div className="flex items-center gap-2 mb-1">
+              <Zap className="w-3.5 h-3.5 text-amber-600" />
+              <span className="text-xs font-medium text-amber-700">Best time</span>
+            </div>
+            <p className="text-xl font-bold text-amber-900">{formatMmSs(times.bestTimeCorrectSec)}</p>
+          </div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-medium text-slate-700">Progress</span>
+            <span className="text-xs text-slate-500">{totalAttempted} attempted</span>
+          </div>
+          <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${insight.correctnessPct}%` }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className={`h-full bg-gradient-to-r rounded-full ${
+                insight.correctnessPct >= 70
+                  ? 'from-emerald-500 to-emerald-600'
+                  : insight.correctnessPct >= 40
+                  ? 'from-yellow-500 to-yellow-600'
+                  : 'from-red-500 to-red-600'
+              }`}
+            />
+          </div>
+        </div>
+
+        {/* Performance Analysis */}
+        <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-xl shadow-sm">
+          <TrendingUp className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+          <p className="text-xs text-blue-900">
+            <span className="font-semibold">Performance Analysis:</span> {insight.feedback}
+          </p>
+        </div>
       </div>
 
       {/* Modal */}
@@ -162,7 +278,7 @@ export default function QuestionInsightCard({ insight, testId }: QuestionInsight
         category={modalCategory}
         studentData={modalData}
       />
-    </div>
+    </motion.div>
   )
 }
 
