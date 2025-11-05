@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import type { StudentRanking } from '@/lib/actions/test-reports'
 import { DetailedSessionModal } from '@/app/students/[userID]/components/DetailedSessionModal'
+import { formatSecondsToHumanReadable } from '@/lib/utils/formatTime'
 
 interface StudentRankingsTabProps {
   testId: number
@@ -66,11 +67,7 @@ export function StudentRankingsTab({ testId, rankings }: StudentRankingsTabProps
     return 'bg-slate-50 text-slate-600 border-slate-200'
   }
 
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${minutes}m ${secs}s`
-  }
+  // Removed - using formatSecondsToMMSS utility instead
 
   return (
     <div className="space-y-6">
@@ -202,7 +199,7 @@ export function StudentRankingsTab({ testId, rankings }: StudentRankingsTabProps
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-1.5 text-sm text-slate-600">
                         <Clock className="h-4 w-4" />
-                        {formatTime(student.timeSeconds)}
+                        {formatSecondsToHumanReadable(student.timeSeconds)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

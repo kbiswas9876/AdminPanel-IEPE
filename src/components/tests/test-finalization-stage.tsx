@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -77,6 +77,59 @@ export function TestFinalizationStage({
   const [isSaving, setIsSaving] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [showPreviewModal, setShowPreviewModal] = useState(false)
+  const [isLoadingTestData, setIsLoadingTestData] = useState(false)
+
+  // Fetch existing test data when in edit mode
+  useEffect(() => {
+    if (isEditMode && testId) {
+      console.log(`🔍 Edit mode detected for test ID: ${testId}`)
+      setIsLoadingTestData(true)
+      
+      const fetchTestData = async () => {
+        try {
+          // Dynamically import the server action
+          const { getTestDetailsForEdit } = await import('@/lib/actions/tests')
+          const testDetails = await getTestDetailsForEdit(testId)
+          
+          if (testDetails && testDetails.test) {
+            const test = testDetails.test
+            console.log('✅ Test data fetched successfully:', test)
+            
+            // Populate form state with fetched data
+            setFormData({
+              name: test.name || '',
+              description: test.description || '',
+              totalTimeMinutes: test.total_time_minutes || 120,
+              allowPausing: test.allow_pausing || false,
+              showInQuestionTimer: test.show_in_question_timer || false,
+              isDynamicallyShuffled: test.is_dynamically_shuffled || false,
+              isProctored: test.is_proctored || false
+            })
+            
+            console.log('✅ Form data populated with:', {
+              name: test.name,
+              description: test.description,
+              totalTimeMinutes: test.total_time_minutes,
+              allowPausing: test.allow_pausing,
+              showInQuestionTimer: test.show_in_question_timer,
+              isDynamicallyShuffled: test.is_dynamically_shuffled,
+              isProctored: test.is_proctored
+            })
+          } else {
+            console.warn('⚠️ No test data found for test ID:', testId)
+            toast.error('Failed to load test data. Please try again.')
+          }
+        } catch (error) {
+          console.error('❌ Error fetching test data:', error)
+          toast.error('Failed to load test data. Please try again.')
+        } finally {
+          setIsLoadingTestData(false)
+        }
+      }
+      
+      fetchTestData()
+    }
+  }, [isEditMode, testId])
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
@@ -271,6 +324,18 @@ export function TestFinalizationStage({
   const blueprintSummary = generateBlueprintSummary()
   const totalQuestions = questions.length
   const customMarkingCount = questions.filter(q => q.customMarking).length
+
+  // Show loading state while fetching test data in edit mode
+  if (isLoadingTestData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading test data...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50">

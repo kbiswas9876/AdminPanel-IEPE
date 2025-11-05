@@ -326,6 +326,7 @@ export interface Test {
   allow_pausing?: boolean
   show_in_question_timer?: boolean
   is_proctored?: boolean
+  is_dynamically_shuffled?: boolean
 }
 
 // Types for test_questions table

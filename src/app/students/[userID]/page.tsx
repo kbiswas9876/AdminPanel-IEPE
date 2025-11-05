@@ -2,6 +2,9 @@ import { ActivityFeed } from './components/ActivityFeed'
 import { ActivitySummaryStats } from './components/ActivitySummaryStats'
 import { getStudentActivityFeed } from '@/lib/actions/studentAnalyticsActions'
 
+// Disable caching to ensure fresh data
+export const revalidate = 0
+
 interface StudentPageProps {
   params: Promise<{ userID: string }>
 }

@@ -5,10 +5,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card } from '@/components/ui/card'
 import { BarChart3, Trophy, Clock, Users, TrendingUp, ArrowLeft, TrendingDown, Target } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { PopulatedOverallAnalyticsTab } from './PopulatedOverallAnalyticsTab'
 import { StudentRankingsTab } from './StudentRankingsTab'
 import { QuestionInsightsTab } from './QuestionInsightsTab'
+import { IntegrityReportTab } from './IntegrityReportTab'
+import { formatSecondsToHumanReadable } from '@/lib/utils/formatTime'
 import dynamic from 'next/dynamic'
 
 const QuestionInsightsPage = dynamic(() => import('../question-insights/QuestionInsightsPage'), { ssr: false })
@@ -130,7 +133,7 @@ export function TestReportDashboard({ test, stats, rankings }: TestReportDashboa
                 <Clock className="h-5 w-5 text-purple-500" />
               </div>
               <div className="text-3xl font-bold text-slate-900">
-                {Math.floor(stats.averageTimeSeconds / 60)}m {stats.averageTimeSeconds % 60}s
+                {formatSecondsToHumanReadable(stats.averageTimeSeconds)}
               </div>
             </Card>
           </div>
@@ -152,7 +155,10 @@ export function TestReportDashboard({ test, stats, rankings }: TestReportDashboa
         {/* Tabbed Analytics */}
         {stats && stats.totalParticipants > 0 && (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full max-w-3xl grid-cols-4 h-12 bg-slate-100/80 p-1">
+            <TabsList className={cn(
+              "grid w-full max-w-3xl h-12 bg-slate-100/80 p-1",
+              test.is_proctored ? "grid-cols-5" : "grid-cols-4"
+            )}>
               <TabsTrigger 
                 value="overview" 
                 className="h-10 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm"
@@ -177,6 +183,14 @@ export function TestReportDashboard({ test, stats, rankings }: TestReportDashboa
               >
                 Topic Analysis
               </TabsTrigger>
+              {test.is_proctored && (
+                <TabsTrigger 
+                  value="integrity" 
+                  className="h-10 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                >
+                  Integrity Report
+                </TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
@@ -198,6 +212,12 @@ export function TestReportDashboard({ test, stats, rankings }: TestReportDashboa
             <TabsContent value="topics" className="space-y-6">
               <TopicDifficultyTab testId={test.id} />
             </TabsContent>
+
+            {test.is_proctored && (
+              <TabsContent value="integrity" className="space-y-6">
+                <IntegrityReportTab testId={test.id} />
+              </TabsContent>
+            )}
           </Tabs>
         )}
       </div>

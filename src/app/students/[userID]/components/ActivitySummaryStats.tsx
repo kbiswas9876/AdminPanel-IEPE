@@ -7,6 +7,7 @@ import { FileText, TrendingUp, Clock, Flame, TrendingDown } from 'lucide-react'
 import { getStudentActivityFeed } from '@/lib/actions/studentAnalyticsActions'
 import type { ActivityLogEntry } from '@/lib/types/analytics'
 import { calculateTotalTime, calculateAverageAccuracy, calculateStreak } from '@/lib/utils/activity-utils'
+import { formatSecondsToHumanReadable } from '@/lib/utils/formatTime'
 
 interface ActivitySummaryStatsProps {
   userId: string
@@ -25,23 +26,35 @@ export function ActivitySummaryStats({ userId }: ActivitySummaryStatsProps) {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // Fetch all activities (we need comprehensive data)
-        const data = await getStudentActivityFeed(userId, {}, { page: 1, limit: 1000 })
+        // Fetch all activities (we need comprehensive data for accurate stats)
+        // Note: We fetch multiple pages to get all activities, not just the first 1000
+        let allSessions: any[] = []
+        let currentPage = 1
+        let hasMore = true
+        const pageSize = 100
         
-        // Calculate stats
-        const sessions = data.entries.filter(
-          entry => entry.activity_type === 'PRACTICE_SESSION_COMPLETED' ||
-                  entry.activity_type === 'MOCK_TEST_COMPLETED'
-        )
+        while (hasMore && currentPage <= 10) { // Limit to 10 pages (1000 entries max) to prevent infinite loops
+          const data = await getStudentActivityFeed(userId, {}, { page: currentPage, limit: pageSize })
+          
+          const sessions = data.entries.filter(
+            entry => entry.activity_type === 'PRACTICE_SESSION_COMPLETED' ||
+                    entry.activity_type === 'MOCK_TEST_COMPLETED'
+          )
+          
+          allSessions = [...allSessions, ...sessions]
+          
+          hasMore = data.current_page < data.total_pages
+          currentPage++
+        }
         
-        const totalSessions = sessions.length
-        const averageAccuracy = calculateAverageAccuracy(sessions)
-        const totalTime = calculateTotalTime(sessions)
-        const streak = calculateStreak(sessions)
+        const totalSessions = allSessions.length
+        const averageAccuracy = calculateAverageAccuracy(allSessions)
+        const totalTime = calculateTotalTime(allSessions)
+        const streak = calculateStreak(allSessions)
         
         // Calculate trend (compare recent vs older)
-        const recentSessions = sessions.slice(0, 5)
-        const olderSessions = sessions.slice(5, 10)
+        const recentSessions = allSessions.slice(0, 5)
+        const olderSessions = allSessions.slice(5, 10)
         
         const recentAccuracy = calculateAverageAccuracy(recentSessions)
         const olderAccuracy = calculateAverageAccuracy(olderSessions)
@@ -50,7 +63,7 @@ export function ActivitySummaryStats({ userId }: ActivitySummaryStatsProps) {
         setStats({
           totalSessions,
           averageAccuracy,
-          totalTime: Math.floor(totalTime / 60), // Convert to minutes
+          totalTime: totalTime, // Keep in seconds for formatting
           streak,
           accuracyChange
         })
@@ -105,7 +118,7 @@ export function ActivitySummaryStats({ userId }: ActivitySummaryStatsProps) {
     },
     {
       label: 'Total Time',
-      value: `${stats.totalTime}m`,
+        value: formatSecondsToHumanReadable(stats.totalTime),
       icon: Clock,
       color: 'purple',
       bgColor: 'bg-purple-50/50',

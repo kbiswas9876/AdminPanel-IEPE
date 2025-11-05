@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useState } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
-import { XMarkIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import { X, AlertTriangle } from 'lucide-react'
 
 interface Violation {
   id: number
@@ -42,7 +42,9 @@ function getViolationTypeName(type: string): string {
 function getDeviceContextSummary(violation: Violation): string {
   const device = violation.device_type === 'desktop' 
     ? 'Desktop' 
-    : violation.device_type?.charAt(0).toUpperCase() + violation.device_type?.slice(1) || 'Unknown'
+    : violation.device_type 
+      ? violation.device_type.charAt(0).toUpperCase() + violation.device_type.slice(1)
+      : 'Unknown'
   
   return `${device} - ${violation.browser_name || 'Unknown'} (${violation.os_name || 'Unknown'})`
 }
@@ -133,7 +135,7 @@ export default function ViolationDetailsModal({
                 <div className="bg-red-50 px-6 py-4 border-b border-red-100">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3">
-                      <ExclamationTriangleIcon className="h-6 w-6 text-red-600 mt-1" />
+                      <AlertTriangle className="h-6 w-6 text-red-600 mt-1" />
                       <div>
                         <Dialog.Title className="text-lg font-semibold text-red-900">
                           Security Violation Log
@@ -154,7 +156,7 @@ export default function ViolationDetailsModal({
                       onClick={onClose}
                       className="rounded-md text-red-400 hover:text-red-500 focus:outline-none"
                     >
-                      <XMarkIcon className="h-6 w-6" />
+                      <X className="h-6 w-6" />
                     </button>
                   </div>
                 </div>
@@ -176,7 +178,7 @@ export default function ViolationDetailsModal({
 
                   {!loading && !error && violations.length === 0 && (
                     <div className="text-center py-8">
-                      <ExclamationTriangleIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                      <AlertTriangle className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                       <p className="text-gray-500">No security violations recorded for this test attempt.</p>
                     </div>
                   )}

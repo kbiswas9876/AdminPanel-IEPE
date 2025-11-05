@@ -879,3 +879,305 @@ export async function getPerformanceFunnelMetrics(testId: number): Promise<{
   }
 }
 
+// ============================================================================
+// SECURITY VIOLATIONS REPORTING
+// ============================================================================
+
+export type ViolationLogEntry = {
+  id: number
+  created_at: string
+  violation_type: string
+  outcome: 'submitted' | 'cancelled'
+  user_id: string
+  test_result_id: number | null
+  mock_test_id: number | null
+  device_type: string | null
+  browser_name: string | null
+  os_name: string | null
+  user_agent_string: string | null
+  user_profiles?: {
+    full_name: string | null
+    email: string | null
+  }
+}
+
+export type ViolationSummary = {
+  totalViolations: number
+  mostCommonViolation: string | null
+  studentsWithViolations: number
+  submittedCount: number
+  cancelledCount: number
+}
+
+export type ViolationLogResponse = {
+  violations: ViolationLogEntry[]
+  totalCount: number
+  summary: ViolationSummary
+}
+
+// Get violation log for a test with filtering and pagination
+export async function getTestViolationLog(
+  testId: number,
+  filters: {
+    studentSearch?: string
+    violationType?: string
+    outcome?: 'submitted' | 'cancelled'
+  } = {},
+  pagination: { page: number; limit: number } = { page: 1, limit: 50 }
+): Promise<ViolationLogResponse> {
+  try {
+    const supabase = createAdminClient()
+    
+    // Build base query - fetch violations first (no JOIN since no FK relationship)
+    let query = supabase
+      .from('security_violations')
+      .select(`
+        id,
+        created_at,
+        violation_type,
+        outcome,
+        user_id,
+        test_result_id,
+        mock_test_id,
+        device_type,
+        browser_name,
+        os_name,
+        user_agent_string
+      `, { count: 'exact' })
+      .eq('mock_test_id', testId)
+    
+    // Apply filters
+    if (filters.violationType) {
+      query = query.eq('violation_type', filters.violationType)
+    }
+    
+    if (filters.outcome) {
+      query = query.eq('outcome', filters.outcome)
+    }
+    
+    // Note: Student search is handled client-side after fetching due to JOIN limitations
+    // We'll filter by user_id if we can identify the user, otherwise filter client-side
+    
+    // Apply pagination
+    const { page, limit } = pagination
+    const from = (page - 1) * limit
+    const to = from + limit - 1
+    
+    const { data: violations, error, count: totalCount } = await query
+      .order('created_at', { ascending: false })
+      .range(from, to)
+    
+    if (error) {
+      console.error('Error fetching violation log:', error)
+      console.error('Query details:', { testId, filters, page, limit })
+      throw error
+    }
+    
+    console.log('Fetched violations:', { 
+      count: violations?.length || 0, 
+      totalCount,
+      testId,
+      sampleViolation: violations?.[0] 
+    })
+    
+    // Fetch user profiles separately since there's no FK relationship
+    const userIds = violations ? [...new Set(violations.map((v: any) => v.user_id))] : []
+    const profileMap = new Map()
+    
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('user_profiles')
+        .select('id, full_name, email')
+        .in('id', userIds)
+      
+      if (profiles) {
+        profiles.forEach((profile: any) => {
+          profileMap.set(profile.id, {
+            full_name: profile.full_name,
+            email: profile.email
+          })
+        })
+      }
+    }
+    
+    // Transform violations to include user profiles
+    let transformedViolations = (violations || []).map((v: any) => {
+      const profile = profileMap.get(v.user_id) || null
+      return {
+        ...v,
+        user_profiles: profile
+      }
+    })
+    
+    // Filter by student search if provided (client-side filter)
+    if (filters.studentSearch && transformedViolations.length > 0) {
+      const searchTerm = filters.studentSearch.toLowerCase()
+      transformedViolations = transformedViolations.filter((v: any) => {
+        const profile = v.user_profiles
+        if (!profile) return false
+        const name = (profile.full_name || '').toLowerCase()
+        const email = (profile.email || '').toLowerCase()
+        return name.includes(searchTerm) || email.includes(searchTerm)
+      })
+    }
+    
+    // Calculate summary statistics - fetch ALL violations for this test (not paginated)
+    const { data: allViolations, error: summaryError } = await supabase
+      .from('security_violations')
+      .select('violation_type, outcome, user_id')
+      .eq('mock_test_id', testId)
+    
+    if (summaryError) {
+      console.error('Error fetching summary violations:', summaryError)
+    }
+    
+    console.log('Summary violations count:', allViolations?.length || 0)
+    
+    let summary: ViolationSummary = {
+      totalViolations: allViolations?.length || 0,
+      mostCommonViolation: null,
+      studentsWithViolations: 0,
+      submittedCount: 0,
+      cancelledCount: 0
+    }
+    
+    if (allViolations && allViolations.length > 0) {
+      // Count violations by type
+      const violationTypeCounts = new Map<string, number>()
+      const uniqueUserIds = new Set<string>()
+      
+      allViolations.forEach((v: any) => {
+        // Count violation types
+        const type = v.violation_type || 'UNKNOWN'
+        violationTypeCounts.set(type, (violationTypeCounts.get(type) || 0) + 1)
+        
+        // Track unique users
+        if (v.user_id) {
+          uniqueUserIds.add(v.user_id)
+        }
+        
+        // Count outcomes
+        if (v.outcome === 'submitted') {
+          summary.submittedCount++
+        } else if (v.outcome === 'cancelled') {
+          summary.cancelledCount++
+        }
+      })
+      
+      // Find most common violation
+      let maxCount = 0
+      let mostCommon = null
+      violationTypeCounts.forEach((count, type) => {
+        if (count > maxCount) {
+          maxCount = count
+          mostCommon = type
+        }
+      })
+      
+      summary.mostCommonViolation = mostCommon
+      summary.studentsWithViolations = uniqueUserIds.size
+    }
+    
+    return {
+      violations: transformedViolations as ViolationLogEntry[],
+      totalCount: totalCount || 0,
+      summary
+    }
+  } catch (error) {
+    console.error('Error getting test violation log:', error)
+    return {
+      violations: [],
+      totalCount: 0,
+      summary: {
+        totalViolations: 0,
+        mostCommonViolation: null,
+        studentsWithViolations: 0,
+        submittedCount: 0,
+        cancelledCount: 0
+      }
+    }
+  }
+}
+
+// Get violations for a specific test attempt
+export async function getViolationsForAttempt(resultId: number): Promise<ViolationLogEntry[]> {
+  try {
+    const supabase = createAdminClient()
+    
+    // First, try to find violations by test_result_id
+    let query = supabase
+      .from('security_violations')
+      .select(`
+        id,
+        created_at,
+        violation_type,
+        outcome,
+        user_id,
+        test_result_id,
+        mock_test_id,
+        device_type,
+        browser_name,
+        os_name,
+        user_agent_string
+      `)
+      .eq('test_result_id', resultId)
+    
+    const { data: violationsByResultId, error: error1 } = await query.order('created_at', { ascending: true })
+    
+    if (violationsByResultId && violationsByResultId.length > 0) {
+      console.log('Found violations by test_result_id:', violationsByResultId.length, 'for resultId:', resultId)
+      return violationsByResultId as ViolationLogEntry[]
+    }
+    
+    // If no violations found by test_result_id, try to match by mock_test_id and user_id
+    // This handles cases where test_result_id might be NULL
+    const { data: testResult } = await supabase
+      .from('test_results')
+      .select('mock_test_id, user_id')
+      .eq('id', resultId)
+      .single()
+    
+    if (!testResult) {
+      console.warn('Test result not found for resultId:', resultId)
+      return []
+    }
+    
+    // Query violations by mock_test_id and user_id (for cases where test_result_id is NULL)
+    query = supabase
+      .from('security_violations')
+      .select(`
+        id,
+        created_at,
+        violation_type,
+        outcome,
+        user_id,
+        test_result_id,
+        mock_test_id,
+        device_type,
+        browser_name,
+        os_name,
+        user_agent_string
+      `)
+      .eq('mock_test_id', testResult.mock_test_id)
+      .eq('user_id', testResult.user_id)
+      .is('test_result_id', null)
+    
+    const { data: violationsByTestAndUser, error: error2 } = await query.order('created_at', { ascending: true })
+    
+    if (error2) {
+      console.error('Error fetching violations by mock_test_id and user_id:', error2)
+    }
+    
+    console.log('Found violations by mock_test_id and user_id:', violationsByTestAndUser?.length || 0, {
+      resultId,
+      mock_test_id: testResult.mock_test_id,
+      user_id: testResult.user_id
+    })
+    
+    return (violationsByTestAndUser || []) as ViolationLogEntry[]
+  } catch (error) {
+    console.error('Error getting violations for attempt:', error)
+    return []
+  }
+}
+

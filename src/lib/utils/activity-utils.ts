@@ -5,6 +5,7 @@
 
 import type { ActivityType } from '@/lib/types/analytics'
 import type { ComponentType } from 'react'
+import { parseISO, isValid, format, isToday, isYesterday } from 'date-fns'
 
 // Icon mapping for each activity type
 export interface ActivityIconConfig {
@@ -66,34 +67,53 @@ export function formatTimestamp(dateString: string): string {
   }) + ' ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
 }
 
-// Format date for headers
+// Format date for headers (using date-fns for robust parsing)
 export function formatDateHeader(dateString: string): string {
-  const date = new Date(dateString)
-  const today = new Date()
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
-  
-  if (date.toDateString() === today.toDateString()) {
-    return 'Today'
+  try {
+    // Handle fallback keys
+    if (dateString === 'Date Unavailable' || dateString === 'Invalid Date Record' || dateString === 'Error Grouping') {
+      return dateString
+    }
+    
+    // Parse using date-fns for robust ISO string handling
+    const parsedDate = parseISO(dateString)
+    
+    if (!isValid(parsedDate)) {
+      console.warn('⚠️ formatDateHeader: Invalid date string:', dateString)
+      return 'Invalid Date'
+    }
+    
+    // Check if it's today or yesterday
+    if (isToday(parsedDate)) {
+      return 'Today'
+    }
+    
+    if (isYesterday(parsedDate)) {
+      return 'Yesterday'
+    }
+    
+    // Format for other dates
+    const today = new Date()
+    return format(parsedDate, parsedDate.getFullYear() !== today.getFullYear() 
+      ? 'EEEE, MMMM d, yyyy' 
+      : 'EEEE, MMMM d'
+    )
+  } catch (error) {
+    console.error('❌ formatDateHeader: Error formatting date:', dateString, error)
+    return 'Invalid Date'
   }
-  
-  if (date.toDateString() === yesterday.toDateString()) {
-    return 'Yesterday'
-  }
-  
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
-  })
 }
 
 // Calculate total time from activities
 export function calculateTotalTime(activities: any[]): number {
   return activities.reduce((total, activity) => {
+    // Check for total_time_taken_seconds in metadata (used by both practice and mock tests)
+    if (activity.metadata?.total_time_taken_seconds) {
+      return total + (activity.metadata.total_time_taken_seconds || 0)
+    }
+    // Fallback to total_time_taken if total_time_taken_seconds is not available
     if (activity.metadata?.total_time_taken) {
-      return total + activity.metadata.total_time_taken
+      return total + (activity.metadata.total_time_taken || 0)
     }
     return total
   }, 0)
@@ -118,27 +138,48 @@ export function calculateAverageAccuracy(activities: any[]): number {
 export function calculateStreak(activities: any[]): number {
   if (activities.length === 0) return 0
   
-  // Sort by date descending
-  const sorted = [...activities].sort((a, b) => 
-    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  )
+  // Get unique dates with activity (normalize to midnight)
+  const uniqueDates = new Set<string>()
+  
+  for (const activity of activities) {
+    try {
+      const activityDate = new Date(activity.created_at)
+      if (!isNaN(activityDate.getTime())) {
+        activityDate.setHours(0, 0, 0, 0)
+        uniqueDates.add(activityDate.toISOString())
+      }
+    } catch (error) {
+      console.warn('⚠️ calculateStreak: Invalid date for activity:', activity.id, error)
+    }
+  }
+  
+  if (uniqueDates.size === 0) return 0
+  
+  // Sort dates in descending order (most recent first)
+  const sortedDates = Array.from(uniqueDates)
+    .map(dateStr => new Date(dateStr))
+    .sort((a, b) => b.getTime() - a.getTime())
+  
+  // Calculate streak starting from today
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
   
   let streak = 0
-  let currentDate = new Date()
-  currentDate.setHours(0, 0, 0, 0)
+  let expectedDate = today
   
-  for (const activity of sorted) {
-    const activityDate = new Date(activity.created_at)
-    activityDate.setHours(0, 0, 0, 0)
+  for (const activityDate of sortedDates) {
+    const diffDays = Math.floor((expectedDate.getTime() - activityDate.getTime()) / (1000 * 60 * 60 * 24))
     
-    const diffDays = Math.floor((currentDate.getTime() - activityDate.getTime()) / (1000 * 60 * 60 * 24))
-    
-    if (diffDays === streak) {
+    // If activity is on the expected date (today, yesterday, etc.), increment streak
+    if (diffDays === 0) {
       streak++
-      currentDate = activityDate
-    } else if (diffDays > streak) {
+      expectedDate = new Date(expectedDate)
+      expectedDate.setDate(expectedDate.getDate() - 1) // Move to previous day
+    } else if (diffDays > 0) {
+      // Gap found - streak is broken
       break
     }
+    // If diffDays < 0, activity is in the future (shouldn't happen, but skip it)
   }
   
   return streak

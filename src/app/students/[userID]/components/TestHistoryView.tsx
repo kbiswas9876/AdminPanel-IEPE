@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
+import { Icon } from '@iconify/react'
 import type { ActivityFeedResponse } from '@/lib/types/analytics'
 import { DetailedSessionModal } from './DetailedSessionModal'
 import ViolationDetailsModal from '@/components/ViolationDetailsModal'
+import { formatSecondsToHumanReadable } from '@/lib/utils/formatTime'
 
 interface TestHistoryViewProps {
   userId: string
@@ -132,7 +134,7 @@ export function TestHistoryView({ userId, initialData, testType }: TestHistoryVi
         
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="text-sm text-gray-600 mb-1">Avg Time</div>
-          <div className="text-3xl font-bold text-gray-900">{Math.floor(summary.avgTime / 60)}m</div>
+          <div className="text-3xl font-bold text-gray-900">{formatSecondsToHumanReadable(summary.avgTime)}</div>
         </div>
       </div>
 
@@ -172,18 +174,39 @@ export function TestHistoryView({ userId, initialData, testType }: TestHistoryVi
                           Latest
                         </span>
                       )}
-                      {testType === 'mock_test' && hasViolations && (
-                        <span 
-                          className="px-2 py-0.5 text-xs font-semibold bg-red-100 text-red-700 rounded flex items-center gap-1 cursor-pointer hover:bg-red-200"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setSelectedViolationResultId(resultId)
-                            setSelectedTestName(meta.test_name || 'Mock Test')
-                          }}
-                          title="Click to view security violations"
-                        >
-                          ⚠️ {violationCount} Violation{violationCount !== 1 ? 's' : ''}
-                        </span>
+                      {testType === 'mock_test' && resultId && (
+                        <div className="flex items-center gap-1.5">
+                          {(() => {
+                            const count = violationCounts[resultId] ?? 0
+                            if (count === 0) {
+                              return (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                  }}
+                                  className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                                  title="No violations detected"
+                                >
+                                  <Icon icon="mdi:flag-outline" className="h-4 w-4" />
+                                </button>
+                              )
+                            }
+                            return (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setSelectedViolationResultId(resultId)
+                                  setSelectedTestName(meta.test_name || 'Mock Test')
+                                }}
+                                className="flex items-center gap-1 text-xs text-red-600 hover:text-red-700 font-semibold transition-colors"
+                                title={`${count} violation${count !== 1 ? 's' : ''} detected - Click to view details`}
+                              >
+                                <Icon icon="mdi:flag" className="h-4 w-4" />
+                                <span>{count}</span>
+                              </button>
+                            )
+                          })()}
+                        </div>
                       )}
                     </div>
                     
@@ -218,7 +241,7 @@ export function TestHistoryView({ userId, initialData, testType }: TestHistoryVi
                       <div>
                         <div className="text-xs text-gray-600 mb-1">Time Taken</div>
                         <div className="text-lg font-semibold text-gray-900">
-                          {Math.floor((meta.total_time_taken_seconds || 0) / 60)}m
+                          {formatSecondsToHumanReadable(meta.total_time_taken_seconds || 0)}
                         </div>
                       </div>
                     </div>
@@ -275,12 +298,12 @@ export function TestHistoryView({ userId, initialData, testType }: TestHistoryVi
       {/* Violation Details Modal (Mock Tests Only) */}
       {testType === 'mock_test' && selectedViolationResultId && (
         <ViolationDetailsModal
+          testResultId={selectedViolationResultId}
           isOpen={!!selectedViolationResultId}
           onClose={() => {
             setSelectedViolationResultId(null)
             setSelectedTestName('')
           }}
-          testResultId={selectedViolationResultId}
           testName={selectedTestName}
         />
       )}

@@ -106,6 +106,9 @@ export async function getStudentSummary(userId: string): Promise<StudentSummary 
 /**
  * Fetches paginated activity feed for a student
  * Supports filtering by activity type and date range
+ * 
+ * IMPORTANT: This function is not cached to ensure fresh data is always returned.
+ * The page component sets revalidate = 0 to prevent Next.js caching.
  */
 export async function getStudentActivityFeed(
   userId: string,
@@ -161,6 +164,7 @@ export async function getStudentActivityFeed(
     const { count: totalCount } = await countQuery
     
     // Apply pagination and sorting
+    // IMPORTANT: Order by created_at DESC to get most recent activities first
     const { page, limit } = pagination
     const from = (page - 1) * limit
     const to = from + limit - 1
@@ -180,6 +184,9 @@ export async function getStudentActivityFeed(
     }
     
     const totalPages = Math.ceil((totalCount || 0) / limit)
+    
+    // Log for debugging - verify we're getting fresh data
+    console.log(`📊 getStudentActivityFeed: Fetched ${entries?.length || 0} entries for user ${userId}, page ${page}, total: ${totalCount || 0}`)
     
     return {
       entries: entries || [],

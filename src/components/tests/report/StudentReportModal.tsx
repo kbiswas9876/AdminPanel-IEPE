@@ -8,6 +8,7 @@ import { X, Trophy, Clock, Target, CheckCircle2, XCircle, Circle } from 'lucide-
 import { getStudentAttemptDetails } from '@/lib/actions/test-reports'
 import type { StudentAttemptDetails } from '@/lib/actions/test-reports'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { formatSecondsToHumanReadable } from '@/lib/utils/formatTime'
 
 interface StudentReportModalProps {
   attemptId: number | null
@@ -34,11 +35,7 @@ export function StudentReportModal({ attemptId, open, onClose }: StudentReportMo
 
   if (!open) return null
 
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${minutes}m ${secs}s`
-  }
+  // Removed - using formatSecondsToMMSS utility instead
 
   const filteredAnswers = details?.answers.filter(answer => {
     if (filter === 'all') return true
@@ -108,7 +105,7 @@ export function StudentReportModal({ attemptId, open, onClose }: StudentReportMo
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-purple-500" />
                     <span className="text-lg font-semibold text-slate-900">
-                      {formatTime(details.totalTime)}
+                      {formatSecondsToHumanReadable(details.totalTime)}
                     </span>
                   </div>
                 </div>
@@ -153,7 +150,7 @@ export function StudentReportModal({ attemptId, open, onClose }: StudentReportMo
                         <div className="flex items-center gap-4 text-xs text-slate-500">
                           <div className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            {formatTime(answer.timeSpent)}
+                            {formatSecondsToHumanReadable(answer.timeSpent)}
                           </div>
                           <div className={`font-semibold ${
                             answer.marks > 0 ? 'text-green-600' :
