@@ -219,3 +219,7 @@ export function ViolationDetailsModal({ resultId, isOpen, onClose }: ViolationDe
   )
 }
 
+
+
+
+
