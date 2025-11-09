@@ -3,9 +3,9 @@ import { getQuestionById, updateQuestion } from '@/lib/actions/questions'
 import { notFound } from 'next/navigation'
 
 interface EditQuestionPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 async function handleUpdate(questionId: number, formData: FormData) {
@@ -14,7 +14,8 @@ async function handleUpdate(questionId: number, formData: FormData) {
 }
 
 export default async function EditQuestionPage({ params }: EditQuestionPageProps) {
-  const questionId = parseInt(params.id)
+  const { id } = await params
+  const questionId = parseInt(id)
   
   if (isNaN(questionId)) {
     notFound()

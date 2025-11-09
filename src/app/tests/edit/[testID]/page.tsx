@@ -3,9 +3,9 @@ import { notFound } from 'next/navigation'
 import EditTestRedirect from './edit-test-redirect'
 
 interface EditTestPageProps {
-  params: {
+  params: Promise<{
     testID: string
-  }
+  }>
 }
 
 export default async function EditTestPage({ params }: EditTestPageProps) {

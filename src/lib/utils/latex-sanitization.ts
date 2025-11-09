@@ -46,13 +46,13 @@ export function processLatexFromCSV(text: string | null | undefined): string | n
   // Pattern 2: Handle LaTeX commands with braces
   processed = processed.replace(/\\\\([a-zA-Z]+)\\{/g, '\\$1{')
   
-  // Pattern 3: Handle LaTeX commands with brackets - use RegExp constructor
-  const bracketRegex = new RegExp('\\\\\\\\([a-zA-Z]+)\\\\[', 'g')
-  processed = processed.replace(bracketRegex, '\\$1[')
+  // Pattern 3: Handle LaTeX commands with brackets - properly escape brackets
+  // Match \\command[ where we need to escape [ in regex
+  processed = processed.replace(/\\\\([a-zA-Z]+)\[/g, '\\$1[')
   
-  // Pattern 4: Handle LaTeX commands with parentheses - use RegExp constructor
-  const parenRegex = new RegExp('\\\\\\\\([a-zA-Z]+)\\\\(', 'g')
-  processed = processed.replace(parenRegex, '\\$1(')
+  // Pattern 4: Handle LaTeX commands with parentheses - properly escape parentheses
+  // Match \\command( where we need to escape ( in regex
+  processed = processed.replace(/\\\\([a-zA-Z]+)\(/g, '\\$1(')
   
   // Pattern 5: Handle remaining double backslashes before letters
   processed = processed.replace(/\\\\([a-zA-Z])/g, '\\$1')

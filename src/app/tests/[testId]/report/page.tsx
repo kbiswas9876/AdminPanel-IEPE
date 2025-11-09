@@ -4,9 +4,9 @@ import { getTestDetails } from '@/lib/actions/tests'
 import { TestReportDashboard } from '@/components/tests/report/TestReportDashboard'
 
 interface PageProps {
-  params: {
+  params: Promise<{
     testId: string
-  }
+  }>
 }
 
 export default async function TestReportPage({ params }: PageProps) {
