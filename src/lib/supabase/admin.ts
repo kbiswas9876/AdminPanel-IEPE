@@ -319,6 +319,7 @@ export interface Test {
   marks_per_correct: number
   negative_marks_per_incorrect: number
   status: 'draft' | 'scheduled' | 'live' | 'completed'
+  dynamic_status?: 'draft' | 'scheduled' | 'live' | 'completed' // Added dynamic_status
   start_time?: string
   end_time?: string
   created_at: string
