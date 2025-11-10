@@ -2538,3 +2538,38 @@ export async function exportAnswerKeyPdf(testId: number): Promise<{ success: boo
   }
 }
 
+export async function declareResultsNow(testId: number): Promise<{ success: boolean; message: string }> {
+  try {
+    const supabase = createAdminClient()
+    
+    const { error } = await supabase
+      .from('tests')
+      .update({
+        result_release_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', testId)
+    
+    if (error) {
+      console.error('Error declaring results:', error)
+      return {
+        success: false,
+        message: `Failed to declare results: ${error.message}`
+      }
+    }
+    
+    revalidatePath('/tests')
+    
+    return {
+      success: true,
+      message: 'Results declared successfully!'
+    }
+  } catch (error) {
+    console.error('Unexpected error declaring results:', error)
+    return {
+      success: false,
+      message: 'An unexpected error occurred while declaring results'
+    }
+  }
+}
+

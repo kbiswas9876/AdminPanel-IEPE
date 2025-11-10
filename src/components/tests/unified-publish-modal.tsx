@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import { enGB } from 'date-fns/locale'
 import { MobileDatePicker } from '@mui/x-date-pickers/MobileDatePicker'
 import { MobileTimePicker } from '@mui/x-date-pickers/MobileTimePicker'
 import { Button } from '@/components/ui/button'
@@ -157,7 +158,8 @@ export function UnifiedPublishModal({
     setPublishData(prev => ({
       ...prev,
       schedulingMode: mode,
-      resultPolicy: mode === 'perpetual' ? 'instant' : prev.resultPolicy,
+      // Allow result policy to be preserved when switching modes
+      // resultPolicy: mode === 'perpetual' ? 'instant' : prev.resultPolicy,
       resultReleaseAt: mode === 'perpetual' ? '' : prev.resultReleaseAt
     }))
     
@@ -246,6 +248,42 @@ export function UnifiedPublishModal({
     return Object.keys(newErrors).length === 0
   }
 
+  const validateData = (data: UnifiedPublishData): Record<string, string> => {
+    const newErrors: Record<string, string> = {};
+    const startDate = fromUTCISOString(data.startTime);
+
+    // 1. Validate End Time for Fixed-Window Tests
+    if (data.schedulingMode === 'fixed') {
+      if (!data.endTime) {
+        newErrors.endTime = 'End time is required for a fixed time window.';
+      } else {
+        const endDate = fromUTCISOString(data.endTime);
+        if (!isEndDateAfterStart(startDate, endDate)) {
+          newErrors.endTime = 'The end time must be after the new start time (which is now).';
+        }
+      }
+    }
+
+    // 2. Validate Result Release Time for Scheduled Policy
+    if (data.resultPolicy === 'scheduled') {
+      if (!data.resultReleaseAt) {
+        newErrors.resultReleaseAt = 'Result release date is required for a scheduled policy.';
+      } else {
+        const releaseDate = fromUTCISOString(data.resultReleaseAt);
+        const endDate = data.endTime ? fromUTCISOString(data.endTime) : null;
+
+        if (endDate && releaseDate <= endDate) {
+          newErrors.resultReleaseAt = 'Result release must be after the test end time.';
+        } else if (!endDate && releaseDate <= startDate) {
+          // This covers perpetual tests
+          newErrors.resultReleaseAt = 'Result release must be after the test start time.';
+        }
+      }
+    }
+    
+    return newErrors;
+  };
+
   const handleConfirm = () => {
     if (validatePublishData()) {
       onConfirm(publishData)
@@ -253,65 +291,32 @@ export function UnifiedPublishModal({
   }
 
   const handlePublishNow = () => {
-    const now = new Date()
-    const startTimeNow = toUTCISOString(now)
+    const now = new Date();
+    
+    // 1. Create a new data object with the start time overridden to "now"
+    //    This respects all other user-defined settings.
+    const newPublishData: UnifiedPublishData = {
+      ...publishData,
+      startTime: toUTCISOString(now),
+    };
 
-    let endTime = ''
-    if (publishData.schedulingMode === 'fixed') {
-      if (publishData.endTime) {
-        try {
-          const currentEndDate = fromUTCISOString(publishData.endTime)
-          if (currentEndDate > now) {
-            endTime = publishData.endTime
-          } else {
-            const defaultEndDate = new Date(now)
-            defaultEndDate.setHours(defaultEndDate.getHours() + 24)
-            endTime = toUTCISOString(defaultEndDate)
-          }
-        } catch {
-          const defaultEndDate = new Date(now)
-          defaultEndDate.setHours(defaultEndDate.getHours() + 24)
-          endTime = toUTCISOString(defaultEndDate)
-        }
-      } else {
-        const defaultEndDate = new Date(now)
-        defaultEndDate.setHours(defaultEndDate.getHours() + 24)
-        endTime = toUTCISOString(defaultEndDate)
-      }
+    // 2. Validate this new data object before proceeding
+    const validationErrors = validateData(newPublishData);
+
+    if (Object.keys(validationErrors).length === 0) {
+      // 3. If the data is valid:
+      //    - Update the UI to reflect the new start time
+      setStartDateValue(now);
+      setPublishData(newPublishData);
+      //    - Trigger the actual publish action
+      onConfirm(newPublishData);
+    } else {
+      // 4. If the data is invalid (e.g., end time is in the past):
+      //    - Do not publish
+      //    - Show the relevant errors to the user
+      setErrors(validationErrors);
     }
-
-    let resultReleaseAt = publishData.resultReleaseAt
-    if (publishData.resultPolicy === 'scheduled') {
-      if (!resultReleaseAt) {
-        if (publishData.schedulingMode === 'fixed' && endTime) {
-          try {
-            const endDate = fromUTCISOString(endTime)
-            const releaseDate = new Date(endDate)
-            releaseDate.setHours(releaseDate.getHours() + 1)
-            resultReleaseAt = toUTCISOString(releaseDate)
-          } catch {
-            const releaseDate = new Date(now)
-            releaseDate.setHours(releaseDate.getHours() + 25)
-            resultReleaseAt = toUTCISOString(releaseDate)
-          }
-        } else {
-          const releaseDate = new Date(now)
-          releaseDate.setHours(releaseDate.getHours() + 1)
-          resultReleaseAt = toUTCISOString(releaseDate)
-        }
-      }
-    }
-
-    const publishNowData: UnifiedPublishData = {
-      startTime: startTimeNow,
-      endTime: endTime,
-      schedulingMode: publishData.schedulingMode,
-      resultPolicy: publishData.resultPolicy || 'instant',
-      resultReleaseAt: resultReleaseAt || ''
-    }
-
-    onConfirm(publishNowData)
-  }
+  };
 
   const handleClose = () => {
     if (!isProcessing) {
@@ -433,7 +438,7 @@ export function UnifiedPublishModal({
 
 
   return (
-      <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={enGB}>
         <Dialog open={open} onOpenChange={handleClose}>
           <DialogContent className="w-[95vw] max-w-lg mx-4 max-h-[90vh] overflow-y-auto" style={{ zIndex: 50 }}>
             <DialogHeader>
@@ -522,22 +527,20 @@ export function UnifiedPublishModal({
               <div className="space-y-3">
                 <Label className="flex items-center space-x-2 text-sm font-semibold"><CheckCircle className="h-4 w-4 text-blue-600" /><span>Result Declaration Policy</span></Label>
                 <div className="space-y-2">
-                  <label className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer ${publishData.resultPolicy === 'instant' ? 'border-blue-300 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'} ${publishData.schedulingMode === 'perpetual' ? 'opacity-100' : ''}`}>
-                    <input type="radio" name="resultPolicy" value="instant" checked={publishData.resultPolicy === 'instant'} onChange={() => handleResultPolicyChange('instant')} className="w-4 h-4 text-blue-600" disabled={publishData.schedulingMode === 'perpetual'} />
+                  <label className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer ${publishData.resultPolicy === 'instant' ? 'border-blue-300 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                    <input type="radio" name="resultPolicy" value="instant" checked={publishData.resultPolicy === 'instant'} onChange={() => handleResultPolicyChange('instant')} className="w-4 h-4 text-blue-600" />
                     <div className="flex-1">
-                      <div className="flex items-center space-x-2"><CheckCircle className="h-4 w-4 text-green-600" /><span className="text-sm font-medium">Instantly on submission</span>{publishData.schedulingMode === 'perpetual' && (<span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Auto-selected</span>)}</div>
+                      <div className="flex items-center space-x-2"><CheckCircle className="h-4 w-4 text-green-600" /><span className="text-sm font-medium">Instantly on submission</span></div>
                       <p className="text-xs text-gray-500 mt-1">Students see results immediately after submitting</p>
                     </div>
                   </label>
-                  {publishData.schedulingMode === 'fixed' && (
-                    <label className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer ${publishData.resultPolicy === 'scheduled' ? 'border-blue-300 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}>
-                      <input type="radio" name="resultPolicy" value="scheduled" checked={publishData.resultPolicy === 'scheduled'} onChange={() => handleResultPolicyChange('scheduled')} className="w-4 h-4 text-blue-600" />
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2"><Clock className="h-4 w-4 text-orange-600" /><span className="text-sm font-medium">At a fixed date/time</span></div>
-                        <p className="text-xs text-gray-500 mt-1">Results are released at a specific time</p>
-                      </div>
-                    </label>
-                  )}
+                  <label className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer ${publishData.resultPolicy === 'scheduled' ? 'border-blue-300 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                    <input type="radio" name="resultPolicy" value="scheduled" checked={publishData.resultPolicy === 'scheduled'} onChange={() => handleResultPolicyChange('scheduled')} className="w-4 h-4 text-blue-600" />
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2"><Clock className="h-4 w-4 text-orange-600" /><span className="text-sm font-medium">At a fixed date/time</span></div>
+                      <p className="text-xs text-gray-500 mt-1">Results are released at a specific time</p>
+                    </div>
+                  </label>
                 </div>
               </div>
 
@@ -572,7 +575,7 @@ export function UnifiedPublishModal({
                         <>
                           <li>• Test will be available from the start date onwards</li>
                           <li>• No end date - students can take it anytime after start</li>
-                          <li>• Results are shown instantly (only logical option)</li>
+                          <li>• Results will be {publishData.resultPolicy === 'instant' ? 'shown immediately' : 'released at the specified time'}</li>
                           <li>• Perfect for practice tests and open-ended assignments</li>
                         </>
                       ) : (

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { deleteTest, cloneTest } from '@/lib/actions/tests'
+import { deleteTest, cloneTest, declareResultsNow } from '@/lib/actions/tests'
 import { PremiumPDFExporter } from './premium-pdf-exporter'
 import { TestPreviewModal } from './test-preview-modal'
 import type { Question as AdminQuestion } from '@/lib/supabase/admin'
@@ -25,7 +25,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { PublishTestDialog } from './publish-test-dialog'
-import { Edit, Trash2, BarChart3, MoreHorizontal, FileDown, Copy, Loader2, Eye } from 'lucide-react'
+import { Edit, Trash2, BarChart3, MoreHorizontal, FileDown, Copy, Loader2, Eye, Zap } from 'lucide-react'
 import Link from 'next/link'
 import type { Test } from '@/lib/supabase/admin'
 
@@ -36,6 +36,7 @@ interface TestActionsProps {
 
 export function TestActions({ test, onAction }: TestActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isDeclaring, setIsDeclaring] = useState(false)
   const [showPremiumExporter, setShowPremiumExporter] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
   const [testData, setTestData] = useState<{ test: Test; questions: AdminQuestion[] } | null>(null)
@@ -56,6 +57,22 @@ export function TestActions({ test, onAction }: TestActionsProps) {
       console.error('Error deleting test:', error)
     } finally {
       setIsDeleting(false)
+    }
+  }
+
+  const handleDeclareResults = async () => {
+    setIsDeclaring(true)
+    try {
+      const result = await declareResultsNow(test.id)
+      if (result.success) {
+        onAction()
+      } else {
+        console.error('Declare results failed:', result.message)
+      }
+    } catch (error) {
+      console.error('Error declaring results:', error)
+    } finally {
+      setIsDeclaring(false)
     }
   }
 
@@ -137,6 +154,13 @@ export function TestActions({ test, onAction }: TestActionsProps) {
     return startsAt && startsAt <= now
   })()
 
+  const canDeclareResults = (() => {
+    if (test.result_policy !== 'scheduled') return false
+    if (!test.result_release_at) return false
+    const releaseDate = new Date(test.result_release_at)
+    return releaseDate > new Date()
+  })()
+
   return (
     <div className="flex items-center justify-between gap-2">
       <div className="flex items-center gap-2">
@@ -189,6 +213,12 @@ export function TestActions({ test, onAction }: TestActionsProps) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
+            {canDeclareResults && (
+              <DropdownMenuItem onClick={handleDeclareResults} disabled={isDeclaring}>
+                <Zap className="h-4 w-4 mr-2" strokeWidth={1.5} />
+                {isDeclaring ? 'Declaring...' : 'Declare Results Now'}
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={handleOpenPremiumExporter}>
               <FileDown className="h-4 w-4 mr-2" strokeWidth={1.5} />
               Export PDF

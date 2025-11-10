@@ -327,6 +327,8 @@ export interface Test {
   show_in_question_timer?: boolean
   is_proctored?: boolean
   is_dynamically_shuffled?: boolean
+  result_policy: 'instant' | 'scheduled'
+  result_release_at?: string | null
 }
 
 // Types for test_questions table

@@ -54,11 +54,21 @@ export class PDFService {
       const safeTest = {
         id: test.id || 0,
         name: test.name || 'Untitled Test',
+        description: test.description || undefined,
         total_time_minutes: test.total_time_minutes || 60,
         marks_per_correct: test.marks_per_correct || 1,
         negative_marks_per_incorrect: test.negative_marks_per_incorrect || 0,
         status: test.status || 'draft',
-        created_at: test.created_at || new Date().toISOString()
+        start_time: test.start_time || undefined,
+        end_time: test.end_time || undefined,
+        created_at: test.created_at || new Date().toISOString(),
+        updated_at: test.updated_at || undefined,
+        allow_pausing: test.allow_pausing || false,
+        show_in_question_timer: test.show_in_question_timer || false,
+        is_proctored: test.is_proctored || false,
+        is_dynamically_shuffled: test.is_dynamically_shuffled || false,
+        result_policy: test.result_policy || 'instant',
+        result_release_at: test.result_release_at || null,
       }
 
       // Ensure questions have required properties
@@ -110,11 +120,21 @@ export class PDFService {
       const safeTest = {
         id: test.id || 0,
         name: test.name || 'Untitled Test',
+        description: test.description || undefined,
         total_time_minutes: test.total_time_minutes || 60,
         marks_per_correct: test.marks_per_correct || 1,
         negative_marks_per_incorrect: test.negative_marks_per_incorrect || 0,
         status: test.status || 'draft',
-        created_at: test.created_at || new Date().toISOString()
+        start_time: test.start_time || undefined,
+        end_time: test.end_time || undefined,
+        created_at: test.created_at || new Date().toISOString(),
+        updated_at: test.updated_at || undefined,
+        allow_pausing: test.allow_pausing || false,
+        show_in_question_timer: test.show_in_question_timer || false,
+        is_proctored: test.is_proctored || false,
+        is_dynamically_shuffled: test.is_dynamically_shuffled || false,
+        result_policy: test.result_policy || 'instant',
+        result_release_at: test.result_release_at || null,
       }
 
       // Ensure questions have required properties
@@ -166,11 +186,21 @@ export class PDFService {
       const safeTest = {
         id: test.id || 0,
         name: test.name || 'Untitled Test',
+        description: test.description || undefined,
         total_time_minutes: test.total_time_minutes || 60,
         marks_per_correct: test.marks_per_correct || 1,
         negative_marks_per_incorrect: test.negative_marks_per_incorrect || 0,
         status: test.status || 'draft',
-        created_at: test.created_at || new Date().toISOString()
+        start_time: test.start_time || undefined,
+        end_time: test.end_time || undefined,
+        created_at: test.created_at || new Date().toISOString(),
+        updated_at: test.updated_at || undefined,
+        allow_pausing: test.allow_pausing || false,
+        show_in_question_timer: test.show_in_question_timer || false,
+        is_proctored: test.is_proctored || false,
+        is_dynamically_shuffled: test.is_dynamically_shuffled || false,
+        result_policy: test.result_policy || 'instant',
+        result_release_at: test.result_release_at || null,
       }
 
       // Ensure questions have required properties
