@@ -46,18 +46,34 @@ export async function getAllTestsWithCounts(): Promise<Array<Test & { question_c
       return []
     }
 
-    const result: Array<Test & { question_count: number }> = (data as Array<Test & { test_questions: Array<{ count: number }> }>).map((row) => {
+    const resultWithStatus: Array<Test & { question_count: number }> = (data as Array<Test & { test_questions: Array<{ count: number }> }>).map((row) => {
       const { test_questions, ...testFields } = row
       const count = Array.isArray(test_questions) && test_questions.length > 0 && typeof test_questions[0].count === 'number'
         ? test_questions[0].count
         : (Array.isArray(test_questions) ? test_questions.length : 0)
+      
+      const test = testFields as Test;
+
+      let result_declaration_status: 'instant' | 'declared' | 'scheduled' | 'not_configured' = 'not_configured';
+      if (test.result_policy === 'instant') {
+        result_declaration_status = 'instant';
+      } else if (test.result_policy === 'scheduled' && test.result_release_at) {
+        const releaseDate = new Date(test.result_release_at);
+        if (releaseDate <= new Date()) {
+          result_declaration_status = 'declared';
+        } else {
+          result_declaration_status = 'scheduled';
+        }
+      }
+
       return {
-        ...(testFields as Test),
-        question_count: count
+        ...test,
+        question_count: count,
+        result_declaration_status
       }
     })
 
-    return result
+    return resultWithStatus
   } catch (error) {
     console.error('Unexpected error:', error)
     return []

@@ -329,6 +329,7 @@ export interface Test {
   is_dynamically_shuffled?: boolean
   result_policy: 'instant' | 'scheduled'
   result_release_at?: string | null
+  result_declaration_status?: 'instant' | 'declared' | 'scheduled' | 'not_configured';
 }
 
 // Types for test_questions table

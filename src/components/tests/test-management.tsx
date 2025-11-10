@@ -13,6 +13,7 @@ import {
 import { TestActions } from './test-actions'
 import { TestProgressCard } from './test-progress-card'
 import { TestControlToggles } from './test-control-toggles'
+import { ResultStatus } from './ResultStatus'
 
 interface TestManagementProps {
   onCreateTest?: () => void
@@ -274,22 +275,15 @@ export function TestManagement({ onCreateTest }: TestManagementProps = {}) {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 text-sm">
-                  <FileText className="h-4 w-4 text-gray-400 flex-shrink-0" strokeWidth={1.5} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500">Results</p>
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {test.result_policy === 'instant' ? 'Instant' : `Scheduled for ${formatDateTime(test.result_release_at)}`}
-                    </p>
-                  </div>
-                </div>
-              </div>
+              {/* Result Status */}
+              <ResultStatus test={test} />
+            </div>
 
-              {/* Test Progress */}
-              <TestProgressCard 
-                progress={progressData[test.id.toString()]}
-                isLoading={progressLoading}
-              />
+            {/* Test Progress */}
+            <TestProgressCard 
+              progress={progressData[test.id.toString()]}
+              isLoading={progressLoading}
+            />
 
               {/* Test Control Settings */}
               <div className="py-4 border-t border-gray-100">
