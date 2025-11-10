@@ -3,7 +3,7 @@
 import * as Tabs from '@radix-ui/react-tabs'
 import { useState } from 'react'
 import Link from 'next/link'
-import { FileText, Clock, Settings, Activity, Eye, Edit, Copy, Trash2, Loader2, Zap } from 'lucide-react'
+import { FileText, Clock, Settings, Activity, Eye, Edit, Copy, Trash2, Loader2, Zap, Calendar, CheckCircle2 } from 'lucide-react'
 import type { Test } from '@/lib/supabase/admin'
 import { Timeline } from './Timeline'
 import { TestActions } from './test-actions'
@@ -90,13 +90,20 @@ export function TestCardTabs({ test, progress, progressLoading, onAction }: Test
     return !startsAt || startsAt > now
   })()
 
+  const canDeclareResults = (() => {
+    if (test.result_policy !== 'scheduled') return false
+    if (!test.result_release_at) return false
+    const releaseDate = new Date(test.result_release_at)
+    return releaseDate > new Date()
+  })()
+
   const getStatusBadge = (test: Test) => {
     const isPerpetual = test.status === 'scheduled' && !test.end_time
     if (isPerpetual) {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 rounded-lg border border-emerald-100 flex-shrink-0">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-          <span className="text-xs font-medium text-emerald-700">Perpetual</span>
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-full flex-shrink-0 shadow-md">
+          <div className="w-2 h-2 rounded-full bg-white/80 animate-pulse" />
+          <span className="text-xs font-semibold">Perpetual</span>
         </span>
       )
     }
@@ -104,37 +111,37 @@ export function TestCardTabs({ test, progress, progressLoading, onAction }: Test
     switch (test.dynamic_status) {
       case 'draft':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 rounded-lg border border-gray-200 flex-shrink-0">
-            <div className="w-1.5 h-1.5 rounded-full bg-gray-600" />
-            <span className="text-xs font-medium text-gray-700">Draft</span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-500 text-white rounded-full flex-shrink-0 shadow-md">
+            <Edit className="w-3 h-3" />
+            <span className="text-xs font-semibold">Draft</span>
           </span>
         )
       case 'scheduled':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 rounded-lg border border-blue-100 flex-shrink-0">
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-            <span className="text-xs font-medium text-blue-700">Scheduled</span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-full flex-shrink-0 shadow-md">
+            <Calendar className="w-3 h-3" />
+            <span className="text-xs font-semibold">Scheduled</span>
           </span>
         )
       case 'live':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 rounded-lg border border-emerald-100 flex-shrink-0">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-            <span className="text-xs font-medium text-emerald-700">Live</span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white rounded-full flex-shrink-0 shadow-md">
+            <div className="w-2 h-2 rounded-full bg-white/80 animate-pulse" />
+            <span className="text-xs font-semibold">Live</span>
           </span>
         )
       case 'completed':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 rounded-lg border border-gray-200 flex-shrink-0">
-            <div className="w-1.5 h-1.5 rounded-full bg-gray-600" />
-            <span className="text-xs font-medium text-gray-700">Completed</span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white rounded-full flex-shrink-0 shadow-md">
+            <CheckCircle2 className="w-3 h-3" />
+            <span className="text-xs font-semibold">Completed</span>
           </span>
         )
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 rounded-lg border border-gray-200 flex-shrink-0">
-            <div className="w-1.5 h-1.5 rounded-full bg-gray-600" />
-            <span className="text-xs font-medium text-gray-700">Unknown</span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-500 text-white rounded-full flex-shrink-0 shadow-md">
+            <div className="w-2 h-2 rounded-full bg-white/80" />
+            <span className="text-xs font-semibold">Unknown</span>
           </span>
         )
     }
@@ -225,6 +232,12 @@ export function TestCardTabs({ test, progress, progressLoading, onAction }: Test
               <Copy className="h-4 w-4 mr-1.5" strokeWidth={1.5} />
               <span>Clone Test</span>
             </Button>
+            {canDeclareResults && (
+              <Button variant="outline" size="sm" onClick={handleDeclareResults} disabled={isDeclaring} className="h-8 px-3 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-150">
+                <Zap className="h-4 w-4 mr-1.5" strokeWidth={1.5} />
+                {isDeclaring ? 'Declaring...' : 'Declare Results Now'}
+              </Button>
+            )}
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button 
