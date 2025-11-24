@@ -149,7 +149,7 @@ export function BulkImport() {
             <div className="bg-blue-50 p-4 rounded-md">
               <h4 className="font-semibold text-blue-900 mb-2">Template Format:</h4>
               <div className="text-sm text-blue-800 space-y-1">
-                <p><strong>Required columns:</strong> question_id, book_source, chapter_name, question_text</p>
+                <p><strong>Required columns:</strong> book_source, chapter_name, question_text</p>
                 <p><strong>Options format:</strong> JSON string like {`{"a": "Option A", "b": "Option B", "c": "Option C", "d": "Option D"}`}</p>
                 <p><strong>Admin tags format:</strong> Comma-separated string like {`"tag1, tag2, tag3"`}</p>
                 <p><strong>Correct option:</strong> Must be {`"a", "b", "c", or "d"`}</p>

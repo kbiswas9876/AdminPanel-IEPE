@@ -7,13 +7,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { QuestionExplorer } from '../shared/question-explorer'
+import { QuestionExplorer } from '../questions/QuestionExplorer'
 import type { Question } from '@/lib/types'
 
 interface UnifiedQuestionBankModalProps {
   open: boolean
   onClose: () => void
-  onSelect: (question: Question) => void
+  onSelect?: (question: Question) => void
   onSelectMultiple?: (questions: Question[]) => void
   initialChapter?: string
   multiSelect?: boolean
@@ -23,29 +23,14 @@ interface UnifiedQuestionBankModalProps {
 export function UnifiedQuestionBankModal({ 
   open, 
   onClose, 
-  onSelect, 
+  onSelect,
   onSelectMultiple,
   initialChapter,
   multiSelect = false,
   title = "Master Question Bank"
 }: UnifiedQuestionBankModalProps) {
-  const [selectedQuestions, setSelectedQuestions] = useState<Set<string | number>>(new Set())
+  const [selectedQuestions] = useState<Set<string | number>>(new Set())
 
-  const handleQuestionSelect = (question: Question) => {
-    onSelect(question)
-    onClose()
-  }
-
-  const handleQuestionSelectMultiple = (questions: Question[]) => {
-    if (onSelectMultiple) {
-      onSelectMultiple(questions)
-      onClose()
-    }
-  }
-
-  const handleSelectionChange = (selected: Set<string | number>) => {
-    setSelectedQuestions(selected)
-  }
 
   return (
     <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
@@ -62,18 +47,7 @@ export function UnifiedQuestionBankModal({
         </DialogHeader>
         
         <div className="flex-1 overflow-hidden">
-          <QuestionExplorer
-            actionType={multiSelect ? 'select-multiple' : 'select'}
-            onQuestionSelect={handleQuestionSelect}
-            onQuestionSelectMultiple={handleQuestionSelectMultiple}
-            title=""
-            showHeader={false}
-            className="h-full"
-            multiSelect={multiSelect}
-            selectedQuestions={selectedQuestions}
-            onSelectionChange={handleSelectionChange}
-            initialFilters={initialChapter ? { chapters: [initialChapter] } : undefined}
-          />
+          <QuestionExplorer />
         </div>
       </DialogContent>
     </Dialog>

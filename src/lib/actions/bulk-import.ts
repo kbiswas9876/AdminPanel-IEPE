@@ -3,8 +3,9 @@
 import { createAdminClient, type Question as DBQuestion } from '@/lib/supabase/admin'
 import type { Question } from '@/lib/types'
 import { revalidatePath } from 'next/cache'
-import { sanitizeQuestionForStorage } from '@/lib/utils/latex-sanitization'
-import { generateQuestionId } from '@/lib/utils/question-id-generator'
+import { processQuestionFromCSV } from '@/lib/utils/latex-sanitization'
+import { generateUniqueQuestionId, generateBookCode } from '@/lib/utils/uniform-id-generator'
+import { getBookCodeByName } from '@/lib/actions/id-generation'
 import Papa from 'papaparse'
 
 export interface ImportResult {
@@ -15,7 +16,7 @@ export interface ImportResult {
 }
 
 export interface CSVRow {
-  question_id: string
+  question_id?: string // Made optional - will be auto-generated
   book_source: string
   chapter_name: string
   question_number_in_book?: string
@@ -50,10 +51,6 @@ function parseCSVData(csvContent: string): { data: Question[], errors: string[] 
       
       try {
         // Validate required fields
-        if (!row.question_id) {
-          errors.push(`Row ${rowNumber}: question_id is required`)
-          return
-        }
         if (!row.book_source) {
           errors.push(`Row ${rowNumber}: book_source is required`)
           return
@@ -105,7 +102,7 @@ function parseCSVData(csvContent: string): { data: Question[], errors: string[] 
         }
         
         const question: Question = {
-          question_id: row.question_id,
+          question_id: row.question_id || '', // Will be auto-generated later if empty
           book_source: row.book_source,
           chapter_name: row.chapter_name,
           question_number_in_book: questionNumber,
@@ -130,6 +127,60 @@ function parseCSVData(csvContent: string): { data: Question[], errors: string[] 
   }
   
   return { data: questions, errors }
+}
+
+// Auto-generate question IDs for questions that don't have them
+async function generateQuestionIds(questions: Question[]): Promise<{ questions: Question[], errors: string[] }> {
+  const errors: string[] = []
+  const updatedQuestions: Question[] = []
+  
+  for (let i = 0; i < questions.length; i++) {
+    const question = questions[i]
+    
+    try {
+      // If question already has an ID, use it
+      if (question.question_id && question.question_id.trim() !== '') {
+        updatedQuestions.push(question)
+        continue
+      }
+      
+      // Auto-generate question ID using uniform algorithm
+      const bookCode = await getBookCodeByName(question.book_source)
+      
+      if (!bookCode) {
+        // Generate book code using uniform algorithm if not found in database
+        const fallbackBookCode = generateBookCode(question.book_source)
+        
+        const generatedId = await generateUniqueQuestionId(
+          fallbackBookCode,
+          question.chapter_name,
+          question.question_number_in_book || 1
+        )
+        
+        updatedQuestions.push({
+          ...question,
+          question_id: generatedId
+        })
+      } else {
+        const generatedId = await generateUniqueQuestionId(
+          bookCode,
+          question.chapter_name,
+          question.question_number_in_book || 1
+        )
+        
+        updatedQuestions.push({
+          ...question,
+          question_id: generatedId
+        })
+      }
+    } catch (error) {
+      errors.push(`Question ${i + 1}: Failed to generate question ID - ${error instanceof Error ? error.message : 'Unknown error'}`)
+      // Add the question without ID for now
+      updatedQuestions.push(question)
+    }
+  }
+  
+  return { questions: updatedQuestions, errors }
 }
 
 // Parse CSV data without inserting into database (for staging)
@@ -177,10 +228,21 @@ export async function parseCSVForStaging(formData: FormData): Promise<{
       }
     }
     
+    // Auto-generate question IDs for questions that don't have them
+    const { questions: questionsWithIds, errors: idErrors } = await generateQuestionIds(questions)
+    
+    if (idErrors.length > 0) {
+      return {
+        success: false,
+        message: 'Failed to generate question IDs',
+        errors: idErrors
+      }
+    }
+    
     return {
       success: true,
-      message: `Successfully parsed ${questions.length} questions for review`,
-      questions: questions
+      message: `Successfully parsed ${questionsWithIds.length} questions for review`,
+      questions: questionsWithIds
     }
     
   } catch (error) {
@@ -202,21 +264,25 @@ export async function finalizeImport(questions: Question[]): Promise<ImportResul
       }
     }
     
-    // Sanitize questions for storage (convert \ to \\ for JSON compatibility)
-    const sanitizedQuestions = questions.map(q => sanitizeQuestionForStorage(q))
+    // Auto-generate question IDs for questions that don't have them
+    const { questions: questionsWithIds, errors: idErrors } = await generateQuestionIds(questions)
+    
+    if (idErrors.length > 0) {
+      return {
+        success: false,
+        message: 'Failed to generate question IDs',
+        errors: idErrors
+      }
+    }
+    
+    // Process questions from CSV with intelligent LaTeX handling
+    const processedQuestions = questionsWithIds.map(q => processQuestionFromCSV(q))
     
     // Convert Question type to DBQuestion type for database insertion
     // Exclude id field to let the database auto-generate it
-    const dbQuestions: Omit<DBQuestion, 'id'>[] = sanitizedQuestions.map(q => {
-      // Generate automatic question_id
-      const autoGeneratedQuestionId = generateQuestionId(
-        q.book_source as string,
-        q.chapter_name as string,
-        q.question_number_in_book as number
-      )
-      
+    const dbQuestions: Omit<DBQuestion, 'id'>[] = processedQuestions.map(q => {
       return {
-        question_id: autoGeneratedQuestionId,
+        question_id: q.question_id as string,
         book_source: q.book_source as string,
         chapter_name: q.chapter_name as string,
         question_number_in_book: q.question_number_in_book as number | undefined,
@@ -303,12 +369,41 @@ export async function bulkImportQuestions(formData: FormData): Promise<ImportRes
       }
     }
     
+    // Auto-generate question IDs for questions that don't have them
+    const { questions: questionsWithIds, errors: idErrors } = await generateQuestionIds(questions)
+    
+    if (idErrors.length > 0) {
+      return {
+        success: false,
+        message: 'Failed to generate question IDs',
+        errors: idErrors
+      }
+    }
+    
+    // Process questions from CSV with intelligent LaTeX handling
+    const processedQuestions = questionsWithIds.map(q => processQuestionFromCSV(q))
+    
+    // Convert to database format
+    const dbQuestions: Omit<DBQuestion, 'id'>[] = processedQuestions.map(q => ({
+      question_id: q.question_id as string,
+      book_source: q.book_source as string,
+      chapter_name: q.chapter_name as string,
+      question_number_in_book: q.question_number_in_book as number | undefined,
+      question_text: q.question_text as string,
+      options: q.options as { a: string; b: string; c: string; d: string; } | undefined,
+      correct_option: q.correct_option as string | undefined,
+      solution_text: q.solution_text as string | undefined,
+      exam_metadata: q.exam_metadata as string | undefined,
+      admin_tags: q.admin_tags as string[] | undefined,
+      created_at: q.created_at as string
+    }))
+    
     // Batch insert into database
     const supabase = createAdminClient()
     
     const { error } = await supabase
       .from('questions')
-      .insert(questions)
+      .insert(dbQuestions)
     
     if (error) {
       console.error('Database insertion error:', error)
@@ -323,8 +418,8 @@ export async function bulkImportQuestions(formData: FormData): Promise<ImportRes
     
     return {
       success: true,
-      message: `Successfully imported ${questions.length} questions!`,
-      importedCount: questions.length
+      message: `Successfully imported ${dbQuestions.length} questions!`,
+      importedCount: dbQuestions.length
     }
     
   } catch (error) {

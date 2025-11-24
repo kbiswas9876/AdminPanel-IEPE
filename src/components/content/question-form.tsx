@@ -16,6 +16,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { ClientOnlyAdvancedTipTapEditor } from '@/components/editors/ClientOnlyAdvancedTipTapEditor'
 import type { Question } from '@/lib/supabase/admin'
 
 interface QuestionFormProps {
@@ -27,6 +28,8 @@ interface QuestionFormProps {
 export function QuestionForm({ question, isEditing = false, onSubmit }: QuestionFormProps) {
   const [bookSources, setBookSources] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
+  const [solutionText, setSolutionText] = useState(question?.solution_text || '')
+  
 
   useEffect(() => {
     const fetchBookSources = async () => {
@@ -46,6 +49,8 @@ export function QuestionForm({ question, isEditing = false, onSubmit }: Question
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
+    // Add the solution text from state to form data
+    formData.set('solution_text', solutionText)
     onSubmit(formData)
   }
 
@@ -229,12 +234,11 @@ export function QuestionForm({ question, isEditing = false, onSubmit }: Question
             {/* Solution Text */}
             <div className="space-y-2">
               <Label htmlFor="solution_text">Solution Text</Label>
-              <Textarea
-                id="solution_text"
-                name="solution_text"
-                defaultValue={question?.solution_text || ''}
-                placeholder="Enter the solution explanation..."
-                rows={4}
+              <ClientOnlyAdvancedTipTapEditor
+                value={solutionText}
+                onChange={setSolutionText}
+                placeholder="Enter the solution/explanation (supports LaTeX math and images)"
+                showToolbar={true}
               />
             </div>
 

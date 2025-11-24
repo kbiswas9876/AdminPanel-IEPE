@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ArrowRight, Pencil, Edit3, Trash2, ChevronDown, Plus, Eye, EyeOff, Settings, Sparkles, Layers, RefreshCw, FileText, CheckCircle2, BarChart3, Award, Star, Shield, Zap as Lightning, Wand2, Palette, Code, Eye as Preview, Save, X, BookOpen, AlertCircle } from 'lucide-react'
-import { SmartLatexRenderer } from './smart-latex-renderer'
+import { UniversalContentRenderer } from '../editors/UniversalContentRenderer'
 import type { Question, TestQuestionSlot } from '@/lib/types'
 import { UnifiedQuestionBankModal } from './unified-question-bank-modal'
 
@@ -218,7 +218,7 @@ export function ReviewRefineInterface({
     }
   }
 
-  const renderMathContent = (text: string) => <SmartLatexRenderer text={text} />
+  const renderMathContent = (text: string) => <UniversalContentRenderer text={text} />
 
   const getOptionLabel = (option: string) => {
     return option.charAt(0).toUpperCase()
@@ -458,7 +458,7 @@ export function ReviewRefineInterface({
                                     Live Preview
                                   </div>
                                   <div className="prose prose-sm max-w-none">
-                                    <SmartLatexRenderer text={editForm.question_text} />
+                                    <UniversalContentRenderer text={editForm.question_text} />
                                   </div>
                                 </div>
                               )}
@@ -523,7 +523,7 @@ export function ReviewRefineInterface({
                                         Live Preview
                               </div>
                                       <div className="prose prose-sm max-w-none">
-                                          <SmartLatexRenderer text={editForm.options[k]} />
+                                          <UniversalContentRenderer text={editForm.options[k]} />
                                   </div>
                                 </div>
                               )}
@@ -630,7 +630,7 @@ export function ReviewRefineInterface({
                                     </div>
                                   </div>
                                   <div className="prose prose-lg max-w-none text-slate-800 leading-relaxed">
-                                    <SmartLatexRenderer text={editForm.solution_text} />
+                                    <UniversalContentRenderer text={editForm.solution_text} />
                                   </div>
                                 </div>
                               )}
@@ -1074,7 +1074,7 @@ function CreateQuestionForm({ onCancel, onSave }: { onCancel: () => void; onSave
                     <span className="text-xs font-semibold text-blue-800">Question Preview</span>
                   </div>
                   <div className="prose prose-xs max-w-none text-gray-800">
-                    <SmartLatexRenderer text={questionText} />
+                    <UniversalContentRenderer text={questionText} />
                   </div>
                 </div>
               )}
@@ -1150,7 +1150,7 @@ function CreateQuestionForm({ onCancel, onSave }: { onCancel: () => void; onSave
                             <span className="text-xs font-bold text-green-700">{key}</span>
                           </div>
                           <div className="flex-1 prose prose-xs max-w-none text-gray-800">
-                            <SmartLatexRenderer text={value} />
+                            <UniversalContentRenderer text={value} />
                           </div>
                           {correct === key && (
                             <CheckCircle2 className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
@@ -1221,7 +1221,7 @@ function CreateQuestionForm({ onCancel, onSave }: { onCancel: () => void; onSave
                     <span className="text-xs font-semibold text-amber-800">Solution Preview</span>
                   </div>
                   <div className="prose prose-xs max-w-none text-gray-800">
-                    <SmartLatexRenderer text={solution} />
+                    <UniversalContentRenderer text={solution} />
                   </div>
                 </div>
               )}
@@ -1286,7 +1286,7 @@ function CreateQuestionForm({ onCancel, onSave }: { onCancel: () => void; onSave
                     <span className="text-xs sm:text-sm font-semibold text-blue-800">Question Preview</span>
                   </div>
                   <div className="prose prose-xs sm:prose-sm max-w-none text-gray-800">
-                    <SmartLatexRenderer text={questionText} />
+                    <UniversalContentRenderer text={questionText} />
                   </div>
                 </div>
               )}
@@ -1306,7 +1306,7 @@ function CreateQuestionForm({ onCancel, onSave }: { onCancel: () => void; onSave
                             <span className="text-xs font-bold text-green-700">{key}</span>
                           </div>
                           <div className="flex-1 prose prose-xs max-w-none text-gray-800">
-                            <SmartLatexRenderer text={value} />
+                            <UniversalContentRenderer text={value} />
                           </div>
                           {correct === key && (
                             <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
@@ -1326,7 +1326,7 @@ function CreateQuestionForm({ onCancel, onSave }: { onCancel: () => void; onSave
                     <span className="text-xs sm:text-sm font-semibold text-amber-800">Solution Preview</span>
                   </div>
                   <div className="prose prose-xs sm:prose-sm max-w-none text-gray-800">
-                    <SmartLatexRenderer text={solution} />
+                    <UniversalContentRenderer text={solution} />
                   </div>
                 </div>
               )}
