@@ -73,7 +73,7 @@ export function ExpandableQuestionList({
     if (editingQuestionId && !expandedQuestionIds.has(editingQuestionId)) {
       setExpandedQuestionIds(prev => new Set([...prev, editingQuestionId]))
     }
-  }, [editingQuestionId])
+  }, [editingQuestionId, expandedQuestionIds])
   
   // Keep track of recently edited questions to preserve their expanded state
   const [recentlyEditedIds, setRecentlyEditedIds] = useState<Set<number>>(new Set())

@@ -150,6 +150,7 @@ export async function getFilterOptions(args?: { bookSource?: string; bookSources
   chapters: string[]
   tags: string[]
   difficulties: string[]
+  exams: string[]
 }> {
   try {
     const supabase = createAdminClient()
@@ -204,12 +205,40 @@ export async function getFilterOptions(args?: { bookSource?: string; bookSources
     }
     const tags = Array.from(tagSet).sort((a, b) => a.localeCompare(b))
 
+    // D) Exam metadata (extract exam names and years)
+    const { data: examRows, error: examErr } = await supabase
+      .from('questions')
+      .select('exam_metadata')
+    if (examErr) {
+      console.error('Error fetching exam metadata:', examErr)
+    }
+    
+    const examSet = new Set<string>()
+    for (const row of (examRows || []) as Array<{ exam_metadata: string | null }>) {
+      if (row.exam_metadata && typeof row.exam_metadata === 'string') {
+        // Extract exam name and year from metadata like "CAT 2022 Slot 1"
+        const examMatch = row.exam_metadata.match(/^([A-Za-z\s]+)\s+(\d{4})/)
+        if (examMatch) {
+          const examName = examMatch[1].trim()
+          const examYear = examMatch[2]
+          examSet.add(`${examName} ${examYear}`)
+        }
+      }
+    }
+    const exams = Array.from(examSet).sort((a, b) => {
+      // Sort by year first, then by name
+      const yearA = a.match(/\d{4}/)?.[0] || '0'
+      const yearB = b.match(/\d{4}/)?.[0] || '0'
+      if (yearA !== yearB) return yearB.localeCompare(yearA) // Newer years first
+      return a.localeCompare(b)
+    })
+
     const difficulties = ['Easy', 'Easy-Moderate', 'Moderate', 'Moderate-Hard', 'Hard']
 
-    return { bookSources, chapters, tags, difficulties }
+    return { bookSources, chapters, tags, difficulties, exams }
   } catch (error) {
     console.error('Unexpected error in getFilterOptions:', error)
-    return { bookSources: [], chapters: [], tags: [], difficulties: ['Easy', 'Easy-Moderate', 'Moderate', 'Moderate-Hard', 'Hard'] }
+    return { bookSources: [], chapters: [], tags: [], difficulties: ['Easy', 'Easy-Moderate', 'Moderate', 'Moderate-Hard', 'Hard'], exams: [] }
   }
 }
 
@@ -369,7 +398,8 @@ export async function searchQuestions(args: {
   chapter_name?: string
   chapters?: string[]
   tags?: string[]
-  difficulty?: 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard'
+  difficulty?: 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard' | 'all'
+  exams?: string[]
   sort_by?: string
   page?: number
   pageSize?: number
@@ -386,9 +416,14 @@ export async function searchQuestions(args: {
       query = query.or(`question_id.ilike.%${args.search}%,question_text.ilike.%${args.search}%`)
     }
     if (args.book_sources && args.book_sources.length > 0) {
-      query = query.in('book_source', args.book_sources)
+      // Normalize book sources for better matching
+      const normalizedSources = args.book_sources.map(source => 
+        source.trim().replace(/\s+/g, ' ')
+      )
+      query = query.in('book_source', normalizedSources)
     } else if (args.book_source) {
-      query = query.eq('book_source', args.book_source)
+      const normalizedSource = args.book_source.trim().replace(/\s+/g, ' ')
+      query = query.eq('book_source', normalizedSource)
     }
 
     if (args.chapters && args.chapters.length > 0) {
@@ -397,7 +432,17 @@ export async function searchQuestions(args: {
       query = query.eq('chapter_name', args.chapter_name)
     }
     if (args.tags && args.tags.length > 0) query = query.contains('admin_tags', args.tags as string[])
-    if (args.difficulty) query = query.eq('difficulty', args.difficulty)
+    if (args.difficulty && args.difficulty !== 'all') query = query.eq('difficulty', args.difficulty)
+    
+    // Filter by exam metadata
+    if (args.exams && args.exams.length > 0) {
+      // Create a filter for exam metadata that matches any of the selected exams
+      const examFilters = args.exams.map(exam => {
+        // Convert "CAT 2022" to match "CAT 2022 Slot 1", "CAT 2022 Slot 2", etc.
+        return `exam_metadata.ilike.%${exam}%`
+      })
+      query = query.or(examFilters.join(','))
+    }
 
     // Add sorting
     if (args.sort_by) {

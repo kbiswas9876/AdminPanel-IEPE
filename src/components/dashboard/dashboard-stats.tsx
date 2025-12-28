@@ -25,7 +25,7 @@ interface RecentActivityProps {
   activities: RecentActivity[]
 }
 
-// Stat Card Component
+// Premium Stat Card Component
 function StatCard({ 
   title, 
   value, 
@@ -43,38 +43,38 @@ function StatCard({
 }) {
   return (
     <Link href={href} className="block group">
-      <Card className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-[1.02] cursor-pointer border-0 ${
+      <Card className={`relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-[1.03] cursor-pointer border-0 rounded-2xl ${
         isUrgent 
-          ? 'bg-gradient-to-br from-orange-50 via-red-50 to-pink-50 shadow-orange-200/50' 
-          : 'bg-white/80 backdrop-blur-sm shadow-gray-200/50'
+          ? 'bg-gradient-to-br from-orange-50/90 via-red-50/80 to-pink-50/90 shadow-orange-200/60 backdrop-blur-sm' 
+          : 'bg-white/90 backdrop-blur-sm shadow-gray-200/60 hover:shadow-indigo-200/40'
       }`}>
         {/* Subtle background pattern */}
         <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
-          <CardTitle className="text-sm font-semibold text-gray-700 tracking-wide">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 relative z-10 p-6">
+          <CardTitle className="text-sm font-bold text-slate-700 tracking-wide uppercase">
             {title}
           </CardTitle>
-          <div className={`p-2 rounded-lg transition-all duration-200 ${
+          <div className={`p-3 rounded-xl transition-all duration-300 shadow-lg ${
             isUrgent 
-              ? 'bg-gradient-to-br from-orange-100 to-red-100 text-orange-600 group-hover:scale-110' 
-              : 'bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600 group-hover:scale-110'
+              ? 'bg-gradient-to-br from-orange-100 to-red-100 text-orange-600 group-hover:scale-110 group-hover:shadow-orange-200/50' 
+              : 'bg-gradient-to-br from-indigo-100 to-blue-100 text-indigo-600 group-hover:scale-110 group-hover:shadow-indigo-200/50'
           }`}>
-            <Icon className="h-5 w-5" />
+            <Icon className="h-6 w-6" />
           </div>
         </CardHeader>
-        <CardContent className="relative z-10">
-          <div className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">
+        <CardContent className="relative z-10 p-6 pt-0">
+          <div className="text-4xl lg:text-5xl font-black text-slate-900 mb-3 tracking-tight">
             {value.toLocaleString()}
           </div>
           {description && (
-            <p className="text-sm text-gray-600 font-medium">
+            <p className="text-sm text-slate-600 font-semibold">
               {description}
             </p>
           )}
           {isUrgent && value > 0 && (
-            <div className="mt-3">
-              <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 shadow-lg animate-pulse">
+            <div className="mt-4">
+              <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 shadow-lg animate-pulse px-3 py-1 text-xs font-bold">
                 Action Required
               </Badge>
             </div>
@@ -136,18 +136,18 @@ function ActivityItem({ activity }: { activity: RecentActivity }) {
   }
 
   return (
-    <div className="flex items-start space-x-4 p-4 hover:bg-gray-50/50 transition-all duration-200 group">
-      <div className={`flex-shrink-0 mt-0.5 p-2 rounded-lg ${getActivityIconBg(activity.type)} group-hover:scale-110 transition-transform duration-200`}>
+    <div className="flex items-start space-x-4 p-5 hover:bg-slate-50/80 transition-all duration-300 group border-l-4 border-transparent hover:border-indigo-200">
+      <div className={`flex-shrink-0 mt-1 p-3 rounded-xl shadow-sm ${getActivityIconBg(activity.type)} group-hover:scale-110 transition-transform duration-300`}>
         {getActivityIcon(activity.type)}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-gray-900 group-hover:text-gray-700 transition-colors">
+        <p className="text-base font-bold text-slate-900 group-hover:text-slate-700 transition-colors">
           {activity.title}
         </p>
-        <p className="text-sm text-gray-600 mt-1 leading-relaxed">
+        <p className="text-sm text-slate-600 mt-1 leading-relaxed">
           {activity.description}
         </p>
-        <p className="text-xs text-gray-500 mt-2 font-medium">
+        <p className="text-xs text-slate-500 mt-3 font-semibold">
           {formatTimestamp(activity.timestamp)}
         </p>
       </div>
@@ -155,10 +155,10 @@ function ActivityItem({ activity }: { activity: RecentActivity }) {
   )
 }
 
-// Main Dashboard Stats Component
+// Premium Dashboard Stats Component
 export function DashboardStats({ stats }: DashboardStatsProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
       <StatCard
         title="Pending Approvals"
         value={stats.pendingUsers}
@@ -193,34 +193,34 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
   )
 }
 
-// Recent Activity Component
+// Premium Recent Activity Component
 export function RecentActivity({ activities }: RecentActivityProps) {
   return (
-    <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-gray-200/50 overflow-hidden">
-      <CardHeader className="border-b border-gray-100/50 bg-gradient-to-r from-gray-50/50 to-white/50">
+    <Card className="border-0 bg-white/90 backdrop-blur-sm shadow-xl shadow-gray-200/50 overflow-hidden rounded-2xl">
+      <CardHeader className="border-b border-slate-200/60 bg-gradient-to-r from-slate-50/80 to-white/80 p-6">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-bold text-gray-900 tracking-tight">
+          <CardTitle className="text-xl font-black text-slate-900 tracking-tight">
             Recent Activity
           </CardTitle>
-          <Button variant="ghost" size="sm" asChild className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-all duration-200">
-            <Link href="/reports" className="flex items-center space-x-1">
+          <Button variant="ghost" size="sm" asChild className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 transition-all duration-300 hover:scale-105 rounded-xl">
+            <Link href="/reports" className="flex items-center space-x-2 font-semibold">
               <span>View All</span>
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="p-0">
+      <CardContent className="p-0 max-h-96 overflow-y-auto">
         {activities.length === 0 ? (
-          <div className="p-8 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-              <Clock className="h-8 w-8 text-gray-400" />
+          <div className="p-12 text-center">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-slate-100 mb-6">
+              <Clock className="h-10 w-10 text-slate-400" />
             </div>
-            <p className="text-gray-500 font-medium">No recent activity</p>
-            <p className="text-sm text-gray-400 mt-1">Activity will appear here as it happens</p>
+            <p className="text-slate-600 font-semibold text-lg">No recent activity</p>
+            <p className="text-sm text-slate-400 mt-2">Activity will appear here as it happens</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100/50">
+          <div className="divide-y divide-slate-200/60">
             {activities.map((activity) => (
               <ActivityItem key={activity.id} activity={activity} />
             ))}

@@ -121,3 +121,39 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Math rendering styles */
+.inline-math-wrapper {
+  display: inline !important;
+  vertical-align: baseline !important;
+}
+
+.inline-math {
+  display: inline !important;
+  vertical-align: baseline !important;
+}
+
+.inline-math .katex {
+  display: inline !important;
+  vertical-align: baseline !important;
+}
+
+.inline-math .katex-display {
+  display: inline !important;
+  margin: 0 !important;
+}
+
+.block-math {
+  display: block !important;
+  text-align: center !important;
+  margin: 1rem 0 !important;
+}
+
+.block-math .katex {
+  display: block !important;
+}
+
+.block-math .katex-display {
+  display: block !important;
+  margin: 0 !important;
+}
