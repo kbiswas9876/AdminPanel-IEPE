@@ -33,6 +33,7 @@ export interface Question {
   solution_text?: string
   exam_metadata?: string
   admin_tags?: string[]
+  difficulty?: 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard' | null
   created_at: string
 }
 
@@ -59,6 +60,254 @@ export interface UserProfile {
   created_at: string
   updated_at?: string
   email?: string
+  active_flags?: string[]
+  profile_picture_url?: string
+}
+
+// Enhanced Analytics Types
+export interface TestResult {
+  id: number
+  user_id: string
+  test_type: 'practice' | 'mock_test'
+  session_type: string
+  mock_test_id?: number
+  score: number
+  score_percentage: number
+  accuracy: number
+  total_questions: number
+  total_correct: number
+  total_incorrect: number
+  total_skipped: number
+  total_time_taken: number
+  submitted_at: string
+  created_at: string
+}
+
+export interface AnswerLog {
+  id: number
+  result_id: number
+  question_id: number
+  user_id: string
+  user_answer: string | null
+  status: 'correct' | 'incorrect' | 'skipped'
+  time_taken: number
+  created_at: string
+}
+
+export interface EnhancedStudentAnalytics {
+  // Overview
+  totalTests: number
+  practiceTests: number
+  mockTests: number
+  
+  // Performance
+  overallScore: number
+  practiceScore: number
+  mockScore: number
+  overallAccuracy: number
+  
+  // Time
+  totalTimeSpent: number
+  averageTimePerQuestion: number
+  
+  // Question Stats
+  totalQuestionsAttempted: number
+  totalCorrect: number
+  totalIncorrect: number
+  totalSkipped: number
+  
+  // Trends
+  recentPerformance: PerformanceTrend[]
+}
+
+export interface PerformanceTrend {
+  date: string
+  score: number
+  testType: 'practice' | 'mock_test'
+}
+
+export interface QuestionPerformanceDetail {
+  questionId: number
+  questionText: string
+  book_source: string
+  chapter_name: string
+  difficulty: string
+  attempts: number
+  correctAttempts: number
+  averageTime: number
+  lastAttempted: string
+  recentStatus: 'correct' | 'incorrect' | 'skipped'
+}
+
+export interface SessionDetail {
+  id: number
+  sessionType: 'practice' | 'mock_test'
+  testName?: string
+  score: number
+  accuracy: number
+  totalQuestions: number
+  correct: number
+  incorrect: number
+  skipped: number
+  timeSpent: number
+  submittedAt: string
+  answerLog: AnswerLog[]
+}
+
+export interface QuestionFilters {
+  subject?: string
+  chapter?: string
+  difficulty?: string
+  status?: 'correct' | 'incorrect' | 'skipped'
+}
+
+// Types for user groups and tags
+export interface UserGroup {
+  id: string
+  name: string
+  description?: string
+  color: string
+  is_system: boolean
+  created_by?: string
+  created_at: string
+  updated_at?: string
+  member_count?: number
+}
+
+export interface Tag {
+  id: string
+  name: string
+  description?: string
+  color: string
+  category: string
+  created_by?: string
+  created_at: string
+  updated_at?: string
+  usage_count?: number
+}
+
+export interface UserGroupMember {
+  id: string
+  user_id: string
+  group_id: string
+  role: 'admin' | 'moderator' | 'member'
+  joined_at: string
+  added_by?: string
+  user?: UserProfile
+  group?: UserGroup
+}
+
+export interface UserTag {
+  id: string
+  user_id: string
+  tag_id: string
+  added_at: string
+  added_by?: string
+  user?: UserProfile
+  tag?: Tag
+}
+
+// Types for permissions system
+export interface Permission {
+  id: string
+  name: string
+  description?: string
+  category: string
+  resource: string
+  action: string
+  created_at: string
+  updated_at?: string
+}
+
+export interface AdminRole {
+  id: string
+  name: string
+  description?: string
+  is_system: boolean
+  created_by?: string
+  created_at: string
+  updated_at?: string
+  permission_count?: number
+}
+
+export interface RolePermission {
+  id: string
+  role_id: string
+  permission_id: string
+  granted_at: string
+  granted_by?: string
+  role?: AdminRole
+  permission?: Permission
+}
+
+export interface UserPermission {
+  id: string
+  user_id: string
+  permission_id: string
+  granted_at: string
+  granted_by?: string
+  expires_at?: string
+  user?: UserProfile
+  permission?: Permission
+}
+
+export interface UserRole {
+  id: string
+  user_id: string
+  role_id: string
+  assigned_at: string
+  assigned_by?: string
+  expires_at?: string
+  user?: UserProfile
+  role?: AdminRole
+}
+
+// Types for audit log system
+export interface AuditLog {
+  id: string
+  admin_id: string
+  action_type: string
+  resource_type: string
+  resource_id?: string
+  description: string
+  old_values?: Record<string, any>
+  new_values?: Record<string, any>
+  metadata?: Record<string, any>
+  ip_address?: string
+  user_agent?: string
+  session_id?: string
+  created_at: string
+  admin?: UserProfile
+}
+
+export interface AuditLogFilter {
+  id: string
+  name: string
+  description?: string
+  filters: Record<string, any>
+  created_by?: string
+  created_at: string
+  updated_at?: string
+}
+
+export interface AuditLogStats {
+  total_actions: number
+  unique_admins: number
+  most_common_action: string
+  action_count: number
+  most_active_admin: string
+  admin_action_count: number
+}
+
+export interface AuditLogSearchParams {
+  search_term?: string
+  action_types?: string[]
+  resource_types?: string[]
+  admin_ids?: string[]
+  start_date?: string
+  end_date?: string
+  limit?: number
+  offset?: number
 }
 
 // Types for tests table
@@ -158,7 +407,8 @@ export interface ErrorReport {
   id: number
   question_id: string
   user_id: string
-  report_description: string
+  report_tag: string
+  report_description: string | null
   status: 'new' | 'reviewed' | 'resolved' | 'dismissed'
   admin_notes?: string
   created_at: string

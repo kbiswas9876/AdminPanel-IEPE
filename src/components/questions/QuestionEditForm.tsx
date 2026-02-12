@@ -45,7 +45,7 @@ import {
   Pencil,
   Monitor
 } from 'lucide-react'
-import type { UIQuestion } from '@/lib/types'
+import type { UIQuestion, Question } from '@/lib/types'
 import { getFilterOptions } from '@/lib/actions/tests'
 // getAllBookSourcesWithCodes is now available in uniform-id-generator
 import { updateQuestionInPlace } from '@/lib/actions/questions'
@@ -220,7 +220,12 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
       }
 
       // Update in database
-      const result = await updateQuestionInPlace(updatedQuestion)
+      if (!updatedQuestion.id) {
+        toast.error('Question ID is required for update')
+        return
+      }
+      
+      const result = await updateQuestionInPlace(updatedQuestion as Partial<Question> & { id: number })
       
       if (result.success) {
         toast.success('Question updated successfully!')

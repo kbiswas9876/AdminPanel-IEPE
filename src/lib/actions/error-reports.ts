@@ -8,7 +8,8 @@ interface RawErrorReport {
   id: number
   question_id: string
   reported_by_user_id: string
-  report_description: string
+  report_tag: string
+  report_description: string | null
   status: 'new' | 'reviewed' | 'resolved' | 'dismissed'
   admin_notes?: string
   created_at: string
@@ -31,6 +32,7 @@ export async function getErrorReports(): Promise<ErrorReportWithDetails[]> {
         id,
         question_id,
         reported_by_user_id,
+        report_tag,
         report_description,
         status,
         admin_notes,
@@ -54,6 +56,7 @@ export async function getErrorReports(): Promise<ErrorReportWithDetails[]> {
       id: report.id,
       question_id: report.question_id,
       user_id: report.reported_by_user_id,
+      report_tag: report.report_tag,
       report_description: report.report_description,
       status: report.status,
       admin_notes: report.admin_notes,
@@ -82,6 +85,7 @@ export async function getErrorReportsByStatus(status: 'new' | 'reviewed' | 'reso
         id,
         question_id,
         reported_by_user_id,
+        report_tag,
         report_description,
         status,
         admin_notes,
@@ -106,6 +110,7 @@ export async function getErrorReportsByStatus(status: 'new' | 'reviewed' | 'reso
       id: report.id,
       question_id: report.question_id,
       user_id: report.reported_by_user_id,
+      report_tag: report.report_tag,
       report_description: report.report_description,
       status: report.status,
       admin_notes: report.admin_notes,
@@ -148,7 +153,7 @@ export async function getNewErrorReportsCount(): Promise<number> {
 // Update error report status
 export async function updateErrorReportStatus(
   reportId: number,
-  newStatus: 'new' | 'reviewed' | 'resolved'
+  newStatus: 'new' | 'reviewed' | 'resolved' | 'in_review'
 ): Promise<{ success: boolean; message: string }> {
   try {
     const supabase = createAdminClient()

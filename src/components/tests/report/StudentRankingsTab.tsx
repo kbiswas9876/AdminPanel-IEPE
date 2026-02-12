@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Card } from '@/components/ui/card'
-import { Trophy, Medal, Award, Clock, Eye } from 'lucide-react'
+import { Trophy, Medal, Award, Clock, Eye, Search, Filter } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import type { StudentRanking } from '@/lib/actions/test-reports'
-import { StudentReportModal } from './StudentReportModal'
+import { DetailedSessionModal } from '@/app/students/[userID]/components/DetailedSessionModal'
 
 interface StudentRankingsTabProps {
   testId: number
@@ -14,12 +15,43 @@ interface StudentRankingsTabProps {
 
 export function StudentRankingsTab({ testId, rankings }: StudentRankingsTabProps) {
   const [selectedAttemptId, setSelectedAttemptId] = useState<number | null>(null)
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [rankFilter, setRankFilter] = useState<'all' | 'top10' | 'top25' | 'bottom25'>('all')
 
-  const handleViewDetails = (attemptId: number) => {
+  const handleViewDetails = (attemptId: number, userId: string) => {
     setSelectedAttemptId(attemptId)
+    setSelectedUserId(userId)
     setModalOpen(true)
   }
+
+  // Filter and search logic
+  const filteredRankings = useMemo(() => {
+    let filtered = [...rankings]
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter(student => 
+        student.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        student.studentEmail.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    }
+
+    // Apply rank filter
+    if (rankFilter !== 'all') {
+      const totalStudents = rankings.length
+      if (rankFilter === 'top10') {
+        filtered = filtered.filter(s => s.rank <= Math.max(10, Math.ceil(totalStudents * 0.1)))
+      } else if (rankFilter === 'top25') {
+        filtered = filtered.filter(s => s.rank <= Math.ceil(totalStudents * 0.25))
+      } else if (rankFilter === 'bottom25') {
+        filtered = filtered.filter(s => s.rank > Math.floor(totalStudents * 0.75))
+      }
+    }
+
+    return filtered
+  }, [rankings, searchTerm, rankFilter])
   const getRankIcon = (rank: number) => {
     if (rank === 1) return <Trophy className="h-5 w-5 text-yellow-500" />
     if (rank === 2) return <Medal className="h-5 w-5 text-slate-400" />
@@ -42,21 +74,63 @@ export function StudentRankingsTab({ testId, rankings }: StudentRankingsTabProps
 
   return (
     <div className="space-y-6">
+      {/* Search and Filters */}
+      <Card className="p-4 border-slate-200 bg-white/60 backdrop-blur-sm">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              placeholder="Search by name or email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-slate-400" />
+            <select
+              value={rankFilter}
+              onChange={(e) => setRankFilter(e.target.value as typeof rankFilter)}
+              className="px-3 py-2 border border-slate-200 rounded-md text-sm bg-white"
+            >
+              <option value="all">All Students</option>
+              <option value="top10">Top 10 Students</option>
+              <option value="top25">Top 25%</option>
+              <option value="bottom25">Bottom 25%</option>
+            </select>
+          </div>
+        </div>
+      </Card>
+
       {/* Rankings Table */}
       <Card className="border-slate-200 bg-white/60 backdrop-blur-sm overflow-hidden">
         <div className="p-6 border-b border-slate-200">
           <h3 className="text-lg font-semibold text-slate-900">
-            Student Rankings ({rankings.length} participants)
+            Student Rankings ({filteredRankings.length} of {rankings.length} shown)
           </h3>
           <p className="text-sm text-slate-500 mt-1">
             Ranked by score, then by time taken
           </p>
         </div>
 
-        {rankings.length === 0 ? (
+        {filteredRankings.length === 0 ? (
           <div className="p-12 text-center">
             <Trophy className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-            <p className="text-sm text-slate-500">No student submissions yet</p>
+            <p className="text-sm text-slate-500">
+              {rankings.length === 0 
+                ? 'No student submissions yet' 
+                : 'No students match your search or filter criteria'}
+            </p>
+            {rankings.length > 0 && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => { setSearchTerm(''); setRankFilter('all'); }}
+                className="mt-4"
+              >
+                Clear Filters
+              </Button>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -84,7 +158,7 @@ export function StudentRankingsTab({ testId, rankings }: StudentRankingsTabProps
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {rankings.map((student) => (
+                {filteredRankings.map((student) => (
                   <tr 
                     key={student.attemptId} 
                     className="hover:bg-slate-50/50 transition-colors"
@@ -135,7 +209,7 @@ export function StudentRankingsTab({ testId, rankings }: StudentRankingsTabProps
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        onClick={() => handleViewDetails(student.attemptId)}
+                        onClick={() => handleViewDetails(student.attemptId, student.userId)}
                         className="h-8 gap-1.5 hover:bg-blue-50 hover:text-blue-700"
                       >
                         <Eye className="h-4 w-4" />
@@ -151,14 +225,17 @@ export function StudentRankingsTab({ testId, rankings }: StudentRankingsTabProps
       </Card>
 
       {/* Student Report Modal */}
-      <StudentReportModal
-        attemptId={selectedAttemptId}
-        open={modalOpen}
-        onClose={() => {
-          setModalOpen(false)
-          setSelectedAttemptId(null)
-        }}
-      />
+      {selectedAttemptId && (
+        <DetailedSessionModal
+          resultId={selectedAttemptId}
+          isOpen={modalOpen}
+          onClose={() => {
+            setModalOpen(false)
+            setSelectedAttemptId(null)
+            setSelectedUserId(null)
+          }}
+        />
+      )}
     </div>
   )
 }

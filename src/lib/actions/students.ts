@@ -2,8 +2,9 @@
 
 import { createAdminClient, type UserProfile } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import type { StudentFilters } from '@/lib/types/studentAdmin'
 
-// Get all users with a specific status
+// Get all users with a specific status (legacy function for backward compatibility)
 export async function getUsersByStatus(status?: 'pending' | 'active' | 'suspended'): Promise<UserProfile[]> {
   try {
     const supabase = createAdminClient()
@@ -27,6 +28,72 @@ export async function getUsersByStatus(status?: 'pending' | 'active' | 'suspende
     return data as UserProfile[]
   } catch (error) {
     console.error('Unexpected error:', error)
+    return []
+  }
+}
+
+// Enhanced function to get students with advanced filtering
+export async function getStudents(filters: StudentFilters = {}): Promise<UserProfile[]> {
+  try {
+    const supabase = createAdminClient()
+    
+    // Start with base query
+    let query = supabase
+      .from('user_profiles')
+      .select('*')
+    
+    // Apply status filter
+    if (filters.status) {
+      query = query.eq('status', filters.status)
+    }
+    
+    // Apply inactivity filter
+    if (filters.inactiveSince) {
+      const cutoffDate = filters.inactiveSince
+      query = query.lt('updated_at', cutoffDate)
+    }
+    
+    // Apply search query (name or email)
+    if (filters.searchQuery) {
+      query = query.or(`full_name.ilike.%${filters.searchQuery}%,email.ilike.%${filters.searchQuery}%`)
+    }
+    
+    // Note: Accuracy filtering on analytics_summary JSONB requires that column to exist
+    // This will be added in Phase 2 or when the analytics_summary column is available
+    // For now, we skip this filter if analytics_summary doesn't exist
+    
+    // Order by updated_at desc
+    query = query.order('updated_at', { ascending: false })
+    
+    const { data, error } = await query
+    
+    if (error) {
+      console.error('Error fetching students with filters:', error)
+      return []
+    }
+    
+    let results = (data || []) as UserProfile[]
+    
+    // Filter by accuracy if both min and max are provided
+    // This is done client-side because JSONB queries are complex
+    if (filters.minAccuracy !== undefined || filters.maxAccuracy !== undefined) {
+      results = results.filter(user => {
+        const accuracy = (user as any).analytics_summary?.overall_accuracy
+        if (accuracy === undefined) return false
+        
+        if (filters.minAccuracy !== undefined && accuracy < filters.minAccuracy) {
+          return false
+        }
+        if (filters.maxAccuracy !== undefined && accuracy > filters.maxAccuracy) {
+          return false
+        }
+        return true
+      })
+    }
+    
+    return results
+  } catch (error) {
+    console.error('Unexpected error fetching students:', error)
     return []
   }
 }
