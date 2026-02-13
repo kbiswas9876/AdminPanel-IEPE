@@ -6,9 +6,10 @@ import type { Question } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Edit, Sparkles, Target, BookOpen, Hash, Tag } from 'lucide-react'
-import { DeleteQuestionDialog } from './delete-question-dialog'
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Sparkles, Target, BookOpen, Hash, Tag } from 'lucide-react'
+// import { DeleteQuestionDialog } from './delete-question-dialog'
 import { UniversalContentRenderer } from '../editors/UniversalContentRenderer'
+import { CompactQuestionDetails } from '../questions/CompactQuestionDetails'
 import { Checkbox } from '@/components/ui/checkbox'
 import { SkeletonLoader } from '@/components/ui/skeleton-loader'
 
@@ -330,8 +331,6 @@ export function ExpandableQuestionList({
         ) : (
           data.map((question, index) => {
             const isExpanded = expandedQuestionIds.has(question.id!)
-            const options = question.options || {}
-            const optionKeys = Object.keys(options).sort()
             
             // Use a more robust key that works for both regular and staged questions
             const questionKey = question.id || question.question_id || `staged-${index}`
@@ -426,165 +425,19 @@ export function ExpandableQuestionList({
                     </div>
                   </div>
 
-                  {/* Premium Expanded Detail Panel */}
+                  {/* Compact Question Details */}
                   {isExpanded && (
-                    <div className="border-t border-gray-200 bg-gray-50">
-                      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-                        {/* Premium Options Display */}
-                        <div>
-                          <div className="flex items-center space-x-2 mb-4">
-                            <div className="relative">
-                              <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg blur-sm opacity-60 pointer-events-none"></div>
-                              <div className="relative p-2 rounded-lg bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 shadow-lg">
-                                <Target className="h-4 w-4 text-blue-600" />
-                              </div>
-                            </div>
-                            <h4 className="font-bold text-gray-900 text-lg">Answer Options</h4>
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {optionKeys.map((optionKey) => {
-                              const optionText = options[optionKey]
-                              const isCorrect = question.correct_option?.toUpperCase() === optionKey.toUpperCase()
-                              
-                              return (
-                                <div
-                                  key={optionKey}
-                                  className={`group relative overflow-hidden flex items-start space-x-3 p-4 rounded-xl border transition-shadow duration-200 ${
-                                    isCorrect
-                                      ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 shadow-md hover:shadow-lg'
-                                      : 'bg-white border-gray-200 shadow-sm hover:shadow-md'
-                                  }`}
-                                >
-                                  <div className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all duration-300 ${
-                                    isCorrect
-                                      ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 shadow-lg'
-                                      : 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800'
-                                  }`}>
-                                    {optionKey.toUpperCase()}
-                                    {isCorrect && (
-                                      <span className="ml-1 text-green-600 text-lg">✓</span>
-                                    )}
-                                  </div>
-                                  <div className="flex-1 prose prose-sm max-w-none">
-                                    <div className="text-sm text-gray-700 leading-relaxed">
-                                      <UniversalContentRenderer text={String(optionText || '')} />
-                                    </div>
-                                  </div>
-                                </div>
-                              )
-                            })}
-                          </div>
-                        </div>
-
-                        {/* Solution */}
-                        {question.solution_text && (
-                          <div>
-                            <h4 className="font-semibold text-gray-900 mb-3">Solution:</h4>
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                              <div className="prose prose-sm max-w-none text-blue-800">
-                                <UniversalContentRenderer text={question.solution_text} />
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Admin Metadata */}
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-3">Metadata:</h4>
-                          <div className="bg-gray-50 rounded-lg p-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-                              <div>
-                                <span className="font-medium text-gray-700">Question ID:</span>
-                                <div className="font-mono text-gray-900">{question.question_id}</div>
-                              </div>
-                              <div>
-                                <span className="font-medium text-gray-700">Book Source:</span>
-                                <div className="text-gray-900">{question.book_source}</div>
-                              </div>
-                              <div>
-                                <span className="font-medium text-gray-700">Chapter:</span>
-                                <div className="text-gray-900">{question.chapter_name}</div>
-                              </div>
-                              <div>
-                                <span className="font-medium text-gray-700">Question Number:</span>
-                                <div className="text-gray-900">{question.question_number_in_book || '—'}</div>
-                              </div>
-                              <div>
-                                <span className="font-medium text-gray-700">Difficulty:</span>
-                                <div className="text-gray-900">{question.difficulty || '—'}</div>
-                              </div>
-                              <div>
-                                <span className="font-medium text-gray-700">Created:</span>
-                                <div className="text-gray-900">
-                                  {new Date(question.created_at).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'short',
-                                    day: 'numeric',
-                                  })}
-                                </div>
-                              </div>
-                            </div>
-                            
-                            {/* Admin Tags */}
-                            {question.admin_tags && question.admin_tags.length > 0 && (
-                              <div className="mt-4">
-                                <span className="font-medium text-gray-700">Admin Tags:</span>
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                  {question.admin_tags.map((tag, index) => (
-                                    <Badge key={index} variant="outline" className="text-xs">
-                                      {tag}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex items-center justify-end gap-3 pt-4 border-t">
-                          {actionType === 'edit' && (
-                            <>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => onQuestionAction?.(question, 'edit')}
-                              >
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit Question
-                              </Button>
-                              <DeleteQuestionDialog 
-                                questionId={question.id!} 
-                                questionText={question.question_text}
-                                onDeleted={onQuestionDeleted}
-                              />
-                            </>
-                          )}
-                          
-                          {actionType === 'select' && (
-                            <Button
-                              size="sm"
-                              onClick={() => onQuestionAction?.(question, 'select')}
-                              className="bg-blue-600 hover:bg-blue-700"
-                            >
-                              Select This Question
-                            </Button>
-                          )}
-                          
-                          {actionType === 'select-multiple' && (
-                            <div className="flex items-center gap-2">
-                              <Checkbox
-                                checked={isQuestionSelected(question)}
-                                onCheckedChange={() => toggleQuestionSelection(question)}
-                              />
-                              <span className="text-sm text-gray-600">
-                                {isQuestionSelected(question) ? 'Selected' : 'Select'}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                    <CompactQuestionDetails
+                      question={question}
+                      isExpanded={isExpanded}
+                      onToggle={() => handleToggleQuestion(question.id!)}
+                      onEdit={() => onQuestionAction?.(question, 'edit')}
+                      onDelete={() => onQuestionDeleted?.()}
+                      actionType={actionType}
+                      onQuestionAction={onQuestionAction}
+                      isSelected={isQuestionSelected(question)}
+                      onSelectionChange={(q) => toggleQuestionSelection(q)}
+                    />
                   )}
                 </CardContent>
               </Card>

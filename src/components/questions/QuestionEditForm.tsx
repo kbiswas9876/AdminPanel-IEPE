@@ -39,7 +39,10 @@ import {
   EyeOff,
   CheckCircle,
   Plus,
-  Minus
+  Minus,
+  Edit3,
+  Pencil,
+  Monitor
 } from 'lucide-react'
 import type { UIQuestion } from '@/lib/types'
 import { getFilterOptions } from '@/lib/actions/tests'
@@ -51,6 +54,7 @@ import { generateUniqueQuestionId, generateUniqueBookCode } from '@/lib/utils/un
 import { getBookCodeByName, getAllBookSourcesWithCodes } from '@/lib/actions/id-generation'
 import { toast } from 'sonner'
 import { ClientOnlyAdvancedTipTapEditor } from '@/components/editors/ClientOnlyAdvancedTipTapEditor'
+import { LivePreviewRenderer } from '@/components/editors/LivePreviewRenderer'
 
 interface QuestionEditFormProps {
   question: UIQuestion
@@ -103,6 +107,9 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
   // New state for premium UI features
   const [showLatexPreview, setShowLatexPreview] = useState(true)
   const [isSolutionExpanded, setIsSolutionExpanded] = useState(false)
+  
+  // Live preview state
+  const [showPreview, setShowPreview] = useState(true)
 
 
   // Load filter options
@@ -427,35 +434,36 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
   return (
     <div className="min-h-screen bg-slate-50/30 p-6">
       <div className="max-w-5xl mx-auto">
-        {/* Premium Header */}
+        {/* Professional Header - Apple-inspired Design */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 overflow-hidden mb-6">
           <div className="px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-slate-50/50 to-blue-50/30">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25 border border-blue-400/20">
-                  <FileQuestion className="h-6 w-6 text-white" />
+                  <Edit3 className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Edit Question</h2>
-                  <p className="text-sm text-gray-600 font-medium">Premium question editor with live LaTeX preview</p>
+                  <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Edit question</h2>
+                  <p className="text-sm text-gray-600 font-medium">Professional editor with live preview</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setShowLatexPreview(!showLatexPreview)}
-                  className="gap-2"
+                  onClick={() => setShowPreview(!showPreview)}
+                  className="gap-2 hover:bg-slate-50 transition-colors"
+                  title="Toggle live preview"
                 >
-                  {showLatexPreview ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  {showLatexPreview ? 'Hide Preview' : 'Show Preview'}
+                  {showPreview ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPreview ? 'Hide preview' : 'Show preview'}
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={onCancel}
                   disabled={isLoading}
-                  className="gap-2"
+                  className="gap-2 hover:bg-slate-50 transition-colors"
                 >
                   <XCircle className="h-4 w-4" />
                   Cancel
@@ -464,20 +472,21 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
                   size="sm"
                   onClick={handleSave}
                   disabled={isLoading}
-                  className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg"
+                  className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-lg transition-all duration-200 hover:shadow-xl"
+                  title="Save changes (Ctrl+S)"
                 >
                   <Save className="h-4 w-4" />
-                  {isLoading ? 'Saving...' : 'Save Changes'}
+                  {isLoading ? 'Saving...' : 'Save changes'}
                 </Button>
               </div>
             </div>
           </div>
 
-          {/* Section 1: Metadata - Two Column Layout */}
+          {/* Section 1: Metadata - Professional Layout */}
           <div className="px-8 py-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-3 h-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full shadow-sm"></div>
-              <h3 className="text-lg font-bold text-gray-800 uppercase tracking-wider">Metadata</h3>
+              <h3 className="text-lg font-bold text-gray-800">Metadata</h3>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -485,7 +494,7 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
               <div className="space-y-6">
                 {/* Question ID */}
                 <div className="space-y-3">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                     <Hash className="h-4 w-4" />
                     Question ID
                   </label>
@@ -507,9 +516,9 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
 
                 {/* Book Source */}
                 <div className="space-y-3">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                     <BookOpen className="h-4 w-4" />
-                    Book Source *
+                    Book source *
                   </label>
                   <Select value={formData.book_source} onValueChange={(value) => {
                     if (value === 'add_new_book') {
@@ -571,7 +580,7 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
 
                 {/* Chapter */}
                 <div className="space-y-3">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                     <BookOpen className="h-4 w-4" />
                     Chapter *
                   </label>
@@ -635,9 +644,9 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
 
                 {/* Question Number */}
                 <div className="space-y-3">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                     <Hash className="h-4 w-4" />
-                    Question Number
+                    Question number
                   </label>
                   <Input
                     type="number"
@@ -653,7 +662,7 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
               <div className="space-y-6">
                 {/* Difficulty */}
                 <div className="space-y-3">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                     <Target className="h-4 w-4" />
                     Difficulty
                   </label>
@@ -673,9 +682,9 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
 
                 {/* Correct Option */}
                 <div className="space-y-3">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                     <CheckCircle className="h-4 w-4" />
-                    Correct Option *
+                    Correct option *
                   </label>
                   <Select value={formData.correct_option} onValueChange={(value) => handleInputChange('correct_option', value)}>
                     <SelectTrigger className="border-slate-200">
@@ -692,9 +701,9 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
 
                 {/* Exam Metadata */}
                 <div className="space-y-3">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                     <Database className="h-4 w-4" />
-                    Exam Metadata
+                    Exam metadata
                   </label>
                   <Input
                     value={formData.exam_metadata}
@@ -764,12 +773,12 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
           </div>
         </div>
 
-        {/* Section 2: Question Text */}
+        {/* Section 2: Question Text with Live Preview */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 overflow-hidden mb-6">
           <div className="px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-slate-50/50 to-green-50/30">
             <div className="flex items-center gap-3">
               <div className="w-3 h-3 bg-gradient-to-br from-green-500 to-green-600 rounded-full shadow-sm"></div>
-              <h3 className="text-lg font-bold text-gray-800 uppercase tracking-wider">Question Text</h3>
+              <h3 className="text-lg font-bold text-gray-800">Question text</h3>
             </div>
           </div>
           <div className="px-8 py-6">
@@ -779,15 +788,28 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
               placeholder="Enter the question text (supports LaTeX math and images)"
               showToolbar={true}
             />
+            
+            {/* Live Preview for Question Text */}
+            {showPreview && formData.question_text && (
+              <div className="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <Monitor className="h-4 w-4 text-slate-600" />
+                  <span className="text-sm font-medium text-slate-700">Live preview</span>
+                </div>
+                <div className="prose prose-sm max-w-none">
+                  <LivePreviewRenderer content={formData.question_text} />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Section 3: Options - 2x2 Grid */}
+        {/* Section 3: Options with Live Preview */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 overflow-hidden mb-6">
           <div className="px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-slate-50/50 to-purple-50/30">
             <div className="flex items-center gap-3">
               <div className="w-3 h-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full shadow-sm"></div>
-              <h3 className="text-lg font-bold text-gray-800 uppercase tracking-wider">Options</h3>
+              <h3 className="text-lg font-bold text-gray-800">Options</h3>
             </div>
           </div>
           <div className="px-8 py-6">
@@ -812,6 +834,19 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
                   compact={true}
                   showToolbar={false}
                 />
+                
+                {/* Live Preview for Option A */}
+                {showPreview && formData.option_a && (
+                  <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Monitor className="h-3 w-3 text-slate-600" />
+                      <span className="text-xs font-medium text-slate-700">Preview</span>
+                    </div>
+                    <div className="prose prose-xs max-w-none">
+                      <LivePreviewRenderer content={formData.option_a} />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Option B */}
@@ -834,6 +869,19 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
                   compact={true}
                   showToolbar={false}
                 />
+                
+                {/* Live Preview for Option B */}
+                {showPreview && formData.option_b && (
+                  <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Monitor className="h-3 w-3 text-slate-600" />
+                      <span className="text-xs font-medium text-slate-700">Preview</span>
+                    </div>
+                    <div className="prose prose-xs max-w-none">
+                      <LivePreviewRenderer content={formData.option_b} />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Option C */}
@@ -856,6 +904,19 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
                   compact={true}
                   showToolbar={false}
                 />
+                
+                {/* Live Preview for Option C */}
+                {showPreview && formData.option_c && (
+                  <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Monitor className="h-3 w-3 text-slate-600" />
+                      <span className="text-xs font-medium text-slate-700">Preview</span>
+                    </div>
+                    <div className="prose prose-xs max-w-none">
+                      <LivePreviewRenderer content={formData.option_c} />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Option D */}
@@ -878,12 +939,25 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
                   compact={true}
                   showToolbar={false}
                 />
+                
+                {/* Live Preview for Option D */}
+                {showPreview && formData.option_d && (
+                  <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Monitor className="h-3 w-3 text-slate-600" />
+                      <span className="text-xs font-medium text-slate-700">Preview</span>
+                    </div>
+                    <div className="prose prose-xs max-w-none">
+                      <LivePreviewRenderer content={formData.option_d} />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Section 4: Solution - Collapsible */}
+        {/* Section 4: Solution with Live Preview */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 overflow-hidden mb-6">
           <div className="px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-slate-50/50 to-orange-50/30">
             <button
@@ -892,7 +966,7 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
             >
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full shadow-sm"></div>
-                <h3 className="text-lg font-bold text-gray-800 uppercase tracking-wider">Solution</h3>
+                <h3 className="text-lg font-bold text-gray-800">Solution</h3>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-500">Click to {isSolutionExpanded ? 'collapse' : 'expand'}</span>
@@ -908,38 +982,47 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
                 placeholder="Enter the solution/explanation (supports LaTeX math and images)"
                 showToolbar={true}
               />
+              
+              {/* Live Preview for Solution */}
+              {showPreview && formData.solution_text && (
+                <div className="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Monitor className="h-4 w-4 text-slate-600" />
+                    <span className="text-sm font-medium text-slate-700">Live preview</span>
+                  </div>
+                  <div className="prose prose-sm max-w-none">
+                    <LivePreviewRenderer content={formData.solution_text} />
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* Sticky Action Footer */}
+        {/* Professional Action Footer */}
         <div className="sticky bottom-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 rounded-t-2xl shadow-lg">
           <div className="px-8 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4 text-sm text-gray-500">
-                <span>💡 <strong>Keyboard Shortcuts:</strong> Ctrl+S to save, Esc to cancel</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onCancel}
-                  disabled={isLoading}
-                  className="gap-2"
-                >
-                  <XCircle className="h-4 w-4" />
-                  Cancel
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleSave}
-                  disabled={isLoading}
-                  className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg"
-                >
-                  <Save className="h-4 w-4" />
-                  {isLoading ? 'Saving...' : 'Save Changes'}
-                </Button>
-              </div>
+            <div className="flex items-center justify-end gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onCancel}
+                disabled={isLoading}
+                className="gap-2 hover:bg-slate-50 transition-colors"
+              >
+                <XCircle className="h-4 w-4" />
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={isLoading}
+                className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-lg transition-all duration-200 hover:shadow-xl"
+                title="Save changes (Ctrl+S)"
+              >
+                <Save className="h-4 w-4" />
+                {isLoading ? 'Saving...' : 'Save changes'}
+              </Button>
             </div>
           </div>
         </div>

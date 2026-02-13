@@ -1,0 +1,361 @@
+/* Apple-Inspired Design System */
+/* Consistent colors, spacing, and component patterns */
+
+:root {
+  /* Primary Color Palette */
+  --apple-blue-50: #eff6ff;
+  --apple-blue-100: #dbeafe;
+  --apple-blue-500: #3b82f6;
+  --apple-blue-600: #2563eb;
+  --apple-blue-700: #1d4ed8;
+
+  /* Neutral Palette */
+  --apple-slate-50: #f8fafc;
+  --apple-slate-100: #f1f5f9;
+  --apple-slate-200: #e2e8f0;
+  --apple-slate-300: #cbd5e1;
+  --apple-slate-400: #94a3b8;
+  --apple-slate-500: #64748b;
+  --apple-slate-600: #475569;
+  --apple-slate-700: #334155;
+  --apple-slate-800: #1e293b;
+  --apple-slate-900: #0f172a;
+
+  /* Success & Status Colors */
+  --apple-green-50: #f0fdf4;
+  --apple-green-500: #22c55e;
+  --apple-green-600: #16a34a;
+  
+  --apple-red-50: #fef2f2;
+  --apple-red-500: #ef4444;
+  --apple-red-600: #dc2626;
+
+  --apple-orange-50: #fff7ed;
+  --apple-orange-500: #f97316;
+  --apple-orange-600: #ea580c;
+
+  /* Spacing System (8px base) */
+  --space-1: 0.125rem;  /* 2px */
+  --space-2: 0.25rem;   /* 4px */
+  --space-3: 0.375rem;  /* 6px */
+  --space-4: 0.5rem;    /* 8px */
+  --space-6: 0.75rem;   /* 12px */
+  --space-8: 1rem;      /* 16px */
+  --space-12: 1.5rem;   /* 24px */
+  --space-16: 2rem;     /* 32px */
+  --space-20: 2.5rem;   /* 40px */
+  --space-24: 3rem;     /* 48px */
+
+  /* Border Radius System */
+  --radius-sm: 0.375rem;   /* 6px */
+  --radius-md: 0.5rem;     /* 8px */
+  --radius-lg: 0.75rem;    /* 12px */
+  --radius-xl: 1rem;       /* 16px */
+  --radius-2xl: 1.5rem;    /* 24px */
+
+  /* Shadow System */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  /* Typography Scale */
+  --text-xs: 0.75rem;      /* 12px */
+  --text-sm: 0.875rem;     /* 14px */
+  --text-base: 1rem;       /* 16px */
+  --text-lg: 1.125rem;     /* 18px */
+  --text-xl: 1.25rem;      /* 20px */
+}
+
+/* Component Base Classes */
+
+/* Cards */
+.design-card {
+  background: white;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--apple-slate-200);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.design-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-1px);
+  border-color: var(--apple-slate-300);
+}
+
+.design-card-selected {
+  ring: 2px solid var(--apple-blue-500);
+  ring-opacity: 0.2;
+  border-color: var(--apple-blue-300);
+  background: var(--apple-blue-50);
+  background-opacity: 0.3;
+}
+
+/* Buttons */
+.design-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  border: none;
+  gap: var(--space-2);
+}
+
+.design-button-primary {
+  background: linear-gradient(to right, var(--apple-blue-600), var(--apple-blue-700));
+  color: white;
+  padding: var(--space-3) var(--space-6);
+  box-shadow: 0 4px 6px -1px rgb(59 130 246 / 0.25);
+}
+
+.design-button-primary:hover {
+  background: linear-gradient(to right, var(--apple-blue-700), var(--apple-blue-800));
+  box-shadow: 0 8px 15px -3px rgb(59 130 246 / 0.3);
+  transform: translateY(-1px);
+}
+
+.design-button-secondary {
+  background: white;
+  color: var(--apple-slate-700);
+  border: 1px solid var(--apple-slate-200);
+  padding: var(--space-3) var(--space-6);
+  box-shadow: var(--shadow-sm);
+}
+
+.design-button-secondary:hover {
+  background: var(--apple-slate-50);
+  border-color: var(--apple-slate-300);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.design-button-ghost {
+  background: transparent;
+  color: var(--apple-slate-600);
+  padding: var(--space-2);
+}
+
+.design-button-ghost:hover {
+  background: var(--apple-slate-100);
+  color: var(--apple-slate-800);
+}
+
+/* Form Controls */
+.design-checkbox {
+  width: 1rem;
+  height: 1rem;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--apple-slate-300);
+  background: white;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.design-checkbox:checked {
+  background: var(--apple-blue-600);
+  border-color: var(--apple-blue-600);
+}
+
+.design-checkbox:focus {
+  outline: 2px solid var(--apple-blue-500);
+  outline-offset: 2px;
+}
+
+/* Badges and Tags */
+.design-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--apple-slate-200);
+  background: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.design-badge-blue {
+  background: linear-gradient(to right, var(--apple-blue-50), #e0f2fe);
+  color: var(--apple-blue-700);
+  border-color: var(--apple-blue-200);
+}
+
+.design-badge-green {
+  background: linear-gradient(to right, var(--apple-green-50), #f0fdf4);
+  color: #15803d;
+  border-color: #bbf7d0;
+}
+
+.design-badge-orange {
+  background: linear-gradient(to right, var(--apple-orange-50), #fff7ed);
+  color: #c2410c;
+  border-color: #fed7aa;
+}
+
+.design-badge-red {
+  background: linear-gradient(to right, var(--apple-red-50), #fef2f2);
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+/* Layout Utilities */
+.design-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: var(--space-8);
+}
+
+.design-grid {
+  display: grid;
+  gap: var(--space-8);
+}
+
+.design-flex {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.design-flex-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Typography */
+.design-heading {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--apple-slate-900);
+  line-height: 1.4;
+}
+
+.design-subheading {
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--apple-slate-700);
+  line-height: 1.5;
+}
+
+.design-body {
+  font-size: var(--text-sm);
+  color: var(--apple-slate-600);
+  line-height: 1.6;
+}
+
+.design-caption {
+  font-size: var(--text-xs);
+  color: var(--apple-slate-500);
+  line-height: 1.4;
+}
+
+/* Status Indicators */
+.design-status-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.design-status-online {
+  background: var(--apple-green-500);
+  box-shadow: 0 0 0 2px var(--apple-green-100);
+}
+
+.design-status-busy {
+  background: var(--apple-red-500);
+  box-shadow: 0 0 0 2px var(--apple-red-100);
+}
+
+.design-status-away {
+  background: var(--apple-orange-500);
+  box-shadow: 0 0 0 2px var(--apple-orange-100);
+}
+
+/* Animations */
+.design-fade-in {
+  animation: designFadeIn 0.3s ease-out;
+}
+
+@keyframes designFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.design-slide-up {
+  animation: designSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes designSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  :root {
+    --space-8: 0.75rem;   /* Slightly smaller on mobile */
+    --space-12: 1rem;
+    --space-16: 1.25rem;
+  }
+  
+  .design-container {
+    padding: var(--space-4);
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --apple-slate-50: #0f172a;
+    --apple-slate-100: #1e293b;
+    --apple-slate-200: #334155;
+    --apple-slate-900: #f8fafc;
+  }
+  
+  .design-card {
+    background: var(--apple-slate-100);
+    border-color: var(--apple-slate-200);
+  }
+  
+  .design-button-secondary {
+    background: var(--apple-slate-100);
+    color: var(--apple-slate-100);
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .design-card,
+  .design-button,
+  .design-checkbox,
+  .design-fade-in,
+  .design-slide-up {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Focus visible for better keyboard navigation */
+.design-button:focus-visible,
+.design-checkbox:focus-visible {
+  outline: 2px solid var(--apple-blue-500);
+  outline-offset: 2px;
+}

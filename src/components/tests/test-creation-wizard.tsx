@@ -12,9 +12,11 @@ import { NextFAB } from '@/components/ui/floating-action-button'
 import { ArrowLeft, BookOpen, Plus, Settings, Target, Zap, Hash, Trash2, Tag, Award, Sparkles } from 'lucide-react'
 import type { TestQuestionSlot, ChapterInfo, BlueprintRule, ChapterBlueprint, TestBlueprint } from '@/lib/types'
 import type { Test } from '@/lib/supabase/admin'
-import { ReviewRefineInterface } from './review-refine-interface'
+import ReviewRefineInterface from './review-refine-interface'
 import { TestFinalizationStage, type TestFormData, type PublishData } from './test-finalization-stage'
+import { TestCreationOptionsModal } from './test-creation-options-modal'
 import { saveTest } from '@/lib/actions/tests'
+import type { Question } from '@/lib/types'
 
 type BlueprintState = Record<string, ChapterBlueprint>
 
@@ -33,14 +35,51 @@ export function TestCreationWizard({
   isEditMode = false, 
   testId 
 }: TestCreationWizardProps = {}) {
-  const [currentStep, setCurrentStep] = useState(isEditMode ? 2 : 1)
+  const [currentStep, setCurrentStep] = useState(isEditMode ? 2 : 0) // Start with options modal
   const [error, setError] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [showOptionsModal, setShowOptionsModal] = useState(!isEditMode)
+  const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([])
+  const [creationMethod, setCreationMethod] = useState<'blueprint' | 'question-bank' | null>(null)
   
   // Step 1: Test Blueprint
   const [chapters, setChapters] = useState<ChapterInfo[]>([])
   const [blueprint, setBlueprint] = useState<BlueprintState>(initialData?.blueprint || {})
   const difficultyLevels: string[] = ['Easy', 'Easy-Moderate', 'Moderate', 'Moderate-Hard', 'Hard']
+
+  // Handle options modal
+  const handleBlueprintSelect = () => {
+    setCreationMethod('blueprint')
+    setShowOptionsModal(false)
+    setCurrentStep(1) // Go to blueprint step
+  }
+
+  const handleQuestionBankSelect = (questions: Question[]) => {
+    setCreationMethod('question-bank')
+    setSelectedQuestions(questions)
+    setShowOptionsModal(false)
+    setCurrentStep(2) // Go directly to review and refine
+  }
+
+  const handleModalClose = () => {
+    setShowOptionsModal(false)
+    // If no method was selected, default to blueprint
+    if (!creationMethod) {
+      setCreationMethod('blueprint')
+      setCurrentStep(1)
+    }
+  }
+
+  // Convert Question[] to TestQuestionSlot[]
+  const convertQuestionsToSlots = (questions: Question[]): TestQuestionSlot[] => {
+    return questions.map(question => ({
+      question,
+      source_type: 'custom' as const,
+      chapter_name: question.chapter_name,
+      source_value: null,
+      tempId: `custom-${question.id}-${Date.now()}`
+    }))
+  }
 
   const totalQuestions = useMemo(() => {
     let total = 0
@@ -249,19 +288,38 @@ export function TestCreationWizard({
 
   return (
     <div className="w-full">
-      {/* Premium Page Header */}
-      {!(isEditMode && currentStep === 3) && (
-        <PageHeader
-          title={isEditMode ? 'Edit Mock Test' : 'Create Mock Test'}
-          subtitle={
-            currentStep === 1 ? 'Design your test blueprint'
-            : currentStep === 2 ? 'Review and refine questions'
-            : currentStep === 3 ? 'Set rules and publish'
-            : undefined
-          }
-          actions={
-            currentStep > 1 && currentStep !== 3 ? (
-              <Button
+      {/* Test Creation Options Modal */}
+      <TestCreationOptionsModal
+        open={showOptionsModal}
+        onClose={handleModalClose}
+        onBlueprintSelect={handleBlueprintSelect}
+        onQuestionBankSelect={handleQuestionBankSelect}
+      />
+
+      {/* Show loading state when modal is open - this should be the only content */}
+      {showOptionsModal && (
+        <div className="flex items-center justify-center min-h-[60vh] bg-gray-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading test creation options...</p>
+          </div>
+        </div>
+      )}
+      {!showOptionsModal && (
+        <>
+          {/* Premium Page Header */}
+          {!(isEditMode && currentStep === 3) && (
+            <PageHeader
+              title={isEditMode ? 'Edit Mock Test' : 'Create Mock Test'}
+              subtitle={
+                currentStep === 1 ? 'Design your test blueprint'
+                : currentStep === 2 ? 'Review and refine questions'
+                : currentStep === 3 ? 'Set rules and publish'
+                : undefined
+              }
+              actions={
+                currentStep > 1 && currentStep !== 3 ? (
+                  <Button
                 variant="outline"
                 size="sm"
                 onClick={handlePrevious}
@@ -289,7 +347,7 @@ export function TestCreationWizard({
         )}
 
         {/* Step 1: Test Blueprint - Mobile-Optimized Premium Design */}
-        {currentStep === 1 && (
+        {currentStep === 1 && !showOptionsModal && (
           <div className="space-y-3 sm:space-y-4 lg:space-y-6 w-full max-w-full">
             {/* Premium Blueprint Summary */}
             <PremiumCard variant="elevated" className="mb-8">
@@ -496,16 +554,17 @@ export function TestCreationWizard({
         )}
 
       {/* Step 2: Review & Refine */}
-      {currentStep === 2 && (
+      {currentStep === 2 && !showOptionsModal && (
         <ReviewRefineInterface
-          questions={reviewQuestions}
-          onQuestionsChange={setReviewQuestions}
+          questions={creationMethod === 'question-bank' ? convertQuestionsToSlots(selectedQuestions) : reviewQuestions}
+          onQuestionsChange={creationMethod === 'question-bank' ? (slots) => setSelectedQuestions(slots.map(slot => slot.question)) : setReviewQuestions}
           onRegenerate={handleRegenerateAt}
           onEdit={(index) => {
             // Placeholder for edit functionality
             console.log('Edit question at index:', index)
           }}
           onNext={() => setCurrentStep(3)}
+          isQuestionBankMode={creationMethod === 'question-bank'}
         />
       )}
 
@@ -522,9 +581,6 @@ export function TestCreationWizard({
         />
       )}
 
-        </div>
-      </div>
-
       {/* Floating Action Button for Step 1 */}
       {currentStep === 1 && (
         <NextFAB
@@ -532,6 +588,10 @@ export function TestCreationWizard({
           disabled={totalQuestions === 0 || isGenerating}
           loading={isGenerating}
         />
+      )}
+        </div>
+      </div>
+      </>
       )}
     </div>
   )

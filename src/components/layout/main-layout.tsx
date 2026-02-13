@@ -13,12 +13,12 @@ function MainLayoutContent({ children }: MainLayoutProps) {
   const { isSidebarOpen, isMobile, setIsSidebarOpen } = useMobile()
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-indigo-50/30">
+    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-indigo-50/30 smooth-scroll">
       {/* Ultra-Premium Mobile Sidebar */}
       <div className={`
         ${isMobile ? 'fixed inset-y-0 left-0 z-50 w-64' : 'relative w-72'}
         ${isMobile && !isSidebarOpen ? '-translate-x-full' : ''}
-        transition-all duration-300 ease-out transform-gpu
+        smooth-animation
         ${isMobile ? 'shadow-2xl' : ''}
       `}>
         <Sidebar />
@@ -35,7 +35,7 @@ function MainLayoutContent({ children }: MainLayoutProps) {
       {/* Main content area */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-transparent">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-transparent smooth-scroll">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>

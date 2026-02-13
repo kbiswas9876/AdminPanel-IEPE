@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { BlockMath, InlineMath } from 'react-katex'
+import katex from 'katex'
 import 'katex/dist/katex.min.css'
 
 interface UniversalContentRendererProps {
@@ -8,12 +9,75 @@ interface UniversalContentRendererProps {
 }
 
 /**
- * Universal Content Renderer for LaTeX and plain text
+ * Universal Content Renderer for LaTeX, HTML, and plain text
  * Handles both inline math ($...$) and block math ($$...$$)
- * Preserves LaTeX line breaks (\\\) for KaTeX to process
+ * Also handles HTML content safely
  */
 export function UniversalContentRenderer({ text, className }: UniversalContentRendererProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!containerRef.current) return
+
+    // Find all elements with data-math attribute and render them with KaTeX
+    const mathElements = containerRef.current.querySelectorAll('[data-math]')
+    mathElements.forEach((element) => {
+      const mathContent = element.getAttribute('data-math')
+      if (mathContent) {
+        try {
+          const isBlock = element.classList.contains('katex-block')
+          const rendered = katex.renderToString(mathContent, {
+            displayMode: isBlock,
+            throwOnError: false,
+          })
+          element.innerHTML = rendered
+        } catch (error) {
+          console.error('KaTeX rendering error:', error)
+          element.textContent = mathContent
+        }
+      }
+    })
+  }, [text])
+
   if (!text) return null
+
+  // Check if content contains HTML tags and LaTeX math
+  const hasHtmlTags = /<[^>]*>/g.test(text)
+  const hasLatexMath = /\$[^$]+\$/g.test(text)
+  
+  // If content has both HTML and LaTeX, process them together
+  if (hasHtmlTags && hasLatexMath) {
+    let processedText = text
+    
+    // Replace LaTeX math with placeholders that will be rendered by KaTeX
+    processedText = processedText.replace(/\$[^$]+\$/g, (match) => {
+      const mathContent = match.slice(1, -1) // Remove $ delimiters
+      return `<span class="katex-inline" data-math="${mathContent}"></span>`
+    })
+    
+    processedText = processedText.replace(/\$\$[^$]+\$\$/g, (match) => {
+      const mathContent = match.slice(2, -2) // Remove $$ delimiters
+      return `<div class="katex-block" data-math="${mathContent}"></div>`
+    })
+    
+    return (
+      <div 
+        ref={containerRef}
+        className={className}
+        dangerouslySetInnerHTML={{ __html: processedText }}
+      />
+    )
+  }
+  
+  if (hasHtmlTags && !hasLatexMath) {
+    // For HTML content without LaTeX, render it safely
+    return (
+      <div 
+        className={className}
+        dangerouslySetInnerHTML={{ __html: text }}
+      />
+    )
+  }
 
   // Split by block math first ($$...$$)
   const blockMathParts = text.split(/(\$\$[^$]+\$\$)/g)

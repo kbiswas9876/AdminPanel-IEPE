@@ -90,7 +90,7 @@ export default function BulkUploadReview({
 
   // Filter questions
   const filteredQuestions = useMemo(() => {
-    return questions.filter((question, index) => {
+    return questions.filter((question) => {
       // Search filter
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase()
