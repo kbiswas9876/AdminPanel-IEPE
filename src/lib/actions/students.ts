@@ -11,7 +11,7 @@ export async function getUsersByStatus(status?: 'pending' | 'active' | 'suspende
     let query = supabase
       .from('user_profiles')
       .select('*')
-      .order('created_at', { ascending: false })
+      .order('updated_at', { ascending: false })
     
     if (status) {
       query = query.eq('status', status)

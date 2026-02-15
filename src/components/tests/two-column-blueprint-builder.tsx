@@ -36,9 +36,12 @@ import {
   CloudDownload,
   Bookmark,
   PlusCircle,
-  Grid3X3
+  Grid3X3,
+  Loader2,
+  AlertCircle
 } from 'lucide-react'
 import type { ChapterInfo, BlueprintRule, ChapterBlueprint, TestBlueprint } from '@/lib/types'
+import { getPresets, savePreset, deletePreset, type BlueprintPreset } from '@/lib/actions/blueprintPresets'
 
 type BlueprintState = Record<string, ChapterBlueprint>
 
@@ -51,12 +54,7 @@ interface TwoColumnBlueprintBuilderProps {
   error: string | null
 }
 
-interface Preset {
-  id: string
-  name: string
-  blueprint: BlueprintState
-  createdAt: string
-}
+// Using BlueprintPreset from server actions instead of local interface
 
 export function TwoColumnBlueprintBuilder({
   chapters,
@@ -67,25 +65,70 @@ export function TwoColumnBlueprintBuilder({
   error
 }: TwoColumnBlueprintBuilderProps) {
   const [selectedChapter, setSelectedChapter] = useState<string | null>(null)
-  const [presets, setPresets] = useState<Preset[]>([])
+  const [presets, setPresets] = useState<BlueprintPreset[]>([])
   const [showSavePreset, setShowSavePreset] = useState(false)
   const [presetName, setPresetName] = useState('')
   const [showLoadPreset, setShowLoadPreset] = useState(false)
+  const [isLoadingPresets, setIsLoadingPresets] = useState(false)
+  const [isSavingPreset, setIsSavingPreset] = useState(false)
+  const [isDeletingPreset, setIsDeletingPreset] = useState<string | null>(null)
+  const [presetError, setPresetError] = useState<string | null>(null)
 
   const difficultyLevels: string[] = ['Easy', 'Easy-Moderate', 'Moderate', 'Moderate-Hard', 'Hard']
 
-  // Load presets from localStorage on mount
+  // Load presets from database on mount
   useEffect(() => {
-    const savedPresets = localStorage.getItem('test-blueprint-presets')
-    if (savedPresets) {
-      setPresets(JSON.parse(savedPresets))
-    }
+    loadPresetsFromDatabase()
   }, [])
 
-  // Save presets to localStorage whenever presets change
+  // Migration: Check for localStorage presets and migrate them
   useEffect(() => {
-    localStorage.setItem('test-blueprint-presets', JSON.stringify(presets))
-  }, [presets])
+    migrateLocalStoragePresets()
+  }, [])
+
+  const loadPresetsFromDatabase = async () => {
+    setIsLoadingPresets(true)
+    setPresetError(null)
+    try {
+      const fetchedPresets = await getPresets()
+      setPresets(fetchedPresets)
+    } catch (error) {
+      console.error('Error loading presets:', error)
+      setPresetError('Failed to load presets')
+    } finally {
+      setIsLoadingPresets(false)
+    }
+  }
+
+  const migrateLocalStoragePresets = async () => {
+    try {
+      const savedPresets = localStorage.getItem('test-blueprint-presets')
+      if (savedPresets) {
+        const localPresets = JSON.parse(savedPresets)
+        if (Array.isArray(localPresets) && localPresets.length > 0) {
+          console.log('Found localStorage presets, migrating to database...')
+          
+          // Migrate each preset to the database
+          for (const localPreset of localPresets) {
+            try {
+              await savePreset(localPreset.name, localPreset.blueprint)
+            } catch (error) {
+              console.error('Error migrating preset:', localPreset.name, error)
+            }
+          }
+          
+          // Clear localStorage after successful migration
+          localStorage.removeItem('test-blueprint-presets')
+          console.log('Migration completed, localStorage cleared')
+          
+          // Reload presets from database
+          await loadPresetsFromDatabase()
+        }
+      }
+    } catch (error) {
+      console.error('Error during migration:', error)
+    }
+  }
 
   const totalQuestions = useMemo(() => {
     let total = 0
@@ -156,29 +199,60 @@ export function TwoColumnBlueprintBuilder({
     onBlueprintChange(newBlueprint)
   }
 
-  const savePreset = () => {
+  const handleSavePreset = async () => {
     if (!presetName.trim()) return
 
-    const newPreset: Preset = {
-      id: Date.now().toString(),
-      name: presetName.trim(),
-      blueprint: { ...blueprint },
-      createdAt: new Date().toISOString()
+    setIsSavingPreset(true)
+    setPresetError(null)
+    
+    try {
+      const result = await savePreset(presetName.trim(), blueprint)
+      
+      if (result.success) {
+        setPresetName('')
+        setShowSavePreset(false)
+        // Reload presets to get the updated list
+        await loadPresetsFromDatabase()
+      } else {
+        setPresetError(result.message)
+      }
+    } catch (error) {
+      console.error('Error saving preset:', error)
+      setPresetError('Failed to save preset')
+    } finally {
+      setIsSavingPreset(false)
     }
-
-    setPresets(prev => [...prev, newPreset])
-    setPresetName('')
-    setShowSavePreset(false)
   }
 
-  const loadPreset = (preset: Preset) => {
+  const loadPreset = (preset: BlueprintPreset) => {
     onBlueprintChange({ ...preset.blueprint })
     setSelectedChapter(null)
     setShowLoadPreset(false)
   }
 
-  const deletePreset = (presetId: string) => {
-    setPresets(prev => prev.filter(p => p.id !== presetId))
+  const handleDeletePreset = async (presetId: string) => {
+    setIsDeletingPreset(presetId)
+    setPresetError(null)
+    
+    try {
+      const result = await deletePreset(presetId)
+      
+      if (result.success) {
+        // Optimistically update the UI
+        setPresets(prev => prev.filter(p => p.id !== presetId))
+      } else {
+        setPresetError(result.message)
+        // Reload presets to ensure consistency
+        await loadPresetsFromDatabase()
+      }
+    } catch (error) {
+      console.error('Error deleting preset:', error)
+      setPresetError('Failed to delete preset')
+      // Reload presets to ensure consistency
+      await loadPresetsFromDatabase()
+    } finally {
+      setIsDeletingPreset(null)
+    }
   }
 
   const getChapterStatus = (chapter: ChapterInfo) => {
@@ -220,21 +294,34 @@ export function TwoColumnBlueprintBuilder({
                 variant="outline"
                 size="sm"
                 onClick={() => setShowSavePreset(!showSavePreset)}
-                disabled={totalQuestions === 0}
+                disabled={totalQuestions === 0 || isSavingPreset}
                 className="h-8 px-4 bg-white border-gray-300 hover:border-green-400 text-gray-700 font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Bookmark className="h-3 w-3 mr-2" />
-                Save Preset
+                {isSavingPreset ? (
+                  <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                ) : (
+                  <Bookmark className="h-3 w-3 mr-2" />
+                )}
+                {isSavingPreset ? 'Saving...' : 'Save Preset'}
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Error Message */}
+      {/* Error Messages */}
       {error && (
         <div className="flex-shrink-0 mx-8 mt-6 p-6 rounded-3xl bg-gradient-to-br from-red-50 to-red-100/50 border-2 border-red-200 shadow-lg backdrop-blur-sm">
           <p className="text-base font-bold text-red-800 tracking-tight">{error}</p>
+        </div>
+      )}
+
+      {presetError && (
+        <div className="flex-shrink-0 mx-8 mt-6 p-6 rounded-3xl bg-gradient-to-br from-red-50 to-red-100/50 border-2 border-red-200 shadow-lg backdrop-blur-sm">
+          <div className="flex items-center space-x-3">
+            <AlertCircle className="h-5 w-5 text-red-600" />
+            <p className="text-base font-bold text-red-800 tracking-tight">{presetError}</p>
+          </div>
         </div>
       )}
 
@@ -516,7 +603,12 @@ export function TwoColumnBlueprintBuilder({
             {showLoadPreset && (
               <div className="mb-3 p-3 bg-gray-50 rounded-lg border">
                 <h3 className="font-medium text-gray-900 mb-2 text-sm">Load from Preset</h3>
-                {presets.length === 0 ? (
+                {isLoadingPresets ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+                    <span className="ml-2 text-sm text-gray-500">Loading presets...</span>
+                  </div>
+                ) : presets.length === 0 ? (
                   <p className="text-gray-500 text-sm">No presets saved yet</p>
                 ) : (
                   <div className="space-y-2">
@@ -527,7 +619,7 @@ export function TwoColumnBlueprintBuilder({
                           <div>
                             <p className="font-medium text-gray-900">{preset.name}</p>
                             <p className="text-sm text-gray-500">
-                              {new Date(preset.createdAt).toLocaleDateString()}
+                              {new Date(preset.created_at).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
@@ -536,16 +628,22 @@ export function TwoColumnBlueprintBuilder({
                             variant="outline"
                             size="sm"
                             onClick={() => loadPreset(preset)}
+                            disabled={isDeletingPreset === preset.id}
                           >
                             Load
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => deletePreset(preset.id)}
-                            className="text-red-600 hover:text-red-700"
+                            onClick={() => handleDeletePreset(preset.id)}
+                            disabled={isDeletingPreset === preset.id}
+                            className="text-red-600 hover:text-red-700 disabled:opacity-50"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            {isDeletingPreset === preset.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
                           </Button>
                         </div>
                       </div>
@@ -565,11 +663,30 @@ export function TwoColumnBlueprintBuilder({
                     value={presetName}
                     onChange={(e) => setPresetName(e.target.value)}
                     className="flex-1"
+                    disabled={isSavingPreset}
                   />
-                  <Button onClick={savePreset} disabled={!presetName.trim()}>
-                    Save
+                  <Button 
+                    onClick={handleSavePreset} 
+                    disabled={!presetName.trim() || isSavingPreset}
+                  >
+                    {isSavingPreset ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Save'
+                    )}
                   </Button>
-                  <Button variant="outline" onClick={() => setShowSavePreset(false)}>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowSavePreset(false)
+                      setPresetName('')
+                      setPresetError(null)
+                    }}
+                    disabled={isSavingPreset}
+                  >
                     Cancel
                   </Button>
                 </div>

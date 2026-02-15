@@ -145,10 +145,11 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
     if (selectedTheme) {
       setSettings(prev => ({
         ...prev,
-        theme: selectedTheme,
+        theme: {
+          ...prev.theme,
+          ...selectedTheme,
+        },
         fontSize: selectedTheme.fontSize,
-        primaryColor: selectedTheme.primaryColor,
-        secondaryColor: selectedTheme.secondaryColor
       }))
     }
   }
@@ -213,23 +214,36 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-[1800px] h-[95vh] p-0 overflow-hidden flex flex-col">
-        <DialogHeader className="p-6 pb-4 flex-shrink-0">
-          <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
-            <FileText className="h-6 w-6" />
-            Interactive PDF Exporter
-          </DialogTitle>
+      <DialogContent className="max-w-none w-screen h-screen p-0 m-0 rounded-none fixed inset-0 z-[9999] bg-white overflow-hidden border-none shadow-none flex flex-col">
+        <DialogHeader className="p-4 flex-shrink-0 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-indigo-600">
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-white">
+              <FileText className="h-6 w-6 text-white" />
+              Interactive PDF Exporter
+            </DialogTitle>
+            <button 
+              onClick={onClose}
+              className="text-white hover:bg-white/20 rounded-full p-2 transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </DialogHeader>
 
-        <div className="flex flex-1 min-h-0">
+        <div className="flex flex-1 min-h-0 bg-gray-50">
           {/* Control Panel - Fixed width for stability and full functionality */}
-          <div className="w-[360px] bg-gray-50 border-r border-gray-200 flex flex-col flex-shrink-0">
-            <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-              <div className="p-6 space-y-8">
+          <div className="w-[380px] bg-white border-r border-gray-200 flex flex-col flex-shrink-0 shadow-sm">
+            <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-500">
+              <div className="p-6 space-y-6">
               
               {/* Design Theme Section */}
-              <div>
-                <Label className="text-sm font-semibold mb-3 block text-gray-800">Design Theme</Label>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <Label className="text-sm font-semibold mb-3 block text-gray-900 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                  Design Theme
+                </Label>
                 <Select value={settings.theme.id} onValueChange={handleThemeChange}>
                   <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                     <SelectValue />
@@ -254,8 +268,11 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
               </div>
 
               {/* Color Palette Section */}
-              <div>
-                <Label className="text-sm font-semibold mb-3 block text-gray-800">Color Palette</Label>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <Label className="text-sm font-semibold mb-3 block text-gray-900 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
+                  Color Palette
+                </Label>
                 <div className="space-y-4">
                   <div>
                     <Label className="text-xs text-gray-600 mb-2 block">Primary Color</Label>
@@ -297,8 +314,11 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
               </div>
 
               {/* Typography Section */}
-              <div>
-                <Label className="text-sm font-semibold mb-3 block text-gray-800">Typography</Label>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <Label className="text-sm font-semibold mb-3 block text-gray-900 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                  Typography
+                </Label>
                 <div className="space-y-4">
                   <div>
                     <Label className="text-xs text-gray-600 mb-2 block">Font Family</Label>
@@ -347,8 +367,11 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
               </div>
 
               {/* Layout & Spacing Section */}
-              <div>
-                <Label className="text-sm font-semibold mb-3 block text-gray-800">Layout & Spacing</Label>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <Label className="text-sm font-semibold mb-3 block text-gray-900 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-orange-600 rounded-full"></div>
+                  Layout & Spacing
+                </Label>
                 <div className="space-y-4">
                   <div>
                     <Label className="text-xs text-gray-600 mb-2 block">Questions per Page: {settings.questionsPerPage}</Label>
@@ -382,8 +405,11 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
               </div>
 
               {/* Content Options Section */}
-              <div>
-                <Label className="text-sm font-semibold mb-3 block text-gray-800">Content Options</Label>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <Label className="text-sm font-semibold mb-3 block text-gray-900 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-indigo-600 rounded-full"></div>
+                  Content Options
+                </Label>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="showHeader" className="text-sm font-medium">Show Header</Label>
@@ -473,8 +499,11 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
               </div>
 
               {/* Custom Text Section */}
-              <div>
-                <Label className="text-sm font-semibold mb-3 block text-gray-800">Custom Text</Label>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <Label className="text-sm font-semibold mb-3 block text-gray-900 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-pink-600 rounded-full"></div>
+                  Custom Text
+                </Label>
                 <div className="space-y-4">
                   <div>
                     <Label className="text-xs text-gray-600 mb-2 block">Custom Header Text (optional)</Label>
@@ -500,8 +529,11 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
               </div>
 
               {/* Preview Mode Section */}
-              <div>
-                <Label className="text-sm font-semibold mb-3 block text-gray-800">Preview Mode</Label>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <Label className="text-sm font-semibold mb-3 block text-gray-900 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-teal-600 rounded-full"></div>
+                  Preview Mode
+                </Label>
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                   <div className="text-xs text-blue-800 font-medium mb-1">Live Preview Active</div>
                   <div className="text-xs text-blue-600">
@@ -511,7 +543,11 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
               </div>
 
               {/* Actions Section */}
-              <div className="pt-4 border-t border-gray-200">
+              <div className="bg-white p-4 rounded-lg border border-gray-300 shadow-sm">
+                <Label className="text-sm font-semibold mb-3 block text-gray-900 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-red-600 rounded-full"></div>
+                  Export Options
+                </Label>
                 <div className="space-y-3">
                   <Button
                     onClick={handleGeneratePDF}
@@ -542,6 +578,7 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
                   </Button>
                 </div>
               </div>
+
               </div>
             </div>
             {/* Scroll indicator */}
@@ -549,12 +586,21 @@ export function InteractivePDFExporter({ test, questions, isOpen, onClose }: Int
           </div>
 
           {/* Preview Area - Flexible Column occupying all remaining space */}
-          <div className="flex-1 flex flex-col min-w-0 flex-grow">
-            <PDFLivePreview
-              test={test}
-              questions={questions}
-              settings={settings}
-            />
+          <div className="flex-1 flex flex-col min-w-0 flex-grow bg-white">
+            <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <div className="w-3 h-3 bg-blue-600 rounded-full animate-pulse"></div>
+                Live PDF Preview
+              </h3>
+              <p className="text-sm text-gray-600 mt-1">Changes update instantly as you modify settings</p>
+            </div>
+            <div className="flex-1 min-h-0">
+              <PDFLivePreview
+                test={test}
+                questions={questions}
+                settings={settings}
+              />
+            </div>
           </div>
         </div>
       </DialogContent>

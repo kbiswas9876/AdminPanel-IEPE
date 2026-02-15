@@ -6,12 +6,15 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ArrowRight, Pencil, Edit3, Trash2, ChevronDown, Plus, Eye, EyeOff, Settings, Sparkles, Layers, RefreshCw, FileText, CheckCircle2, BarChart3, Award, Star, Shield, Zap as Lightning, Wand2, Palette, Save, X, BookOpen, AlertCircle } from 'lucide-react'
+import { ArrowRight, Pencil, Edit3, Trash2, ChevronDown, Plus, Eye, EyeOff, Sparkles, Layers, RefreshCw, FileText, CheckCircle2, BarChart3, Award, Star, Shield, Zap as Lightning, Wand2, Palette, Save, X, BookOpen, AlertCircle, Info, ToggleLeft, ToggleRight, Tag, Minus } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 import { UniversalContentRenderer } from '../editors/UniversalContentRenderer'
 import { ClientOnlyAdvancedTipTapEditor } from '@/components/editors/ClientOnlyAdvancedTipTapEditor'
 import { LivePreviewRenderer } from '@/components/editors/LivePreviewRenderer'
 import type { Question, TestQuestionSlot } from '@/lib/types'
 import { UnifiedQuestionBankModal } from './unified-question-bank-modal'
+import { TestPreviewModal } from './test-preview-modal'
 
 interface ReviewRefineInterfaceProps {
   questions: TestQuestionSlot[]
@@ -20,6 +23,11 @@ interface ReviewRefineInterfaceProps {
   onEdit: (index: number) => void
   onNext: () => void
   isQuestionBankMode?: boolean
+  globalMarkingRules?: {
+    marksPerCorrect: number
+    penaltyPerIncorrect: number
+  }
+  onGlobalMarkingRulesChange?: (rules: { marksPerCorrect: number; penaltyPerIncorrect: number }) => void
 }
 
 export default function ReviewRefineInterface({
@@ -28,7 +36,9 @@ export default function ReviewRefineInterface({
   onRegenerate,
   onEdit,
   onNext,
-  isQuestionBankMode: _isQuestionBankMode = false
+  isQuestionBankMode: _isQuestionBankMode = false,
+  globalMarkingRules = { marksPerCorrect: 1, penaltyPerIncorrect: 0.25 },
+  onGlobalMarkingRulesChange
 }: ReviewRefineInterfaceProps) {
   const [shuffleOptions, setShuffleOptions] = useState(false)
   const [overrideIndex, setOverrideIndex] = useState<number | null>(null)
@@ -49,6 +59,14 @@ export default function ReviewRefineInterface({
     solution: true
   })
   const [isShuffling, setIsShuffling] = useState(false)
+  const [customMarkingIndex, setCustomMarkingIndex] = useState<number | null>(null)
+  const [customMarkingModal, setCustomMarkingModal] = useState(false)
+  const [customMarkingForm, setCustomMarkingForm] = useState<{
+    marksPerCorrect: number
+    penaltyPerIncorrect: number
+  }>({ marksPerCorrect: 1, penaltyPerIncorrect: 0.25 })
+  const [showPreviewModal, setShowPreviewModal] = useState(false)
+
 
   const handleShuffleQuestions = async () => {
     setIsShuffling(true)
@@ -65,6 +83,57 @@ export default function ReviewRefineInterface({
     onQuestionsChange(shuffled)
     
     setIsShuffling(false)
+  }
+
+  const handleCustomMarking = (index: number) => {
+    console.log('🎯 Opening custom marking modal for question:', index + 1)
+    setCustomMarkingIndex(index)
+    const question = questions[index]
+    // Initialize with global rules or existing custom rules
+    const initialForm = {
+      marksPerCorrect: question.customMarking?.marksPerCorrect ?? globalMarkingRules.marksPerCorrect,
+      penaltyPerIncorrect: question.customMarking?.penaltyPerIncorrect ?? globalMarkingRules.penaltyPerIncorrect
+    }
+    console.log('📝 Initial form values:', initialForm)
+    setCustomMarkingForm(initialForm)
+    setCustomMarkingModal(true)
+  }
+
+  const handleSaveCustomMarking = () => {
+    console.log('💾 Save custom marking called with:', { customMarkingIndex, customMarkingForm })
+    if (customMarkingIndex !== null) {
+      const updatedQuestions = [...questions]
+      const newCustomMarking = {
+        marksPerCorrect: customMarkingForm.marksPerCorrect,
+        penaltyPerIncorrect: customMarkingForm.penaltyPerIncorrect
+      }
+      console.log('🔄 Updating question with custom marking:', newCustomMarking)
+      
+      updatedQuestions[customMarkingIndex] = {
+        ...updatedQuestions[customMarkingIndex],
+        customMarking: newCustomMarking
+      }
+      
+      console.log('📤 Calling onQuestionsChange with updated questions')
+      onQuestionsChange(updatedQuestions)
+      
+      // Show success feedback
+      const questionNumber = customMarkingIndex + 1
+      console.log(`✅ Custom marking saved for Question ${questionNumber}: +${customMarkingForm.marksPerCorrect} / -${customMarkingForm.penaltyPerIncorrect}`)
+    }
+    setCustomMarkingModal(false)
+    setCustomMarkingIndex(null)
+  }
+
+  const handleRemoveCustomMarking = (index: number) => {
+    const updatedQuestions = [...questions]
+    const { customMarking, ...rest } = updatedQuestions[index]
+    updatedQuestions[index] = rest
+    onQuestionsChange(updatedQuestions)
+    
+    // Show feedback
+    const questionNumber = index + 1
+    console.log(`🔄 Custom marking removed for Question ${questionNumber}, reverted to default`)
   }
 
   const handleOverride = (index: number) => {
@@ -218,99 +287,152 @@ export default function ReviewRefineInterface({
 
   return (
     <div className="w-full">
-      {/* Modern Header */}
-      <div className="design-header">
-        <div className="flex items-center justify-between">
-          {/* Left Section - Title & Status */}
-          <div className="flex items-center gap-4 min-w-0 flex-1">
-            <div className="flex-shrink-0 p-3 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 shadow-sm">
-              <Sparkles className="h-5 w-5 text-blue-600" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h2 className="design-heading mb-2">
-                Review & Refine
-              </h2>
-              <div className="flex items-center gap-3">
-                <div className="design-status-indicator">
-                  <FileText className="h-3.5 w-3.5" />
-                  <span>{questions.length} questions</span>
-                </div>
-                <div className="design-status-indicator design-status-indicator-ready">
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                  <span>Ready</span>
+      {/* Clean & Organized Header */}
+      <div className="sticky top-0 z-40 bg-white/98 backdrop-blur-md border-b border-gray-200/60 shadow-lg">
+        <div className="px-3 sm:px-4 py-4 sm:py-5 max-w-none mx-auto w-full">
+          {/* Title & Status Row */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <Sparkles className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
+                  Review & Refine
+                </h2>
+                <div className="flex items-center gap-3 mt-1">
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 rounded-full border border-blue-200/50">
+                    <FileText className="h-3.5 w-3.5 text-blue-600" />
+                    <span className="text-sm font-semibold text-blue-700">{questions.length} questions</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-green-50 rounded-full border border-green-200/50">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+                    <span className="text-sm font-semibold text-green-700">Ready</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Professional Control Bar */}
+          <div className="flex flex-col xl:flex-row items-stretch gap-3 xl:gap-4">
             
-          {/* Right Section - Primary Actions */}
-          <div className="design-action-group">
-            <Button 
-              onClick={() => setChooseOpen(true)}
-              className="design-button design-button-primary"
-            >
-              <Plus className="h-4 w-4" />
-              Add Question
-            </Button>
-            
-            <Button 
-              onClick={onNext}
-              className="design-button design-button-primary"
-            >
-              Next Step
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-        
-        {/* Action Controls */}
-        <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-          <div className="flex items-center gap-4">
-            {/* Shuffle Button */}
-            <Button 
-              onClick={handleShuffleQuestions}
-              disabled={isShuffling}
-              className="design-button design-button-secondary"
-            >
-              {isShuffling ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
-                  Shuffling...
-                </>
-              ) : (
-                <>
-                  <Lightning className="h-4 w-4 mr-2" />
-                  Shuffle Questions
-                </>
-              )}
-            </Button>
-            
-            {/* Toggle Switch */}
-            <div className="flex items-center gap-3 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200">
-              <div className="flex items-center gap-2">
-                <Settings className="h-4 w-4 text-gray-600" />
-                <div>
-                  <span className="text-sm font-medium text-gray-800">Shuffle Options</span>
-                  <p className="text-xs text-gray-600">Randomize option order</p>
-                </div>
-              </div>
+            {/* Left Section - Primary Actions */}
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => setChooseOpen(true)}
+                className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 text-sm px-4 py-2.5 h-10 rounded-xl font-semibold min-w-[140px]"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Question
+              </Button>
               
-              {/* Modern Toggle Switch */}
-              <button
-                onClick={() => setShuffleOptions(!shuffleOptions)}
-                className={`design-toggle ${shuffleOptions ? 'design-toggle-active' : ''}`}
-                aria-pressed={shuffleOptions}
-              />
+              <Button 
+                onClick={() => setShowPreviewModal(true)}
+                disabled={questions.length === 0}
+                variant="outline"
+                className="border-2 border-blue-200 hover:border-blue-300 hover:bg-blue-50 text-blue-700 hover:text-blue-800 shadow-sm hover:shadow-md transition-all duration-300 text-sm px-4 py-2.5 h-10 rounded-xl font-semibold min-w-[140px]"
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                Preview Test
+              </Button>
+              
+              <Button 
+                onClick={onNext}
+                className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 text-sm px-4 py-2.5 h-10 rounded-xl font-semibold min-w-[140px]"
+              >
+                Next Step
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+
+            {/* Center Section - Default Marking Rules */}
+            <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-xl border border-emerald-200/60 shadow-lg px-4 py-2.5 h-10">
+              <span className="text-sm font-semibold text-gray-800 whitespace-nowrap">Default Marking:</span>
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-gray-500">+</span>
+                <Input
+                  type="number"
+                  step="0.25"
+                  min="0"
+                  value={globalMarkingRules.marksPerCorrect}
+                  onChange={(e) => onGlobalMarkingRulesChange?.({
+                    ...globalMarkingRules,
+                    marksPerCorrect: Number(e.target.value)
+                  })}
+                  className="h-7 w-16 text-center text-sm border-gray-200 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-100 rounded-md transition-all duration-200 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                  placeholder="1.0"
+                />
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-gray-500">-</span>
+                <Input
+                  type="number"
+                  step="0.25"
+                  min="0"
+                  value={globalMarkingRules.penaltyPerIncorrect}
+                  onChange={(e) => onGlobalMarkingRulesChange?.({
+                    ...globalMarkingRules,
+                    penaltyPerIncorrect: Number(e.target.value)
+                  })}
+                  className="h-7 w-16 text-center text-sm border-gray-200 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-100 rounded-md transition-all duration-200 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                  placeholder="0.25"
+                />
+              </div>
+            </div>
+
+            {/* Right Section - Shuffle Controls */}
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={handleShuffleQuestions}
+                disabled={isShuffling}
+                className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm px-4 py-2.5 h-10 rounded-xl font-semibold min-w-[120px]"
+              >
+                {isShuffling ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Shuffling...
+                  </>
+                ) : (
+                  <>
+                    <Lightning className="h-4 w-4 mr-2" />
+                    Shuffle
+                  </>
+                )}
+              </Button>
+              
+              {/* Compact Shuffle Options */}
+              <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-xl border border-blue-200/60 shadow-lg px-3 py-2.5 h-10">
+                <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center shadow-sm">
+                  <RefreshCw className="h-3 w-3 text-white" />
+                </div>
+                <span className="text-sm font-semibold text-gray-800">Shuffle Options</span>
+                <button
+                  onClick={() => setShuffleOptions(!shuffleOptions)}
+                  className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                  style={{
+                    backgroundColor: shuffleOptions ? '#3b82f6' : '#d1d5db'
+                  }}
+                >
+                  <span
+                    className="inline-block h-3 w-3 transform rounded-full bg-white shadow-lg transition-transform"
+                    style={{
+                      transform: shuffleOptions ? 'translateX(1rem)' : 'translateX(0.125rem)'
+                    }}
+                  />
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="p-6">
-        <div className="max-w-4xl mx-auto">
-        {/* Questions List */}
-        <div className="space-y-6">
+      {/* Main Content - Full Width */}
+      <div className="px-3 sm:px-4">
+        <div className="max-w-none mx-auto w-full">
+        
+        {/* Ultra-Premium Questions List */}
+        <div className="space-y-4 sm:space-y-6 pt-3 sm:pt-4 -mx-3 sm:-mx-4">
           {questions.map((item, index) => {
             const q = item.question
             const options = q.options || {}
@@ -318,47 +440,92 @@ export default function ReviewRefineInterface({
             const optionKeys = Object.keys(options).filter(key => options[key] && options[key].trim()) as Array<keyof typeof options>
             
             return (
-              <div key={index} className="design-question-card group">
-                  {/* Question Header */}
-                  <div className="flex items-start justify-between mb-6">
-                    <div className="flex items-center gap-4 min-w-0 flex-1">
+              <Card key={index} className="group border border-gray-200/60 rounded-xl sm:rounded-2xl overflow-hidden bg-white shadow-lg sm:shadow-xl hover:shadow-xl sm:hover:shadow-2xl transition-all duration-300 hover:scale-[1.005] sm:hover:scale-[1.01]">
+                <CardContent className="py-4 sm:py-6 px-3 sm:px-4">
+                  {/* Ultra-Premium Question Header */}
+                  <div className="flex items-start justify-between mb-4 sm:mb-6">
+                    <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
                       <div className="min-w-0 flex-1">
-                        <h3 className="design-subheading mb-2">
-                          Question {index + 1}
-                        </h3>
-                        <div className="flex items-center gap-2">
-                          <div className="design-badge-modern design-badge-blue">
-                            <Layers className="h-3.5 w-3.5" />
-                            <span>{item.chapter_name}</span>
+                        <h3 className="text-sm sm:text-base font-bold text-gray-900 tracking-tight mb-1 sm:mb-2">
+                              Question {index + 1}
+                            </h3>
+                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                          <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-full border border-blue-200/50 shadow-sm">
+                            <Layers className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-600" />
+                            <span className="text-xs sm:text-sm font-semibold text-blue-700">{item.chapter_name}</span>
                           </div>
-                          <div className="design-badge-modern">
-                            <FileText className="h-3.5 w-3.5" />
-                            <span>{item.source_type}</span>
-                            {item.source_value && <span>: {item.source_value}</span>}
+                          <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-gray-50 to-slate-50 rounded-full border border-gray-200/50 shadow-sm">
+                            <FileText className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-600" />
+                            <span className="text-xs sm:text-sm font-semibold text-gray-700">{item.source_type}</span>
+                            {item.source_value && <span className="text-xs text-gray-500">: {item.source_value}</span>}
+                        </div>
+                        {/* Enhanced Marking Rules Display */}
+                        {(() => {
+                          const hasCustomMarking = !!item.customMarking
+                          const marksPerCorrect = item.customMarking?.marksPerCorrect ?? globalMarkingRules.marksPerCorrect
+                          const penaltyPerIncorrect = item.customMarking?.penaltyPerIncorrect ?? globalMarkingRules.penaltyPerIncorrect
+                          
+                          console.log(`🏷️ Question ${index + 1} marking display:`, {
+                            hasCustomMarking,
+                            marksPerCorrect,
+                            penaltyPerIncorrect,
+                            customMarking: item.customMarking,
+                            globalRules: globalMarkingRules
+                          })
+                          
+                          return (
+                            <div className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border shadow-sm transition-all duration-200 ${
+                              hasCustomMarking 
+                                ? 'bg-gradient-to-r from-orange-50 to-amber-50 border-orange-300/60 shadow-orange-100' 
+                                : 'bg-gradient-to-r from-gray-50 to-slate-50 border-gray-300/60 shadow-gray-100'
+                            }`}>
+                              <Tag className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${
+                                hasCustomMarking ? 'text-orange-600' : 'text-gray-600'
+                              }`} />
+                              <span className={`text-xs sm:text-sm font-bold ${
+                                hasCustomMarking ? 'text-orange-800' : 'text-gray-800'
+                              }`}>
+                                {hasCustomMarking ? 'Custom' : 'Default'} Marking
+                              </span>
+                              <span className={`text-xs sm:text-sm font-mono font-bold px-1.5 py-0.5 rounded ${
+                                hasCustomMarking 
+                                  ? 'bg-orange-100 text-orange-800 border border-orange-200' 
+                                  : 'bg-gray-100 text-gray-800 border border-gray-200'
+                              }`}>
+                                +{marksPerCorrect} / -{penaltyPerIncorrect}
+                              </span>
+                            </div>
+                          )
+                        })()}
+                          </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
                     
-                    {/* Question Actions */}
-                    <div className="design-question-actions">
-                      <button
+                    {/* Ultra-Premium Action Buttons */}
+                    <div className="flex items-center gap-0.5 sm:gap-2 ml-1 sm:ml-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => onRegenerate(index)}
-                        className="design-action-button"
+                        className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-200 rounded-md sm:rounded-xl shadow-sm hover:shadow-md group"
                         title="Regenerate Question"
                       >
-                        <RefreshCw className="h-4 w-4" />
-                      </button>
+                        <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 group-hover:rotate-180 transition-transform duration-300" />
+                      </Button>
                       
-                      <button
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => handleOverride(index)}
-                        className="design-action-button"
+                        className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-green-50 hover:border-green-300 hover:text-green-700 transition-all duration-200 rounded-md sm:rounded-xl shadow-sm hover:shadow-md group"
                         title="Override with Bank Question"
                       >
-                        <Pencil className="h-4 w-4" />
-                      </button>
+                        <Pencil className="h-3 w-3 sm:h-4 sm:w-4 group-hover:scale-110 transition-transform duration-200" />
+                      </Button>
                       
-                      <button
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => {
                           if (editingIndex === index) {
                             cancelEdit()
@@ -367,23 +534,39 @@ export default function ReviewRefineInterface({
                           }
                           onEdit(index)
                         }}
-                        className="design-action-button"
+                        className="h-7 w-7 sm:h-9 sm:w-9 p-0 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 transition-all duration-200 rounded-md sm:rounded-xl shadow-sm hover:shadow-md group"
                         title="Edit Question"
                       >
-                        <Edit3 className="h-4 w-4" />
-                      </button>
+                        <Edit3 className="h-3 w-3 sm:h-4 sm:w-4 group-hover:scale-110 transition-transform duration-200" />
+                      </Button>
                       
-                      <button
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCustomMarking(index)}
+                        className={`h-7 w-7 sm:h-9 sm:w-9 p-0 transition-all duration-200 rounded-md sm:rounded-xl shadow-sm hover:shadow-md group ${
+                          item.customMarking 
+                            ? 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 border-emerald-200 hover:border-emerald-300' 
+                            : 'text-gray-600 hover:text-gray-700 hover:bg-gray-50 border-gray-200 hover:border-gray-300'
+                        }`}
+                        title={item.customMarking ? "Edit Custom Marking" : "Set Custom Marking"}
+                      >
+                        <Tag className="h-3 w-3 sm:h-4 sm:w-4 group-hover:scale-110 transition-transform duration-200" />
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => handleDelete(index)}
-                        className="design-action-button design-action-button-danger"
+                        className="h-7 w-7 sm:h-9 sm:w-9 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300 transition-all duration-200 rounded-md sm:rounded-xl shadow-sm hover:shadow-md group"
                         title="Delete Question"
                       >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
+                        <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 group-hover:scale-110 transition-transform duration-200" />
+                      </Button>
+                      </div>
                   </div>
-                  {/* Question Content */}
-                  <div className="space-y-6">
+                  {/* Ultra-Premium Question Content */}
+                  <div className="space-y-4 sm:space-y-6">
                       {editingIndex === index && editForm ? (
                       <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-200/50 overflow-hidden">
                         {/* Premium Header */}
@@ -613,21 +796,21 @@ export default function ReviewRefineInterface({
                         </div>
                       ) : (
                         <div>
-                        {/* Question Text */}
-                        <div className="mb-6 p-6 bg-gray-50 rounded-lg border border-gray-200">
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className="p-2 rounded-lg bg-purple-100">
-                              <FileText className="h-4 w-4 text-purple-600" />
+                        {/* Ultra-Premium Question Text */}
+                        <div className="mb-4 sm:mb-6 p-4 sm:p-6 bg-gradient-to-br from-gray-50/80 via-white/50 to-blue-50/30 rounded-xl sm:rounded-2xl border border-gray-200/60 shadow-lg">
+                          <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                            <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-gradient-to-br from-purple-100 to-indigo-100 shadow-sm">
+                              <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-600" />
                             </div>
-                            <h4 className="text-sm font-semibold text-gray-800">Question</h4>
+                            <h4 className="text-xs sm:text-sm font-bold text-gray-800">Question</h4>
                           </div>
-                          <div className="prose prose-sm max-w-none text-gray-800 leading-relaxed">
+                          <div className="prose prose-xs sm:prose-lg max-w-none text-gray-800 leading-relaxed">
                               {renderMathContent(q.question_text)}
                             </div>
                           </div>
 
-                        {/* Answer Options */}
-                        <div className="space-y-3 mb-6">
+                        {/* Ultra-Premium Options */}
+                        <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
                             {optionKeys.map((optionKey) => {
                               const optionText = options[optionKey]
                               const isCorrect = q.correct_option === optionKey
@@ -635,19 +818,23 @@ export default function ReviewRefineInterface({
                               return (
                                 <div
                                   key={optionKey}
-                                  className={`design-answer-option ${
-                                    isCorrect ? 'design-answer-option-correct' : ''
+                                className={`flex items-start space-x-3 sm:space-x-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl border transition-all duration-300 hover:shadow-md ${
+                                    isCorrect 
+                                      ? 'bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 border-green-300/60 shadow-lg' 
+                                      : 'bg-white/90 border-gray-200/60 hover:bg-gray-50/80'
                                   }`}
                                 >
-                                  <div className={`design-option-label ${
-                                    isCorrect ? 'design-answer-option-correct .design-option-label' : ''
+                                <div className={`flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl flex items-center justify-center text-sm sm:text-lg font-bold transition-all duration-300 shadow-sm ${
+                                    isCorrect
+                                      ? 'bg-gradient-to-br from-green-100 to-emerald-100 text-green-800 shadow-green-200'
+                                      : 'bg-gradient-to-br from-gray-100 to-slate-200 text-gray-700'
                                   }`}>
                                     {getOptionLabel(String(optionKey))}
                                     {isCorrect && (
-                                      <CheckCircle2 className="h-3 w-3 ml-1" />
+                                    <span className="ml-0.5 sm:ml-1 text-green-600 text-xs sm:text-sm">✓</span>
                                     )}
                                   </div>
-                                  <div className="flex-1 prose prose-sm max-w-none text-gray-800 leading-relaxed">
+                                  <div className="flex-1 prose prose-xs sm:prose-lg max-w-none text-gray-800 leading-relaxed">
                                     {renderMathContent(String(optionText))}
                                   </div>
                                 </div>
@@ -722,8 +909,10 @@ export default function ReviewRefineInterface({
                                   <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
                                   <span className="text-sm font-bold text-amber-800">Solution</span>
                                 </div>
-                                <div className="prose prose-xs sm:prose-lg max-w-none text-gray-800 leading-relaxed">
-                                  {renderMathContent(q.solution_text)}
+                                <div className="prose prose-xs max-w-none text-gray-800 leading-relaxed">
+                                  <div className="text-sm font-medium [&_*]:text-sm [&_*]:leading-relaxed [&_p]:mb-2 [&_p]:last:mb-0 [&_strong]:font-semibold [&_em]:italic">
+                                    {renderMathContent(q.solution_text)}
+                                  </div>
                                 </div>
                               </div>
                             )}
@@ -732,76 +921,57 @@ export default function ReviewRefineInterface({
                         </div>
                       )}
                     </div>
-                </div>
+                </CardContent>
+              </Card>
             )
           })}
         </div>
 
-        {/* Test Summary - Minimalist iOS Design */}
-        <div className="mt-8 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-8 py-6 border-b border-gray-100">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
-                  <BarChart3 className="h-5 w-5 text-gray-600" />
+        {/* Ultra-Premium Summary */}
+        <div className="mt-6 sm:mt-8 py-4 sm:py-6 px-3 sm:px-4 bg-gradient-to-br from-blue-50/90 via-indigo-50/70 to-purple-50/50 rounded-xl sm:rounded-2xl border border-blue-200/60 shadow-lg sm:shadow-xl -mx-3 sm:-mx-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 shadow-lg">
+                  <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                 </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900">Test Summary</h3>
-                  <p className="text-sm text-gray-500">Review your test configuration</p>
-                </div>
+                <h3 className="text-base sm:text-lg font-bold text-blue-900 tracking-tight">Test Summary</h3>
               </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-green-50 rounded-full">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm font-medium text-green-700">Ready</span>
-              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-white/60 rounded-lg sm:rounded-xl border border-blue-200/40 shadow-sm">
+                  <div className="p-1.5 sm:p-2 rounded-md sm:rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100">
+                    <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600" />
+                  </div>
+            <div>
+                    <p className="text-xs font-semibold text-blue-600">Total Questions</p>
+                    <p className="text-base sm:text-lg font-bold text-blue-800">{questions.length}</p>
             </div>
-          </div>
-          
-          <div className="px-8 py-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              {/* Total Questions */}
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
-                  <FileText className="h-6 w-6 text-blue-600" />
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Total Questions</p>
-                  <p className="text-2xl font-semibold text-gray-900">{questions.length}</p>
+                <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-white/60 rounded-lg sm:rounded-xl border border-green-200/40 shadow-sm">
+                  <div className="p-1.5 sm:p-2 rounded-md sm:rounded-lg bg-gradient-to-br from-green-100 to-emerald-100">
+                    <Lightning className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-green-600">Shuffle</p>
+                    <p className="text-base sm:text-lg font-bold text-green-800">Available</p>
+                  </div>
                 </div>
-              </div>
-              
-              {/* Shuffle Status */}
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center">
-                  <Lightning className="h-6 w-6 text-gray-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Shuffle</p>
-                  <p className="text-2xl font-semibold text-gray-900">Available</p>
-                </div>
-              </div>
-              
-              {/* Options Status */}
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center">
-                  <Settings className="h-6 w-6 text-gray-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Options</p>
-                  <p className="text-2xl font-semibold text-gray-900">{shuffleOptions ? 'On' : 'Off'}</p>
+                <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-white/60 rounded-lg sm:rounded-xl border border-blue-200/40 shadow-sm">
+                  <div className="p-1.5 sm:p-2 rounded-md sm:rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100">
+                    <RefreshCw className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-blue-600">Options</p>
+                    <p className="text-base sm:text-lg font-bold text-blue-800">{shuffleOptions ? 'On' : 'Off'}</p>
+                  </div>
                 </div>
               </div>
             </div>
-            
-            {/* Action Button */}
-            <div className="flex justify-end">
-              <Button 
-                onClick={onNext}
-                className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-3"
-              >
-                <CheckCircle2 className="h-5 w-5" />
+            <div className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-green-100 to-emerald-100 rounded-xl sm:rounded-2xl border border-green-200/60 shadow-lg">
+              <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+              <span className="text-xs sm:text-sm font-bold text-green-800">
                 Ready to Proceed
-              </Button>
+              </span>
             </div>
           </div>
         </div>
@@ -818,80 +988,67 @@ export default function ReviewRefineInterface({
         onSelect={handleSelectOverride}
         onSelectMultiple={handleSelectMultiple}
         initialChapter={overrideIndex !== null ? questions[overrideIndex]?.chapter_name : undefined}
-        multiSelect={overrideIndex === questions.length}
+        multiSelect={overrideIndex !== null && overrideIndex === questions.length}
         title={overrideIndex === questions.length ? "Add Questions from Bank" : "Select Replacement Question"}
       />
 
-      {/* Add New Question Modal */}
-      {chooseOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl border border-gray-200 w-full max-w-md mx-4">
-            {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-100">
-                  <Plus className="h-5 w-5 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Add New Question</h3>
-                  <p className="text-sm text-gray-600">Choose how you'd like to add a question</p>
-                </div>
+      {/* Add New Question Choice Modal */}
+      <Dialog open={chooseOpen} onOpenChange={setChooseOpen}>
+        <DialogContent className="max-w-md sm:max-w-lg">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600">
+                <Plus className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <DialogTitle className="text-lg font-bold">Add New Question</DialogTitle>
+                <DialogDescription>Choose how you'd like to add a question</DialogDescription>
               </div>
             </div>
+          </DialogHeader>
 
-            {/* Modal Content */}
-            <div className="p-6 space-y-4">
-              {/* Write New Question Option */}
-              <Button 
-                onClick={() => { setChooseOpen(false); setCreateOpen(true) }}
-                className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-4 group"
-              >
-                <div className="p-2 rounded-lg bg-white/20">
-                  <Wand2 className="h-5 w-5" />
-                </div>
-                <div className="flex-1 text-left">
-                  <div className="font-semibold text-base">Write a New Question</div>
-                  <div className="text-sm text-blue-100">Create a custom question with LaTeX support</div>
-                </div>
-                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </Button>
+          <div className="space-y-4">
+            {/* Write New Question Option */}
+            <Button 
+              onClick={() => { setChooseOpen(false); setCreateOpen(true) }}
+              className="w-full h-16 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-4 group"
+            >
+              <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm group-hover:bg-white/30 transition-colors">
+                <Wand2 className="h-5 w-5" />
+              </div>
+              <div className="flex-1 text-left">
+                <div className="font-semibold text-base">Write a New Question</div>
+                <div className="text-sm text-purple-100">Create a custom question with LaTeX support</div>
+              </div>
+              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
 
-              {/* Add from Question Bank Option */}
-              <Button 
-                variant="outline"
-                onClick={() => { setChooseOpen(false); setModalOpen(true); setOverrideIndex(questions.length) }}
-                className="w-full h-16 border border-gray-200 hover:border-blue-300 hover:bg-blue-50 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-4 group"
-              >
-                <div className="p-2 rounded-lg bg-blue-100">
-                  <BookOpen className="h-5 w-5 text-blue-600" />
-                </div>
-                <div className="flex-1 text-left">
-                  <div className="font-semibold text-base text-gray-800">Add from Question Bank</div>
-                  <div className="text-sm text-gray-600">Select from existing questions in the database</div>
-                </div>
-                <ArrowRight className="h-4 w-4 text-gray-400 group-hover:translate-x-1 group-hover:text-gray-600 transition-all" />
-              </Button>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg flex justify-end">
-              <Button 
-                variant="ghost"
-                onClick={() => setChooseOpen(false)}
-                className="h-10 px-6 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                Cancel
-              </Button>
-            </div>
+            {/* Add from Question Bank Option */}
+            <Button 
+              variant="outline"
+              onClick={() => { setChooseOpen(false); setModalOpen(true); setOverrideIndex(questions.length) }}
+              className="w-full h-16 border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-4 group"
+            >
+              <div className="p-2 rounded-lg bg-blue-100 group-hover:bg-blue-200 transition-colors">
+                <BookOpen className="h-5 w-5 text-blue-600" />
+              </div>
+              <div className="flex-1 text-left">
+                <div className="font-semibold text-base text-gray-800">Add from Question Bank</div>
+                <div className="text-sm text-gray-600">Select from existing questions in the database</div>
+              </div>
+              <ArrowRight className="h-4 w-4 text-gray-400 group-hover:translate-x-1 group-hover:text-gray-600 transition-all" />
+            </Button>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
-      {/* Ultra-Premium Create Question Modal */}
-      {createOpen && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-start justify-center p-2 sm:p-4 overflow-y-auto">
-          <div className="bg-white w-full max-w-4xl sm:max-w-6xl rounded-xl sm:rounded-2xl shadow-2xl border border-gray-200/60 my-4 sm:my-8 min-h-[90vh] max-h-[95vh] flex flex-col">
-            <div className="flex-1 overflow-y-auto">
+      {/* Create New Question Modal */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="max-w-4xl sm:max-w-6xl h-[95vh] flex flex-col" showCloseButton={false}>
+          <VisuallyHidden>
+            <DialogTitle>Create New Question</DialogTitle>
+          </VisuallyHidden>
+          <div className="flex-1 overflow-y-auto">
             <CreateQuestionForm
               onCancel={() => setCreateOpen(false)}
               onSave={(newQ) => {
@@ -899,10 +1056,115 @@ export default function ReviewRefineInterface({
                 setCreateOpen(false)
               }}
             />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Custom Marking Modal */}
+      <Dialog open={customMarkingModal} onOpenChange={setCustomMarkingModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600">
+                <Tag className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <DialogTitle className="text-lg font-bold">Custom Marking for This Question</DialogTitle>
+                <DialogDescription>Set custom scoring for this specific question</DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-gray-700">Marks for Correct Answer</Label>
+              <Input
+                type="number"
+                step="0.25"
+                min="0"
+                value={customMarkingForm.marksPerCorrect}
+                onChange={(e) => setCustomMarkingForm({
+                  ...customMarkingForm,
+                  marksPerCorrect: Number(e.target.value)
+                })}
+                className="h-12 border-gray-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 rounded-xl text-base transition-all duration-200"
+                placeholder="1.0"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-gray-700">Penalty for Incorrect Answer</Label>
+              <Input
+                type="number"
+                step="0.25"
+                min="0"
+                value={customMarkingForm.penaltyPerIncorrect}
+                onChange={(e) => setCustomMarkingForm({
+                  ...customMarkingForm,
+                  penaltyPerIncorrect: Number(e.target.value)
+                })}
+                className="h-12 border-gray-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 rounded-xl text-base transition-all duration-200"
+                placeholder="0.25"
+              />
+            </div>
+
+            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center gap-2">
+                <Info className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-800">
+                  These custom marks will override the default marking rules for this specific question only. The change will be visible immediately on the question card.
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+
+          <div className="flex items-center justify-between pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (customMarkingIndex !== null) {
+                  handleRemoveCustomMarking(customMarkingIndex)
+                }
+                setCustomMarkingModal(false)
+                setCustomMarkingIndex(null)
+              }}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
+            >
+              <Minus className="h-4 w-4 mr-2" />
+              Remove Custom Marking
+            </Button>
+            
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setCustomMarkingModal(false)}
+                className="border-gray-200 hover:border-gray-300"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveCustomMarking}
+                className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Save Marking
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Test Preview Modal */}
+      <TestPreviewModal
+        open={showPreviewModal}
+        onClose={() => setShowPreviewModal(false)}
+        testName="Test Preview"
+        description="This is how your test will appear to students"
+        totalTimeMinutes={globalMarkingRules.marksPerCorrect * questions.length}
+        marksPerCorrect={globalMarkingRules.marksPerCorrect}
+        penaltyPerIncorrect={globalMarkingRules.penaltyPerIncorrect}
+        questions={questions}
+      />
     </div>
   )
 }
@@ -995,7 +1257,7 @@ function CreateQuestionForm({ onCancel, onSave }: { onCancel: () => void; onSave
               <Wand2 className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Create New Question</h2>
+              <h2 className="text-xl font-bold text-gray-900 tracking-tight">Create New Question</h2>
               <p className="text-sm text-gray-600 font-medium">Design a custom question with LaTeX support</p>
             </div>
           </div>
@@ -1003,9 +1265,9 @@ function CreateQuestionForm({ onCancel, onSave }: { onCancel: () => void; onSave
             variant="ghost"
             size="sm"
             onClick={onCancel}
-            className="h-10 w-10 rounded-xl hover:bg-gray-100 transition-colors"
+            className="h-12 w-12 rounded-2xl hover:bg-red-50 hover:border-red-200 border-2 border-transparent transition-all duration-200 group"
           >
-            <X className="h-5 w-5" />
+            <X className="h-6 w-6 text-gray-600 group-hover:text-red-600 transition-colors" />
           </Button>
         </div>
       </div>
@@ -1246,7 +1508,7 @@ function CreateQuestionForm({ onCancel, onSave }: { onCancel: () => void; onSave
                 <div className="px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-slate-50/50 to-gray-50/30">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-slate-100 rounded-2xl flex items-center justify-center">
-                      <Settings className="h-5 w-5 text-slate-600" />
+                      <Info className="h-5 w-5 text-slate-600" />
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-gray-900">Question Metadata</h3>

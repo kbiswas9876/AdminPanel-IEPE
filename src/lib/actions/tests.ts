@@ -506,19 +506,34 @@ export async function saveTest(args: {
   total_time_minutes: number
   marks_per_correct: number
   negative_marks_per_incorrect: number
-  result_policy: 'instant' | 'scheduled'
+  result_policy: 'instant' | 'scheduled' | 'perpetual'
   result_release_at?: string | null
   question_ids: number[]
+  allow_pausing?: boolean
+  show_in_question_timer?: boolean
   publish?: {
     start_time: string
-    end_time: string
+    end_time?: string | null
+    is_perpetual?: boolean
   } | null
 }): Promise<{ success: boolean; message: string; testId?: number }> {
   try {
+    console.log('🔍 saveTest called with args:', { 
+      testId: args.testId, 
+      isEditMode: typeof args.testId === 'number' && Number.isFinite(args.testId),
+      questionIdsCount: args.question_ids?.length || 0,
+      testName: args.name 
+    })
+    
     const supabase = createAdminClient()
 
     // Determine status based on publish payload
     const status = args.publish ? 'scheduled' : 'draft'
+
+    // Ensure negative marks is always <= 0 (enforce CHECK constraint)
+    const correctedNegativeMarks = args.negative_marks_per_incorrect > 0 
+      ? -args.negative_marks_per_incorrect 
+      : args.negative_marks_per_incorrect;
 
     // Base payload for tests table
     const baseData = {
@@ -526,18 +541,21 @@ export async function saveTest(args: {
       description: args.description,
       total_time_minutes: args.total_time_minutes,
       marks_per_correct: args.marks_per_correct,
-      negative_marks_per_incorrect: args.negative_marks_per_incorrect,
+      negative_marks_per_incorrect: correctedNegativeMarks,
       result_policy: args.result_policy,
       result_release_at: args.result_policy === 'scheduled' ? (args.result_release_at || null) : null,
       status,
       start_time: args.publish?.start_time || null,
-      end_time: args.publish?.end_time || null,
+      end_time: args.publish?.is_perpetual ? null : (args.publish?.end_time || null),
+      allow_pausing: args.allow_pausing ?? false,
+      show_in_question_timer: args.show_in_question_timer ?? false,
       updated_at: new Date().toISOString()
     }
 
     let testId: number | undefined = args.testId
 
     if (typeof testId === 'number' && Number.isFinite(testId)) {
+      console.log('🔍 UPDATE MODE: Updating existing test with ID:', testId)
       // UPDATE existing test
       const { error: updateErr } = await supabase
         .from('tests')
@@ -549,6 +567,7 @@ export async function saveTest(args: {
         return { success: false, message: `Failed to update test: ${updateErr.message}` }
       }
     } else {
+      console.log('🔍 CREATE MODE: Creating new test')
       // CREATE new test - let DB generate the id
       const { data: created, error: insertErr } = await supabase
         .from('tests')
@@ -557,26 +576,45 @@ export async function saveTest(args: {
         .single()
 
       if (insertErr || !created) {
-        console.error('Error creating test:', insertErr)
+        console.error('❌ Error creating test:', insertErr)
         return { success: false, message: `Failed to create test: ${insertErr?.message}` }
       }
       testId = created.id as number
+      console.log('✅ Test created successfully with ID:', testId)
     }
 
     // Reset mappings then insert fresh
+    console.log('🔍 Clearing existing test_questions for test ID:', testId)
     const { error: delErr } = await supabase.from('test_questions').delete().eq('test_id', testId!)
     if (delErr) {
-      console.error('Error clearing mappings:', delErr)
+      console.error('❌ Error clearing mappings:', delErr)
       return { success: false, message: `Failed to reset test questions: ${delErr.message}` }
     }
 
-    const mappings = (args.question_ids || []).map((qid) => ({ test_id: testId!, question_id: qid }))
+    const mappings = (args.question_ids || []).map((qid) => ({ 
+      test_id: testId!, 
+      question_id: qid,
+      test_name: args.name,
+      test_status: status,
+      total_time_minutes: args.total_time_minutes,
+      marks_per_correct: args.marks_per_correct,
+      penalty_per_incorrect: args.negative_marks_per_incorrect
+    }))
+    
+    console.log('🔍 Inserting test_questions mappings:', { 
+      testId, 
+      mappingsCount: mappings.length,
+      testName: args.name,
+      testStatus: status 
+    })
+    
     if (mappings.length > 0) {
       const { error: insErr } = await supabase.from('test_questions').insert(mappings)
       if (insErr) {
-        console.error('Error inserting mappings:', insErr)
+        console.error('❌ Error inserting mappings:', insErr)
         return { success: false, message: `Failed to add questions: ${insErr.message}` }
       }
+      console.log('✅ Test questions inserted successfully')
     }
 
     revalidatePath('/tests')
@@ -590,22 +628,30 @@ export async function saveTest(args: {
 // FormData-compatible server action for robust client submissions
 export async function saveTestFromForm(formData: FormData): Promise<{ success: boolean; message: string; testId?: number }> {
   try {
+    // Ensure negative marks is always <= 0 (enforce CHECK constraint)
+    const rawNegativeMarks = Number(formData.get('negative_marks_per_incorrect') || 0);
+    const correctedNegativeMarks = rawNegativeMarks > 0 ? -rawNegativeMarks : rawNegativeMarks;
+
     const payload = {
       testId: formData.get('testId') ? Number(formData.get('testId')) : undefined,
       name: String(formData.get('name') || ''),
       description: formData.get('description') ? String(formData.get('description')) : undefined,
       total_time_minutes: Number(formData.get('total_time_minutes') || 0),
       marks_per_correct: Number(formData.get('marks_per_correct') || 0),
-      negative_marks_per_incorrect: Number(formData.get('negative_marks_per_incorrect') || 0),
+      negative_marks_per_incorrect: correctedNegativeMarks,
       result_policy: (String(formData.get('result_policy') || 'instant') as 'instant' | 'scheduled'),
       result_release_at: formData.get('result_release_at') ? String(formData.get('result_release_at')) : null,
+      allow_pausing: String(formData.get('allow_pausing') || 'false') === 'true',
+      show_in_question_timer: String(formData.get('show_in_question_timer') || 'false') === 'true',
       question_ids: (() => { try { return JSON.parse(String(formData.get('question_ids') || '[]')) as number[] } catch { return [] } })(),
-      publish: ((): { start_time: string; end_time: string } | null => {
+      publish: ((): { start_time: string; end_time?: string | null; is_perpetual?: boolean } | null => {
         const status = String(formData.get('status') || 'draft')
         if (status === 'scheduled') {
+          const isPerpetual = String(formData.get('is_perpetual') || 'false') === 'true'
           return {
             start_time: String(formData.get('start_time') || ''),
-            end_time: String(formData.get('end_time') || '')
+            end_time: isPerpetual ? null : String(formData.get('end_time') || ''),
+            is_perpetual: isPerpetual
           }
         }
         return null
@@ -625,6 +671,8 @@ export async function saveTestFromForm(formData: FormData): Promise<{ success: b
       status,
       start_time: payload.publish?.start_time || null,
       end_time: payload.publish?.end_time || null,
+      allow_pausing: payload.allow_pausing,
+      show_in_question_timer: payload.show_in_question_timer,
       updated_at: new Date().toISOString()
     }
 
@@ -668,7 +716,7 @@ export async function saveTestFromForm(formData: FormData): Promise<{ success: b
         correct_option?: string
         solution_text?: string | null
       }
-      type Item = { id?: number; new?: NewPayload; override?: OverridePayload }
+      type Item = { id?: number; new?: NewPayload; override?: OverridePayload; customMarking?: { marksPerCorrect: number; penaltyPerIncorrect: number } }
       let list: Item[] = []
       try {
         list = JSON.parse(questionsPayloadRaw) as Item[]
@@ -742,7 +790,17 @@ export async function saveTestFromForm(formData: FormData): Promise<{ success: b
         for (let i = 0; i < list.length; i++) {
           const qid = finalQuestionIds[i]
           const override = list[i].override || null
-          const row: Record<string, unknown> = { test_id: testId!, question_id: qid }
+          const customMarking = list[i].customMarking || null
+          
+          const row: Record<string, unknown> = { 
+            test_id: testId!, 
+            question_id: qid,
+            test_name: payload.name,
+            test_status: status,
+            total_time_minutes: payload.total_time_minutes,
+            marks_per_correct: customMarking?.marksPerCorrect ?? payload.marks_per_correct,
+            penalty_per_incorrect: customMarking?.penaltyPerIncorrect ?? payload.negative_marks_per_incorrect
+          }
           if (override && Object.keys(override).length > 0) {
             row.question_override_data = override
           }
@@ -756,7 +814,18 @@ export async function saveTestFromForm(formData: FormData): Promise<{ success: b
           console.error('Cleanup failed after override attempt:', del3)
         }
         if (finalQuestionIds.length > 0) {
-          const mappings = finalQuestionIds.map((qid) => ({ test_id: testId!, question_id: qid }))
+          const mappings = finalQuestionIds.map((qid, index) => {
+            const customMarking = list[index]?.customMarking || null
+            return { 
+              test_id: testId!, 
+              question_id: qid,
+              test_name: payload.name,
+              test_status: status,
+              total_time_minutes: payload.total_time_minutes,
+              marks_per_correct: customMarking?.marksPerCorrect ?? payload.marks_per_correct,
+              penalty_per_incorrect: customMarking?.penaltyPerIncorrect ?? payload.negative_marks_per_incorrect
+            }
+          })
           const { error: insErr } = await supabase.from('test_questions').insert(mappings)
           if (insErr) {
             console.error('Error inserting mappings (fallback):', insErr)
@@ -773,7 +842,15 @@ export async function saveTestFromForm(formData: FormData): Promise<{ success: b
       return { success: false, message: `Failed to reset test questions: ${delErr.message}` }
     }
       if (finalQuestionIds.length > 0) {
-        const mappings = finalQuestionIds.map((qid) => ({ test_id: testId!, question_id: qid }))
+        const mappings = finalQuestionIds.map((qid) => ({ 
+          test_id: testId!, 
+          question_id: qid,
+          test_name: payload.name,
+          test_status: status,
+          total_time_minutes: payload.total_time_minutes,
+          marks_per_correct: payload.marks_per_correct,
+          penalty_per_incorrect: payload.negative_marks_per_incorrect
+        }))
       const { error: insErr } = await supabase.from('test_questions').insert(mappings)
       if (insErr) {
         console.error('Error inserting mappings:', insErr)
@@ -816,6 +893,11 @@ export async function createTest(testData: TestCreationData): Promise<{ success:
   try {
     const supabase = createAdminClient()
     
+    // Ensure negative marks is always <= 0 (enforce CHECK constraint)
+    const correctedNegativeMarks = testData.negative_marks_per_incorrect > 0 
+      ? -testData.negative_marks_per_incorrect 
+      : testData.negative_marks_per_incorrect;
+
     // First, create the test record
     const { data: testResult, error: testError } = await supabase
       .from('tests')
@@ -824,7 +906,9 @@ export async function createTest(testData: TestCreationData): Promise<{ success:
         description: testData.description,
         total_time_minutes: testData.total_time_minutes,
         marks_per_correct: testData.marks_per_correct,
-        negative_marks_per_incorrect: testData.negative_marks_per_incorrect,
+        negative_marks_per_incorrect: correctedNegativeMarks,
+        allow_pausing: false, // Default to strict mode for new tests
+        show_in_question_timer: false, // Default to strict mode for new tests
         status: 'draft'
       }])
       .select()
@@ -880,10 +964,12 @@ export async function createTest(testData: TestCreationData): Promise<{ success:
       }
     }
     
-    // Create test_questions records
+    // Create test_questions records with denormalized test metadata
     const testQuestionsData = allQuestionIds.map(questionId => ({
       test_id: testId,
-      question_id: questionId
+      question_id: questionId,
+      test_name: testData.name,
+      test_status: 'draft'
     }))
     
     const { error: testQuestionsError } = await supabase
@@ -916,17 +1002,54 @@ export async function createTest(testData: TestCreationData): Promise<{ success:
   }
 }
 
+// Update test control settings (allow_pausing, show_in_question_timer)
+export async function updateTestControlSettings(
+  testId: number, 
+  settings: { allow_pausing?: boolean; show_in_question_timer?: boolean }
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const supabase = createAdminClient()
+    
+    const updateData: Record<string, unknown> = {}
+    if (settings.allow_pausing !== undefined) updateData.allow_pausing = settings.allow_pausing
+    if (settings.show_in_question_timer !== undefined) updateData.show_in_question_timer = settings.show_in_question_timer
+    updateData.updated_at = new Date().toISOString()
+    
+    const { error } = await supabase
+      .from('tests')
+      .update(updateData)
+      .eq('id', testId)
+    
+    if (error) {
+      console.error('Error updating test control settings:', error)
+      return { success: false, message: 'Failed to update test settings' }
+    }
+    
+    return { success: true, message: 'Test settings updated successfully' }
+  } catch (error) {
+    console.error('Error updating test control settings:', error)
+    return { success: false, message: 'An error occurred while updating test settings' }
+  }
+}
+
 // Update test (for editing draft tests)
 export async function updateTest(testId: number, testData: Partial<TestCreationData>): Promise<{ success: boolean; message: string }> {
   try {
     const supabase = createAdminClient()
     
+    // Ensure negative marks is always <= 0 (enforce CHECK constraint)
+    const correctedNegativeMarks = testData.negative_marks_per_incorrect !== undefined && testData.negative_marks_per_incorrect > 0 
+      ? -testData.negative_marks_per_incorrect 
+      : testData.negative_marks_per_incorrect;
+
     const updateData: Record<string, unknown> = {}
     if (testData.name) updateData.name = testData.name
     if (testData.description !== undefined) updateData.description = testData.description
     if (testData.total_time_minutes) updateData.total_time_minutes = testData.total_time_minutes
     if (testData.marks_per_correct) updateData.marks_per_correct = testData.marks_per_correct
-    if (testData.negative_marks_per_incorrect) updateData.negative_marks_per_incorrect = testData.negative_marks_per_incorrect
+    if (testData.negative_marks_per_incorrect !== undefined) updateData.negative_marks_per_incorrect = correctedNegativeMarks
+    if (testData.allow_pausing !== undefined) updateData.allow_pausing = testData.allow_pausing
+    if (testData.show_in_question_timer !== undefined) updateData.show_in_question_timer = testData.show_in_question_timer
     updateData.updated_at = new Date().toISOString()
     
     const { error } = await supabase
@@ -939,6 +1062,22 @@ export async function updateTest(testId: number, testData: Partial<TestCreationD
       return {
         success: false,
         message: `Failed to update test: ${error.message}`
+      }
+    }
+    
+    // Sync denormalized data in test_questions table if name changed
+    if (testData.name) {
+      const syncData: Record<string, unknown> = {}
+      syncData.test_name = testData.name
+      
+      const { error: syncError } = await supabase
+        .from('test_questions')
+        .update(syncData)
+        .eq('test_id', testId)
+      
+      if (syncError) {
+        console.error('Error syncing denormalized test data:', syncError)
+        // Don't fail the whole operation, just log the error
       }
     }
     
@@ -986,6 +1125,17 @@ export async function publishTest(
         success: false,
         message: `Failed to publish test: ${error.message}`
       }
+    }
+    
+    // Sync the status change in test_questions table
+    const { error: syncError } = await supabase
+      .from('test_questions')
+      .update({ test_status: 'scheduled' })
+      .eq('test_id', testId)
+    
+    if (syncError) {
+      console.error('Error syncing test status in test_questions:', syncError)
+      // Don't fail the whole operation, just log the error
     }
     
     revalidatePath('/tests')
@@ -1186,6 +1336,11 @@ export async function cloneTest(testId: number): Promise<{ success: boolean; mes
       return { success: false, message: 'Failed to read original questions' }
     }
 
+    // Ensure negative marks is always <= 0 (enforce CHECK constraint)
+    const correctedNegativeMarks = original.negative_marks_per_incorrect > 0 
+      ? -original.negative_marks_per_incorrect 
+      : original.negative_marks_per_incorrect;
+
     // Create new test
     const { data: created, error: createErr } = await supabase
       .from('tests')
@@ -1194,7 +1349,9 @@ export async function cloneTest(testId: number): Promise<{ success: boolean; mes
         description: original.description,
         total_time_minutes: original.total_time_minutes,
         marks_per_correct: original.marks_per_correct,
-        negative_marks_per_incorrect: original.negative_marks_per_incorrect,
+        negative_marks_per_incorrect: correctedNegativeMarks,
+        allow_pausing: original.allow_pausing ?? false,
+        show_in_question_timer: original.show_in_question_timer ?? false,
         result_policy: 'instant',
         result_release_at: null,
         status: 'draft',
@@ -1209,7 +1366,12 @@ export async function cloneTest(testId: number): Promise<{ success: boolean; mes
     const newTestId = created.id as number
     const questionIds = (mappings || []).map((m) => m.question_id as number)
     if (questionIds.length > 0) {
-      const insertData = questionIds.map((qid) => ({ test_id: newTestId, question_id: qid }))
+      const insertData = questionIds.map((qid) => ({ 
+        test_id: newTestId, 
+        question_id: qid,
+        test_name: `${original.name} (Copy)`,
+        test_status: 'draft'
+      }))
       const { error: insErr } = await supabase.from('test_questions').insert(insertData)
       if (insErr) {
         console.error('Error inserting cloned mappings:', insErr)

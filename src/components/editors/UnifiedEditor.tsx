@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
@@ -18,11 +18,13 @@ import { TableHeader } from '@tiptap/extension-table-header'
 import { createLowlight } from 'lowlight'
 // import { MathExtension } from './extensions/MathExtension'
 import { ImageUploadExtension } from './extensions/ImageUploadExtension'
+import { ResizableImage } from 'tiptap-extension-resizable-image'
 import { LineBreakExtension } from './extensions/LineBreakExtension'
 import { LatexLineBreakExtension } from './extensions/LatexLineBreakExtension'
 import { EditorToolbar } from './EditorToolbar'
 import { cn } from '@/lib/utils'
 import './editor-styles.css'
+import 'tiptap-extension-resizable-image/styles.css'
 
 interface UnifiedEditorProps {
   value: string
@@ -48,10 +50,11 @@ export function UnifiedEditor({
   const handleImageUpload = useCallback(async (file: File): Promise<string> => {
     setIsUploading(true)
     try {
+      // Use Cloudinary upload API
       const formData = new FormData()
       formData.append('image', file)
       
-      const response = await fetch('/api/upload-image', {
+      const response = await fetch('/api/cloudinary-upload', {
         method: 'POST',
         body: formData
       })
@@ -71,15 +74,38 @@ export function UnifiedEditor({
     }
   }, [])
 
+  // Process content to protect LaTeX backslashes from corruption
+  const processContent = (content: string) => {
+    if (!content) return content
+    
+    // Protect backslashes in LaTeX expressions from being misinterpreted
+    // as escape sequences during HTML parsing
+    let processedContent = content
+    
+    // Protect display math $$...$$
+    processedContent = processedContent.replace(/\$\$([^$]+?)\$\$/g, (match, formula) => {
+      const protectedFormula = formula.replace(/\\/g, '&#92;')
+      return `$$${protectedFormula}$$`
+    })
+    
+    // Protect inline math $...$
+    processedContent = processedContent.replace(/\$([^$]+?)\$/g, (match, formula) => {
+      const protectedFormula = formula.replace(/\\/g, '&#92;')
+      return `$${protectedFormula}$`
+    })
+    
+    return processedContent
+  }
+
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         codeBlock: false, // We'll use CodeBlockLowlight instead
       }),
-      Image.configure({
+      ResizableImage.configure({
         HTMLAttributes: {
-          class: 'editor-image rounded-lg shadow-sm max-w-full h-auto',
+          class: 'editor-image rounded-lg shadow-sm max-w-full h-auto editor-image-align-left',
         },
       }),
       Link.configure({
@@ -117,7 +143,7 @@ export function UnifiedEditor({
         allowedFileTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'],
       }),
     ],
-    content: value,
+    content: processContent(value),
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML())
     },
@@ -131,6 +157,19 @@ export function UnifiedEditor({
     },
     autofocus: autoFocus,
   })
+
+  // Update editor content when value prop changes
+  useEffect(() => {
+    if (editor && value !== undefined) {
+      const currentContent = editor.getHTML()
+      const processedValue = processContent(value)
+      
+      // Only update if content has actually changed
+      if (currentContent !== processedValue) {
+        editor.commands.setContent(processedValue)
+      }
+    }
+  }, [editor, value])
 
   if (!editor) {
     return null

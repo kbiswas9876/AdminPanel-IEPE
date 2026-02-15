@@ -44,6 +44,7 @@ import {
   ArrowUpDown
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { SavePresetModal } from '@/components/ui/save-preset-modal'
 
 interface FilterOptions {
   books: string[]
@@ -85,6 +86,8 @@ export function FilterBar({ compact = false }: { compact?: boolean } = {}) {
   })
   const [isLoading, setIsLoading] = useState(true)
   const [showPresets, setShowPresets] = useState(false)
+  const [showSaveModal, setShowSaveModal] = useState(false)
+  const [localPresets, setLocalPresets] = useState<string[]>([])
 
   // Load filter options
   useEffect(() => {
@@ -107,6 +110,11 @@ export function FilterBar({ compact = false }: { compact?: boolean } = {}) {
 
     loadOptions()
   }, [])
+
+  // Sync local presets with store
+  useEffect(() => {
+    setLocalPresets(getPresets())
+  }, [getPresets])
 
   // Multi-select component (shared visuals)
   const MultiSelect = ({ 
@@ -308,14 +316,22 @@ export function FilterBar({ compact = false }: { compact?: boolean } = {}) {
   ].filter(Boolean).length
 
   // Handle preset operations
-  const handleSavePreset = () => {
-    const name = prompt('Enter preset name:')
-    if (name) {
-      savePreset(name)
-    }
+  const handleSavePreset = (name: string) => {
+    savePreset(name)
+    setShowSaveModal(false)
+    // Update local presets immediately
+    setLocalPresets(prev => [...prev, name])
   }
 
-  const presets = getPresets()
+  const handleDeletePreset = (presetName: string) => {
+    // Optimistic UI update - remove from local list immediately
+    setLocalPresets(prev => prev.filter(p => p !== presetName))
+    
+    // Delete from store (async)
+    deletePreset(presetName)
+  }
+
+  const presets = localPresets
 
   if (isLoading) {
     return (
@@ -337,203 +353,270 @@ export function FilterBar({ compact = false }: { compact?: boolean } = {}) {
           compact ? "px-3 md:px-4 py-1.5" : "px-6 md:px-8 py-6"
         )}
       >
-        {/* Header Section - Hidden in compact mode */}
-        {!compact && (
-          <div className={cn("flex items-center justify-between", compact ? "mb-1" : "mb-6") }>
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl blur-md opacity-20" />
-                <div className={cn("relative bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-xl", compact ? "p-2" : "p-3") }>
-                  <Sparkles className={cn("text-white", compact ? "h-4 w-4" : "h-6 w-6")} />
-                </div>
-              </div>
-              <div>
-                <h2 className={cn("font-semibold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent", compact ? "text-base" : "text-xl") }>
-                  Smart Filters
-                </h2>
-                <p className={cn("text-gray-500 font-medium", compact ? "text-xs" : "text-sm") }>
-                  {activeFiltersCount > 0 
-                    ? `${activeFiltersCount} filter${activeFiltersCount === 1 ? '' : 's'} applied`
-                    : 'Refine your search with intelligent filtering'
-                  }
-                </p>
-              </div>
-            </div>
-          
-          {/* Quick Actions */}
-          <div className={cn("flex items-center", compact ? "space-x-2" : "space-x-3") }>
-            <Popover open={showPresets} onOpenChange={setShowPresets}>
-              <PopoverTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className={cn("group relative overflow-hidden bg-gray-50/80 backdrop-blur-sm border border-gray-200/50 hover:bg-white hover:border-blue-200/50 hover:shadow-md transition-all duration-300 rounded-xl",
-                    compact ? "h-8 px-3" : "h-10 px-4"
-                  )}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/5 to-blue-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500" />
-                  <Bookmark className={cn("mr-2 relative z-10", compact ? "h-3.5 w-3.5" : "h-4 w-4")} />
-                  <span className={cn("font-medium relative z-10", compact ? "text-xs" : "text-sm")}>Presets</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80 p-0 bg-white/95 backdrop-blur-xl border border-gray-200/50 rounded-2xl shadow-2xl">
-                <div className="p-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-lg font-semibold text-gray-900">Filter Presets</h4>
-                    <Button 
-                      size="sm" 
-                      onClick={handleSavePreset}
-                      className={cn("bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl",
-                        compact ? "h-8 px-3" : "h-9 px-4"
-                      )}
-                    >
-                      <Save className="h-3 w-3 mr-2" />
-                      Save Current
-                    </Button>
-                  </div>
-                  {presets.length > 0 ? (
-                    <div className="space-y-2">
-                      {presets.map((preset) => (
-                        <div key={preset} className="group flex items-center justify-between p-3 rounded-xl bg-gray-50/50 hover:bg-white hover:shadow-sm transition-all duration-200">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              loadPreset(preset)
-                              setShowPresets(false)
-                            }}
-                            className="justify-start flex-1 font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200"
-                          >
-                            {preset}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => deletePreset(preset)}
-                            className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 hover:bg-red-50 transition-all duration-200 rounded-lg h-8 w-8 p-0"
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
-                        <Bookmark className="h-6 w-6 text-gray-400" />
-                      </div>
-                      <p className="text-gray-500 font-medium">No presets saved yet</p>
-                      <p className="text-gray-400 text-sm mt-1">Save your current filters to create a preset</p>
-                    </div>
-                  )}
-                </div>
-              </PopoverContent>
-            </Popover>
-            
-            {activeFiltersCount > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearAllFilters}
-                className={cn("group relative overflow-hidden bg-red-50/80 backdrop-blur-sm border border-red-200/50 hover:bg-red-100 hover:border-red-300/50 hover:shadow-md transition-all duration-300 rounded-xl text-red-600 hover:text-red-700",
-                  compact ? "h-8 px-3" : "h-10 px-4"
-                )}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-red-500/0 via-red-500/5 to-red-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500" />
-                <RotateCcw className="h-4 w-4 mr-2 relative z-10" />
-                <span className={cn("font-medium relative z-10", compact ? "text-xs" : "text-sm")}>Reset All</span>
-              </Button>
-            )}
-          </div>
-        </div>
-        )}
+        {/* Header Section - Completely hidden for compact design */}
 
-        {/* Search and Filter Section - Single line in compact mode */}
+        {/* Two-Tiered Responsive Layout for Compact Mode */}
         {compact ? (
-          <div className="flex items-center justify-between w-full">
-            {/* Search Bar - Doubled width */}
-            <div className="relative" style={{ maxWidth: '600px', minWidth: '400px' }}>
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-xl blur-lg" />
-              <div className="relative flex items-center bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 focus-within:shadow-md focus-within:border-blue-300/50">
-                <Search className="absolute left-3 h-4 w-4 text-gray-400 transition-colors duration-200" />
-                <Input
-                  placeholder="Search questions, books, chapters, or tags..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9 pr-4 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-gray-400 font-medium rounded-xl py-2 text-sm"
-                />
+          <div className="space-y-3">
+            {/* Primary Control Bar - Fixed Layout */}
+            <div className="flex items-center justify-between w-full">
+              {/* Search Bar */}
+              <div className="relative flex-1 max-w-md mr-6">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-xl blur-lg" />
+                <div className="relative flex items-center bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 focus-within:shadow-md focus-within:border-blue-300/50">
+                  <Search className="absolute left-3 h-4 w-4 text-gray-400 transition-colors duration-200" />
+                  <Input
+                    placeholder="Search questions, books, chapters, or tags..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-9 pr-4 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-gray-400 font-medium rounded-xl py-2 text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Filter and Sort Controls */}
+              <div className="flex items-center gap-3">
+                <div className="min-w-[120px]">
+                  <MultiSelect
+                    options={filterOptions.books}
+                    selected={book_sources}
+                    onSelectionChange={setBookSources}
+                    placeholder="Books"
+                    icon={BookOpen}
+                  />
+                </div>
+                <div className="min-w-[120px]">
+                  <MultiSelect
+                    options={filterOptions.chapters}
+                    selected={chapters}
+                    onSelectionChange={setChapters}
+                    placeholder="Chapters"
+                    icon={Target}
+                  />
+                </div>
+                <div className="min-w-[120px]">
+                  <MultiSelect
+                    options={filterOptions.tags}
+                    selected={tags}
+                    onSelectionChange={setTags}
+                    placeholder="Tags"
+                    icon={Tag}
+                  />
+                </div>
+                <div className="min-w-[140px]">
+                  <SingleSelect 
+                    options={filterOptions.difficulties}
+                    value={difficulty}
+                    onChange={setDifficulty}
+                    placeholder="All Difficulties"
+                    icon={Zap}
+                  />
+                </div>
+                <div className="min-w-[150px]">
+                  <Select value={sort_by} onValueChange={setSortBy}>
+                    <SelectTrigger className="group w-full h-9 justify-between bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-200/50 transition-all duration-200 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300 px-4">
+                      <div className="flex items-center gap-2">
+                        <ArrowUpDown className="h-3.5 w-3.5 text-gray-400 group-hover:text-indigo-500 transition-colors duration-200 flex-shrink-0" />
+                        <SelectValue className="font-medium text-xs" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent className="bg-white/95 backdrop-blur-xl border border-gray-200/50 rounded-xl shadow-2xl">
+                      <SelectItem value="id_asc" className="font-medium text-sm">ID (Ascending)</SelectItem>
+                      <SelectItem value="id_desc" className="font-medium text-sm">ID (Descending)</SelectItem>
+                      <SelectItem value="created_at_asc" className="font-medium text-sm">Oldest First</SelectItem>
+                      <SelectItem value="created_at_desc" className="font-medium text-sm">Newest First</SelectItem>
+                      <SelectItem value="difficulty_asc" className="font-medium text-sm">Easy → Hard</SelectItem>
+                      <SelectItem value="difficulty_desc" className="font-medium text-sm">Hard → Easy</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* Presets Button - Fixed Position */}
+                <Popover open={showPresets} onOpenChange={setShowPresets}>
+                  <PopoverTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-9 px-3 text-xs bg-gray-50/80 backdrop-blur-sm border border-gray-200/50 hover:bg-white hover:border-blue-200/50 hover:shadow-md transition-all duration-300 rounded-xl"
+                    >
+                      <Bookmark className="h-3.5 w-3.5 mr-1" />
+                      Presets
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 p-0 bg-white/95 backdrop-blur-xl border border-gray-200/50 rounded-2xl shadow-2xl">
+                    <div className="p-6 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-lg font-semibold text-gray-900">Filter Presets</h4>
+                        <Button 
+                          size="sm" 
+                          onClick={() => setShowSaveModal(true)}
+                          className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl h-8 px-3"
+                        >
+                          <Save className="h-3 w-3 mr-2" />
+                          Save Current
+                        </Button>
+                      </div>
+                      {presets.length > 0 ? (
+                        <div className="space-y-2">
+                          {presets.map((preset) => (
+                            <div key={preset} className="group flex items-center justify-between p-3 rounded-xl bg-gray-50/50 hover:bg-white hover:shadow-sm transition-all duration-200">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  loadPreset(preset)
+                                  setShowPresets(false)
+                                }}
+                                className="justify-start flex-1 font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200"
+                              >
+                                {preset}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeletePreset(preset)}
+                                className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 hover:bg-red-50 transition-all duration-200 rounded-lg h-8 w-8 p-0"
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
+                            <Bookmark className="h-6 w-6 text-gray-400" />
+                          </div>
+                          <p className="text-gray-500 font-medium">No presets saved yet</p>
+                          <p className="text-gray-400 text-sm mt-1">Save your current filters to create a preset</p>
+                        </div>
+                      )}
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
 
-            {/* Filter and Sort Buttons Group - Right side with better spacing */}
-            <div className="flex items-center gap-4">
-              <div className="min-w-[120px]">
-                <MultiSelect
-                  options={filterOptions.books}
-                  selected={book_sources}
-                  onSelectionChange={setBookSources}
-                  placeholder="Books"
-                  icon={BookOpen}
-                />
-              </div>
-              <div className="min-w-[120px]">
-                <MultiSelect
-                  options={filterOptions.chapters}
-                  selected={chapters}
-                  onSelectionChange={setChapters}
-                  placeholder="Chapters"
-                  icon={Target}
-                />
-              </div>
-              <div className="min-w-[120px]">
-                <MultiSelect
-                  options={filterOptions.tags}
-                  selected={tags}
-                  onSelectionChange={setTags}
-                  placeholder="Tags"
-                  icon={Tag}
-                />
-              </div>
-              <div className="min-w-[140px]">
-                <SingleSelect 
-                  options={filterOptions.difficulties}
-                  value={difficulty}
-                  onChange={setDifficulty}
-                  placeholder="All Difficulties"
-                  icon={Zap}
-                />
-              </div>
-              <div className="min-w-[150px]">
-                <Select value={sort_by} onValueChange={setSortBy}>
-                  <SelectTrigger className="group w-full h-9 justify-between bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-200/50 transition-all duration-200 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300 px-4">
-                    <div className="flex items-center gap-2">
-                      <ArrowUpDown className="h-3.5 w-3.5 text-gray-400 group-hover:text-indigo-500 transition-colors duration-200 flex-shrink-0" />
-                      <SelectValue className="font-medium text-xs" />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent className="bg-white/95 backdrop-blur-xl border border-gray-200/50 rounded-xl shadow-2xl">
-                    <SelectItem value="id_asc" className="font-medium text-sm">ID (Ascending)</SelectItem>
-                    <SelectItem value="id_desc" className="font-medium text-sm">ID (Descending)</SelectItem>
-                    <SelectItem value="created_at_asc" className="font-medium text-sm">Oldest First</SelectItem>
-                    <SelectItem value="created_at_desc" className="font-medium text-sm">Newest First</SelectItem>
-                    <SelectItem value="difficulty_asc" className="font-medium text-sm">Easy → Hard</SelectItem>
-                    <SelectItem value="difficulty_desc" className="font-medium text-sm">Hard → Easy</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              {activeFiltersCount > 0 && (
+            {/* Secondary Dynamic Bar - Only when filters are active */}
+            {activeFiltersCount > 0 && (
+              <div className="flex items-center justify-between w-full bg-gray-50/50 backdrop-blur-sm border border-gray-200/30 rounded-xl px-4 py-2">
+                {/* Active Filters Title and Badges */}
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm font-semibold text-gray-900">Active Filters</span>
+                    <span className="text-xs font-medium text-gray-500 bg-gray-100 rounded-full px-2 py-0.5">
+                      {activeFiltersCount} applied
+                    </span>
+                  </div>
+                  
+                  {/* Filter Badges - Responsive wrapping */}
+                  <div className="flex flex-wrap gap-2 flex-1">
+                    {search && (
+                      <div className="group inline-flex items-center bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/50 rounded-xl px-3 py-1.5 shadow-sm hover:shadow-md transition-all duration-200">
+                        <Search className="h-3.5 w-3.5 text-blue-600 mr-1.5" />
+                        <span className="text-xs font-medium text-blue-800">"{search}"</span>
+                        <button
+                          className="ml-2 p-0.5 rounded-lg hover:bg-red-100 text-red-500 hover:text-red-600 transition-colors duration-200"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSearch('')
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
+                    {book_sources.map((book) => (
+                      <div key={book} className="group inline-flex items-center bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200/50 rounded-xl px-3 py-1.5 shadow-sm hover:shadow-md transition-all duration-200">
+                        <BookOpen className="h-3.5 w-3.5 text-orange-600 mr-1.5" />
+                        <span className="text-xs font-medium text-orange-800">{book}</span>
+                        <button
+                          className="ml-2 p-0.5 rounded-lg hover:bg-red-100 text-red-500 hover:text-red-600 transition-colors duration-200"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setBookSources(book_sources.filter(b => b !== book))
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                    {chapters.map((chapter) => (
+                      <div key={chapter} className="group inline-flex items-center bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/50 rounded-xl px-3 py-1.5 shadow-sm hover:shadow-md transition-all duration-200">
+                        <Target className="h-3.5 w-3.5 text-blue-600 mr-1.5" />
+                        <span className="text-xs font-medium text-blue-800">{chapter}</span>
+                        <button
+                          className="ml-2 p-0.5 rounded-lg hover:bg-red-100 text-red-500 hover:text-red-600 transition-colors duration-200"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setChapters(chapters.filter(c => c !== chapter))
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                    {tags.map((tag) => (
+                      <div key={tag} className="group inline-flex items-center bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200/50 rounded-xl px-3 py-1.5 shadow-sm hover:shadow-md transition-all duration-200">
+                        <Tag className="h-3.5 w-3.5 text-purple-600 mr-1.5" />
+                        <span className="text-xs font-medium text-purple-800">{tag}</span>
+                        <button
+                          className="ml-2 p-0.5 rounded-lg hover:bg-red-100 text-red-500 hover:text-red-600 transition-colors duration-200"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setTags(tags.filter(t => t !== tag))
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                    {difficulty && difficulty !== 'all' && (
+                      <div className="group inline-flex items-center bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200/50 rounded-xl px-3 py-1.5 shadow-sm hover:shadow-md transition-all duration-200">
+                        <Zap className="h-3.5 w-3.5 text-emerald-600 mr-1.5" />
+                        <span className="text-xs font-medium text-emerald-800">{difficulty}</span>
+                        <button
+                          className="ml-2 p-0.5 rounded-lg hover:bg-red-100 text-red-500 hover:text-red-600 transition-colors duration-200"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setDifficulty('all')
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
+                    {sort_by !== 'id_asc' && (
+                      <div className="group inline-flex items-center bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200/50 rounded-xl px-3 py-1.5 shadow-sm hover:shadow-md transition-all duration-200">
+                        <ArrowUpDown className="h-3.5 w-3.5 text-gray-600 mr-1.5" />
+                        <span className="text-xs font-medium text-gray-800">{sort_by.replace('_', ' ')}</span>
+                        <button
+                          className="ml-2 p-0.5 rounded-lg hover:bg-red-100 text-red-500 hover:text-red-600 transition-colors duration-200"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSortBy('id_asc')
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Reset Button - Fixed Position on Right */}
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={clearAllFilters}
-                  className="h-9 px-3 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                  className="h-8 px-3 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200/50 hover:border-red-300/50 transition-all duration-200 rounded-xl ml-4 flex-shrink-0"
                 >
                   <RotateCcw className="h-3.5 w-3.5 mr-1" />
-                  Reset
+                  Reset All
                 </Button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         ) : (
           <>
@@ -700,15 +783,15 @@ export function FilterBar({ compact = false }: { compact?: boolean } = {}) {
         </div>
         )}
 
-        {/* Active Filters Display */}
-        {activeFiltersCount > 0 && (
-          <div className={cn("border-t border-gray-100", compact ? "pt-4" : "pt-8") }>
+        {/* Active Filters Display - Only shown in non-compact mode */}
+        {!compact && activeFiltersCount > 0 && (
+          <div className="border-t border-gray-100 pt-8">
             <div className="flex items-center space-x-3 mb-4">
               <div className="p-2 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl">
                 <Filter className="h-4 w-4 text-blue-600" />
               </div>
-              <h3 className={cn("font-semibold text-gray-900", compact ? "text-base" : "text-lg")}>Active Filters</h3>
-              <span className={cn("font-medium text-gray-500 bg-gray-100 rounded-full", compact ? "text-xs px-2.5 py-0.5" : "text-sm px-3 py-1") }>
+              <h3 className="text-lg font-semibold text-gray-900">Active Filters</h3>
+              <span className="text-sm font-medium text-gray-500 bg-gray-100 rounded-full px-3 py-1">
                 {activeFiltersCount} applied
               </span>
             </div>
@@ -806,6 +889,14 @@ export function FilterBar({ compact = false }: { compact?: boolean } = {}) {
             </div>
           </div>
         )}
+
+        {/* Save Preset Modal */}
+        <SavePresetModal
+          open={showSaveModal}
+          onOpenChange={setShowSaveModal}
+          onSave={handleSavePreset}
+          existingPresets={presets}
+        />
       </div>
     </div>
   )

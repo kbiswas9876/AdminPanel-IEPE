@@ -33,6 +33,9 @@ export type ChapterBlueprint = {
 // Type for test blueprint configuration
 export type TestBlueprint = Record<string, ChapterBlueprint>;
 
+// Type alias for blueprint state (same as TestBlueprint)
+export type BlueprintState = TestBlueprint;
+
 // Type for test question slot in the test creation wizard
 export type TestQuestionSlot = {
   question: Question;
@@ -40,6 +43,10 @@ export type TestQuestionSlot = {
   chapter_name: string;
   source_value?: string | null;
   tempId?: string;
+  customMarking?: {
+    marksPerCorrect: number;
+    penaltyPerIncorrect: number;
+  };
 };
 
 // Type for PDF customization settings
@@ -87,6 +94,8 @@ export type Test = {
   published?: boolean;
   publish_start_time?: string | null;
   publish_end_time?: string | null;
+  allow_pausing?: boolean;
+  show_in_question_timer?: boolean;
 };
 
 // Type for UI question (with additional UI-specific properties)

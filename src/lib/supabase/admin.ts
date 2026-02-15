@@ -74,6 +74,8 @@ export interface Test {
   end_time?: string
   created_at: string
   updated_at?: string
+  allow_pausing?: boolean
+  show_in_question_timer?: boolean
 }
 
 // Types for test_questions table
@@ -97,6 +99,8 @@ export interface TestCreationData {
   total_time_minutes: number
   marks_per_correct: number
   negative_marks_per_incorrect: number
+  allow_pausing?: boolean
+  show_in_question_timer?: boolean
   blueprint: TestBlueprint[]
 }
 
@@ -111,6 +115,20 @@ export interface TestAttempt {
   total_skipped: number
   time_taken_seconds: number
   completed_at: string
+}
+
+// Types for test_attempt_answers table
+export interface TestAttemptAnswer {
+  id: number
+  attempt_id: number
+  question_id: number
+  question_number: number
+  selected_option: string | null
+  correct_option: string
+  is_correct: boolean
+  marks_awarded: number
+  time_spent_seconds: number
+  created_at: string
 }
 
 // Types for student analytics
@@ -141,7 +159,8 @@ export interface ErrorReport {
   question_id: string
   user_id: string
   report_description: string
-  status: 'new' | 'in_review' | 'resolved'
+  status: 'new' | 'reviewed' | 'resolved' | 'dismissed'
+  admin_notes?: string
   created_at: string
   updated_at?: string
 }

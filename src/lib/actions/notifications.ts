@@ -2,14 +2,30 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 
+export type NotificationPriority = 'critical' | 'high' | 'normal' | 'low'
+export type NotificationCategory = 'user_management' | 'content' | 'testing' | 'system' | 'error'
+
+export interface NotificationAction {
+  label: string
+  action: string
+  variant: 'primary' | 'secondary' | 'destructive'
+  params?: Record<string, unknown>
+}
+
 export interface Notification {
   id: number
-  type: 'user_registration' | 'error_report' | 'question_added' | 'test_published' | 'system_alert'
+  type: 'user_registration' | 'error_report' | 'question_added' | 'test_published' | 'system_alert' | 'bulk_import' | 'admin_action'
   title: string
   message: string
   timestamp: Date
   read: boolean
+  priority: NotificationPriority
+  category: NotificationCategory
   metadata?: Record<string, unknown>
+  actionable?: boolean
+  actions?: NotificationAction[]
+  imageUrl?: string
+  groupKey?: string
 }
 
 export async function getNotifications(limit: number = 10): Promise<Notification[]> {
@@ -25,9 +41,9 @@ export async function getNotifications(limit: number = 10): Promise<Notification
     // Get pending user registrations
     const { data: pendingUsers, error: usersError } = await supabase
       .from('user_profiles')
-      .select('id, full_name, email, created_at')
+      .select('id, full_name, email, updated_at')
       .eq('status', 'pending')
-      .order('created_at', { ascending: false })
+      .order('updated_at', { ascending: false })
       .limit(5)
 
     if (!usersError && pendingUsers) {
@@ -47,9 +63,17 @@ export async function getNotifications(limit: number = 10): Promise<Notification
           type: 'user_registration',
           title: 'New User Registration',
           message: `${user.full_name} (${user.email}) has registered and is awaiting approval`,
-          timestamp: new Date(user.created_at),
+          timestamp: new Date(user.updated_at),
           read: !!readStatus,
-          metadata: { userId: user.id }
+          priority: 'high',
+          category: 'user_management',
+          actionable: true,
+          actions: [
+            { label: 'Approve', action: 'approve_user', variant: 'primary', params: { userId: user.id } },
+            { label: 'Reject', action: 'reject_user', variant: 'destructive', params: { userId: user.id } }
+          ],
+          metadata: { userId: user.id },
+          groupKey: 'user_registrations'
         })
       }
     }
@@ -81,7 +105,15 @@ export async function getNotifications(limit: number = 10): Promise<Notification
           message: report.title || 'New error report submitted',
           timestamp: new Date(report.created_at),
           read: !!readStatus,
-          metadata: { reportId: report.id }
+          priority: 'critical',
+          category: 'error',
+          actionable: true,
+          actions: [
+            { label: 'View', action: 'view_error', variant: 'primary', params: { reportId: report.id } },
+            { label: 'Dismiss', action: 'dismiss_error', variant: 'secondary', params: { reportId: report.id } }
+          ],
+          metadata: { reportId: report.id },
+          groupKey: 'error_reports'
         })
       }
     }
@@ -115,7 +147,11 @@ export async function getNotifications(limit: number = 10): Promise<Notification
         message: `${recentQuestions.length} new question${recentQuestions.length > 1 ? 's' : ''} added to the question bank`,
         timestamp: new Date(recentQuestions[0].created_at),
         read: !!readStatus,
-        metadata: { questionCount: recentQuestions.length }
+        priority: 'normal',
+        category: 'content',
+        actionable: false,
+        metadata: { questionCount: recentQuestions.length },
+        groupKey: 'content_updates'
       })
     }
 
@@ -147,7 +183,14 @@ export async function getNotifications(limit: number = 10): Promise<Notification
           message: `"${test.title}" has been published and is now available`,
           timestamp: new Date(test.created_at),
           read: !!readStatus,
-          metadata: { testId: test.id }
+          priority: 'normal',
+          category: 'testing',
+          actionable: true,
+          actions: [
+            { label: 'View Test', action: 'view_test', variant: 'primary', params: { testId: test.id } }
+          ],
+          metadata: { testId: test.id },
+          groupKey: 'test_updates'
         })
       }
     }
@@ -197,5 +240,39 @@ export async function markNotificationAsRead(notificationId: number): Promise<{ 
   } catch (error) {
     console.error('Error marking notification as read:', error)
     return { success: false }
+  }
+}
+
+export async function markAllNotificationsAsRead(notificationIds: number[]): Promise<{ success: boolean; message: string }> {
+  try {
+    const supabase = createAdminClient()
+    const currentUser = (await supabase.auth.getUser()).data.user
+    
+    if (!currentUser) {
+      return { success: false, message: 'Not authenticated' }
+    }
+    
+    // Batch upsert all notification read statuses
+    const readStatuses = notificationIds.map(id => ({
+      notification_id: id,
+      user_id: currentUser.id,
+      read_at: new Date().toISOString()
+    }))
+    
+    const { error } = await supabase
+      .from('notification_read_status')
+      .upsert(readStatuses, {
+        onConflict: 'notification_id,user_id'
+      })
+    
+    if (error) {
+      console.error('Error marking all notifications as read:', error)
+      return { success: false, message: 'Failed to mark notifications as read' }
+    }
+    
+    return { success: true, message: 'All notifications marked as read' }
+  } catch (error) {
+    console.error('Error marking all notifications as read:', error)
+    return { success: false, message: 'An error occurred' }
   }
 }

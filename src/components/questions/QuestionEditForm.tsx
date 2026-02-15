@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 import { 
   Select, 
   SelectContent, 
@@ -111,6 +112,47 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
   // Live preview state
   const [showPreview, setShowPreview] = useState(true)
 
+  // Store initial form data for comparison
+  const initialFormData = useMemo(() => ({
+    question_id: question.question_id || '',
+    book_source: question.book_source || '',
+    chapter_name: question.chapter_name || '',
+    question_number_in_book: question.question_number_in_book || '',
+    question_text: question.question_text || '',
+    option_a: question.options?.a || '',
+    option_b: question.options?.b || '',
+    option_c: question.options?.c || '',
+    option_d: question.options?.d || '',
+    correct_option: question.correct_option || '',
+    solution_text: question.solution_text || '',
+    exam_metadata: question.exam_metadata || '',
+    admin_tags: question.admin_tags || [],
+    difficulty: question.difficulty || ''
+  }), [question])
+
+  // Track if form has been modified
+  const hasUnsavedChanges = useMemo(() => {
+    return (
+      formData.question_text !== initialFormData.question_text ||
+      formData.option_a !== initialFormData.option_a ||
+      formData.option_b !== initialFormData.option_b ||
+      formData.option_c !== initialFormData.option_c ||
+      formData.option_d !== initialFormData.option_d ||
+      formData.solution_text !== initialFormData.solution_text ||
+      formData.book_source !== initialFormData.book_source ||
+      formData.chapter_name !== initialFormData.chapter_name ||
+      formData.question_number_in_book !== initialFormData.question_number_in_book ||
+      formData.exam_metadata !== initialFormData.exam_metadata ||
+      formData.correct_option !== initialFormData.correct_option ||
+      formData.difficulty !== initialFormData.difficulty ||
+      JSON.stringify(formData.admin_tags.sort()) !== JSON.stringify(initialFormData.admin_tags.sort())
+    )
+  }, [formData, initialFormData])
+
+  // Use the unsaved changes hook
+  const { confirmNavigation } = useUnsavedChanges({ 
+    hasUnsavedChanges 
+  })
 
   // Load filter options
   useEffect(() => {
@@ -461,7 +503,11 @@ export function QuestionEditForm({ question, onSave, onCancel }: QuestionEditFor
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={onCancel}
+                  onClick={async () => {
+                    if (await confirmNavigation()) {
+                      onCancel()
+                    }
+                  }}
                   disabled={isLoading}
                   className="gap-2 hover:bg-slate-50 transition-colors"
                 >

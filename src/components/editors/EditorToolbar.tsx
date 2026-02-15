@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useCallback, useMemo } from 'react'
 import { Editor } from '@tiptap/react'
 import { Button } from '@/components/ui/button'
 import { 
@@ -35,11 +35,77 @@ interface EditorToolbarProps {
 export function EditorToolbar({ editor, isUploading = false }: EditorToolbarProps) {
   if (!editor) return null
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const baseImageClass = 'editor-image rounded-lg shadow-sm max-w-full h-auto'
+  const imageAlignmentClasses = {
+    left: 'editor-image-align-left',
+    center: 'editor-image-align-center',
+    right: 'editor-image-align-right',
+  }
+
+  const currentImageClasses = useMemo(() => {
+    const attrs = editor.getAttributes('image') ?? {}
+    const classAttr = (attrs.class as string) || (attrs.className as string) || ''
+    const tokens = classAttr.split(/\s+/).filter(Boolean)
+    const merged = new Set(baseImageClass.split(' '))
+    tokens.forEach(token => merged.add(token))
+    return merged
+  }, [editor.state.selection.from, editor.state.selection.to])
+
+  const setImageAlignment = useCallback((alignment: keyof typeof imageAlignmentClasses) => {
+    if (!editor.isActive('image')) return
+
+    const classes = new Set(currentImageClasses)
+    Object.values(imageAlignmentClasses).forEach(cls => classes.delete(cls))
+    classes.add(imageAlignmentClasses[alignment])
+
+    if (!classes.has('editor-image')) {
+      baseImageClass.split(' ').forEach(cls => classes.add(cls))
+    }
+
+    const classString = Array.from(classes).join(' ')
+
+    editor
+      .chain()
+      .focus()
+      .updateAttributes('image', {
+        class: classString,
+        className: classString,
+      })
+      .run()
+  }, [editor, currentImageClasses])
+
+  const isImageAligned = useCallback((alignment: keyof typeof imageAlignmentClasses) => {
+    const classes = currentImageClasses
+    return classes.has(imageAlignmentClasses[alignment])
+  }, [currentImageClasses])
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
-      // For now, just insert a placeholder - image upload will be handled by drag/drop
-      editor.chain().focus().insertContent(`<img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlPC90ZXh0Pjwvc3ZnPg==" alt="Image placeholder" />`).run()
+      try {
+        // Upload to Cloudinary
+        const formData = new FormData()
+        formData.append('image', file)
+        
+        const response = await fetch('/api/cloudinary-upload', {
+          method: 'POST',
+          body: formData
+        })
+        
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || 'Upload failed')
+        }
+        
+        const result = await response.json()
+        
+        // Insert the uploaded image into the editor
+        editor.chain().focus().insertContent(`<img src="${result.url}" alt="Uploaded image" />`).run()
+      } catch (error) {
+        console.error('Image upload failed:', error)
+        // Fallback: insert placeholder
+        editor.chain().focus().insertContent(`<img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlPC90ZXh0Pjwvc3ZnPg==" alt="Image placeholder" />`).run()
+      }
     }
     // Reset input
     event.target.value = ''
@@ -156,11 +222,13 @@ export function EditorToolbar({ editor, isUploading = false }: EditorToolbarProp
 
       <div className="w-px h-6 bg-gray-300 mx-1" />
 
-      {/* Alignment */}
+      {/* Text Alignment */}
       <Button
         variant={editor.isActive({ textAlign: 'left' }) ? 'default' : 'ghost'}
         size="sm"
         onClick={() => editor.chain().focus().setTextAlign('left').run()}
+        title="Align Text Left"
+        disabled={editor.isActive('image')}
       >
         <AlignLeft className="h-4 w-4" />
       </Button>
@@ -168,6 +236,8 @@ export function EditorToolbar({ editor, isUploading = false }: EditorToolbarProp
         variant={editor.isActive({ textAlign: 'center' }) ? 'default' : 'ghost'}
         size="sm"
         onClick={() => editor.chain().focus().setTextAlign('center').run()}
+        title="Align Text Center"
+        disabled={editor.isActive('image')}
       >
         <AlignCenter className="h-4 w-4" />
       </Button>
@@ -175,11 +245,49 @@ export function EditorToolbar({ editor, isUploading = false }: EditorToolbarProp
         variant={editor.isActive({ textAlign: 'right' }) ? 'default' : 'ghost'}
         size="sm"
         onClick={() => editor.chain().focus().setTextAlign('right').run()}
+        title="Align Text Right"
+        disabled={editor.isActive('image')}
       >
         <AlignRight className="h-4 w-4" />
       </Button>
 
       <div className="w-px h-6 bg-gray-300 mx-1" />
+
+      {/* Image Alignment - Only visible when image is selected */}
+      {editor.isActive('image') && (
+        <>
+          <Button
+            variant={isImageAligned('left') ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setImageAlignment('left')}
+            title="Align Image Left"
+          >
+            <ImageIcon className="h-3 w-3 mr-1" />
+            <AlignLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={isImageAligned('center') ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setImageAlignment('center')}
+            title="Align Image Center"
+          >
+            <ImageIcon className="h-3 w-3 mr-1" />
+            <AlignCenter className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={isImageAligned('right') ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setImageAlignment('right')}
+            title="Align Image Right"
+          >
+            <ImageIcon className="h-3 w-3 mr-1" />
+            <AlignRight className="h-4 w-4" />
+          </Button>
+
+          <div className="w-px h-6 bg-gray-300 mx-1" />
+        </>
+      )}
+
 
       {/* Line Break */}
       <Button

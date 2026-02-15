@@ -13,7 +13,7 @@ export function ContentManagement() {
     <div className="h-full flex flex-col">
       <div className="mx-auto w-full max-w-7xl px-8 flex-1 flex flex-col gap-6">
         <div className="flex-shrink-0">
-          <FilterBar />
+          <FilterBar compact={true} />
         </div>
         <div className="flex-1 min-h-0">
           <QuestionExplorer />

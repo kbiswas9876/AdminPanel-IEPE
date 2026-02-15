@@ -23,7 +23,7 @@ export function InReviewReportsTable() {
   const loadReports = async () => {
     try {
       setLoading(true)
-      const data = await getErrorReportsByStatus('in_review')
+      const data = await getErrorReportsByStatus('reviewed')
       setReports(data)
     } catch (error) {
       console.error('Error loading in-review reports:', error)

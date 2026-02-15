@@ -65,13 +65,15 @@ interface SourceDestinationQuestionBuilderProps {
   onClose: () => void
   onSelectMultiple: (questions: Question[]) => void
   title?: string
+  singleSelect?: boolean
 }
 
 export function SourceDestinationQuestionBuilder({
   open,
   onClose,
   onSelectMultiple,
-  title = "Build Your Test"
+  title = "Build Your Test",
+  singleSelect = false
 }: SourceDestinationQuestionBuilderProps) {
   // State management
   const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([])
@@ -166,12 +168,24 @@ export function SourceDestinationQuestionBuilder({
   const handleSelectQuestion = (question: Question) => {
     const isSelected = selectedQuestions.some(q => (q.id ?? q.question_id) === (question.id ?? question.question_id))
     
-    if (isSelected) {
-      // Remove from selected
-      setSelectedQuestions(prev => prev.filter(q => (q.id ?? q.question_id) !== (question.id ?? question.question_id)))
+    if (singleSelect) {
+      // Single-select mode: replace current selection
+      if (isSelected) {
+        // Deselect if already selected
+        setSelectedQuestions([])
+      } else {
+        // Select only this question
+        setSelectedQuestions([question])
+      }
     } else {
-      // Add to selected
-      setSelectedQuestions(prev => [...prev, question])
+      // Multi-select mode: toggle selection
+      if (isSelected) {
+        // Remove from selected
+        setSelectedQuestions(prev => prev.filter(q => (q.id ?? q.question_id) !== (question.id ?? question.question_id)))
+      } else {
+        // Add to selected
+        setSelectedQuestions(prev => [...prev, question])
+      }
     }
   }
 
@@ -640,10 +654,11 @@ export function SourceDestinationQuestionBuilder({
                       >
                         <div className="flex items-start gap-3">
                           <input
-                            type="checkbox"
+                            type={singleSelect ? "radio" : "checkbox"}
                             checked={isSelected}
                             onChange={() => handleSelectQuestion(q)}
                             className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600"
+                            name={singleSelect ? "question-selection" : undefined}
                           />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">

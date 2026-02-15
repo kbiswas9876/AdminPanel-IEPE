@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,6 +13,7 @@ import { BookSourceCombobox } from './book-source-combobox'
 import { ChapterNameCombobox } from './chapter-name-combobox'
 import { UniversalContentRenderer } from '../editors/UniversalContentRenderer'
 import type { Question } from '@/lib/types'
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 
 interface InPlaceQuestionEditorProps {
   question: Question
@@ -35,6 +36,27 @@ export function InPlaceQuestionEditor({
     question: true,
     options: true,
     solution: true
+  })
+
+  // Store initial values for comparison
+  const initialData = useMemo(() => ({
+    formData: question,
+    options: question.options || { a: '', b: '', c: '', d: '' },
+    adminTags: question.admin_tags || []
+  }), [question])
+
+  // Track if form has been modified
+  const hasUnsavedChanges = useMemo(() => {
+    return (
+      JSON.stringify(formData) !== JSON.stringify(initialData.formData) ||
+      JSON.stringify(options) !== JSON.stringify(initialData.options) ||
+      JSON.stringify(adminTags.sort()) !== JSON.stringify(initialData.adminTags.sort())
+    )
+  }, [formData, options, adminTags, initialData])
+
+  // Use the unsaved changes hook
+  const { confirmNavigation } = useUnsavedChanges({ 
+    hasUnsavedChanges 
   })
 
   // Initialize form data when question prop changes
@@ -174,7 +196,11 @@ export function InPlaceQuestionEditor({
           <Button
             variant="ghost"
             size="sm"
-            onClick={onCancel}
+            onClick={async () => {
+              if (await confirmNavigation()) {
+                onCancel()
+              }
+            }}
             className="h-8 w-8 p-0 text-white hover:bg-white/20 transition-colors"
           >
             <X className="h-4 w-4" />
@@ -470,7 +496,11 @@ export function InPlaceQuestionEditor({
         <div className="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
           <Button
             variant="outline"
-            onClick={onCancel}
+            onClick={async () => {
+              if (await confirmNavigation()) {
+                onCancel()
+              }
+            }}
             disabled={isSaving}
             className="px-6 py-2 border-gray-300 text-gray-700 hover:bg-gray-50 transition-all duration-200"
           >

@@ -1,6 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 
 // Dashboard statistics interface
 export interface DashboardStats {
@@ -10,14 +11,24 @@ export interface DashboardStats {
   totalQuestions: number
 }
 
+// Admin profile interface
+export interface AdminProfile {
+  id: string
+  email: string
+  full_name: string | null
+  role: string
+  last_login?: string
+}
+
 // Recent activity interface
 export interface RecentActivity {
   id: string
-  type: 'user_registration' | 'test_created' | 'bulk_import' | 'error_report' | 'question_added'
+  type: 'user_registration' | 'test_created' | 'bulk_import' | 'error_report' | 'question_added' | 'admin_login' | 'admin_profile_update' | 'admin_settings_change' | 'admin_action'
   title: string
   description: string
   timestamp: string
   userEmail?: string
+  adminEmail?: string
   metadata?: Record<string, unknown>
 }
 
@@ -66,8 +77,8 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   }
 }
 
-// Get recent activity feed
-export async function getRecentActivity(limit: number = 7): Promise<RecentActivity[]> {
+// Get recent activity feed (including admin activities)
+export async function getRecentActivity(limit: number = 10): Promise<RecentActivity[]> {
   try {
     const supabase = createAdminClient()
     const activities: RecentActivity[] = []
@@ -75,8 +86,8 @@ export async function getRecentActivity(limit: number = 7): Promise<RecentActivi
     // Get recent user registrations
     const { data: recentUsers } = await supabase
       .from('user_profiles')
-      .select('id, email, full_name, created_at, status')
-      .order('created_at', { ascending: false })
+      .select('id, email, full_name, updated_at, status')
+      .order('updated_at', { ascending: false })
       .limit(3)
     
     if (recentUsers) {
@@ -88,7 +99,7 @@ export async function getRecentActivity(limit: number = 7): Promise<RecentActivi
           description: user.status === 'pending' 
             ? `${user.full_name || user.email} registered and is pending approval`
             : `${user.full_name || user.email} registered and was approved`,
-          timestamp: user.created_at,
+          timestamp: user.updated_at,
           userEmail: user.email,
           metadata: { userId: user.id, status: user.status }
         })
@@ -98,7 +109,7 @@ export async function getRecentActivity(limit: number = 7): Promise<RecentActivi
     // Get recent error reports
     const { data: recentErrors } = await supabase
       .from('error_reports')
-      .select('id, created_at, status, profiles(email)')
+      .select('id, created_at, status, reported_by_user_id')
       .order('created_at', { ascending: false })
       .limit(2)
     
@@ -108,9 +119,9 @@ export async function getRecentActivity(limit: number = 7): Promise<RecentActivi
           id: `error_${error.id}`,
           type: 'error_report',
           title: 'New Error Report',
-          description: `Error report submitted by ${error.profiles?.[0]?.email || 'Unknown user'}`,
+          description: `Error report submitted by user ${error.reported_by_user_id}`,
           timestamp: error.created_at,
-          userEmail: error.profiles?.[0]?.email,
+          userEmail: undefined,
           metadata: { errorId: error.id, status: error.status }
         })
       })
@@ -136,6 +147,64 @@ export async function getRecentActivity(limit: number = 7): Promise<RecentActivi
       })
     }
     
+    // Get recent admin activities
+    const { data: adminActivities } = await supabase
+      .from('admin_activity_log')
+      .select(`
+        id,
+        action_type,
+        action_description,
+        created_at,
+        admin_id,
+        metadata
+      `)
+      .order('created_at', { ascending: false })
+      .limit(5)
+    
+    if (adminActivities) {
+      // Get admin emails for the activities
+      const adminIds = [...new Set(adminActivities.map(a => a.admin_id))]
+      const { data: adminProfiles } = await supabase
+        .from('user_profiles')
+        .select('id, email, full_name')
+        .in('id', adminIds)
+      
+      const adminEmailMap = new Map(
+        adminProfiles?.map(p => [p.id, { email: p.email, name: p.full_name }]) || []
+      )
+      
+      adminActivities.forEach(activity => {
+        const admin = adminEmailMap.get(activity.admin_id)
+        const adminName = admin?.name || admin?.email || 'Admin'
+        
+        // Map action types to user-friendly types
+        let activityType: RecentActivity['type'] = 'admin_action'
+        if (activity.action_type === 'login') {
+          activityType = 'admin_login'
+        } else if (activity.action_type === 'profile_update') {
+          activityType = 'admin_profile_update'
+        } else if (activity.action_type === 'settings_change') {
+          activityType = 'admin_settings_change'
+        }
+        
+        activities.push({
+          id: `admin_${activity.id}`,
+          type: activityType,
+          title: activity.action_type === 'login' 
+            ? 'Admin Login' 
+            : activity.action_type === 'profile_update'
+            ? 'Profile Updated'
+            : activity.action_type === 'settings_change'
+            ? 'Settings Changed'
+            : 'Admin Action',
+          description: activity.action_description || `${adminName} performed an action`,
+          timestamp: activity.created_at,
+          adminEmail: admin?.email,
+          metadata: activity.metadata as Record<string, unknown> || {}
+        })
+      })
+    }
+    
     // Sort all activities by timestamp and return the most recent
     return activities
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
@@ -144,6 +213,96 @@ export async function getRecentActivity(limit: number = 7): Promise<RecentActivi
   } catch (error) {
     console.error('Error fetching recent activity:', error)
     return []
+  }
+}
+
+// Get current admin profile
+export async function getCurrentAdminProfile(): Promise<AdminProfile | null> {
+  try {
+    const supabase = await createClient()
+    const adminSupabase = createAdminClient()
+    
+    // Get current user (secure method)
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    
+    if (userError || !user) {
+      return null
+    }
+    
+    // Get profile from database
+    const { data: profile } = await adminSupabase
+      .from('user_profiles')
+      .select('id, full_name, role')
+      .eq('id', user.id)
+      .single()
+    
+    if (!profile) {
+      return null
+    }
+    
+    return {
+      id: profile.id,
+      email: user.email || 'Unknown',
+      full_name: profile.full_name,
+      role: profile.role,
+      last_login: user.last_sign_in_at || undefined
+    }
+  } catch (error) {
+    console.error('Error fetching admin profile:', error)
+    return null
+  }
+}
+
+// Get enhanced dashboard stats with badge counts for quick actions
+export interface QuickActionBadges {
+  pendingApprovals: number
+  newErrors: number
+  draftTests: number
+  recentQuestions: number
+}
+
+export async function getQuickActionBadges(): Promise<QuickActionBadges> {
+  try {
+    const supabase = createAdminClient()
+    
+    const [
+      pendingApprovalsResult,
+      newErrorsResult,
+      draftTestsResult,
+      recentQuestionsResult
+    ] = await Promise.all([
+      supabase
+        .from('user_profiles')
+        .select('id', { count: 'exact' })
+        .eq('status', 'pending'),
+      supabase
+        .from('error_reports')
+        .select('id', { count: 'exact' })
+        .eq('status', 'new'),
+      supabase
+        .from('tests')
+        .select('id', { count: 'exact' })
+        .eq('status', 'draft'),
+      supabase
+        .from('questions')
+        .select('id', { count: 'exact' })
+        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+    ])
+    
+    return {
+      pendingApprovals: pendingApprovalsResult.count || 0,
+      newErrors: newErrorsResult.count || 0,
+      draftTests: draftTestsResult.count || 0,
+      recentQuestions: recentQuestionsResult.count || 0
+    }
+  } catch (error) {
+    console.error('Error fetching quick action badges:', error)
+    return {
+      pendingApprovals: 0,
+      newErrors: 0,
+      draftTests: 0,
+      recentQuestions: 0
+    }
   }
 }
 
