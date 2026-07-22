@@ -60,7 +60,7 @@ export function ReorganizedStudentManagement({ users }: ReorganizedStudentManage
 
   // Client-side filtering logic based on filtered results
   const pendingUsers = useMemo(() => 
-    filteredUsers.filter(u => u.status === 'pending'), [filteredUsers]
+    filteredUsers.filter(u => u.status === 'pending' || u.status === 'correction_required'), [filteredUsers]
   )
   
   const activeStudents = useMemo(() => 

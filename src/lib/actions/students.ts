@@ -160,6 +160,43 @@ export async function approveUser(userId: string): Promise<{ success: boolean; m
   }
 }
 
+// Request user correction / revision (change status to correction_required with reason message)
+export async function requestUserCorrection(userId: string, reasonMessage: string): Promise<{ success: boolean; message: string }> {
+  try {
+    const supabase = createAdminClient()
+    
+    const { error } = await supabase
+      .from('user_profiles')
+      .update({ 
+        status: 'correction_required',
+        rejection_reason: reasonMessage || 'Please update your profile details for approval.',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId)
+    
+    if (error) {
+      console.error('Error requesting user correction:', error)
+      return {
+        success: false,
+        message: `Failed to request correction: ${error.message}`
+      }
+    }
+    
+    revalidatePath('/students')
+    
+    return {
+      success: true,
+      message: 'Correction request sent to student successfully'
+    }
+  } catch (error) {
+    console.error('Error requesting user correction:', error)
+    return {
+      success: false,
+      message: 'An unexpected error occurred while requesting user correction'
+    }
+  }
+}
+
 // Reject a user (delete from profiles and auth)
 export async function rejectUser(userId: string): Promise<{ success: boolean; message: string }> {
   try {

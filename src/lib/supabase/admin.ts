@@ -55,11 +55,18 @@ export interface BookSource {
 export interface UserProfile {
   id: string
   full_name?: string
+  email?: string
+  phone_number?: string
   role: 'admin' | 'student'
-  status: 'pending' | 'active' | 'suspended'
+  status: 'pending' | 'correction_required' | 'active' | 'suspended'
+  rejection_reason?: string
+  date_of_birth?: string
+  state?: string
+  city?: string
+  target_exam?: string
+  student_category?: string
   created_at: string
   updated_at?: string
-  email?: string
   active_flags?: string[]
   profile_picture_url?: string
 }

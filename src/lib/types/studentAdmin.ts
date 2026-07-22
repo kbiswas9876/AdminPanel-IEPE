@@ -27,7 +27,7 @@ export interface StudentExportData {
     id: string
     full_name: string
     email: string
-    status: 'pending' | 'active' | 'suspended'
+    status: 'pending' | 'correction_required' | 'active' | 'suspended'
     role: string
     created_at: string
     updated_at?: string

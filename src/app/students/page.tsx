@@ -3,41 +3,48 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { Users } from 'lucide-react'
 
 export default async function StudentsPage() {
-
   const supabaseAdmin = createAdminClient()
 
-  // Fetch all users at once using admin client
-  const { data: allUsers, error } = await supabaseAdmin
-    .from('user_profiles')
-    .select('*')
-    .order('id', { ascending: false })
+  // 1. Primary Source of Truth: Fetch all registered users from Supabase Auth Admin API
+  const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers()
 
-  // Fetch emails separately from auth.users
-  const userEmails: { [key: string]: string } = {}
-  if (allUsers && allUsers.length > 0) {
-    const userIds = allUsers.map(user => user.id)
-    const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers()
-    
-    if (authUsers?.users) {
-      authUsers.users.forEach(user => {
-        if (userIds.includes(user.id)) {
-          userEmails[user.id] = user.email || 'No email'
-        }
+  // 2. Secondary Source: Fetch profiles from user_profiles table if populated
+  let profileMap: { [key: string]: any } = {}
+  try {
+    const { data: allProfiles } = await supabaseAdmin
+      .from('user_profiles')
+      .select('*')
+
+    if (allProfiles && Array.isArray(allProfiles)) {
+      allProfiles.forEach((p) => {
+        profileMap[p.id] = p
       })
     }
+  } catch (err) {
+    // Silent fallback to auth users metadata
   }
 
-  // Combine the data
-  const usersWithEmails = allUsers?.map(user => ({
-    ...user,
-    email: userEmails[user.id] || 'No email'
-  })) || []
+  // 3. Combine Auth metadata + DB Profiles safely without console errors
+  const usersWithCombinedData = (authUsers?.users || []).map((u) => {
+    const profile = profileMap[u.id] || {}
+    const meta = u.user_metadata || {}
 
-
-  if (error) {
-    console.error("Error fetching users:", error)
-    // We'll handle this in the UI
-  }
+    return {
+      id: u.id,
+      email: u.email || profile.email || 'No email',
+      full_name: profile.full_name || meta.full_name || meta.name || 'Student (Unspecified)',
+      status: profile.status || meta.status || 'pending',
+      role: profile.role || meta.role || 'student',
+      rejection_reason: profile.rejection_reason || meta.rejection_reason || null,
+      phone_number: profile.phone_number || meta.phone_number || meta.phone || 'Not provided',
+      target_exam: profile.target_exam || meta.target_exam || 'Not specified',
+      date_of_birth: profile.date_of_birth || meta.date_of_birth || 'Not provided',
+      state: profile.state || meta.state || 'Not specified',
+      city: profile.city || meta.city || 'Not specified',
+      student_category: profile.student_category || meta.student_category || 'General',
+      created_at: profile.created_at || u.created_at || new Date().toISOString(),
+    }
+  })
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -57,13 +64,11 @@ export default async function StudentsPage() {
           </div>
         </div>
       </div>
-      
+
       {/* Main Content */}
       <div className="bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200/50 shadow-gray-200/50 overflow-hidden">
-        <ReorganizedStudentManagement users={usersWithEmails} />
+        <ReorganizedStudentManagement users={usersWithCombinedData} />
       </div>
     </div>
   )
 }
-
-
