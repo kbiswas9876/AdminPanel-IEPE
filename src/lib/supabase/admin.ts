@@ -48,6 +48,12 @@ export interface BookSource {
   id: number
   name: string
   code: string
+  icon_url?: string | null
+  exam_type?: string | null
+  author?: string | null
+  publisher?: string | null
+  publication_year?: string | null
+  description?: string | null
   created_at: string
 }
 
