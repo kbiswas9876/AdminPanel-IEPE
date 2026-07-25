@@ -76,9 +76,17 @@ export function ActiveStudentsTable({ users, onUserAction, selectedUsers = [], o
               <TableCell>
                 <Link href={`/students/${user.id}`} className="hover:bg-gray-50 rounded-md p-2 -m-2 block">
                   <div className="flex items-center space-x-3">
-                    <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                      <User className="h-4 w-4 text-green-600" />
-                    </div>
+                    {user.profile_picture_url ? (
+                      <img
+                        src={user.profile_picture_url}
+                        alt={user.full_name || 'Student'}
+                        className="h-8 w-8 rounded-full object-cover border border-green-500"
+                      />
+                    ) : (
+                      <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                        <User className="h-4 w-4 text-green-600" />
+                      </div>
+                    )}
                     <div>
                       <p className="font-medium text-gray-900 hover:text-blue-600">
                         {user.full_name || 'No name provided'}

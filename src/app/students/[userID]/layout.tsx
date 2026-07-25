@@ -27,9 +27,17 @@ export default async function StudentLayout({ params, children }: StudentLayoutP
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             {/* Student Avatar */}
-            <div className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xl font-semibold">
-              {studentSummary.name?.charAt(0).toUpperCase() || '?'}
-            </div>
+            {studentSummary.profile_picture_url ? (
+              <img
+                src={studentSummary.profile_picture_url}
+                alt={studentSummary.name || 'Student Avatar'}
+                className="h-16 w-16 rounded-full object-cover border-2 border-emerald-500 shadow-md"
+              />
+            ) : (
+              <div className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xl font-semibold">
+                {studentSummary.name?.charAt(0).toUpperCase() || '?'}
+              </div>
+            )}
             
             {/* Student Info */}
             <div>
