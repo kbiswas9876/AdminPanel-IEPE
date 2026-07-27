@@ -2,16 +2,29 @@
 // Mirror of the Student Portal's performance feedback logic
 // Located in student-portal/src/lib/speed-calculator.ts
 
+// Note: 'Very Easy' (15s) and 'Very Hard' (100s) are documented as future-proofing
+// for upcoming database schema expansions while maintaining current active schema compatibility.
 const ADVANCED_TIME_THRESHOLDS = {
-  'Easy': 20,           // Instant-recall questions
-  'Easy-Moderate': 30,  // Single-step calculations
-  'Moderate': 45,       // Standard multi-step problems
-  'Moderate-Hard': 60,  // Complex problems requiring careful thought
-  'Hard': 90,           // Most challenging questions requiring deep understanding
-  'default': 36,        // Baseline (100 questions in 60 minutes = 36 seconds/question)
+  'Very Easy': 15,     // Documented future-proofing (Instant recall)
+  'Easy': 20,          // Simple recall / quick answer (18s - 20s baseline)
+  'Easy-Moderate': 28, // Single-step calculation / reading (25s - 28s baseline)
+  'Moderate': 40,      // Standard multi-step problem (35s - 40s baseline)
+  'Moderate-Hard': 60, // Complex problem requiring calculation/thought (55s - 60s baseline)
+  'Hard': 80,          // Most challenging questions (75s - 80s baseline)
+  'Very Hard': 100,    // Documented future-proofing (Deep multi-concept)
+  'default': 30,       // Baseline default
 };
 
-export type AdvancedDifficulty = 'Easy' | 'Easy-Moderate' | 'Moderate' | 'Moderate-Hard' | 'Hard' | null | undefined;
+export type AdvancedDifficulty = 
+  | 'Very Easy'
+  | 'Easy' 
+  | 'Easy-Moderate' 
+  | 'Moderate' 
+  | 'Moderate-Hard' 
+  | 'Hard' 
+  | 'Very Hard'
+  | null 
+  | undefined;
 export type PerformanceState = 'Slow' | 'Superfast' | 'OnTime' | 'OnTimeButNotCorrect';
 
 /**
@@ -20,20 +33,8 @@ export type PerformanceState = 'Slow' | 'Superfast' | 'OnTime' | 'OnTimeButNotCo
  * @returns Target time in seconds
  */
 export function getTargetTime(difficulty: AdvancedDifficulty): number {
-  switch (difficulty) {
-    case 'Easy':
-      return ADVANCED_TIME_THRESHOLDS['Easy'];
-    case 'Easy-Moderate':
-      return ADVANCED_TIME_THRESHOLDS['Easy-Moderate'];
-    case 'Moderate':
-      return ADVANCED_TIME_THRESHOLDS['Moderate'];
-    case 'Moderate-Hard':
-      return ADVANCED_TIME_THRESHOLDS['Moderate-Hard'];
-    case 'Hard':
-      return ADVANCED_TIME_THRESHOLDS['Hard'];
-    default:
-      return ADVANCED_TIME_THRESHOLDS['default'];
-  }
+  if (!difficulty) return ADVANCED_TIME_THRESHOLDS.default;
+  return ADVANCED_TIME_THRESHOLDS[difficulty] || ADVANCED_TIME_THRESHOLDS.default;
 }
 
 /**
