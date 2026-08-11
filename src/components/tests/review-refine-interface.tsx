@@ -381,48 +381,8 @@ export default function ReviewRefineInterface({
               </div>
             </div>
 
-            {/* Right Section - Shuffle Controls */}
-            <div className="flex items-center gap-2">
-              <Button 
-                onClick={handleShuffleQuestions}
-                disabled={isShuffling}
-                className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm px-4 py-2.5 h-10 rounded-xl font-semibold min-w-[120px]"
-              >
-                {isShuffling ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Shuffling...
-                  </>
-                ) : (
-                  <>
-                    <Lightning className="h-4 w-4 mr-2" />
-                    Shuffle
-                  </>
-                )}
-              </Button>
-              
-              {/* Compact Shuffle Options */}
-              <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-xl border border-blue-200/60 shadow-lg px-3 py-2.5 h-10">
-                <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center shadow-sm">
-                  <RefreshCw className="h-3 w-3 text-white" />
-                </div>
-                <span className="text-sm font-semibold text-gray-800">Shuffle Options</span>
-                <button
-                  onClick={() => setShuffleOptions(!shuffleOptions)}
-                  className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
-                  style={{
-                    backgroundColor: shuffleOptions ? '#3b82f6' : '#d1d5db'
-                  }}
-                >
-                  <span
-                    className="inline-block h-3 w-3 transform rounded-full bg-white shadow-lg transition-transform"
-                    style={{
-                      transform: shuffleOptions ? 'translateX(1rem)' : 'translateX(0.125rem)'
-                    }}
-                  />
-                </button>
-              </div>
-            </div>
+            {/* Right Section - Shuffle Controls (removed per dynamic shuffling mandate) */}
+            <div className="flex items-center gap-2" />
           </div>
         </div>
       </div>

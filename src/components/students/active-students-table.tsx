@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Checkbox } from '@/components/ui/checkbox'
 import { User, Mail, Calendar, Shield } from 'lucide-react'
 import Link from 'next/link'
 import { SuspendUserDialog } from './suspend-user-dialog'
@@ -17,9 +18,11 @@ import { PromoteToAdminDialog } from './promote-to-admin-dialog'
 interface ActiveStudentsTableProps {
   users: UserProfile[]
   onUserAction: () => void
+  selectedUsers?: string[]
+  onUserSelect?: (userId: string, selected: boolean) => void
 }
 
-export function ActiveStudentsTable({ users, onUserAction }: ActiveStudentsTableProps) {
+export function ActiveStudentsTable({ users, onUserAction, selectedUsers = [], onUserSelect }: ActiveStudentsTableProps) {
 
   const handleUserAction = () => {
     onUserAction() // Notify parent component to refresh data
@@ -42,6 +45,14 @@ export function ActiveStudentsTable({ users, onUserAction }: ActiveStudentsTable
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-[50px]">
+              <Checkbox 
+                checked={selectedUsers.length === users.length && users.length > 0}
+                onCheckedChange={() => {
+                  // This will be handled by the parent component
+                }}
+              />
+            </TableHead>
             <TableHead>Student</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Registration Date</TableHead>
@@ -53,11 +64,29 @@ export function ActiveStudentsTable({ users, onUserAction }: ActiveStudentsTable
           {users.map((user) => (
             <TableRow key={user.id}>
               <TableCell>
+                <Checkbox
+                  checked={selectedUsers.includes(user.id)}
+                  onCheckedChange={(checked) => {
+                    if (onUserSelect) {
+                      onUserSelect(user.id, !!checked)
+                    }
+                  }}
+                />
+              </TableCell>
+              <TableCell>
                 <Link href={`/students/${user.id}`} className="hover:bg-gray-50 rounded-md p-2 -m-2 block">
                   <div className="flex items-center space-x-3">
-                    <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                      <User className="h-4 w-4 text-green-600" />
-                    </div>
+                    {user.profile_picture_url ? (
+                      <img
+                        src={user.profile_picture_url}
+                        alt={user.full_name || 'Student'}
+                        className="h-8 w-8 rounded-full object-cover border border-green-500"
+                      />
+                    ) : (
+                      <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                        <User className="h-4 w-4 text-green-600" />
+                      </div>
+                    )}
                     <div>
                       <p className="font-medium text-gray-900 hover:text-blue-600">
                         {user.full_name || 'No name provided'}

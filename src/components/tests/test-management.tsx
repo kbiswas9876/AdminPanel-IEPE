@@ -4,29 +4,33 @@ import { useState, useEffect } from 'react'
 import { getAllTestsWithCounts } from '@/lib/actions/tests'
 import type { Test } from '@/lib/supabase/admin'
 import { Button } from '@/components/ui/button'
-import { 
-  Plus, 
-  FileText, 
-  Calendar, 
-  Clock
-} from 'lucide-react'
-import { TestActions } from './test-actions'
-import { TestControlToggles } from './test-control-toggles'
+import { Plus, FileText } from 'lucide-react'
+import { TestCardTabs } from './TestCardTabs'
+import { useDynamicStatus } from '@/hooks/useDynamicStatus'
 
 interface TestManagementProps {
   onCreateTest?: () => void
 }
 
 export function TestManagement({ onCreateTest }: TestManagementProps = {}) {
-  const [tests, setTests] = useState<Array<Test & { question_count?: number }>>([])
+  const [initialTests, setInitialTests] = useState<Array<Test & { question_count?: number }>>([])
+  const dynamicTests = useDynamicStatus(initialTests)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // Progress data state: testId -> progress stats
+  const [progressData, setProgressData] = useState<Record<string, {
+    total_taken: number
+    submitted: number
+    in_progress: number
+  }>>({})
+  const [progressLoading, setProgressLoading] = useState(false)
 
   useEffect(() => {
     const fetchTests = async () => {
       try {
         const allTests = await getAllTestsWithCounts()
-        setTests(allTests)
+        setInitialTests(allTests)
       } catch (err) {
         setError('Failed to fetch tests')
         console.error('Error:', err)
@@ -38,12 +42,53 @@ export function TestManagement({ onCreateTest }: TestManagementProps = {}) {
     fetchTests()
   }, [])
 
+  // Fetch progress data for all tests
+  const fetchProgressData = async (testIds: number[]) => {
+    if (testIds.length === 0) return
+
+    setProgressLoading(true)
+    try {
+      const testIdsParam = testIds.join(',')
+      const response = await fetch(`/api/tests/progress?testIds=${testIdsParam}`)
+      
+      if (!response.ok) {
+        console.error('Failed to fetch progress data:', response.statusText)
+        return
+      }
+
+      const data = await response.json()
+      setProgressData(data)
+    } catch (err) {
+      console.error('Error fetching progress data:', err)
+    } finally {
+      setProgressLoading(false)
+    }
+  }
+
+  // Fetch progress when tests are loaded and poll for updates
+  useEffect(() => {
+    if (initialTests.length === 0) return
+
+    const testIds = initialTests.map(test => test.id)
+    
+    // Fetch immediately
+    fetchProgressData(testIds)
+    
+    // Poll for progress updates every 30 seconds
+    const intervalId = setInterval(() => {
+      fetchProgressData(testIds)
+    }, 30000) // Poll every 30 seconds
+
+    return () => clearInterval(intervalId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialTests.length]) // Re-run when number of tests changes
+
   const handleTestAction = () => {
     // Refresh the tests list
     const fetchTests = async () => {
       try {
         const allTests = await getAllTestsWithCounts()
-        setTests(allTests)
+        setInitialTests(allTests)
       } catch (err) {
         setError('Failed to fetch tests')
         console.error('Error:', err)
@@ -51,70 +96,6 @@ export function TestManagement({ onCreateTest }: TestManagementProps = {}) {
     }
     
     fetchTests()
-  }
-
-  const getStatusBadge = (test: Test) => {
-    if (isPerpetualTest(test)) {
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 rounded-lg border border-emerald-100 flex-shrink-0">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-          <span className="text-xs font-medium text-emerald-700">Perpetual</span>
-        </span>
-      )
-    }
-    
-    switch (test.status) {
-      case 'draft':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 rounded-lg border border-gray-200 flex-shrink-0">
-            <div className="w-1.5 h-1.5 rounded-full bg-gray-600" />
-            <span className="text-xs font-medium text-gray-700">Draft</span>
-          </span>
-        )
-      case 'scheduled':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 rounded-lg border border-blue-100 flex-shrink-0">
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-            <span className="text-xs font-medium text-blue-700">Scheduled</span>
-          </span>
-        )
-      case 'live':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 rounded-lg border border-emerald-100 flex-shrink-0">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-            <span className="text-xs font-medium text-emerald-700">Live</span>
-          </span>
-        )
-      case 'completed':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 rounded-lg border border-gray-200 flex-shrink-0">
-            <div className="w-1.5 h-1.5 rounded-full bg-gray-600" />
-            <span className="text-xs font-medium text-gray-700">Completed</span>
-          </span>
-        )
-      default:
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 rounded-lg border border-gray-200 flex-shrink-0">
-            <div className="w-1.5 h-1.5 rounded-full bg-gray-600" />
-            <span className="text-xs font-medium text-gray-700">Unknown</span>
-          </span>
-        )
-    }
-  }
-
-  const formatDateTime = (dateTime: string | null | undefined) => {
-    if (!dateTime) return 'Not set'
-    return new Date(dateTime).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
-
-  const isPerpetualTest = (test: Test) => {
-    return test.status === 'scheduled' && !test.end_time
   }
 
   if (loading) {
@@ -140,7 +121,7 @@ export function TestManagement({ onCreateTest }: TestManagementProps = {}) {
 
   return (
     <div>
-      {tests.length === 0 ? (
+      {dynamicTests.length === 0 && !loading ? (
         <div className="text-center py-16">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white border border-gray-200 shadow-sm mb-4">
             <FileText className="h-8 w-8 text-gray-400" strokeWidth={1.5} />
@@ -157,92 +138,17 @@ export function TestManagement({ onCreateTest }: TestManagementProps = {}) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {tests.map((test) => (
+          {dynamicTests.map((test) => (
             <div
               key={test.id}
               className="group relative bg-white rounded-xl border border-gray-200 p-5 transition-all duration-200 hover:shadow-md hover:border-gray-300"
             >
-              {/* Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-semibold text-gray-900 mb-1 line-clamp-2">
-                    {test.name}
-                  </h3>
-                  {test.description && (
-                    <p className="text-sm text-gray-500 line-clamp-2">
-                      {test.description}
-                    </p>
-                  )}
-                </div>
-                {getStatusBadge(test)}
-              </div>
-
-              {/* Stats */}
-              <div className="flex items-center gap-6 py-4 border-y border-gray-100">
-                <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-gray-400" strokeWidth={1.5} />
-                  <div>
-                    <p className="text-xs text-gray-500">Questions</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {typeof test.question_count === 'number' ? test.question_count : '—'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-gray-400" strokeWidth={1.5} />
-                  <div>
-                    <p className="text-xs text-gray-500">Duration</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {test.total_time_minutes}<span className="text-xs text-gray-500 ml-0.5">min</span>
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Timeline */}
-              <div className="py-4 space-y-3">
-                <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="h-4 w-4 text-gray-400 flex-shrink-0" strokeWidth={1.5} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500">Start</p>
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {test.start_time ? formatDateTime(test.start_time) : 'Not scheduled'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 text-sm">
-                  <Clock className="h-4 w-4 text-gray-400 flex-shrink-0" strokeWidth={1.5} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500">End</p>
-                    <p className={`text-sm font-medium truncate ${
-                      isPerpetualTest(test) ? 'text-emerald-700' : 'text-gray-900'
-                    }`}>
-                      {isPerpetualTest(test) ? '∞ Perpetual' : formatDateTime(test.end_time)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Test Control Settings */}
-              <div className="py-4 border-t border-gray-100">
-                <TestControlToggles 
-                  test={test} 
-                  onUpdate={handleTestAction}
-                />
-              </div>
-
-              {/* Actions */}
-              <div className="pt-4 border-t border-gray-100">
-                <TestActions 
-                  test={test} 
-                  onAction={handleTestAction}
-                />
-              </div>
-
-              {/* Hover effect overlay */}
-              <div className="absolute inset-0 rounded-xl ring-1 ring-inset ring-black/0 group-hover:ring-black/5 transition-all duration-200 pointer-events-none" />
+              <TestCardTabs 
+                test={test} 
+                progress={progressData[test.id.toString()]}
+                progressLoading={progressLoading}
+                onAction={handleTestAction}
+              />
             </div>
           ))}
         </div>
@@ -250,3 +156,4 @@ export function TestManagement({ onCreateTest }: TestManagementProps = {}) {
     </div>
   )
 }
+

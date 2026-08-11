@@ -10,15 +10,18 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { User, Mail, Calendar, Shield } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
 import Link from 'next/link'
 import { DemoteToStudentDialog } from './demote-to-student-dialog'
 
 interface AdminsTableProps {
   users: UserProfile[]
   onUserAction: () => void
+  selectedUsers?: string[]
+  onUserSelect?: (userId: string, selected: boolean) => void
 }
 
-export function AdminsTable({ users, onUserAction }: AdminsTableProps) {
+export function AdminsTable({ users, onUserAction, selectedUsers = [], onUserSelect }: AdminsTableProps) {
   if (users.length === 0) {
     return (
       <div className="text-center py-12">
@@ -34,6 +37,16 @@ export function AdminsTable({ users, onUserAction }: AdminsTableProps) {
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-12">
+              <Checkbox 
+                checked={selectedUsers.length === users.length && users.length > 0}
+                onCheckedChange={(checked) => {
+                  if (onUserSelect) {
+                    users.forEach(user => onUserSelect(user.id, !!checked))
+                  }
+                }}
+              />
+            </TableHead>
             <TableHead>User</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Status</TableHead>
@@ -44,6 +57,12 @@ export function AdminsTable({ users, onUserAction }: AdminsTableProps) {
         <TableBody>
           {users.map((user) => (
             <TableRow key={user.id}>
+              <TableCell>
+                <Checkbox 
+                  checked={selectedUsers.includes(user.id)}
+                  onCheckedChange={(checked) => onUserSelect?.(user.id, !!checked)}
+                />
+              </TableCell>
               <TableCell>
                 <div className="flex items-center space-x-3">
                   <div className="flex-shrink-0">

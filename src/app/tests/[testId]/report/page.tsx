@@ -4,13 +4,14 @@ import { getTestDetails } from '@/lib/actions/tests'
 import { TestReportDashboard } from '@/components/tests/report/TestReportDashboard'
 
 interface PageProps {
-  params: {
+  params: Promise<{
     testId: string
-  }
+  }>
 }
 
 export default async function TestReportPage({ params }: PageProps) {
-  const testId = parseInt(params.testId)
+  const resolvedParams = await params
+  const testId = parseInt(resolvedParams.testId)
   
   if (isNaN(testId)) {
     notFound()

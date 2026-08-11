@@ -1,13 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { X, Trophy, Clock, Target, CheckCircle2, XCircle, Circle } from 'lucide-react'
 import { getStudentAttemptDetails } from '@/lib/actions/test-reports'
 import type { StudentAttemptDetails } from '@/lib/actions/test-reports'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { formatSecondsToHumanReadable } from '@/lib/utils/formatTime'
 
 interface StudentReportModalProps {
   attemptId: number | null
@@ -34,11 +35,7 @@ export function StudentReportModal({ attemptId, open, onClose }: StudentReportMo
 
   if (!open) return null
 
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${minutes}m ${secs}s`
-  }
+  // Removed - using formatSecondsToMMSS utility instead
 
   const filteredAnswers = details?.answers.filter(answer => {
     if (filter === 'all') return true
@@ -51,6 +48,7 @@ export function StudentReportModal({ attemptId, open, onClose }: StudentReportMo
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-5xl h-[90vh] p-0 gap-0 overflow-hidden">
+        <DialogTitle className="sr-only">Student Test Report Details</DialogTitle>
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="w-8 h-8 border-2 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
@@ -107,7 +105,7 @@ export function StudentReportModal({ attemptId, open, onClose }: StudentReportMo
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-purple-500" />
                     <span className="text-lg font-semibold text-slate-900">
-                      {formatTime(details.totalTime)}
+                      {formatSecondsToHumanReadable(details.totalTime)}
                     </span>
                   </div>
                 </div>
@@ -152,7 +150,7 @@ export function StudentReportModal({ attemptId, open, onClose }: StudentReportMo
                         <div className="flex items-center gap-4 text-xs text-slate-500">
                           <div className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            {formatTime(answer.timeSpent)}
+                            {formatSecondsToHumanReadable(answer.timeSpent)}
                           </div>
                           <div className={`font-semibold ${
                             answer.marks > 0 ? 'text-green-600' :

@@ -46,18 +46,34 @@ export async function getAllTestsWithCounts(): Promise<Array<Test & { question_c
       return []
     }
 
-    const result: Array<Test & { question_count: number }> = (data as Array<Test & { test_questions: Array<{ count: number }> }>).map((row) => {
+    const resultWithStatus: Array<Test & { question_count: number }> = (data as Array<Test & { test_questions: Array<{ count: number }> }>).map((row) => {
       const { test_questions, ...testFields } = row
       const count = Array.isArray(test_questions) && test_questions.length > 0 && typeof test_questions[0].count === 'number'
         ? test_questions[0].count
         : (Array.isArray(test_questions) ? test_questions.length : 0)
+      
+      const test = testFields as Test;
+
+      let result_declaration_status: 'instant' | 'declared' | 'scheduled' | 'not_configured' = 'not_configured';
+      if (test.result_policy === 'instant') {
+        result_declaration_status = 'instant';
+      } else if (test.result_policy === 'scheduled' && test.result_release_at) {
+        const releaseDate = new Date(test.result_release_at);
+        if (releaseDate <= new Date()) {
+          result_declaration_status = 'declared';
+        } else {
+          result_declaration_status = 'scheduled';
+        }
+      }
+
       return {
-        ...(testFields as Test),
-        question_count: count
+        ...test,
+        question_count: count,
+        result_declaration_status
       }
     })
 
-    return result
+    return resultWithStatus
   } catch (error) {
     console.error('Unexpected error:', error)
     return []
@@ -511,6 +527,8 @@ export async function saveTest(args: {
   question_ids: number[]
   allow_pausing?: boolean
   show_in_question_timer?: boolean
+  is_proctored?: boolean
+  is_dynamically_shuffled?: boolean
   publish?: {
     start_time: string
     end_time?: string | null
@@ -549,6 +567,8 @@ export async function saveTest(args: {
       end_time: args.publish?.is_perpetual ? null : (args.publish?.end_time || null),
       allow_pausing: args.allow_pausing ?? false,
       show_in_question_timer: args.show_in_question_timer ?? false,
+      is_proctored: args.is_proctored ?? false,
+      is_dynamically_shuffled: args.is_dynamically_shuffled ?? false,
       updated_at: new Date().toISOString()
     }
 
@@ -643,6 +663,8 @@ export async function saveTestFromForm(formData: FormData): Promise<{ success: b
       result_release_at: formData.get('result_release_at') ? String(formData.get('result_release_at')) : null,
       allow_pausing: String(formData.get('allow_pausing') || 'false') === 'true',
       show_in_question_timer: String(formData.get('show_in_question_timer') || 'false') === 'true',
+      is_proctored: String(formData.get('is_proctored') || 'false') === 'true',
+      is_dynamically_shuffled: String(formData.get('is_dynamically_shuffled') || 'false') === 'true',
       question_ids: (() => { try { return JSON.parse(String(formData.get('question_ids') || '[]')) as number[] } catch { return [] } })(),
       publish: ((): { start_time: string; end_time?: string | null; is_perpetual?: boolean } | null => {
         const status = String(formData.get('status') || 'draft')
@@ -673,6 +695,8 @@ export async function saveTestFromForm(formData: FormData): Promise<{ success: b
       end_time: payload.publish?.end_time || null,
       allow_pausing: payload.allow_pausing,
       show_in_question_timer: payload.show_in_question_timer,
+      is_proctored: payload.is_proctored,
+      is_dynamically_shuffled: payload.is_dynamically_shuffled,
       updated_at: new Date().toISOString()
     }
 
@@ -1002,10 +1026,10 @@ export async function createTest(testData: TestCreationData): Promise<{ success:
   }
 }
 
-// Update test control settings (allow_pausing, show_in_question_timer)
+// Update test control settings (allow_pausing, show_in_question_timer, is_proctored)
 export async function updateTestControlSettings(
   testId: number, 
-  settings: { allow_pausing?: boolean; show_in_question_timer?: boolean }
+  settings: { allow_pausing?: boolean; show_in_question_timer?: boolean; is_proctored?: boolean }
 ): Promise<{ success: boolean; message: string }> {
   try {
     const supabase = createAdminClient()
@@ -1013,6 +1037,7 @@ export async function updateTestControlSettings(
     const updateData: Record<string, unknown> = {}
     if (settings.allow_pausing !== undefined) updateData.allow_pausing = settings.allow_pausing
     if (settings.show_in_question_timer !== undefined) updateData.show_in_question_timer = settings.show_in_question_timer
+    if (settings.is_proctored !== undefined) updateData.is_proctored = settings.is_proctored
     updateData.updated_at = new Date().toISOString()
     
     const { error } = await supabase
@@ -1050,6 +1075,7 @@ export async function updateTest(testId: number, testData: Partial<TestCreationD
     if (testData.negative_marks_per_incorrect !== undefined) updateData.negative_marks_per_incorrect = correctedNegativeMarks
     if (testData.allow_pausing !== undefined) updateData.allow_pausing = testData.allow_pausing
     if (testData.show_in_question_timer !== undefined) updateData.show_in_question_timer = testData.show_in_question_timer
+    if (testData.is_proctored !== undefined) updateData.is_proctored = testData.is_proctored
     updateData.updated_at = new Date().toISOString()
     
     const { error } = await supabase
@@ -2525,6 +2551,41 @@ export async function exportAnswerKeyPdf(testId: number): Promise<{ success: boo
   } catch (error) {
     console.error('Premium Answer Key export failed:', error)
     return { success: false, message: 'Failed to export Answer Key' }
+  }
+}
+
+export async function declareResultsNow(testId: number): Promise<{ success: boolean; message: string }> {
+  try {
+    const supabase = createAdminClient()
+    
+    const { error } = await supabase
+      .from('tests')
+      .update({
+        result_release_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', testId)
+    
+    if (error) {
+      console.error('Error declaring results:', error)
+      return {
+        success: false,
+        message: `Failed to declare results: ${error.message}`
+      }
+    }
+    
+    revalidatePath('/tests')
+    
+    return {
+      success: true,
+      message: 'Results declared successfully!'
+    }
+  } catch (error) {
+    console.error('Unexpected error declaring results:', error)
+    return {
+      success: false,
+      message: 'An unexpected error occurred while declaring results'
+    }
   }
 }
 

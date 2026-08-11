@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -43,6 +43,8 @@ export interface TestFormData {
   totalTimeMinutes: number
   allowPausing: boolean
   showInQuestionTimer: boolean
+  isDynamicallyShuffled?: boolean
+  isProctored: boolean
 }
 
 // Legacy interface - keeping for backward compatibility
@@ -67,13 +69,67 @@ export function TestFinalizationStage({
     description: initialTestData?.description || '',
     totalTimeMinutes: initialTestData?.total_time_minutes || 120,
     allowPausing: false, // Default to strict mode for new tests
-    showInQuestionTimer: false // Default to strict mode for new tests
+    showInQuestionTimer: false, // Default to strict mode for new tests
+    isProctored: false // Default to non-proctored mode
   })
   
   const [showPublishModal, setShowPublishModal] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [showPreviewModal, setShowPreviewModal] = useState(false)
+  const [isLoadingTestData, setIsLoadingTestData] = useState(false)
+
+  // Fetch existing test data when in edit mode
+  useEffect(() => {
+    if (isEditMode && testId) {
+      console.log(`🔍 Edit mode detected for test ID: ${testId}`)
+      setIsLoadingTestData(true)
+      
+      const fetchTestData = async () => {
+        try {
+          // Dynamically import the server action
+          const { getTestDetailsForEdit } = await import('@/lib/actions/tests')
+          const testDetails = await getTestDetailsForEdit(testId)
+          
+          if (testDetails && testDetails.test) {
+            const test = testDetails.test
+            console.log('✅ Test data fetched successfully:', test)
+            
+            // Populate form state with fetched data
+            setFormData({
+              name: test.name || '',
+              description: test.description || '',
+              totalTimeMinutes: test.total_time_minutes || 120,
+              allowPausing: test.allow_pausing || false,
+              showInQuestionTimer: test.show_in_question_timer || false,
+              isDynamicallyShuffled: test.is_dynamically_shuffled || false,
+              isProctored: test.is_proctored || false
+            })
+            
+            console.log('✅ Form data populated with:', {
+              name: test.name,
+              description: test.description,
+              totalTimeMinutes: test.total_time_minutes,
+              allowPausing: test.allow_pausing,
+              showInQuestionTimer: test.show_in_question_timer,
+              isDynamicallyShuffled: test.is_dynamically_shuffled,
+              isProctored: test.is_proctored
+            })
+          } else {
+            console.warn('⚠️ No test data found for test ID:', testId)
+            toast.error('Failed to load test data. Please try again.')
+          }
+        } catch (error) {
+          console.error('❌ Error fetching test data:', error)
+          toast.error('Failed to load test data. Please try again.')
+        } finally {
+          setIsLoadingTestData(false)
+        }
+      }
+      
+      fetchTestData()
+    }
+  }, [isEditMode, testId])
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
@@ -105,8 +161,10 @@ export function TestFinalizationStage({
     fd.append('result_policy', 'instant')
     fd.append('allow_pausing', String(formData.allowPausing))
     fd.append('show_in_question_timer', String(formData.showInQuestionTimer))
+    fd.append('is_proctored', String(formData.isProctored))
     fd.append('result_release_at', '')
     fd.append('status', 'draft')
+    fd.append('is_dynamically_shuffled', String(Boolean(formData.isDynamicallyShuffled)))
     const questionsPayload = questions.map((slot) => {
       const q = slot.question
       const normalizedOptions = Object.fromEntries(Object.entries(q.options || {}).map(([k, v]) => [String(k).toUpperCase(), v]))
@@ -175,6 +233,8 @@ export function TestFinalizationStage({
     fd.append('is_perpetual', String(publishData.schedulingMode === 'perpetual'))
     fd.append('allow_pausing', String(formData.allowPausing))
     fd.append('show_in_question_timer', String(formData.showInQuestionTimer))
+    fd.append('is_proctored', String(formData.isProctored))
+    fd.append('is_dynamically_shuffled', String(Boolean(formData.isDynamicallyShuffled)))
     const questionsPayload = questions.map((slot) => {
       const q = slot.question
       const normalizedOptions = Object.fromEntries(Object.entries(q.options || {}).map(([k, v]) => [String(k).toUpperCase(), v]))
@@ -264,6 +324,18 @@ export function TestFinalizationStage({
   const blueprintSummary = generateBlueprintSummary()
   const totalQuestions = questions.length
   const customMarkingCount = questions.filter(q => q.customMarking).length
+
+  // Show loading state while fetching test data in edit mode
+  if (isLoadingTestData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading test data...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50">
@@ -508,6 +580,34 @@ export function TestFinalizationStage({
                     <Switch
                       checked={formData.showInQuestionTimer}
                       onCheckedChange={(checked) => updateFormData('showInQuestionTimer', checked)}
+                    />
+                  </div>
+
+                  {/* Dynamic Per-User Shuffling Toggle */}
+                  <div className="flex items-center justify-between rounded-lg border border-gray-200 p-3 bg-white shadow-sm">
+                    <div className="space-y-0.5">
+                      <Label className="text-sm font-semibold text-gray-900">Enable Dynamic Per-User Shuffling</Label>
+                      <p className="text-xs text-gray-600">
+                        Each student sees a unique question and option order.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={Boolean(formData.isDynamicallyShuffled)}
+                      onCheckedChange={(checked) => updateFormData('isDynamicallyShuffled', checked)}
+                    />
+                  </div>
+
+                  {/* Enable Proctoring Toggle */}
+                  <div className="flex items-center justify-between rounded-lg border-2 border-blue-200 p-4 bg-blue-50/50 shadow-sm">
+                    <div className="space-y-1">
+                      <Label className="text-sm font-semibold text-gray-900">Enable Proctoring</Label>
+                      <p className="text-xs text-gray-600">
+                        When enabled, forces students into a secure, fullscreen environment with violation detection and disables the browser's back button.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={formData.isProctored}
+                      onCheckedChange={(checked) => updateFormData('isProctored', checked)}
                     />
                   </div>
                 </div>

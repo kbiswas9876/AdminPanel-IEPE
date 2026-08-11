@@ -1,5 +1,5 @@
-import { ErrorReportsManagement } from '@/components/reports/error-reports-management'
+import ErrorReportsDashboard from '@/components/reports/error-reports-dashboard'
 
 export default function ReportsPage() {
-  return <ErrorReportsManagement />
+  return <ErrorReportsDashboard />
 }

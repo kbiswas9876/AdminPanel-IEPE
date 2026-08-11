@@ -1,20 +1,28 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { 
   ChevronDown,
   ChevronRight,
   Edit,
   BookOpen,
+  ChevronDown as ChevronDownIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { UIQuestion } from '@/lib/types'
 import { UniversalContentRenderer } from '@/components/editors/UniversalContentRenderer'
 import { QuestionEditForm } from './QuestionEditForm'
 import { CompactQuestionDetails } from './CompactQuestionDetails'
+import { useUpdateQuestionDifficulty } from '@/lib/hooks/useQuestionMutations'
 
 interface CompactQuestionTableProps {
   questions: UIQuestion[]
@@ -43,6 +51,37 @@ export function CompactQuestionTable({
   const [editingQuestion, setEditingQuestion] = useState<number | null>(null)
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set())
   const [animatingQuestions, setAnimatingQuestions] = useState<Set<number>>(new Set())
+  const [openPopoverId, setOpenPopoverId] = useState<number | null>(null)
+
+  // Difficulty options for quick edit
+  const DIFFICULTY_OPTIONS = [
+    { value: 'Easy', label: 'Easy' },
+    { value: 'Easy-Moderate', label: 'Easy-Moderate' },
+    { value: 'Moderate', label: 'Moderate' },
+    { value: 'Moderate-Hard', label: 'Moderate-Hard' },
+    { value: 'Hard', label: 'Hard' }
+  ] as const
+
+  // Initialize the mutation hook
+  const updateDifficultyMutation = useUpdateQuestionDifficulty()
+
+  // Handle quick difficulty update with proper event handling and mutation
+  const handleQuickDifficultyUpdate = (event: React.MouseEvent, question: UIQuestion, newDifficulty: string) => {
+    if (!question.id) return
+
+    // CRITICAL: Stop event propagation to prevent card expansion
+    event.stopPropagation()
+    event.preventDefault()
+
+    // Close the popover immediately
+    setOpenPopoverId(null)
+
+    // Call the mutation - React Query handles all the state management
+    updateDifficultyMutation.mutate({
+      id: question.id,
+      difficulty: newDifficulty
+    })
+  }
 
   // Auto-expand edited question when context should be preserved
   useEffect(() => {
@@ -149,14 +188,74 @@ export function CompactQuestionTable({
                         </div>
                       </div>
                       
-                      {/* Difficulty Badge */}
+                      {/* Interactive Difficulty Badge */}
                       {question.difficulty && (
-                        <Badge 
-                          variant="outline" 
-                          className={cn("text-xs px-3 py-1.5 rounded-xl font-medium shadow-sm", getDifficultyColor(question.difficulty))}
+                        <Popover 
+                          open={openPopoverId === question.id} 
+                          onOpenChange={(open) => setOpenPopoverId(open ? question.id! : null)}
                         >
-                          {question.difficulty}
-                        </Badge>
+                          <PopoverTrigger asChild>
+                            <Badge 
+                              variant="outline" 
+                              className={cn(
+                                "text-xs px-3 py-1.5 rounded-xl font-medium shadow-sm cursor-pointer transition-all duration-200 hover:ring-2 hover:ring-offset-1 hover:ring-blue-300",
+                                getDifficultyColor(question.difficulty)
+                              )}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div className="flex items-center gap-1">
+                                {question.difficulty}
+                                <ChevronDownIcon className="h-3 w-3 opacity-60" />
+                              </div>
+                            </Badge>
+                          </PopoverTrigger>
+                          <PopoverContent 
+                            className="w-48 p-1" 
+                            align="start"
+                            onClick={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            sideOffset={4}
+                            avoidCollisions={true}
+                          >
+                            <div 
+                              className="space-y-1"
+                              onClick={(e) => e.stopPropagation()}
+                              onMouseDown={(e) => e.stopPropagation()}
+                            >
+                              {DIFFICULTY_OPTIONS.map((option, index) => (
+                                <motion.button
+                                  key={option.value}
+                                  initial={{ opacity: 0, y: -5 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ 
+                                    duration: 0.05, 
+                                    delay: index * 0.01,
+                                    ease: [0.25, 0.46, 0.45, 0.94]
+                                  }}
+                                  whileHover={{ 
+                                    scale: 1.01,
+                                    backgroundColor: question.difficulty === option.value 
+                                      ? "rgb(239 246 255)" 
+                                      : "rgb(249 250 251)"
+                                  }}
+                                  whileTap={{ scale: 0.99 }}
+                                  onClick={(e) => {
+                                    handleQuickDifficultyUpdate(e, question, option.value)
+                                  }}
+                                  onMouseDown={(e) => e.stopPropagation()}
+                                  className={cn(
+                                    "w-full text-left px-3 py-2 text-sm rounded-md transition-all duration-100 cursor-pointer",
+                                    question.difficulty === option.value
+                                      ? "bg-blue-50 text-blue-700 font-medium"
+                                      : "hover:bg-gray-50 text-gray-700"
+                                  )}
+                                >
+                                  {option.label}
+                                </motion.button>
+                              ))}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       )}
                     </div>
                     

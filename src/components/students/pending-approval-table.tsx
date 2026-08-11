@@ -10,21 +10,22 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { User, Mail, Calendar } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
 import { ApproveUserDialog } from './approve-user-dialog'
 import { RejectUserDialog } from './reject-user-dialog'
+import { ViewProfileDialog } from './view-profile-dialog'
 
 interface PendingApprovalTableProps {
   users: UserProfile[]
   onUserAction: () => void
+  selectedUsers?: string[]
+  onUserSelect?: (userId: string, selected: boolean) => void
 }
 
-export function PendingApprovalTable({ users, onUserAction }: PendingApprovalTableProps) {
-
+export function PendingApprovalTable({ users, onUserAction, selectedUsers = [], onUserSelect }: PendingApprovalTableProps) {
   const handleUserAction = () => {
     onUserAction() // Notify parent component to refresh data
   }
-
-
 
   if (users.length === 0) {
     return (
@@ -41,25 +42,44 @@ export function PendingApprovalTable({ users, onUserAction }: PendingApprovalTab
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-12">
+              <Checkbox 
+                checked={selectedUsers.length === users.length && users.length > 0}
+                onCheckedChange={(checked) => {
+                  if (onUserSelect) {
+                    users.forEach(user => onUserSelect(user.id, !!checked))
+                  }
+                }}
+              />
+            </TableHead>
             <TableHead>Student</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Registration Date</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="w-[200px]">Actions</TableHead>
+            <TableHead className="w-[300px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {users.map((user) => (
             <TableRow key={user.id}>
               <TableCell>
+                <Checkbox 
+                  checked={selectedUsers.includes(user.id)}
+                  onCheckedChange={(checked) => onUserSelect?.(user.id, !!checked)}
+                />
+              </TableCell>
+              <TableCell>
                 <div className="flex items-center space-x-3">
-                  <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                    <User className="h-4 w-4 text-gray-600" />
+                  <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                    <User className="h-4 w-4 text-blue-600" />
                   </div>
                   <div>
                     <p className="font-medium text-gray-900">
-                      {user.full_name || 'No name provided'}
+                      {user.full_name || 'Student (Unspecified)'}
                     </p>
+                    {user.target_exam && (
+                      <p className="text-xs text-blue-600 font-semibold">{user.target_exam}</p>
+                    )}
                   </div>
                 </div>
               </TableCell>
@@ -73,23 +93,33 @@ export function PendingApprovalTable({ users, onUserAction }: PendingApprovalTab
                 <div className="flex items-center space-x-2">
                   <Calendar className="h-4 w-4 text-gray-400" />
                   <span className="text-sm text-gray-600">
-                    {new Date(user.created_at).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                    {user.created_at && !isNaN(new Date(user.created_at).getTime())
+                      ? new Date(user.created_at).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })
+                      : 'Recently Registered'
+                    }
                   </span>
                 </div>
               </TableCell>
               <TableCell>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                  Pending
-                </span>
+                {user.status === 'correction_required' ? (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                    Revision Requested
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                    Pending Review
+                  </span>
+                )}
               </TableCell>
               <TableCell>
                 <div className="flex items-center space-x-2">
+                  <ViewProfileDialog user={user} />
                   <ApproveUserDialog 
                     user={user} 
                     onApprove={handleUserAction}

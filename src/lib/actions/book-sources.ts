@@ -7,6 +7,12 @@ export interface BookSource {
   id: number
   name: string
   code: string
+  icon_url?: string | null
+  exam_type?: string | null
+  author?: string | null
+  publisher?: string | null
+  publication_year?: string | null
+  description?: string | null
   created_at: string
 }
 
@@ -43,7 +49,18 @@ export async function getBookSources(): Promise<{
   }
 }
 
-export async function createBookSource(name: string, code: string): Promise<{
+export async function createBookSource(
+  name: string,
+  code: string,
+  extraData?: {
+    icon_url?: string
+    exam_type?: string
+    author?: string
+    publisher?: string
+    publication_year?: string
+    description?: string
+  }
+): Promise<{
   success: boolean
   message: string
   data?: BookSource
@@ -76,7 +93,13 @@ export async function createBookSource(name: string, code: string): Promise<{
       .from('book_sources')
       .insert({
         name,
-        code
+        code,
+        icon_url: extraData?.icon_url || null,
+        exam_type: extraData?.exam_type || null,
+        author: extraData?.author || null,
+        publisher: extraData?.publisher || null,
+        publication_year: extraData?.publication_year || null,
+        description: extraData?.description || null
       })
       .select()
       .single()
@@ -89,7 +112,6 @@ export async function createBookSource(name: string, code: string): Promise<{
       }
     }
     
-    // Revalidate the content page to refresh the UI
     revalidatePath('/content')
     
     return {
@@ -103,6 +125,56 @@ export async function createBookSource(name: string, code: string): Promise<{
     return {
       success: false,
       message: 'An unexpected error occurred while creating the book source'
+    }
+  }
+}
+
+export async function updateBookSource(
+  id: number,
+  updateData: {
+    name?: string
+    icon_url?: string | null
+    exam_type?: string | null
+    author?: string | null
+    publisher?: string | null
+    publication_year?: string | null
+    description?: string | null
+  }
+): Promise<{
+  success: boolean
+  message: string
+  data?: BookSource
+}> {
+  try {
+    const supabase = createAdminClient()
+    
+    const { data, error } = await supabase
+      .from('book_sources')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single()
+    
+    if (error) {
+      console.error('Error updating book source:', error)
+      return {
+        success: false,
+        message: `Failed to update book source: ${error.message}`
+      }
+    }
+    
+    revalidatePath('/content')
+    
+    return {
+      success: true,
+      message: 'Book source updated successfully!',
+      data
+    }
+  } catch (error) {
+    console.error('Unexpected error updating book source:', error)
+    return {
+      success: false,
+      message: 'An unexpected error occurred while updating the book source'
     }
   }
 }
@@ -153,5 +225,49 @@ export async function deleteBookSource(id: number): Promise<{
       success: false,
       message: 'An unexpected error occurred while deleting the book source'
     }
+  }
+}
+
+// Upload Book Cover Image File to Supabase Storage
+export async function uploadBookCoverIcon(formData: FormData): Promise<{
+  success: boolean
+  url?: string
+  message: string
+}> {
+  try {
+    const file = formData.get('file') as File
+    if (!file) {
+      return { success: false, message: 'No file provided for upload' }
+    }
+
+    const supabase = createAdminClient()
+    const fileExt = file.name.split('.').pop() || 'png'
+    const fileName = `book-cover-${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${fileExt}`
+    const buffer = Buffer.from(await file.arrayBuffer())
+
+    const { error: uploadError } = await supabase.storage
+      .from('book-icons')
+      .upload(fileName, buffer, {
+        contentType: file.type || 'image/png',
+        upsert: true
+      })
+
+    if (uploadError) {
+      console.error('Storage upload error:', uploadError)
+      return { success: false, message: uploadError.message }
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from('book-icons')
+      .getPublicUrl(fileName)
+
+    return {
+      success: true,
+      url: publicUrlData.publicUrl,
+      message: 'Cover image uploaded successfully!'
+    }
+  } catch (err: any) {
+    console.error('Upload error:', err)
+    return { success: false, message: err.message || 'File upload failed' }
   }
 }
